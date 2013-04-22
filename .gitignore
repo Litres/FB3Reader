@@ -4,3 +4,8 @@
 bin
 obj
 Properties
+*.sln
+*.suo
+
+# *.js vill eventually go avay, but for now it's just fine
+*.js

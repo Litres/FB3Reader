@@ -1,0 +1,6 @@
+*.js.map
+*.config
+*.user
+bin
+obj
+Properties

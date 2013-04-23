@@ -8,8 +8,12 @@ module FB3Reader {
 		public alert: FB3ReaderSite.IAlert;
 		public NotePopup: FB3ReaderSite.INotePopup;
 
-		constructor(URL: string, Site: FB3ReaderSite.IFB3ReaderSite) {
-			this.FB3DOM = new FB3DOM.FB3DOM(URL, this.Progress);
+		constructor(Site: FB3ReaderSite.IFB3ReaderSite) {
+			this.FB3DOM = new FB3DOM.FB3DOM();
+		}
+
+		Init(URL: string) {
+			this.FB3DOM.Init(URL);
 		}
 		GoTO(Bloc: FB3DOM.IPointer) {
 		}

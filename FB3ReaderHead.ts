@@ -24,7 +24,7 @@ module FB3Reader {
 		NotePopup:FB3ReaderSite.INotePopup;
 
 //		constructor(URL:string);
-
+		Init(URL: string);
 		GoTO(Bloc: FB3DOM.IPointer): void;
 	}
 }

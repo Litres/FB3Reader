@@ -2,16 +2,30 @@
 
 module FB3DOM {
 
-	export interface IPointer extends Array {};
-	export interface IDOMBlockReadyCallback { (Block: Array); };
+	export interface IPointer {};
+	export interface IDOMBlockReadyCallback { (Block: IFB3Block); };
+	export interface ITOC extends Array {};
 
 	export interface IFB3Block {
-		GetPartialHTML(HyphOn: bool, From: number, To: number): string;
-		GetHTML(HyphOn: bool);
+		GetPartialHTML(HyphOn: bool, From: IPointer, To: IPointer): string;
+		GetHTML(HyphOn: bool):string;
+		GetBlocks(
+			From: IPointer,
+			To: IPointer,
+			DoneCallBack: IDOMBlockReadyCallback,
+			ProgressCallback: FB3ReaderSite.ILoadProgress
+		): IFB3Block;
 	}
 
-	export interface IFB3DOM {
-		//		constructor(URL:string);
+	export interface IFB3DOM extends IFB3Block{
+		Ready: bool;
+
+		// Init(URL: string) - загрузка описания книги из указанного URL
+		Init(URL: string);
+
+		TOC(): any;
+		Alert: FB3ReaderSite.IAlert;
+		//		constructor();
 	}
 
 }

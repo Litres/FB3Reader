@@ -4,6 +4,7 @@ module FB3DOM {
 
 	export interface IPointer {};
 	export interface IDOMBlockReadyCallback { (Block: IFB3Block); };
+	export interface IDOMTextReadyCallback { (HTML: string); };
 	export interface ITOC extends Array {};
 
 	export interface IFB3Block {
@@ -20,11 +21,7 @@ module FB3DOM {
 	export interface IFB3DOM extends IFB3Block{
 		Ready: bool;
 
-		// Init(URL: string) - загрузка описания книги из указанного URL
-		Init(URL: string);
-
-		TOC(): any;
-		Alert: FB3ReaderSite.IAlert;
+		TOC(): FB3Reader.ITocNode;
 		//		constructor();
 	}
 

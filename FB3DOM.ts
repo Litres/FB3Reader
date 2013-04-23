@@ -5,14 +5,16 @@ module FB3DOM {
 
 	export class FB3Block implements IFB3Block {
 
+		private Alert: FB3ReaderSite.IAlert;
+
 		public GetPartialHTML(HyphOn: bool, From: IPointer, To: IPointer): string {
 			return null;
 		}
-		GetHTML(HyphOn: bool): string {
+		public GetHTML(HyphOn: bool): string {
 			return null;
 		}
 
-		GetBlocks(
+		public GetBlocks(
 			From: IPointer,
 			To: IPointer,
 			DoneCallBack: IDOMBlockReadyCallback,
@@ -21,23 +23,32 @@ module FB3DOM {
 			return null;
 		}
 	}
-	export class FB3DOM  extends FB3Block implements IFB3DOM {
+	export class FB3DOM extends FB3Block implements IFB3DOM {
 		public Ready: bool;
-		public Alert: FB3ReaderSite.IAlert;
-		private RawData: Array;
-		constructor () {
-			this.Ready = false;
-			super();
-		}
 
-		public Init(URL: string) {
-			this.RawData.length = 0;
+		private RawData: Array;
+
+		constructor(private FB3Reader: FB3Reader.IFBReader, URL: string) {
+			super();
+			this.Alert = FB3Reader.Site.Alert;
+			this.Init(URL);
 		}
 
 		public TOC() {
-			return new Array();
+			return {
+				Title: 'Title',
+				Subitems: new Array(),
+				StartBlock:0,
+				EndBlock: 30
+			};
 		}
 
+		private Init(URL:string) {
+			this.RawData = new Array();
+			this.Ready = false;
+
+		}
+		
 		private parseJSON(data: string): Object {
 			// Borrowed bits from JQuery & http://json.org/json2.js
 			if (!data) { return null; }

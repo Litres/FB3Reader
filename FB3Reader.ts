@@ -3,19 +3,25 @@
 module FB3Reader {
 
 	export class FB3Reader implements IFBReader {
+		public HyphON: bool;
+		public BookStyleNotes: bool;
+		public Position: number;
+
 		private FB3DOM: FB3DOM.IFB3DOM;
-		public Progress: FB3ReaderSite.ILoadProgress;
-		public alert: FB3ReaderSite.IAlert;
-		public NotePopup: FB3ReaderSite.INotePopup;
+		private Alert: FB3ReaderSite.IAlert;
 
-		constructor(Site: FB3ReaderSite.IFB3ReaderSite) {
-			this.FB3DOM = new FB3DOM.FB3DOM();
+		constructor(public Site: FB3ReaderSite.IFB3ReaderSite, URL:string) {
+			this.CreateDom(URL);
+			this.Alert = Site.Alert;
 		}
 
-		Init(URL: string) {
-			this.FB3DOM.Init(URL);
+		private CreateDom(URL: string) {
+			this.FB3DOM = new FB3DOM.FB3DOM(this,URL);
 		}
-		GoTO(Bloc: FB3DOM.IPointer) {
+		public GoTO(Bloc: FB3DOM.IPointer) {
+		}
+		public TOC() {
+			return this.FB3DOM.TOC();
 		}
 	}
 

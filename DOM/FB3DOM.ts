@@ -5,7 +5,7 @@ module FB3DOM {
 	export class FB3Text implements IFB3Block {
 		constructor(private text: string, public Parent: IFB3Block) { }
 		public GetHTML(HyphOn: bool, Range: IRange): string {
-			return this.text;
+			return this.text;  // todo - HyphOn must work, must just replace shy with ''
 		}
 	}
 
@@ -15,7 +15,15 @@ module FB3DOM {
 		private Childs: IFB3Block[];
 
 		public GetHTML(HyphOn: bool, Range: IRange): string {
-			return "";
+			var Out = [this.GetInitTag(Range)];
+			var CloseTag = this.GetCloseTag(Range);
+			var From = Range.From.shift();	// todo perhaps we should check range here...
+			var To = Range.To.shift();			// and here
+			for (var I = From; I <= To; I++) {
+				Out.push(this.Childs[I].GetHTML(HyphOn,Range));
+			}
+			Out.push(CloseTag);
+			return Out.join(''); // Hope one join is faster than several concats
 		}
 
 		constructor(public Data: IJSONBlock, public Parent: IFB3Block) {
@@ -31,7 +39,10 @@ module FB3DOM {
 			}
 		}
 
-		private GetInitTag(Range: IRange) {
+		private GetCloseTag(Range: IRange):string {
+			return '</' + this.TagName + '>';
+		}
+		private GetInitTag(Range: IRange):string {
 			var ElementClasses = new Array();
 			if (Range.From[0]) {
 				ElementClasses.push('cut_top')
@@ -82,7 +93,7 @@ module FB3DOM {
 			};
 		}
 
-		// Wondering why I make _Init public? Because you can't inherite private methods, bah!
+		// Wondering why I make _Init public? Because you can't inherite private methods, darling!
 		public _Init() {
 			this.RawData = new Array();
 			this.Ready = false;

@@ -15,6 +15,6 @@ module FB3Reader {
 		BookStyleNotes: bool;
 		Position: number;
 		TOC(): ITocNode;
-		GoTO(Bloc: FB3DOM.IPointer): void;
+		GoTO(Bloc: Array): void;
 	}
 }

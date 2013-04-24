@@ -32,5 +32,22 @@ module FB3DOM {
 				this.Alert("Invalid JSON");
 			}
 		}
+
+		private XMLHttpRequest(): XMLHttpRequest {
+			var Ret:any = XMLHttpRequest;
+			if (typeof Ret === "undefined") {
+				Ret = function () {
+					try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
+					catch (e) { }
+					try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); }
+					catch (e) { }
+					try { return new ActiveXObject("Microsoft.XMLHTTP"); }
+					catch (e) { }
+					// Microsoft.XMLHTTP points to Msxml2.XMLHTTP and is redundant
+					throw new Error("This browser does not support XMLHttpRequest.");
+				};
+			}
+			return <XMLHttpRequest> Ret;
+		}
 	}
 }

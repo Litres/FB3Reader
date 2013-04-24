@@ -13,7 +13,7 @@ module FB3Reader {
 			private FB3DOM: FB3DOM.IFB3DOM) {
 		}
 
-		public GoTO(Bloc: FB3DOM.IPointer) {
+		public GoTO(Bloc: Array) {
 		}
 		public TOC() {
 			return this.FB3DOM.TOC();

@@ -2,25 +2,24 @@
 
 module FB3DOM {
 
-	export interface IPointer {};
-	export interface IDOMBlockReadyCallback { (Block: IFB3Block); };
-	export interface IDOMTextReadyCallback { (HTML: string); };
+	export interface IRange { From: number[]; To: number[] };
+	export interface IDOMTextReadyCallback { (HTML: string): void; };
 	export interface ITOC extends Array {};
+	export interface IJSONBlock {
+		t: string;		// Tag name
+		xp?: number[];// XPAth shurtcut for this node in the native XML
+		c?: any[];		// Child nodes/text for this tag (array)
+		nc?: string;	// Native class name for the block
+		css?: string; // Native CSS for the block
+		i?: string;		// FB/HTML ID
+	}
 
 	export interface IFB3Block {
-		GetPartialHTML(HyphOn: bool, From: IPointer, To: IPointer): string;
-		GetHTML(HyphOn: bool):string;
-		GetBlocks(
-			From: IPointer,
-			To: IPointer,
-			DoneCallBack: IDOMBlockReadyCallback,
-			ProgressCallback: FB3ReaderSite.ILoadProgress
-		): IFB3Block;
+		Parent: IFB3Block;
+		GetHTML(HyphOn: bool, Range: IRange):string;
 	}
 
 	export interface IFB3DOM extends IFB3Block{
-		Ready: bool;
-
 		TOC(): FB3Reader.ITocNode;
 		//		constructor();
 	}

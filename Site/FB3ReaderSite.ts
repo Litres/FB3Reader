@@ -1,4 +1,4 @@
-/// <reference path="FB3ReaderAllModules.ts" />
+/// <reference path="FB3ReaderSiteHead.ts" />
 
 module FB3ReaderSite {
 

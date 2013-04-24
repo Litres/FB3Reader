@@ -1,4 +1,4 @@
-/// <reference path="FB3ReaderAllModules.ts" />
+/// <reference path="FB3ReaderHead.ts" />
 
 module FB3Reader {
 
@@ -7,17 +7,12 @@ module FB3Reader {
 		public BookStyleNotes: bool;
 		public Position: number;
 
-		private FB3DOM: FB3DOM.IFB3DOM;
 		private Alert: FB3ReaderSite.IAlert;
 
-		constructor(public Site: FB3ReaderSite.IFB3ReaderSite, URL:string) {
-			this.CreateDom(URL);
-			this.Alert = Site.Alert;
+		constructor(public Site: FB3ReaderSite.IFB3ReaderSite,
+			private FB3DOM: FB3DOM.IFB3DOM) {
 		}
 
-		private CreateDom(URL: string) {
-			this.FB3DOM = new FB3DOM.FB3DOM(this,URL);
-		}
 		public GoTO(Bloc: FB3DOM.IPointer) {
 		}
 		public TOC() {

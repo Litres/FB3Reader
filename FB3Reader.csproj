@@ -21,22 +21,26 @@
     <Content Include="app.js">
       <DependentUpon>app.ts</DependentUpon>
     </Content>
-    <TypeScriptCompile Include="FB3DOM.ts" />
-    <Content Include="FB3DOM.js">
+    <TypeScriptCompile Include="DOM\FB3DOM.ts" />
+    <Content Include="DOM\FB3DOM.js">
       <DependentUpon>FB3DOM.ts</DependentUpon>
     </Content>
-    <Content Include="FB3DOMHead.ts" />
-    <TypeScriptCompile Include="FB3Reader.ts" />
-    <Content Include="FB3Reader.js">
+    <TypeScriptCompile Include="DOM\FB3DOMAsync.ts" />
+    <Content Include="DOM\FB3DOMAsync.js">
+      <DependentUpon>FB3DOMAsync.ts</DependentUpon>
+    </Content>
+    <Content Include="DOM\FB3DOMHead.ts" />
+    <TypeScriptCompile Include="Reader\FB3Reader.ts" />
+    <Content Include="Reader\FB3Reader.js">
       <DependentUpon>FB3Reader.ts</DependentUpon>
     </Content>
-    <Content Include="FB3ReaderAllModules.ts" />
-    <Content Include="FB3ReaderHead.ts" />
-    <TypeScriptCompile Include="FB3ReaderSite.ts" />
-    <Content Include="FB3ReaderSite.js">
+    <Content Include="FB3ReaderHeaders.ts" />
+    <Content Include="Reader\FB3ReaderHead.ts" />
+    <TypeScriptCompile Include="Site\FB3ReaderSite.ts" />
+    <Content Include="Site\FB3ReaderSite.js">
       <DependentUpon>FB3ReaderSite.ts</DependentUpon>
     </Content>
-    <Content Include="FB3ReaderSiteHead.ts" />
+    <Content Include="Site\FB3ReaderSiteHead.ts" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />

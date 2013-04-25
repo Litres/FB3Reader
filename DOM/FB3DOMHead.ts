@@ -32,6 +32,9 @@ module FB3DOM {
 	export interface IFB3DOM extends IFB3Block{
 		HyphOn: bool;
 		TOC(): FB3Reader.ITocNode;
+		Progressor: FB3ReaderSite.ILoadProgress;
+		Alert: FB3ReaderSite.IAlert;
+		DataProvider: FB3DataProvider.IJsonLoaderFactory;
 		Init(HyphOn: bool, URL: string, OnDone: IIFB3DOMReadyFunc);
 		//		constructor();
 	}

@@ -17,6 +17,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="app.css" />
+    <TypeScriptCompile Include="DataProvider\FB3AjaxDataProvider.ts" />
+    <Content Include="DataProvider\FB3AjaxDataProvider.js">
+      <DependentUpon>FB3AjaxDataProvider.ts</DependentUpon>
+    </Content>
+    <TypeScriptCompile Include="DataProvider\FB3DataProviderHead.ts" />
     <Content Include="default.htm" />
     <Content Include="app.js">
       <DependentUpon>app.ts</DependentUpon>

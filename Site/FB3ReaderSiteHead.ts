@@ -5,9 +5,11 @@ module FB3ReaderSite {
 	export interface IAlert { (Message: string): void; }
 	export interface INotePopup { (NoteBody: FB3DOM.IFB3Block): void; }
 	export interface ILoadProgress {
-		HourglassOn(Message:string): void;
-		progress(Message:string,Progress: number): void;
-		HourglassOff(Message: string): void;
+		HourglassOn(Owner: any, Message: string): void;
+		Progress(Owner: any, Progress: number): void;
+		HourglassOff(Owner: any): void;
+		Tick(Owner: any): void;
+		Alert: IAlert;
 	}
 	export interface IFB3ReaderSite {
 		Progressor: ILoadProgress;

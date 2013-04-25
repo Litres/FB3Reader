@@ -2,7 +2,7 @@
 
 module FB3Reader {
 
-	export class FB3Reader implements IFBReader {
+	export class Reader implements IFBReader {
 		public HyphON: bool;
 		public BookStyleNotes: bool;
 		public Position: number;

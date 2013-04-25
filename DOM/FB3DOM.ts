@@ -27,7 +27,7 @@ module FB3DOM {
 
 	interface IJSonLoadingDone{ (JSON: string) };
 
-	export class FB3DOM extends FB3Tag implements IFB3DOM {
+	export class DOM extends FB3Tag implements IFB3DOM {
 		private RawData: Array;
 		private LoadDequests: Array;
 		public HyphOn: bool;

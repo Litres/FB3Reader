@@ -25,10 +25,6 @@
     <Content Include="DOM\FB3DOM.js">
       <DependentUpon>FB3DOM.ts</DependentUpon>
     </Content>
-    <TypeScriptCompile Include="DOM\FB3DOMAsync.ts" />
-    <Content Include="DOM\FB3DOMAsync.js">
-      <DependentUpon>FB3DOMAsync.ts</DependentUpon>
-    </Content>
     <TypeScriptCompile Include="DOM\FB3DOMBlock.ts" />
     <Content Include="DOM\FB3DOMBlock.js">
       <DependentUpon>FB3DOMBlock.ts</DependentUpon>

@@ -16,11 +16,16 @@ module FB3DOM {
 
 	export interface IFB3Block {
 		Parent: IFB3Block;
+		Chars: number;
+		ID: number;
+		GetXPID(): string;
 		GetHTML(HyphOn: bool, Range: IRange):string;
 	}
 
 	export interface IFB3DOM extends IFB3Block{
+		HyphOn: bool;
 		TOC(): FB3Reader.ITocNode;
+		MissingRangeBlocks(Range: IRange): number[];
 		//		constructor();
 	}
 

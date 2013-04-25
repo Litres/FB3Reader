@@ -4,7 +4,7 @@
 
 window.onload = () => {
 	var AReaderSite = new FB3ReaderSite.FB3ReaderSite(document.getElementById('reader'));
-	var AReaderDOM = new FB3DOM.FB3DOMAsync(AReaderSite.Alert, 'about:blank');
+	var AReaderDOM = new FB3DOM.FB3DOM(AReaderSite.Alert, 'about:blank',true);
 	var AFB3Reader = new FB3Reader.FB3Reader(AReaderSite, AReaderDOM);
 
 };

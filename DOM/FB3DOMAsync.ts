@@ -2,12 +2,10 @@
 
 module FB3DOM {
 	declare var window;
-	export class FB3DOMAsync extends FB3DOMBase {
+	export class FB3DOMAsync extends FB3DOM {
 
 		public _Init() {
 			this.RawData = new Array();
-			this.Ready = false;
-
 		}
 
 		private parseJSON(data: string): Object {

@@ -18,6 +18,7 @@
   <ItemGroup>
     <Content Include="app.css" />
     <TypeScriptCompile Include="DataProvider\FB3AjaxDataProvider.ts" />
+    <Content Include="DataProvider\DocHeadExample.js" />
     <Content Include="DataProvider\FB3AjaxDataProvider.js">
       <DependentUpon>FB3AjaxDataProvider.ts</DependentUpon>
     </Content>

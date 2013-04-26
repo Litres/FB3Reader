@@ -4,13 +4,13 @@ module FB3DOM {
 
 	export interface IRange { From: number[]; To: number[] }
 	export interface IDOMTextReadyCallback { (HTML: string): void; }
-	export interface ITOC {
-		Title: string;
-		Start: number;
-		End: number;
-		Subitems: ITOC[];
+	export interface ITOC {				// Compact notation as we plan to transfer this over network, why create overload
+		t?: string;	// title
+		s: number;	// start root node N
+		e: number;	// end root node (including, use [0,-1] Pointer to get last block)
+		c?: ITOC[];	// contents (subitems)
 	}
-	export interface IJSONBlock {
+	export interface IJSONBlock {	// Compact notation for the same reason
 		t: string;		// Tag name
 		xp?: number[];// XPAth shurtcut for this node in the native XML
 		c?: any[];		// Child nodes/text for this tag (array)

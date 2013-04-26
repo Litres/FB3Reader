@@ -24,14 +24,25 @@ module FB3DataProvider {
 			this.Req.addEventListener("error", this.onTransferFailed, false);
 			this.Req.addEventListener("abort", this.onTransferAborted, false);
 			this.Req.onreadystatechange = this.onTransferComplete;
+			this.Req.open('GET', URL, true);
+			this.Req.send();
 		}
 
-		private onTransferComplete(e: ProgressEvent) {
-			if (this.Req.readyState != 4) {
-				this.Progressor.Tick(this);
-			} else {
+		private onTransferComplete() {
+			try {
+				if (this.Req.readyState != 4) {
+					this.Progressor.Tick(this);
+				} else {
+					this.Progressor.HourglassOff(this);
+					if (this.Req.status == 200) {
+						this.Callback(this.parseJSON(this.Req.responseText));
+					} else {
+						this.Progressor.Alert('Failed to load "' + URL + '", server returned error "' + this.Req.status + '"');
+					}
+				}
+			} catch (err) {
 				this.Progressor.HourglassOff(this);
-				this.Callback(this.parseJSON(this.Req.responseText));
+				this.Progressor.Alert('Failed to load "' + URL + '" (unknown error "' + err.description+'")');
 			}
 		}
 
@@ -57,7 +68,6 @@ module FB3DataProvider {
 					catch (e) { }
 					try { return new ActiveXObject("Microsoft.XMLHTTP"); }
 					catch (e) { }
-					// Microsoft.XMLHTTP points to Msxml2.XMLHTTP and is redundant
 					this.Progressor.Alert("This browser does not support XMLHttpRequest.");
 				};
 			}
@@ -65,7 +75,7 @@ module FB3DataProvider {
 		}
 		private parseJSON(data: string): Object {
 			// Borrowed bits from JQuery & http://json.org/json2.js
-			if (!data) { return null; }
+			if (data === undefined || data =='') { return null; }
 
 			// trim for IE
 			data = data.replace(/^\s\s*/, '').replace(/\s\s*$/, '');

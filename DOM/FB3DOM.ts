@@ -73,7 +73,7 @@ module FB3DOM {
 		public Init(HyphOn: bool, URL: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
 			this.HyphOn = HyphOn;
 			this.OnDoneFunc = OnDone;
-			this.DataProvider.Request(URL, this.AfterHeaderLoaded, this.Progressor);
+			this.DataProvider.Request(URL, (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 		}
 	}
 

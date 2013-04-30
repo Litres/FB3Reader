@@ -5,19 +5,20 @@ module FB3ReaderSite {
 	export class ExampleSite implements IFB3ReaderSite {
 		public Progressor: ILoadProgress;
 		public NotePopup: INotePopup;
+		public Alert: IAlert;
 		constructor(public Canvas: HTMLElement) {
 			this.Progressor = new ExampleProgressor();
+			this.Alert = this.Progressor.Alert;
 		}
 
-		public Alert(Message: string): void {
-			document.getElementById('AlertSpan').innerHTML = Message;
-//			window.alert(Message);
-		}
 	}
 	export class ExampleProgressor implements ILoadProgress {
 		private Hourglasses: any;
 		private Progresses: any;
-		public Alert: IAlert;
+		public Alert(Message: string): void {
+			document.getElementById('AlertSpan').innerHTML = Message;
+			//			window.alert(Message);
+		}
 		HourglassOn(Owner: any, Message: string): void {
 			this.Hourglasses[Owner.toString()] = 1;
 			document.getElementById('MessSpan').innerHTML = Message;

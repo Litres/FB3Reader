@@ -50,6 +50,9 @@ module FB3DOM {
 
 		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number) {
 			super('', Parent, ID);
+			
+			if (Data === null) return;
+
 			this.TagName = Data.t;
 			this.Childs = new Array();
 			for (var I = 0; I <= Data.c.length; I++) {

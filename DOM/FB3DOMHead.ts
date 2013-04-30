@@ -20,6 +20,12 @@ module FB3DOM {
 		href?: string;// Anchor
 	}
 
+	export interface IDataDisposition {
+		s: number;
+		e: number;
+		url: string;
+	}
+
 	export interface IFB3Block {
 		Parent: IFB3Block;
 		Chars: number;

@@ -5,11 +5,11 @@
 
 window.onload = () => {
 	var Canvas = document.getElementById('reader');
-	var AReaderSite = new FB3ReaderSite.Site(Canvas);
+	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
 	var DataProvider = new FB3DataProvider.AJAXDataProvider();
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
 	var AFB3Reader: FB3Reader.IFBReader;
-	AReaderDOM.Init(true, 'about:blank', (FB3DOM: FB3DOM.IFB3DOM) => {
+	AReaderDOM.Init(true, '/DataProvider/AjaxExample/120421.toc.js', (FB3DOM: FB3DOM.IFB3DOM) => {
 			AFB3Reader = new FB3Reader.Reader(AReaderSite, FB3DOM);
 		} );
 

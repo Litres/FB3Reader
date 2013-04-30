@@ -8,7 +8,7 @@ module FB3DataProvider {
 		}
 	}
 
-	interface AJWindow extends Window {JSON: JSON;}
+	interface AJWindow extends Window { JSON: JSON; XMLHttpRequest: XMLHttpRequest; ActiveXObject: any}
 	declare var window: AJWindow;
 
 
@@ -18,17 +18,20 @@ module FB3DataProvider {
 			private Callback: IJSonLoadedCallback,
 			private Progressor: FB3ReaderSite.ILoadProgress
 			) {
-			this.Progressor.HourglassOn(this, '');
-			this.Req = this.XMLHttpRequest();
-			this.Req.addEventListener("progress", this.onUpdateProgress, false);
-			this.Req.addEventListener("error", this.onTransferFailed, false);
-			this.Req.addEventListener("abort", this.onTransferAborted, false);
-			this.Req.onreadystatechange = this.onTransferComplete;
+			this.Progressor.HourglassOn(this, 'Loading ' + URL);
+			this.Req = this.HttpRequest();
+			try { // Old IE with it's internals does not support this
+				this.Req.addEventListener("progress", (e: ProgressEvent) => this.onUpdateProgress(e), false);
+				this.Req.addEventListener("error", (e: ProgressEvent) => this.onTransferFailed(e), false);
+				this.Req.addEventListener("abort", (e: ProgressEvent) => this.onTransferAborted(e), false);
+			} catch (e) { }
+			this.Req.onreadystatechange = () => this.onTransferComplete();
 			this.Req.open('GET', URL, true);
-			this.Req.send();
+			this.Req.send(null);
 		}
 
-		private onTransferComplete() {
+		public onTransferComplete() {
+			alert('sefs');
 			try {
 				if (this.Req.readyState != 4) {
 					this.Progressor.Tick(this);
@@ -58,20 +61,14 @@ module FB3DataProvider {
 			this.Progressor.Alert('Failed to load "' + URL + '" (interrupted)');
 		}
 
-		private XMLHttpRequest(): XMLHttpRequest {
-			var XMLHttpRequest = XMLHttpRequest;
-			if (typeof XMLHttpRequest === "undefined") {
-				XMLHttpRequest = function () {
-					try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
-					catch (e) { }
-					try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); }
-					catch (e) { }
-					try { return new ActiveXObject("Microsoft.XMLHTTP"); }
-					catch (e) { }
-					this.Progressor.Alert("This browser does not support XMLHttpRequest.");
-				};
+		private HttpRequest(): XMLHttpRequest {
+			var ref = null;
+			if (window.XMLHttpRequest) {
+				ref = new XMLHttpRequest();
+			} else if (window.ActiveXObject) { // Older IE.
+				ref = new ActiveXObject("MSXML2.XMLHTTP.3.0");
 			}
-			return new XMLHttpRequest;
+			return ref;
 		}
 		private parseJSON(data: string): Object {
 			// Borrowed bits from JQuery & http://json.org/json2.js

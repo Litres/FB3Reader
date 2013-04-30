@@ -32,6 +32,9 @@ module FB3DOM {
 		private LoadDequests: Array;
 		public HyphOn: bool;
 		private ActiveRequests: number = 0;
+		private TocBlocks: ITOC[];
+		private DataChunks: IDataDisposition[];
+		private OnDoneFunc: any;
 		
 		constructor(public Alert: FB3ReaderSite.IAlert,
 			public Progressor: FB3ReaderSite.ILoadProgress,
@@ -60,9 +63,17 @@ module FB3DOM {
 			return [1];
 		}
 
-		// Wondering why I make _Init public? Because you can't inherite private methods, darling!
+		private AfterHeaderLoaded(Data: any):void {
+			this.TocBlocks = Data.Body;
+			this.DataChunks = Data.Parts;
+			this.OnDoneFunc(this);
+		}
+
+		// Wondering why I make Init public? Because you can't inherite private methods, darling!
 		public Init(HyphOn: bool, URL: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
 			this.HyphOn = HyphOn;
+			this.OnDoneFunc = OnDone;
+			this.DataProvider.Request(URL, this.AfterHeaderLoaded, this.Progressor);
 		}
 	}
 

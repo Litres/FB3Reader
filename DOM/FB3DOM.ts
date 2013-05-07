@@ -120,11 +120,11 @@ module FB3DOM {
 			for (var I = 0; I < this.DataChunks.length; I++) {
 				if ( // If this chunk intersects with our range
 						(
-							From < this.DataChunks[I].s && To > this.DataChunks[I].s
+							From <= this.DataChunks[I].s && To >= this.DataChunks[I].s
 							||
-							From < this.DataChunks[I].e && To > this.DataChunks[I].e
+							From <= this.DataChunks[I].e && To >= this.DataChunks[I].e
 							||
-							From > this.DataChunks[I].s && To < this.DataChunks[I].e
+							From >= this.DataChunks[I].s && To <= this.DataChunks[I].e
 						)
 						&& this.DataChunks[I].loaded != 2
 					) {

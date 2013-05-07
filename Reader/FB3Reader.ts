@@ -11,7 +11,7 @@ module FB3Reader {
 
 		constructor(public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM) {
-			var Range: FB3DOM.IRange = { From: [0, 0], To: [50, -1] };
+			var Range: FB3DOM.IRange = { From: [0,0,2], To: [4,5] };
 			FB3DOM.GetHTMLAsync(true, Range, (HTML: string) => this.TestDOM(HTML));
 		}
 

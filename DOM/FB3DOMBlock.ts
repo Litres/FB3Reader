@@ -56,7 +56,14 @@ module FB3DOM {
 				From = 0;
 			}
 			for (var I = From; I <= To; I++) {
-				Out.push(this.Childs[I].GetHTML(HyphOn, Range));
+				var KidRange: IRange = {From:[] , To:[]};
+				if (I == From) {
+					KidRange.From = Range.From;
+				}
+				if (I == To) {
+					KidRange.To = Range.To;
+				}
+				Out.push(this.Childs[I].GetHTML(HyphOn, KidRange));
 			}
 			Out.push(CloseTag);
 			return Out.join(''); // Hope one join is faster than several concats
@@ -86,7 +93,7 @@ module FB3DOM {
 			if (TagMapper[this.TagName]) {
 				return TagMapper[this.TagName];
 			} else if (this.TagName == 'p' && this.Parent && this.Parent.TagName == 'title' && this.Data.xp) {
-				var lvl = this.Data.xp.length - 3;
+				var lvl = this.Data.xp.length - 2;
 				return 'h' + (lvl < 6 ? lvl : 5);
 			} else {
 				return this.TagName;

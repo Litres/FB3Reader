@@ -6,20 +6,23 @@ module FB3DOM {
 
 	class AsyncLoadConsumer {
 		private ImDone: boolean;
-		BlockLoaded(N: number): number {
-			if (this.ImDone) return;
-			for (var I = 0; I <= this.WaitedBlocks.length; I++) {
+		BlockLoaded(N: number): boolean {
+			if (this.ImDone) return false;
+			for (var I = 0; I < this.WaitedBlocks.length; I++) {
 				if (this.WaitedBlocks[I] == N)
 					this.WaitedBlocks.splice(I,1);
 			}
 			if (!this.WaitedBlocks.length) {
-				var HTML = this.FB3DOM.GetHTML(this.FB3DOM.HyphOn, this.Range);
-				IDOMTextReadyCallback(HTML);
-				this.ImDone = true;
+				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range);
+				this.OnDone(HTML);
+				return true;
+			} else {
+				return false;
 			}
 		}
 		constructor(private FB3DOM: IFB3DOM,
 			private WaitedBlocks: number[],
+			private HyphOn: bool,
 			private Range: IRange,
 			private OnDone: IDOMTextReadyCallback) {
 		}
@@ -28,28 +31,19 @@ module FB3DOM {
 	interface IJSonLoadingDone{ (JSON: string) };
 
 	export class DOM extends FB3Tag implements IFB3DOM {
-		private RawData: Array;
 		private LoadDequests: Array;
 		public HyphOn: bool;
-		private ActiveRequests: number = 0;
-		private TocBlocks: ITOC[];
-		private DataChunks: IDataDisposition[];
+		private ActiveRequests: AsyncLoadConsumer[];
+		public TOC: ITOC[];
+		public DataChunks: IDataDisposition[];
 		private OnDoneFunc: any;
+		private URL: string;
 		
 		constructor(public Alert: FB3ReaderSite.IAlert,
 			public Progressor: FB3ReaderSite.ILoadProgress,
 			public DataProvider: FB3DataProvider.IJsonLoaderFactory) {
 			super(null, null, 0);
-			this.RawData = new Array();
-		}
-
-		public TOC() {
-			return {
-				Title: 'Title',
-				Subitems: new Array(),
-				StartBlock: 0,
-				EndBlock: 30
-			};
+			this.ActiveRequests = [];
 		}
 
 		public GetCloseTag(Range: IRange): string {
@@ -64,7 +58,7 @@ module FB3DOM {
 		}
 
 		private AfterHeaderLoaded(Data: any):void {
-			this.TocBlocks = Data.Body;
+			this.TOC = Data.Body;
 			this.DataChunks = Data.Parts;
 			this.OnDoneFunc(this);
 		}
@@ -73,7 +67,71 @@ module FB3DOM {
 		public Init(HyphOn: bool, URL: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
 			this.HyphOn = HyphOn;
 			this.OnDoneFunc = OnDone;
+			this.URL = URL;
+			this.Childs = new Array();
 			this.DataProvider.Request(URL, (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
+		}
+		public GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void {
+			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
+			if (MissingChunks.length == 0) {
+				Callback(this.GetHTML(HyphOn, Range));
+			} else {
+				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, Callback));
+				for (var I = 0; I < MissingChunks.length; I++) {
+					if (!this.DataChunks[MissingChunks[I]].loaded) {
+						var AjRequest = this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]),
+							(Data: any, CustomData?: any) => this.OnChunkLoaded(Data, CustomData),
+							this.Progressor, { ChunkN: MissingChunks[I]});
+						this.DataChunks[MissingChunks[I]].loaded = 1;
+					}
+				}
+			}
+		}
+
+		private zeroPad(num, places) {
+			var zero = places - num.toString().length + 1;
+			return Array(+(zero > 0 && zero)).join("0") + num;
+		}
+
+		public ChunkUrl(N: number): string {
+			return this.URL.replace('.toc.js', '.' + this.zeroPad(N,3) + '.js');
+		}
+
+		private OnChunkLoaded(Data: Array, CustomData?: any):void {
+			var LoadedChunk: number = CustomData.ChunkN;
+			var Shift = this.DataChunks[LoadedChunk].s;
+			for (var I = 0; I < Data.length; I++) {
+				this.Childs[I + Shift] = new FB3Tag(Data[I],this, I + Shift);
+			}
+			this.DataChunks[LoadedChunk].loaded = 2;
+
+			var I = 0;
+			while (I < this.ActiveRequests.length) {
+				if (this.ActiveRequests[I].BlockLoaded(LoadedChunk)) {
+					this.ActiveRequests.splice(I, 1);
+				} else {
+					I++;
+				}
+			}
+		}
+
+		private CheckRangeLoaded(From: number, To: number): number[] {
+			var ChunksMissing = [];
+			for (var I = 0; I < this.DataChunks.length; I++) {
+				if ( // If this chunk intersects with our range
+						(
+							From < this.DataChunks[I].s && To > this.DataChunks[I].s
+							||
+							From < this.DataChunks[I].e && To > this.DataChunks[I].e
+							||
+							From > this.DataChunks[I].s && To < this.DataChunks[I].e
+						)
+						&& this.DataChunks[I].loaded != 2
+					) {
+					ChunksMissing.push(I);
+				}
+			}
+			return ChunksMissing;
 		}
 	}
 

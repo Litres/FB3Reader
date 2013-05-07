@@ -3,8 +3,8 @@
 module FB3DataProvider {
 
 	export class AJAXDataProvider implements IJsonLoaderFactory {
-		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress) {
-			new AjaxLoader(URL, Callback, Progressor);
+		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
+			new AjaxLoader(URL, Callback, Progressor, CustomData);
 		}
 	}
 
@@ -12,11 +12,12 @@ module FB3DataProvider {
 	declare var window: AJWindow;
 
 
-	class AjaxLoader {
+	export class AjaxLoader {
 		private Req: XMLHttpRequest;
 		constructor(public URL: string,
 			private Callback: IJSonLoadedCallback,
-			private Progressor: FB3ReaderSite.ILoadProgress
+			private Progressor: FB3ReaderSite.ILoadProgress,
+			public CustomData?: any
 			) {
 			this.Progressor.HourglassOn(this, 'Loading ' + URL);
 			this.Req = this.HttpRequest();
@@ -37,7 +38,7 @@ module FB3DataProvider {
 				} else {
 					this.Progressor.HourglassOff(this);
 					if (this.Req.status == 200) {
-						this.Callback(this.parseJSON(this.Req.responseText));
+						this.Callback(this.parseJSON(this.Req.responseText), this.CustomData);
 					} else {
 						this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
 					}

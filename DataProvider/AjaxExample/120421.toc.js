@@ -1,116 +1,808 @@
-{Body: [{s:0,e:1312,t:'Лев Семенович Выготский Психология искусства',c:[{s:1,e:34,t:'Вступительная статья'},{s:35,e:735,t:'Психология искусства',c:[{s:37,e:48,t:'Предисловие'},{s:49,e:104,t:'К методологии вопроса',c:[{s:50,e:104,t:'Глава I Психологическая проблема искусства'}]},{s:105,e:260,t:'Критика',c:[{s:106,e:162,t:'Глава II Искусство как познание'},{s:163,e:217,t:'Глава III Искусство как прием'},{s:218,e:260,t:'Глава IV Искусство и психоанализ'}]},{s:261,e:610,t:'Анализ эстетической реакции',c:[{s:262,e:351,t:'Глава V Анализ басни'},{s:352,e:484,t:'Глава VI «Тонкий яд» Синтез'},{s:485,e:545,t:'Глава VII Легкое дыхание'},{s:546,e:610,t:'Глава VIII Трагедия о Гамлете, принце Датском'}]},{s:611,e:735,t:'Психология искусства',c:[{s:612,e:650,t:'Глава IX Искусство как катарсис'},{s:651,e:697,t:'Глава X Психология искусства'},{s:698,e:735,t:'Глава XI Искусство и жизнь'}]}]},{s:736,e:1312,t:'Приложения',c:[{s:737,e:757,t:'Приложение И. Бунин Легкое дыхание[58]'},{s:758,e:1312,t:'Трагедия о Гамлете, принце Датском У. Шекспира'}]}]},
-{s:1313,e:1460,c:[{s:1313,e:1460,t:'Комментарии',c:[{s:1314,e:1315,t:'1'},{s:1316,e:1317,t:'2'},{s:1318,e:1319,t:'3'},{s:1320,e:1321,t:'4'},{s:1322,e:1324,t:'5'},{s:1325,e:1326,t:'6'},{s:1327,e:1328,t:'7'},{s:1329,e:1330,t:'8'},{s:1331,e:1333,t:'9'},{s:1334,e:1337,t:'10'},{s:1338,e:1339,t:'11'},{s:1340,e:1341,t:'12'},{s:1342,e:1343,t:'13'},{s:1344,e:1347,t:'14'},{s:1348,e:1349,t:'15'},{s:1350,e:1351,t:'16'},{s:1352,e:1353,t:'17'},{s:1354,e:1355,t:'18'},{s:1356,e:1357,t:'19'},{s:1358,e:1359,t:'20'},{s:1360,e:1361,t:'21'},{s:1362,e:1363,t:'22'},{s:1364,e:1365,t:'23'},{s:1366,e:1367,t:'24'},{s:1368,e:1369,t:'25'},{s:1370,e:1375,t:'26'},{s:1376,e:1377,t:'27'},{s:1378,e:1379,t:'28'},{s:1380,e:1381,t:'29'},{s:1382,e:1383,t:'30'},{s:1384,e:1387,t:'31'},{s:1388,e:1389,t:'32'},{s:1390,e:1391,t:'33'},{s:1392,e:1393,t:'34'},{s:1394,e:1395,t:'35'},{s:1396,e:1397,t:'36'},{s:1398,e:1399,t:'37'},{s:1400,e:1401,t:'38'},{s:1402,e:1403,t:'39'},{s:1404,e:1405,t:'40'},{s:1406,e:1407,t:'41'},{s:1408,e:1409,t:'42'},{s:1410,e:1411,t:'43'},{s:1412,e:1419,t:'44'},{s:1420,e:1421,t:'45'},{s:1422,e:1429,t:'46'},{s:1430,e:1431,t:'47'},{s:1432,e:1433,t:'48'},{s:1434,e:1435,t:'49'},{s:1436,e:1437,t:'50'},{s:1438,e:1439,t:'51'},{s:1440,e:1442,t:'52'},{s:1443,e:1444,t:'53'},{s:1445,e:1447,t:'54'},{s:1448,e:1449,t:'55'},{s:1450,e:1451,t:'56'},{s:1452,e:1453,t:'57'},{s:1454,e:1455,t:'58'},{s:1456,e:1457,t:'59'},{s:1458,e:1460,t:'60'}]}]}],Parts:[{s:0,e:21,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.000.js'},
-{s:22,e:41,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.001.js'},
-{s:42,e:58,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.002.js'},
-{s:59,e:75,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.003.js'},
-{s:76,e:85,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.004.js'},
-{s:86,e:95,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.005.js'},
-{s:96,e:103,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.006.js'},
-{s:104,e:118,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.007.js'},
-{s:119,e:124,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.008.js'},
-{s:125,e:133,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.009.js'},
-{s:134,e:143,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.010.js'},
-{s:144,e:155,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.011.js'},
-{s:156,e:162,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.012.js'},
-{s:163,e:175,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.013.js'},
-{s:176,e:184,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.014.js'},
-{s:185,e:199,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.015.js'},
-{s:200,e:208,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.016.js'},
-{s:209,e:223,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.017.js'},
-{s:224,e:234,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.018.js'},
-{s:235,e:246,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.019.js'},
-{s:247,e:252,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.020.js'},
-{s:253,e:264,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.021.js'},
-{s:265,e:273,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.022.js'},
-{s:274,e:284,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.023.js'},
-{s:285,e:292,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.024.js'},
-{s:293,e:305,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.025.js'},
-{s:306,e:313,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.026.js'},
-{s:314,e:321,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.027.js'},
-{s:322,e:334,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.028.js'},
-{s:335,e:351,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.029.js'},
-{s:352,e:376,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.030.js'},
-{s:377,e:400,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.031.js'},
-{s:401,e:423,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.032.js'},
-{s:424,e:449,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.033.js'},
-{s:450,e:468,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.034.js'},
-{s:469,e:476,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.035.js'},
-{s:477,e:489,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.036.js'},
-{s:490,e:492,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.037.js'},
-{s:493,e:527,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.038.js'},
-{s:528,e:532,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.039.js'},
-{s:533,e:543,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.040.js'},
-{s:544,e:552,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.041.js'},
-{s:553,e:556,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.042.js'},
-{s:557,e:561,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.043.js'},
-{s:562,e:569,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.044.js'},
-{s:570,e:573,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.045.js'},
-{s:574,e:588,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.046.js'},
-{s:589,e:600,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.047.js'},
-{s:601,e:603,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.048.js'},
-{s:604,e:614,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.049.js'},
-{s:615,e:621,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.050.js'},
-{s:622,e:629,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.051.js'},
-{s:630,e:636,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.052.js'},
-{s:637,e:641,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.053.js'},
-{s:642,e:647,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.054.js'},
-{s:648,e:655,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.055.js'},
-{s:656,e:657,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.056.js'},
-{s:658,e:675,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.057.js'},
-{s:676,e:683,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.058.js'},
-{s:684,e:685,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.059.js'},
-{s:686,e:691,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.060.js'},
-{s:692,e:704,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.061.js'},
-{s:705,e:710,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.062.js'},
-{s:711,e:714,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.063.js'},
-{s:715,e:720,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.064.js'},
-{s:721,e:724,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.065.js'},
-{s:725,e:728,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.066.js'},
-{s:729,e:741,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.067.js'},
-{s:742,e:756,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.068.js'},
-{s:757,e:767,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.069.js'},
-{s:768,e:769,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.070.js'},
-{s:770,e:774,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.071.js'},
-{s:775,e:776,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.072.js'},
-{s:777,e:786,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.073.js'},
-{s:787,e:810,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.074.js'},
-{s:811,e:821,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.075.js'},
-{s:822,e:844,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.076.js'},
-{s:845,e:859,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.077.js'},
-{s:860,e:877,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.078.js'},
-{s:878,e:892,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.079.js'},
-{s:893,e:919,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.080.js'},
-{s:920,e:940,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.081.js'},
-{s:941,e:957,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.082.js'},
-{s:958,e:971,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.083.js'},
-{s:972,e:991,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.084.js'},
-{s:992,e:1021,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.085.js'},
-{s:1022,e:1025,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.086.js'},
-{s:1026,e:1060,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.087.js'},
-{s:1061,e:1085,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.088.js'},
-{s:1086,e:1101,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.089.js'},
-{s:1102,e:1132,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.090.js'},
-{s:1133,e:1160,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.091.js'},
-{s:1161,e:1169,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.092.js'},
-{s:1170,e:1205,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.093.js'},
-{s:1206,e:1219,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.094.js'},
-{s:1220,e:1246,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.095.js'},
-{s:1247,e:1260,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.096.js'},
-{s:1261,e:1294,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.097.js'},
-{s:1295,e:1309,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.098.js'},
-{s:1310,e:1321,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.099.js'},
-{s:1322,e:1330,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.100.js'},
-{s:1331,e:1336,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.101.js'},
-{s:1337,e:1357,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.102.js'},
-{s:1358,e:1371,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.103.js'},
-{s:1372,e:1383,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.104.js'},
-{s:1384,e:1391,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.105.js'},
-{s:1392,e:1403,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.106.js'},
-{s:1404,e:1411,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.107.js'},
-{s:1412,e:1421,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.108.js'},
-{s:1422,e:1429,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.109.js'},
-{s:1430,e:1433,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.110.js'},
-{s:1434,e:1437,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.111.js'},
-{s:1438,e:1444,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.112.js'},
-{s:1445,e:1457,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.113.js'},
-{s:1458,e:1460,url:'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.114.js'}]}
+{
+  Body: [{
+    s: 0,
+    e: 1312,
+    t: 'Лев Семенович Выготский Психология искусства',
+    c: [{
+      s: 1,
+      e: 34,
+      t: 'Вступительная статья'
+    }, {
+      s: 35,
+      e: 735,
+      t: 'Психология искусства',
+      c: [{
+        s: 37,
+        e: 48,
+        t: 'Предисловие'
+      }, {
+        s: 49,
+        e: 104,
+        t: 'К методологии вопроса',
+        c: [{
+          s: 50,
+          e: 104,
+          t: 'Глава I Психологическая проблема искусства'
+        }]
+      }, {
+        s: 105,
+        e: 260,
+        t: 'Критика',
+        c: [{
+          s: 106,
+          e: 162,
+          t: 'Глава II Искусство как познание'
+        }, {
+          s: 163,
+          e: 217,
+          t: 'Глава III Искусство как прием'
+        }, {
+          s: 218,
+          e: 260,
+          t: 'Глава IV Искусство и психоанализ'
+        }]
+      }, {
+        s: 261,
+        e: 610,
+        t: 'Анализ эстетической реакции',
+        c: [{
+          s: 262,
+          e: 351,
+          t: 'Глава V Анализ басни'
+        }, {
+          s: 352,
+          e: 484,
+          t: 'Глава VI «Тонкий яд» Синтез'
+        }, {
+          s: 485,
+          e: 545,
+          t: 'Глава VII Легкое дыхание'
+        }, {
+          s: 546,
+          e: 610,
+          t: 'Глава VIII Трагедия о Гамлете, принце Датском'
+        }]
+      }, {
+        s: 611,
+        e: 735,
+        t: 'Психология искусства',
+        c: [{
+          s: 612,
+          e: 650,
+          t: 'Глава IX Искусство как катарсис'
+        }, {
+          s: 651,
+          e: 697,
+          t: 'Глава X Психология искусства'
+        }, {
+          s: 698,
+          e: 735,
+          t: 'Глава XI Искусство и жизнь'
+        }]
+      }]
+    }, {
+      s: 736,
+      e: 1312,
+      t: 'Приложения',
+      c: [{
+        s: 737,
+        e: 757,
+        t: 'Приложение И. Бунин Легкое дыхание[58]'
+      }, {
+        s: 758,
+        e: 1312,
+        t: 'Трагедия о Гамлете, принце Датском У. Шекспира'
+      }]
+    }]
+  }, {
+    s: 1313,
+    e: 1460,
+    c: [{
+      s: 1313,
+      e: 1460,
+      t: 'Комментарии',
+      c: [{
+        s: 1314,
+        e: 1315,
+        t: '1'
+      }, {
+        s: 1316,
+        e: 1317,
+        t: '2'
+      }, {
+        s: 1318,
+        e: 1319,
+        t: '3'
+      }, {
+        s: 1320,
+        e: 1321,
+        t: '4'
+      }, {
+        s: 1322,
+        e: 1324,
+        t: '5'
+      }, {
+        s: 1325,
+        e: 1326,
+        t: '6'
+      }, {
+        s: 1327,
+        e: 1328,
+        t: '7'
+      }, {
+        s: 1329,
+        e: 1330,
+        t: '8'
+      }, {
+        s: 1331,
+        e: 1333,
+        t: '9'
+      }, {
+        s: 1334,
+        e: 1337,
+        t: '10'
+      }, {
+        s: 1338,
+        e: 1339,
+        t: '11'
+      }, {
+        s: 1340,
+        e: 1341,
+        t: '12'
+      }, {
+        s: 1342,
+        e: 1343,
+        t: '13'
+      }, {
+        s: 1344,
+        e: 1347,
+        t: '14'
+      }, {
+        s: 1348,
+        e: 1349,
+        t: '15'
+      }, {
+        s: 1350,
+        e: 1351,
+        t: '16'
+      }, {
+        s: 1352,
+        e: 1353,
+        t: '17'
+      }, {
+        s: 1354,
+        e: 1355,
+        t: '18'
+      }, {
+        s: 1356,
+        e: 1357,
+        t: '19'
+      }, {
+        s: 1358,
+        e: 1359,
+        t: '20'
+      }, {
+        s: 1360,
+        e: 1361,
+        t: '21'
+      }, {
+        s: 1362,
+        e: 1363,
+        t: '22'
+      }, {
+        s: 1364,
+        e: 1365,
+        t: '23'
+      }, {
+        s: 1366,
+        e: 1367,
+        t: '24'
+      }, {
+        s: 1368,
+        e: 1369,
+        t: '25'
+      }, {
+        s: 1370,
+        e: 1375,
+        t: '26'
+      }, {
+        s: 1376,
+        e: 1377,
+        t: '27'
+      }, {
+        s: 1378,
+        e: 1379,
+        t: '28'
+      }, {
+        s: 1380,
+        e: 1381,
+        t: '29'
+      }, {
+        s: 1382,
+        e: 1383,
+        t: '30'
+      }, {
+        s: 1384,
+        e: 1387,
+        t: '31'
+      }, {
+        s: 1388,
+        e: 1389,
+        t: '32'
+      }, {
+        s: 1390,
+        e: 1391,
+        t: '33'
+      }, {
+        s: 1392,
+        e: 1393,
+        t: '34'
+      }, {
+        s: 1394,
+        e: 1395,
+        t: '35'
+      }, {
+        s: 1396,
+        e: 1397,
+        t: '36'
+      }, {
+        s: 1398,
+        e: 1399,
+        t: '37'
+      }, {
+        s: 1400,
+        e: 1401,
+        t: '38'
+      }, {
+        s: 1402,
+        e: 1403,
+        t: '39'
+      }, {
+        s: 1404,
+        e: 1405,
+        t: '40'
+      }, {
+        s: 1406,
+        e: 1407,
+        t: '41'
+      }, {
+        s: 1408,
+        e: 1409,
+        t: '42'
+      }, {
+        s: 1410,
+        e: 1411,
+        t: '43'
+      }, {
+        s: 1412,
+        e: 1419,
+        t: '44'
+      }, {
+        s: 1420,
+        e: 1421,
+        t: '45'
+      }, {
+        s: 1422,
+        e: 1429,
+        t: '46'
+      }, {
+        s: 1430,
+        e: 1431,
+        t: '47'
+      }, {
+        s: 1432,
+        e: 1433,
+        t: '48'
+      }, {
+        s: 1434,
+        e: 1435,
+        t: '49'
+      }, {
+        s: 1436,
+        e: 1437,
+        t: '50'
+      }, {
+        s: 1438,
+        e: 1439,
+        t: '51'
+      }, {
+        s: 1440,
+        e: 1442,
+        t: '52'
+      }, {
+        s: 1443,
+        e: 1444,
+        t: '53'
+      }, {
+        s: 1445,
+        e: 1447,
+        t: '54'
+      }, {
+        s: 1448,
+        e: 1449,
+        t: '55'
+      }, {
+        s: 1450,
+        e: 1451,
+        t: '56'
+      }, {
+        s: 1452,
+        e: 1453,
+        t: '57'
+      }, {
+        s: 1454,
+        e: 1455,
+        t: '58'
+      }, {
+        s: 1456,
+        e: 1457,
+        t: '59'
+      }, {
+        s: 1458,
+        e: 1460,
+        t: '60'
+      }]
+    }]
+  }],
+  Parts: [{
+    s: 0,
+    e: 21,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.000.js'
+  }, {
+    s: 22,
+    e: 41,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.001.js'
+  }, {
+    s: 42,
+    e: 58,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.002.js'
+  }, {
+    s: 59,
+    e: 75,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.003.js'
+  }, {
+    s: 76,
+    e: 85,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.004.js'
+  }, {
+    s: 86,
+    e: 95,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.005.js'
+  }, {
+    s: 96,
+    e: 103,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.006.js'
+  }, {
+    s: 104,
+    e: 118,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.007.js'
+  }, {
+    s: 119,
+    e: 124,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.008.js'
+  }, {
+    s: 125,
+    e: 133,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.009.js'
+  }, {
+    s: 134,
+    e: 143,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.010.js'
+  }, {
+    s: 144,
+    e: 155,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.011.js'
+  }, {
+    s: 156,
+    e: 162,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.012.js'
+  }, {
+    s: 163,
+    e: 175,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.013.js'
+  }, {
+    s: 176,
+    e: 184,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.014.js'
+  }, {
+    s: 185,
+    e: 199,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.015.js'
+  }, {
+    s: 200,
+    e: 208,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.016.js'
+  }, {
+    s: 209,
+    e: 223,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.017.js'
+  }, {
+    s: 224,
+    e: 234,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.018.js'
+  }, {
+    s: 235,
+    e: 246,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.019.js'
+  }, {
+    s: 247,
+    e: 252,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.020.js'
+  }, {
+    s: 253,
+    e: 264,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.021.js'
+  }, {
+    s: 265,
+    e: 273,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.022.js'
+  }, {
+    s: 274,
+    e: 284,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.023.js'
+  }, {
+    s: 285,
+    e: 292,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.024.js'
+  }, {
+    s: 293,
+    e: 305,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.025.js'
+  }, {
+    s: 306,
+    e: 313,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.026.js'
+  }, {
+    s: 314,
+    e: 321,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.027.js'
+  }, {
+    s: 322,
+    e: 334,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.028.js'
+  }, {
+    s: 335,
+    e: 351,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.029.js'
+  }, {
+    s: 352,
+    e: 376,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.030.js'
+  }, {
+    s: 377,
+    e: 400,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.031.js'
+  }, {
+    s: 401,
+    e: 423,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.032.js'
+  }, {
+    s: 424,
+    e: 449,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.033.js'
+  }, {
+    s: 450,
+    e: 468,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.034.js'
+  }, {
+    s: 469,
+    e: 476,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.035.js'
+  }, {
+    s: 477,
+    e: 489,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.036.js'
+  }, {
+    s: 490,
+    e: 492,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.037.js'
+  }, {
+    s: 493,
+    e: 527,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.038.js'
+  }, {
+    s: 528,
+    e: 532,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.039.js'
+  }, {
+    s: 533,
+    e: 543,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.040.js'
+  }, {
+    s: 544,
+    e: 552,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.041.js'
+  }, {
+    s: 553,
+    e: 556,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.042.js'
+  }, {
+    s: 557,
+    e: 561,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.043.js'
+  }, {
+    s: 562,
+    e: 569,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.044.js'
+  }, {
+    s: 570,
+    e: 573,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.045.js'
+  }, {
+    s: 574,
+    e: 588,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.046.js'
+  }, {
+    s: 589,
+    e: 600,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.047.js'
+  }, {
+    s: 601,
+    e: 603,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.048.js'
+  }, {
+    s: 604,
+    e: 614,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.049.js'
+  }, {
+    s: 615,
+    e: 621,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.050.js'
+  }, {
+    s: 622,
+    e: 629,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.051.js'
+  }, {
+    s: 630,
+    e: 636,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.052.js'
+  }, {
+    s: 637,
+    e: 641,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.053.js'
+  }, {
+    s: 642,
+    e: 647,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.054.js'
+  }, {
+    s: 648,
+    e: 655,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.055.js'
+  }, {
+    s: 656,
+    e: 657,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.056.js'
+  }, {
+    s: 658,
+    e: 675,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.057.js'
+  }, {
+    s: 676,
+    e: 683,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.058.js'
+  }, {
+    s: 684,
+    e: 685,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.059.js'
+  }, {
+    s: 686,
+    e: 691,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.060.js'
+  }, {
+    s: 692,
+    e: 704,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.061.js'
+  }, {
+    s: 705,
+    e: 710,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.062.js'
+  }, {
+    s: 711,
+    e: 714,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.063.js'
+  }, {
+    s: 715,
+    e: 720,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.064.js'
+  }, {
+    s: 721,
+    e: 724,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.065.js'
+  }, {
+    s: 725,
+    e: 728,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.066.js'
+  }, {
+    s: 729,
+    e: 741,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.067.js'
+  }, {
+    s: 742,
+    e: 756,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.068.js'
+  }, {
+    s: 757,
+    e: 767,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.069.js'
+  }, {
+    s: 768,
+    e: 769,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.070.js'
+  }, {
+    s: 770,
+    e: 774,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.071.js'
+  }, {
+    s: 775,
+    e: 776,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.072.js'
+  }, {
+    s: 777,
+    e: 786,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.073.js'
+  }, {
+    s: 787,
+    e: 810,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.074.js'
+  }, {
+    s: 811,
+    e: 821,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.075.js'
+  }, {
+    s: 822,
+    e: 844,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.076.js'
+  }, {
+    s: 845,
+    e: 859,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.077.js'
+  }, {
+    s: 860,
+    e: 877,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.078.js'
+  }, {
+    s: 878,
+    e: 892,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.079.js'
+  }, {
+    s: 893,
+    e: 919,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.080.js'
+  }, {
+    s: 920,
+    e: 940,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.081.js'
+  }, {
+    s: 941,
+    e: 957,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.082.js'
+  }, {
+    s: 958,
+    e: 971,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.083.js'
+  }, {
+    s: 972,
+    e: 991,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.084.js'
+  }, {
+    s: 992,
+    e: 1021,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.085.js'
+  }, {
+    s: 1022,
+    e: 1025,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.086.js'
+  }, {
+    s: 1026,
+    e: 1060,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.087.js'
+  }, {
+    s: 1061,
+    e: 1085,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.088.js'
+  }, {
+    s: 1086,
+    e: 1101,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.089.js'
+  }, {
+    s: 1102,
+    e: 1132,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.090.js'
+  }, {
+    s: 1133,
+    e: 1160,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.091.js'
+  }, {
+    s: 1161,
+    e: 1169,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.092.js'
+  }, {
+    s: 1170,
+    e: 1205,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.093.js'
+  }, {
+    s: 1206,
+    e: 1219,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.094.js'
+  }, {
+    s: 1220,
+    e: 1246,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.095.js'
+  }, {
+    s: 1247,
+    e: 1260,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.096.js'
+  }, {
+    s: 1261,
+    e: 1294,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.097.js'
+  }, {
+    s: 1295,
+    e: 1309,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.098.js'
+  }, {
+    s: 1310,
+    e: 1321,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.099.js'
+  }, {
+    s: 1322,
+    e: 1330,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.100.js'
+  }, {
+    s: 1331,
+    e: 1336,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.101.js'
+  }, {
+    s: 1337,
+    e: 1357,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.102.js'
+  }, {
+    s: 1358,
+    e: 1371,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.103.js'
+  }, {
+    s: 1372,
+    e: 1383,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.104.js'
+  }, {
+    s: 1384,
+    e: 1391,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.105.js'
+  }, {
+    s: 1392,
+    e: 1403,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.106.js'
+  }, {
+    s: 1404,
+    e: 1411,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.107.js'
+  }, {
+    s: 1412,
+    e: 1421,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.108.js'
+  }, {
+    s: 1422,
+    e: 1429,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.109.js'
+  }, {
+    s: 1430,
+    e: 1433,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.110.js'
+  }, {
+    s: 1434,
+    e: 1437,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.111.js'
+  }, {
+    s: 1438,
+    e: 1444,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.112.js'
+  }, {
+    s: 1445,
+    e: 1457,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.113.js'
+  }, {
+    s: 1458,
+    e: 1460,
+    url: 'C:\Work\FB3Reader\DataProvider\AjaxExample\120421.114.js'
+  }]
+}

@@ -24,25 +24,28 @@ module FB3DOM {
 		s: number;
 		e: number;
 		url: string;
+		loaded: number; // 0 - not loaded, 1 - requested, 2 - loaded, available
 	}
 
 	export interface IFB3Block {
 		Parent: IFB3Block;
-		Chars: number;
-		ID: number;
-		GetXPID(): string;
-		GetHTML(HyphOn: bool, Range: IRange):string;
+		Chars: number;			// Length of the node - pure characters and spaces
+		ID: number;					// Position of this node within the parent. Used to generate GetXPID
+		GetXPID(): string;	// XPAth-like ID for this DOM-node, allows for reverse search for block
+		GetHTML(HyphOn: bool, Range: IRange):string;	// Returns partial HTML for this node
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
 
 	export interface IFB3DOM extends IFB3Block{
 		HyphOn: bool;
-		TOC(): FB3Reader.ITocNode;
 		Progressor: FB3ReaderSite.ILoadProgress;
 		Alert: FB3ReaderSite.IAlert;
 		DataProvider: FB3DataProvider.IJsonLoaderFactory;
+		TOC: ITOC[];
+		DataChunks: IDataDisposition[];
 		Init(HyphOn: bool, URL: string, OnDone: IIFB3DOMReadyFunc);
+		GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void;
 		//		constructor();
 	}
 

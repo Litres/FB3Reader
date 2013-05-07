@@ -33,7 +33,7 @@ module FB3ReaderSite {
 				OverallProgress = this.Progresses[Progress];
 			}
 			OverallProgress = OverallProgress / N;
-			document.getElementById('ProgressSpan').innerHTML = Progress.toFixed(1);
+			document.getElementById('ProgressSpan').innerHTML = OverallProgress.toFixed(1);
 		}
 		HourglassOff(Owner: any): void {
 			this.Hourglasses[Owner] = 0;
@@ -53,7 +53,12 @@ module FB3ReaderSite {
 			}
 		}
 		Tick(Owner: any): void {
-			this.Progress(Owner, this.Progresses[Owner] < 99? this.Progresses[Owner]+1:99);
+			if (!this.Progresses[Owner]) {
+				this.Progresses[Owner] = 1;
+			} else if (this.Progresses[Owner] < 99) {
+				this.Progresses[Owner] += 1;
+			}
+			this.Progress(Owner, this.Progresses[Owner]);
 		}
 		constructor() {
 			this.Hourglasses = {};

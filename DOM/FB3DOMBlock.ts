@@ -24,7 +24,7 @@ module FB3DOM {
 	export class FB3Tag extends FB3Text implements IFB3Block {
 		public Chars: number;
 		private TagName: string;
-		private Childs: IFB3Block[];
+		public Childs: IFB3Block[];
 
 		public GetHTML(HyphOn: bool, Range: IRange): string {
 			var Out = [this.GetInitTag(Range)];
@@ -55,13 +55,13 @@ module FB3DOM {
 
 			this.TagName = Data.t;
 			this.Childs = new Array();
-			for (var I = 0; I <= Data.c.length; I++) {
+			for (var I = 0; I < Data.c.length; I++) {
 				var Itm = Data.c[I];
 				var Kid: IFB3Block;
 				if (typeof Itm === "string") {
-					Kid = new FB3Tag(Itm, this, I);
-				} else {
 					Kid = new FB3Text(Itm, this, I);
+				} else {
+					Kid = new FB3Tag(Itm, this, I);
 				}
 				this.Childs.push(Kid);
 				this.Chars += Kid.Chars;

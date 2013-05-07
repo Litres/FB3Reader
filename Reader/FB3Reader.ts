@@ -11,12 +11,18 @@ module FB3Reader {
 
 		constructor(public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM) {
+			var Range: FB3DOM.IRange = { From: [0, 0], To: [50, -1] };
+			FB3DOM.GetHTMLAsync(true, Range, (HTML: string) => this.TestDOM(HTML));
+		}
+
+		private TestDOM(HTML: string) {
+			this.Site.Canvas.innerHTML = HTML;
 		}
 
 		public GoTO(Bloc: Array) {
 		}
 		public TOC() {
-			return this.FB3DOM.TOC();
+			return this.FB3DOM.TOC;
 		}
 	}
 

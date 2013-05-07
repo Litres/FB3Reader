@@ -2,8 +2,7 @@
 
 module FB3ReaderSite {
 
-	export interface IAlert { (Message: string): void; }
-	export interface INotePopup { (NoteBody: FB3DOM.IFB3Block): void; }
+	// General-purpose interface for progress feedback
 	export interface ILoadProgress {
 		HourglassOn(Owner: any, Message: string): void;
 		Progress(Owner: any, Progress: number): void;
@@ -11,6 +10,9 @@ module FB3ReaderSite {
 		Tick(Owner: any): void;
 		Alert: IAlert;
 	}
+
+	export interface IAlert { (Message: string): void; }
+	export interface INotePopup { (NoteBody: FB3DOM.IFB3Block): void; }
 	export interface IFB3ReaderSite {
 		Progressor: ILoadProgress;
 		Canvas: HTMLElement;

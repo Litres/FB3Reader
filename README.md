@@ -1,7 +1,7 @@
 FB3Reader engine
 =========
 
-Open source JavaScript-based eBook reader engine written on [TypeScript](https://www.typescriptlang.org/).
+Open source (LGPL) JavaScript-based eBook reader engine written on [TypeScript](https://www.typescriptlang.org/).
 
 Why javascript, it is slow!
 ---------

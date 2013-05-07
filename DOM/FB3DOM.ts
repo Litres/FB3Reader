@@ -94,7 +94,7 @@ module FB3DOM {
 		}
 
 		public ChunkUrl(N: number): string {
-			return this.URL.replace('.toc.js', '.' + this.zeroPad(N,3) + '.js');
+			return this.URL.replace('.toc.js', '.' + this.zeroPad(N,3) + '.js?rand='+Math.random());
 		}
 
 		private OnChunkLoaded(Data: Array, CustomData?: any):void {

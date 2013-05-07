@@ -1,6 +1,20 @@
 /// <reference path="FB3DOMHead.ts" />
 
 module FB3DOM {
+	export var TagMapper = {
+		title: 'div',
+		poem: 'div',
+		stanza: 'div',
+		subtitle: 'h6',
+		epigraph: 'blockquote',
+		annotation: 'blockquote',
+		'text-author': 'blockquote',
+		date: 'blockquote',
+		cite: 'blockquote',
+		v: 'p',
+		'empty-line': 'hr',
+		emphasis: 'em',		style: 'span'
+	};
 
 	export class FB3Text implements IFB3Block {
 		public Chars: number;
@@ -23,7 +37,7 @@ module FB3DOM {
 
 	export class FB3Tag extends FB3Text implements IFB3Block {
 		public Chars: number;
-		private TagName: string;
+		public TagName: string;
 		public Childs: IFB3Block[];
 
 		public GetHTML(HyphOn: bool, Range: IRange): string {
@@ -68,8 +82,19 @@ module FB3DOM {
 			}
 		}
 
+		public HTMLTagName(): string {
+			if (TagMapper[this.TagName]) {
+				return TagMapper[this.TagName];
+			} else if (this.TagName == 'p' && this.Parent && this.Parent.TagName == 'title' && this.Data.xp) {
+				var lvl = this.Data.xp.length - 3;
+				return 'h' + (lvl < 6 ? lvl : 5);
+			} else {
+				return this.TagName;
+			}
+		}
+
 		public GetCloseTag(Range: IRange): string {
-			return '</' + this.TagName + '>';
+			return '</' + this.HTMLTagName() + '>';
 		}
 		public GetInitTag(Range: IRange): string {
 			var ElementClasses = new Array();
@@ -82,11 +107,15 @@ module FB3DOM {
 			if (this.Data.xp.length) {
 				ElementClasses.push('xp_' + this.Data.xp.join('_'))
 			}
+
+			if (TagMapper[this.TagName]) {
+				ElementClasses.push('tag_' + this.TagName);
+			}
 			if (this.Data.nc) {
 				ElementClasses.push(this.Data.nc)
 			}
 
-			var Out = '<' + this.TagName;
+			var Out = '<' + this.HTMLTagName();
 			if (ElementClasses.length) {
 				Out += ' class="' + ElementClasses.join(' ') + '"';
 			}

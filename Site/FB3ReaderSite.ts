@@ -19,7 +19,7 @@ module FB3ReaderSite {
 			document.getElementById('AlertSpan').innerHTML = Message;
 			//			window.alert(Message);
 		}
-		HourglassOn(Owner: any, Message: string): void {
+		HourglassOn(Owner: any, Message?: string): void {
 			this.Hourglasses[Owner.toString()] = 1;
 			document.getElementById('MessSpan').innerHTML = Message;
 			document.body.style.cursor = 'wait';

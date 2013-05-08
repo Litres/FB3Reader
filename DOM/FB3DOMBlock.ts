@@ -21,7 +21,7 @@ module FB3DOM {
 		constructor(private text: string, public Parent: IFB3Block, public ID: number) {
 			this.Chars = text.length;
 		}
-		public GetHTML(HyphOn: bool, Range: IRange): string {
+		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML {
 			return this.text;  // todo - HyphOn must work, must just replace shy with ''
 		}
 
@@ -40,7 +40,7 @@ module FB3DOM {
 		public TagName: string;
 		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: bool, Range: IRange): string {
+		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML {
 			var Out = [this.GetInitTag(Range)];
 			var CloseTag = this.GetCloseTag(Range);
 			var From = Range.From.shift() || 0;
@@ -63,7 +63,7 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				Out.push(this.Childs[I].GetHTML(HyphOn, KidRange));
+				Out.push(<string>this.Childs[I].GetHTML(HyphOn, KidRange));
 			}
 			Out.push(CloseTag);
 			return Out.join(''); // Hope one join is faster than several concats

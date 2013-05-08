@@ -12,14 +12,14 @@ module FB3DataProvider {
 	declare var window: AJWindow;
 
 
-	export class AjaxLoader {
+	class AjaxLoader {
 		private Req: XMLHttpRequest;
 		constructor(public URL: string,
 			private Callback: IJSonLoadedCallback,
 			private Progressor: FB3ReaderSite.ILoadProgress,
 			public CustomData?: any
 			) {
-			this.Progressor.HourglassOn(this, 'Loading ' + URL);
+			this.Progressor.HourglassOn(this, false, 'Loading ' + URL);
 			this.Req = this.HttpRequest();
 			try { // Old IE with it's internals does not support this
 				this.Req.addEventListener("progress", (e: ProgressEvent) => this.onUpdateProgress(e), false);

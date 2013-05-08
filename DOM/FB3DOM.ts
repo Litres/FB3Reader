@@ -69,7 +69,9 @@ module FB3DOM {
 			this.OnDoneFunc = OnDone;
 			this.URL = URL;
 			this.Childs = new Array();
+			this.Progressor.HourglassOn(this, true, 'Loading meta...');
 			this.DataProvider.Request(URL, (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
+			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void {
 			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);

@@ -3,8 +3,17 @@ var FB3DataProvider;
 (function (FB3DataProvider) {
     var AJAXDataProvider = (function () {
         function AJAXDataProvider() { }
-        AJAXDataProvider.prototype.Request = function (URL, Callback, Progressor, CustomData) {
-            new AjaxLoader(URL, Callback, Progressor, CustomData);
+        AJAXDataProvider.prototype.Request = function (ArtID, Callback, Progressor, CustomData) {
+            new AjaxLoader(this.ArtID2URL(ArtID), Callback, Progressor, CustomData);
+        };
+        AJAXDataProvider.prototype.ArtID2URL = function (ArtID, Chunk) {
+            var OutURL = '/DataProvider/AjaxExample/' + ArtID + '.';
+            if (Chunk == null) {
+                OutURL += 'toc.js';
+            } else {
+                OutURL += Chunk + '.js?rand=' + Math.random();
+            }
+            return OutURL;
         };
         return AJAXDataProvider;
     })();

@@ -32,18 +32,20 @@ module FB3DOM {
 
 	export class DOM extends FB3Tag implements IFB3DOM {
 		private LoadDequests: Array;
-		public HyphOn: bool;
+		private HyphOn: bool;
 		private ActiveRequests: AsyncLoadConsumer[];
 		public TOC: ITOC[];
 		public DataChunks: IDataDisposition[];
+		public Ready: bool;
 		private OnDoneFunc: any;
-		private URL: string;
+		private ArtID: string;
 		
 		constructor(public Alert: FB3ReaderSite.IAlert,
 			public Progressor: FB3ReaderSite.ILoadProgress,
 			public DataProvider: FB3DataProvider.IJsonLoaderFactory) {
 			super(null, null, 0);
 			this.ActiveRequests = [];
+			this.Ready = false;
 		}
 
 		public GetCloseTag(Range: IRange): string {
@@ -64,13 +66,13 @@ module FB3DOM {
 		}
 
 		// Wondering why I make Init public? Because you can't inherite private methods, darling!
-		public Init(HyphOn: bool, URL: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
+		public Init(HyphOn: bool, ArtID: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
 			this.HyphOn = HyphOn;
 			this.OnDoneFunc = OnDone;
-			this.URL = URL;
+			this.ArtID = ArtID;
 			this.Childs = new Array();
 			this.Progressor.HourglassOn(this, true, 'Loading meta...');
-			this.DataProvider.Request(URL, (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
+			this.DataProvider.Request(ArtID, (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void {
@@ -96,7 +98,7 @@ module FB3DOM {
 		}
 
 		public ChunkUrl(N: number): string {
-			return this.URL.replace('.toc.js', '.' + this.zeroPad(N,3) + '.js?rand='+Math.random());
+			return this.DataProvider.ArtID2URL(this.ArtID, N);
 		}
 
 		private OnChunkLoaded(Data: Array, CustomData?: any):void {

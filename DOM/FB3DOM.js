@@ -44,6 +44,7 @@ var FB3DOM;
             this.Progressor = Progressor;
             this.DataProvider = DataProvider;
             this.ActiveRequests = [];
+            this.Ready = false;
         }
         DOM.prototype.GetCloseTag = function (Range) {
             return '';
@@ -62,14 +63,14 @@ var FB3DOM;
             this.OnDoneFunc(this);
         };
         DOM.prototype.Init = // Wondering why I make Init public? Because you can't inherite private methods, darling!
-        function (HyphOn, URL, OnDone) {
+        function (HyphOn, ArtID, OnDone) {
             var _this = this;
             this.HyphOn = HyphOn;
             this.OnDoneFunc = OnDone;
-            this.URL = URL;
+            this.ArtID = ArtID;
             this.Childs = new Array();
             this.Progressor.HourglassOn(this, true, 'Loading meta...');
-            this.DataProvider.Request(URL, function (Data) {
+            this.DataProvider.Request(ArtID, function (Data) {
                 return _this.AfterHeaderLoaded(Data);
             }, this.Progressor);
             this.Progressor.HourglassOff(this);
@@ -98,7 +99,7 @@ var FB3DOM;
             return Array(+(zero > 0 && zero)).join("0") + num;
         };
         DOM.prototype.ChunkUrl = function (N) {
-            return this.URL.replace('.toc.js', '.' + this.zeroPad(N, 3) + '.js?rand=' + Math.random());
+            return this.DataProvider.ArtID2URL(this.ArtID, N);
         };
         DOM.prototype.OnChunkLoaded = function (Data, CustomData) {
             var LoadedChunk = CustomData.ChunkN;

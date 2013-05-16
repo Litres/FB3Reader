@@ -5,9 +5,10 @@ module FB3DataProvider {
 		(Data: any, CustomData?: any): void;
 	}
 	export interface IJsonLoaderFactory {
-		Request(URL: string,
+		Request(ArtID: string,
 			Callback: IJSonLoadedCallback,
 			Progressor: FB3ReaderSite.ILoadProgress,
 			CustomData?: any);
+		ArtID2URL(ArtID: string, Chunk?:number): string;
 	}
 }

@@ -43,14 +43,14 @@ module FB3DOM {
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
 
 	export interface IFB3DOM extends IFB3Block{
-		HyphOn: bool;
+		Ready: bool;
 		Progressor: FB3ReaderSite.ILoadProgress;
 		Alert: FB3ReaderSite.IAlert;
 		DataProvider: FB3DataProvider.IJsonLoaderFactory;
 		TOC: ITOC[];
 		DataChunks: IDataDisposition[];
 		Init(HyphOn: bool,
-			URL: string,
+			ArtID: string,
 			OnDone: IIFB3DOMReadyFunc);
 		GetHTMLAsync(HyphOn: bool,
 			Range: IRange,

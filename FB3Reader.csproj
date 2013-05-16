@@ -18,6 +18,11 @@
   <ItemGroup>
     <Content Include="app.css" />
     <TypeScriptCompile Include="DataProvider\FB3AjaxDataProvider.ts" />
+    <TypeScriptCompile Include="Bookmarks\FB3Bookmarks.ts" />
+    <Content Include="Bookmarks\FB3Bookmarks.js">
+      <DependentUpon>FB3Bookmarks.ts</DependentUpon>
+    </Content>
+    <TypeScriptCompile Include="Bookmarks\FB3BookmarksHead.ts" />
     <Content Include="DataProvider\FB3AjaxDataProvider.js">
       <DependentUpon>FB3AjaxDataProvider.ts</DependentUpon>
     </Content>

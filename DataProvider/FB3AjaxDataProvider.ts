@@ -3,8 +3,17 @@
 module FB3DataProvider {
 
 	export class AJAXDataProvider implements IJsonLoaderFactory {
-		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
-			new AjaxLoader(URL, Callback, Progressor, CustomData);
+		public Request(ArtID: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
+			new AjaxLoader(this.ArtID2URL(ArtID), Callback, Progressor, CustomData);
+		}
+		public ArtID2URL(ArtID: string, Chunk?: number): string {
+			var OutURL = '/DataProvider/AjaxExample/' + ArtID+'.';
+			if (Chunk == null) {
+				OutURL += 'toc.js';
+			} else {
+				OutURL += Chunk + '.js?rand=' + Math.random();
+			}
+			return OutURL;
 		}
 	}
 

@@ -11,7 +11,10 @@ var FB3Reader;
             this.Init();
             // Basic class init
             this.HyphON = true;
-            this.NColumns = 0;
+            this.NColumns = 2;
+            // Environment research & canvas preparation
+            this.PrepareCanvas();
+            this.ResetCache();
         }
         Reader.prototype.Init = function () {
             var _this = this;
@@ -23,28 +26,46 @@ var FB3Reader;
             });
         };
         Reader.prototype.LoadDone = function () {
-            var _this = this;
             if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-                var Range = {
-                    From: [
-                        0, 
-                        0, 
-                        2
-                    ],
-                    To: [
-                        4, 
-                        5
-                    ]
-                };
-                this.FB3DOM.GetHTMLAsync(true, Range, function (HTML) {
-                    return _this.TestDOM(HTML);
-                });
+                var ReadPos;
+                if (this.Bookmarks && this.Bookmarks.CurPos) {
+                    ReadPos = this.Bookmarks.CurPos.Fragment.From;
+                } else {
+                    ReadPos = [
+                        0
+                    ];
+                }
+                this.GoTO(ReadPos);
             }
         };
         Reader.prototype.TestDOM = function (HTML) {
-            this.Site.Canvas.innerHTML = HTML;
+            this.Site.getElementById('FB3ReaderColumn0').innerHTML = HTML;
         };
         Reader.prototype.GoTO = function (NewPos) {
+            var GotoPage = this.GetCachedPage(NewPos);
+            if (GotoPage != undefined) {
+                this.GoTOPage(GotoPage);
+            } else {
+                this.GoToOpenPosition(NewPos);
+            }
+        };
+        Reader.prototype.GoTOPage = function (Page) {
+        };
+        Reader.prototype.GoToOpenPosition = function (NewPos) {
+            var _this = this;
+            var FragmentEnd = NewPos[0] + 10;
+            if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+                FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+            }
+            var Range = {
+                From: NewPos,
+                To: [
+                    FragmentEnd
+                ]
+            };
+            this.FB3DOM.GetHTMLAsync(this.HyphON, Range, function (HTML) {
+                return _this.TestDOM(HTML);
+            });
         };
         Reader.prototype.TOC = function () {
             return this.FB3DOM.TOC;
@@ -52,13 +73,13 @@ var FB3Reader;
         Reader.prototype.ResetCache = function () {
         };
         Reader.prototype.GetCachedPage = function (NewPos) {
-            return 0;
+            return undefined;
         };
         Reader.prototype.SearchForText = function (Text) {
             return null;
         };
         Reader.prototype.PrepareCanvas = function () {
-            var InnerHTML = '<div class=" class="FB3ReaderColumnset' + this.NColumns + '">';
+            var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv">';
             for(var I = 0; I < this.NColumns; I++) {
                 InnerHTML += '<div id="FB3ReaderColumn' + I + '" class="Cell' + I + 'of' + this.NColumns + '"></div>';
             }

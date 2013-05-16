@@ -10,6 +10,9 @@ module FB3ReaderSite {
 			this.Progressor = new ExampleProgressor();
 			this.Alert = this.Progressor.Alert;
 		}
+		getElementById(elementId: string): HTMLElement {
+			return document.getElementById(elementId);
+		}
 
 	}
 	export class ExampleProgressor implements ILoadProgress {

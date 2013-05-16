@@ -7,6 +7,9 @@ var FB3ReaderSite;
             this.Progressor = new ExampleProgressor();
             this.Alert = this.Progressor.Alert;
         }
+        ExampleSite.prototype.getElementById = function (elementId) {
+            return document.getElementById(elementId);
+        };
         return ExampleSite;
     })();
     FB3ReaderSite.ExampleSite = ExampleSite;    

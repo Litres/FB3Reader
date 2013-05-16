@@ -8,6 +8,7 @@ module FB3ReaderSite {
 		Canvas: HTMLElement;
 		NotePopup: INotePopup;
 		Alert: IAlert;
+		getElementById(elementId: string): HTMLElement;
 	}
 
 	// General-purpose interface for progress feedback

@@ -16,6 +16,8 @@ module FB3Reader {
 
 		TOC(): FB3DOM.ITOC[];
 		GoTO(NewPos: IPosition): void;
+		GoTOPage(Page: number): void;
+		GoToOpenPosition(NewPos: IPosition): void;
 		ResetCache(): void;
 		GetCachedPage(NewPos: IPosition): number;
 		SearchForText(Text: string): FB3DOM.ITOC[];

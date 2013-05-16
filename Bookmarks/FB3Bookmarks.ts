@@ -4,6 +4,7 @@ module FB3Bookmarks {
 	export class LitResBookmarksProcessor implements IBookmarks {
 		public Bookmarks: IBookmark[];
 		public Ready: boolean;
+		public CurPos: IBookmark;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM) {
 			this.Ready = false;
 		}

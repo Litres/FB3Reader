@@ -16,11 +16,11 @@ module FB3Bookmarks {
 		Fragment: FB3DOM.IRange;
 	}
 
-
 	export interface IBookmarks {
 		Ready: boolean;
 		FB3DOM: FB3DOM.IFB3DOM;
 		Bookmarks: IBookmark[];
+		CurPos: IBookmark;
 		Load(ArtID: string, Callback?: IBookmarksReadyCallback);
 		Store(): void;
 	}

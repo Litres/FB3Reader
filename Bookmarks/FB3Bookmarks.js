@@ -7,6 +7,7 @@ var FB3Bookmarks;
             this.Ready = false;
         }
         LitResBookmarksProcessor.prototype.Load = function (ArtID, Callback) {
+            this.Ready = true;
         };
         LitResBookmarksProcessor.prototype.Store = function () {
         };

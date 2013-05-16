@@ -6,6 +6,7 @@ module FB3Reader {
 		public HyphON: bool;
 		public BookStyleNotes: bool;
 		public Position: number;
+		public NColumns: number;
 
 		private Alert: FB3ReaderSite.IAlert;
 
@@ -13,7 +14,14 @@ module FB3Reader {
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM,
 			public Bookmarks: FB3Bookmarks.IBookmarks) {
+			// First we start loading data - hopefully it will happend in the background
+			this.Init();
+			
+			// Basic class init
 			this.HyphON = true;
+			this.NColumns = 0;
+
+			// Environment research & canvas preparation
 		}
 
 		public Init(): void {
@@ -40,7 +48,18 @@ module FB3Reader {
 
 		public ResetCache(): void { }
 		public GetCachedPage(NewPos: IPosition): number { return 0 }
-		public SearchForText(Text: string): FB3DOM.ITOC[] { return null }
+		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
+
+		private PrepareCanvas() {
+			var InnerHTML = '<div class=" class="FB3ReaderColumnset' + this.NColumns+'">';
+			for (var I = 0; I < this.NColumns; I++) {
+				InnerHTML += '<div id="FB3ReaderColumn' + I + '" class="Cell'+I+'of' + this.NColumns+'"></div>';
+			}
+			InnerHTML += '</div>'
+			this.Site.Canvas.innerHTML = InnerHTML;
+		}
+
+		private DrawPageFromPoint
 
 	}
 

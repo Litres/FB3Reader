@@ -13,5 +13,7 @@ window.onload = () => {
 	var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
 	//	BookmarksProcessor.Load(ArtID);
 	var AFB3Reader = new FB3Reader.Reader(ArtID, AReaderSite, AReaderDOM, BookmarksProcessor);
+	AFB3Reader.NColumns = 2;
+	AFB3Reader.HyphON = true;
 	AFB3Reader.Init();
 };

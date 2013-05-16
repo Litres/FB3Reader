@@ -60,6 +60,7 @@ var FB3DOM;
         DOM.prototype.AfterHeaderLoaded = function (Data) {
             this.TOC = Data.Body;
             this.DataChunks = Data.Parts;
+            this.Ready = true;
             this.OnDoneFunc(this);
         };
         DOM.prototype.Init = // Wondering why I make Init public? Because you can't inherite private methods, darling!
@@ -70,7 +71,7 @@ var FB3DOM;
             this.ArtID = ArtID;
             this.Childs = new Array();
             this.Progressor.HourglassOn(this, true, 'Loading meta...');
-            this.DataProvider.Request(ArtID, function (Data) {
+            this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), function (Data) {
                 return _this.AfterHeaderLoaded(Data);
             }, this.Progressor);
             this.Progressor.HourglassOff(this);
@@ -93,10 +94,6 @@ var FB3DOM;
                     }
                 }
             }
-        };
-        DOM.prototype.zeroPad = function (num, places) {
-            var zero = places - num.toString().length + 1;
-            return Array(+(zero > 0 && zero)).join("0") + num;
         };
         DOM.prototype.ChunkUrl = function (N) {
             return this.DataProvider.ArtID2URL(this.ArtID, N);

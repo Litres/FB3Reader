@@ -7,7 +7,9 @@ module FB3Bookmarks {
 		constructor(public FB3DOM: FB3DOM.IFB3DOM) {
 			this.Ready = false;
 		}
-		Load(ArtID: string, Callback?: IBookmarksReadyCallback) { }
-		Store(): void { }
+		Load(ArtID: string, Callback?: IBookmarksReadyCallback) {
+			this.Ready = true; //fake
+		}
+		Store(): void { } // fake
 	}
 }

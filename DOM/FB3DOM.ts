@@ -62,6 +62,7 @@ module FB3DOM {
 		private AfterHeaderLoaded(Data: any):void {
 			this.TOC = Data.Body;
 			this.DataChunks = Data.Parts;
+			this.Ready = true;
 			this.OnDoneFunc(this);
 		}
 
@@ -72,7 +73,7 @@ module FB3DOM {
 			this.ArtID = ArtID;
 			this.Childs = new Array();
 			this.Progressor.HourglassOn(this, true, 'Loading meta...');
-			this.DataProvider.Request(ArtID, (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
+			this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void {
@@ -90,11 +91,6 @@ module FB3DOM {
 					}
 				}
 			}
-		}
-
-		private zeroPad(num, places) {
-			var zero = places - num.toString().length + 1;
-			return Array(+(zero > 0 && zero)).join("0") + num;
 		}
 
 		public ChunkUrl(N: number): string {

@@ -7,7 +7,11 @@ var FB3Reader;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
             this.Bookmarks = Bookmarks;
+            // First we start loading data - hopefully it will happend in the background
+            this.Init();
+            // Basic class init
             this.HyphON = true;
+            this.NColumns = 0;
         }
         Reader.prototype.Init = function () {
             var _this = this;
@@ -52,6 +56,14 @@ var FB3Reader;
         };
         Reader.prototype.SearchForText = function (Text) {
             return null;
+        };
+        Reader.prototype.PrepareCanvas = function () {
+            var InnerHTML = '<div class=" class="FB3ReaderColumnset' + this.NColumns + '">';
+            for(var I = 0; I < this.NColumns; I++) {
+                InnerHTML += '<div id="FB3ReaderColumn' + I + '" class="Cell' + I + 'of' + this.NColumns + '"></div>';
+            }
+            InnerHTML += '</div>';
+            this.Site.Canvas.innerHTML = InnerHTML;
         };
         return Reader;
     })();

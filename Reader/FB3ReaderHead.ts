@@ -10,6 +10,7 @@ module FB3Reader {
 		ArtID: string;
 		HyphON: bool;
 		BookStyleNotes: bool;
+		NColumns: number;
 		Position: number;
 		Init():void;
 

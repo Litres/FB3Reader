@@ -1,14 +1,53 @@
 /// <reference path="FB3ReaderHead.ts" />
 
 module FB3Reader {
+	interface IDumbCallback {()}
+
+	class ReaderPage {
+		private Element: HTMLDivElement;
+		private ID: number;
+		private OnDrawDone: IDumbCallback;
+		 // Номер колонки
+		Show(): void { }
+		Hide(): void { }
+		constructor(public ColumnN: number,
+			public NColumns: number,
+			private FB3DOM: FB3DOM.IFB3DOM,
+			private FBReader:IFBReader) { }
+		GetInitHTML(ID: number): FB3DOM.InnerHTML {
+			this.ID = ID;
+			return '<div id="FB3ReaderColumn' + this.ID + '" class="Cell' + this.ColumnN + 'of' + this.NColumns + '">…</div>';
+		}
+		BindToHTMLDoc(Site: FB3ReaderSite.IFB3ReaderSite): void {
+			this.Element = <HTMLDivElement> Site.getElementById('FB3ReaderColumn' + this.ID);
+		}
+
+		DrawInit(StartPos: IPosition, OnDrawDone: IDumbCallback): void {
+			var FragmentEnd = StartPos[0] + 10;
+			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+			}
+			var Range: FB3DOM.IRange = { From: StartPos, To: [FragmentEnd] };
+			this.OnDrawDone = OnDrawDone;
+			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, Range, (HTML: string) => this.DrawEnd(HTML));
+		}
+
+		DrawEnd(HTML: string) {
+			this.Element.innerHTML = HTML;
+			this.OnDrawDone();
+		}
+	}
 
 	export class Reader implements IFBReader {
 		public HyphON: bool;
 		public BookStyleNotes: bool;
 		public Position: number;
 		public NColumns: number;
+		public CacheForward: number;
+		public CacheBackward: number;
 
 		private Alert: FB3ReaderSite.IAlert;
+		private Pages: ReaderPage[];
 
 		constructor(public ArtID: string,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
@@ -20,6 +59,8 @@ module FB3Reader {
 			// Basic class init
 			this.HyphON = true;
 			this.NColumns = 2;
+			this.CacheForward = 6;
+			this.CacheBackward = 2;
 
 			// Environment research & canvas preparation
 			this.PrepareCanvas();
@@ -80,15 +121,20 @@ module FB3Reader {
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
 
 		private PrepareCanvas() {
-			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns +'" id="FB3ReaderHostDiv">';
-			for (var I = 0; I < this.NColumns; I++) {
-				InnerHTML += '<div id="FB3ReaderColumn' + I + '" class="Cell'+I+'of' + this.NColumns+'"></div>';
+			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv">';
+			this.Pages = new Array();
+			for (var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
+				for (var J = 0; J < this.NColumns; J++) {
+					var NewPage = new ReaderPage(J, this.NColumns, this.FB3DOM, this);
+					this.Pages[this.Pages.length] = NewPage;
+					InnerHTML += NewPage.GetInitHTML(I*J);
+				}
 			}
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
 		}
 
-		private DrawPageFromPoint
+//		private DrawPageFromPoint
 
 	}
 

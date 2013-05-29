@@ -12,7 +12,9 @@ module FB3Reader {
 		BookStyleNotes: bool;
 		NColumns: number;
 		Position: number;
-		Init():void;
+		Init(): void;
+		CacheForward: number; // Number of PAGES (!) of forward cache
+		CacheBackward: number; // Number of PAGES (!) of backward cache
 
 		TOC(): FB3DOM.ITOC[];
 		GoTO(NewPos: IPosition): void;

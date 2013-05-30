@@ -22,7 +22,7 @@ module FB3DOM {
 			this.Chars = text.length;
 		}
 		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML {
-			return this.text;  // todo - HyphOn must work, must just replace shy with ''
+			return '<span id="' + this.GetXPID() + '">'+this.text+'</span>';  // todo - HyphOn must work, must just replace shy with ''
 		}
 
 		public GetXPID(): string {
@@ -132,7 +132,7 @@ module FB3DOM {
 			//}
 
 			if (this.Data.i) {
-				Out += ' id="' + this.Data.i + '"';
+				Out += ' id="' + this.GetXPID() + '"';
 			}
 			return Out + '>';
 

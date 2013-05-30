@@ -1,4 +1,4 @@
-/// <reference path="FB3ReaderHead.ts" />
+п»ї/// <reference path="FB3ReaderHead.ts" />
 
 module FB3Reader {
 	interface IDumbCallback {()}
@@ -7,16 +7,20 @@ module FB3Reader {
 		private Element: HTMLDivElement;
 		private ID: number;
 		private OnDrawDone: IDumbCallback;
-		 // Номер колонки
+		public Ready: bool;
+		public PageN: number;
+		 // column number
 		Show(): void { }
 		Hide(): void { }
 		constructor(public ColumnN: number,
-			public NColumns: number,
 			private FB3DOM: FB3DOM.IFB3DOM,
-			private FBReader:IFBReader) { }
+			private FBReader: IFBReader) {
+			this.Ready = false;
+			this.PageN = 0;
+		}
 		GetInitHTML(ID: number): FB3DOM.InnerHTML {
 			this.ID = ID;
-			return '<div id="FB3ReaderColumn' + this.ID + '" class="Cell' + this.ColumnN + 'of' + this.NColumns + '">…</div>';
+			return '<div id="FB3ReaderColumn' + this.ID + '" class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderAbsDiv">...</div></div>';
 		}
 		BindToHTMLDoc(Site: FB3ReaderSite.IFB3ReaderSite): void {
 			this.Element = <HTMLDivElement> Site.getElementById('FB3ReaderColumn' + this.ID);
@@ -35,6 +39,28 @@ module FB3Reader {
 		DrawEnd(HTML: string) {
 			this.Element.innerHTML = HTML;
 			this.OnDrawDone();
+		}
+
+		EndPos(): IPosition {
+			return null;
+		}
+	}
+
+	class RenderQueue {
+		private timeoutId: any;
+		private Pos: number;
+		constructor(public Pages: ReaderPage[], StartPos: IPosition) {
+			this.Pages[0].DrawInit(StartPos, () => this.RenderNext());
+		}
+		RenderNext(): void {
+			this.Pos++;
+			var NextPage = this.Pages[this.Pos];
+			if (NextPage) {
+				setTimeout(() => this._RenderNext(), 10);
+			}
+		}
+		_RenderNext(): void {
+			this.Pages[this.Pos].DrawInit(this.Pages[this.Pos-1].EndPos(), () => this.RenderNext());
 		}
 	}
 
@@ -55,7 +81,7 @@ module FB3Reader {
 			public Bookmarks: FB3Bookmarks.IBookmarks) {
 			// First we start loading data - hopefully it will happend in the background
 			this.Init();
-			
+
 			// Basic class init
 			this.HyphON = true;
 			this.NColumns = 2;
@@ -87,7 +113,7 @@ module FB3Reader {
 		}
 
 		private TestDOM(HTML: string) { // fake
-			this.Site.getElementById('FB3ReaderColumn0').innerHTML = HTML;
+			this.Site.getElementById('FB3ReaderColumn0').innerHTML = '<div class="FBReaderAbsDiv">'+HTML+'</div>';
 		}
 
 		public GoTO(NewPos: IPosition) {
@@ -101,6 +127,8 @@ module FB3Reader {
 		public GoTOPage(Page: number): void {
 
 		}
+
+		private FillPage
 
 		public GoToOpenPosition(NewPos: IPosition): void {
 			var FragmentEnd = NewPos[0] + 10;
@@ -121,11 +149,11 @@ module FB3Reader {
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
 
 		private PrepareCanvas() {
-			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv">';
+			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
 			this.Pages = new Array();
 			for (var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
 				for (var J = 0; J < this.NColumns; J++) {
-					var NewPage = new ReaderPage(J, this.NColumns, this.FB3DOM, this);
+					var NewPage = new ReaderPage(J, this.FB3DOM, this);
 					this.Pages[this.Pages.length] = NewPage;
 					InnerHTML += NewPage.GetInitHTML(I*J);
 				}

@@ -2,20 +2,21 @@
 var FB3Reader;
 (function (FB3Reader) {
     var ReaderPage = (function () {
-        function ReaderPage(ColumnN, NColumns, FB3DOM, FBReader) {
+        function ReaderPage(ColumnN, FB3DOM, FBReader) {
             this.ColumnN = ColumnN;
-            this.NColumns = NColumns;
             this.FB3DOM = FB3DOM;
             this.FBReader = FBReader;
+            this.Ready = false;
+            this.PageN = 0;
         }
-        ReaderPage.prototype.Show = // Номер колонки
+        ReaderPage.prototype.Show = // column number
         function () {
         };
         ReaderPage.prototype.Hide = function () {
         };
         ReaderPage.prototype.GetInitHTML = function (ID) {
             this.ID = ID;
-            return '<div id="FB3ReaderColumn' + this.ID + '" class="Cell' + this.ColumnN + 'of' + this.NColumns + '">…</div>';
+            return '<div id="FB3ReaderColumn' + this.ID + '" class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderAbsDiv">...</div></div>';
         };
         ReaderPage.prototype.BindToHTMLDoc = function (Site) {
             this.Element = Site.getElementById('FB3ReaderColumn' + this.ID);
@@ -41,7 +42,36 @@ var FB3Reader;
             this.Element.innerHTML = HTML;
             this.OnDrawDone();
         };
+        ReaderPage.prototype.EndPos = function () {
+            return null;
+        };
         return ReaderPage;
+    })();    
+    var RenderQueue = (function () {
+        function RenderQueue(Pages, StartPos) {
+            this.Pages = Pages;
+            var _this = this;
+            this.Pages[0].DrawInit(StartPos, function () {
+                return _this.RenderNext();
+            });
+        }
+        RenderQueue.prototype.RenderNext = function () {
+            var _this = this;
+            this.Pos++;
+            var NextPage = this.Pages[this.Pos];
+            if (NextPage) {
+                setTimeout(function () {
+                    return _this._RenderNext();
+                }, 10);
+            }
+        };
+        RenderQueue.prototype._RenderNext = function () {
+            var _this = this;
+            this.Pages[this.Pos].DrawInit(this.Pages[this.Pos - 1].EndPos(), function () {
+                return _this.RenderNext();
+            });
+        };
+        return RenderQueue;
     })();    
     var Reader = (function () {
         function Reader(ArtID, Site, FB3DOM, Bookmarks) {
@@ -83,7 +113,7 @@ var FB3Reader;
             }
         };
         Reader.prototype.TestDOM = function (HTML) {
-            this.Site.getElementById('FB3ReaderColumn0').innerHTML = HTML;
+            this.Site.getElementById('FB3ReaderColumn0').innerHTML = '<div class="FBReaderAbsDiv">' + HTML + '</div>';
         };
         Reader.prototype.GoTO = function (NewPos) {
             var GotoPage = this.GetCachedPage(NewPos);
@@ -123,11 +153,11 @@ var FB3Reader;
             return null;
         };
         Reader.prototype.PrepareCanvas = function () {
-            var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv">';
+            var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
             this.Pages = new Array();
             for(var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
                 for(var J = 0; J < this.NColumns; J++) {
-                    var NewPage = new ReaderPage(J, this.NColumns, this.FB3DOM, this);
+                    var NewPage = new ReaderPage(J, this.FB3DOM, this);
                     this.Pages[this.Pages.length] = NewPage;
                     InnerHTML += NewPage.GetInitHTML(I * J);
                 }

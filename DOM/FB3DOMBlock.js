@@ -29,7 +29,7 @@ var FB3DOM;
             this.Chars = text.length;
         }
         FB3Text.prototype.GetHTML = function (HyphOn, Range) {
-            return this.text;
+            return '<span id="' + this.GetXPID() + '">' + this.text + '</span>';
         };
         FB3Text.prototype.GetXPID = function () {
             var ID = "";
@@ -132,7 +132,7 @@ var FB3DOM;
                 Out += ' class="' + ElementClasses.join(' ') + '"';
             }
             if (this.Data.i) {
-                Out += ' id="' + this.Data.i + '"';
+                Out += ' id="' + this.GetXPID() + '"';
             }
             return Out + '>';
         };

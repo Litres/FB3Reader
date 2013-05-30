@@ -3,6 +3,41 @@
     font-family: 'Segoe UI', sans-serif
 }
 
-span {
-    font-style: italic
+#reader {
+    overflow:hidden;
+    height:50%;
+}
+div.FB2readerPage {
+    height: 100%;
+    overflow:hidden;
+}
+
+div.FB2readerPage > div.FBReaderAbsDiv {
+    position: absolute;
+}
+
+
+div.FB3ReaderColumnset3 div.FB2readerPage {
+    width: 33.3%;
+    height: 100%;
+    float:left;
+}
+div.FB3ReaderColumnset2 div.FB2readerPage {
+    width: 50%;
+    height: 100%;
+    float:left;
+}
+
+div.FB3ReaderColumnset1 div.FB2readerPage {
+    height: 100%;
+    width: 100%;
+}
+
+#FB3ReaderHostDiv {
+    background-color: #000090;
+    color:yellow;
+}
+
+div.FB2readerPage p {
+    text-align: justify;
 }

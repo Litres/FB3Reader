@@ -41,8 +41,10 @@ module FB3Reader {
 			this.OnDrawDone();
 		}
 
-		EndPos(): IPosition {
-			return null;
+		FallOut(): IPosition {
+			for (var I = 0; I < this.Element.childNodes.length; I++) {
+
+			}
 		}
 	}
 
@@ -60,7 +62,7 @@ module FB3Reader {
 			}
 		}
 		_RenderNext(): void {
-			this.Pages[this.Pos].DrawInit(this.Pages[this.Pos-1].EndPos(), () => this.RenderNext());
+			this.Pages[this.Pos].DrawInit(this.Pages[this.Pos - 1].FallOut(), () => this.RenderNext());
 		}
 	}
 

@@ -10,7 +10,7 @@ window.onload = function () {
     var DataProvider = new FB3DataProvider.AJAXDataProvider();
     var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
     var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
-    //	BookmarksProcessor.Load(ArtID);
+    BookmarksProcessor.Load(ArtID);
     var AFB3Reader = new FB3Reader.Reader(ArtID, AReaderSite, AReaderDOM, BookmarksProcessor);
     AFB3Reader.NColumns = 2;
     AFB3Reader.HyphON = true;

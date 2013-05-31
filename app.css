@@ -1,19 +1,20 @@
-﻿body
+﻿html,body
 {
+    height:100%;
     font-family: 'Segoe UI', sans-serif
 }
 
 #reader {
-    overflow:hidden;
     height:50%;
+    width:100%;
 }
 div.FB2readerPage {
     height: 100%;
     overflow:hidden;
 }
 
-div.FB2readerPage > div.FBReaderAbsDiv {
-    position: absolute;
+div.FB2readerPage div.FBReaderAbsDiv {
+    /*position: absolute;*/
 }
 
 

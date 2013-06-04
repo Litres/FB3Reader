@@ -133,6 +133,7 @@ module FB3DOM {
 			}
 			return ChunksMissing;
 		}
+		public GetXPID(): string { return '' }
 	}
 
 }

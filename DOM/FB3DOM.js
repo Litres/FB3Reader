@@ -123,6 +123,9 @@ var FB3DOM;
             }
             return ChunksMissing;
         };
+        DOM.prototype.GetXPID = function () {
+            return '';
+        };
         return DOM;
     })(FB3DOM.FB3Tag);
     FB3DOM.DOM = DOM;    

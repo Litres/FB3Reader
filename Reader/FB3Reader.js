@@ -2,76 +2,115 @@
 var FB3Reader;
 (function (FB3Reader) {
     var ReaderPage = (function () {
-        function ReaderPage(ColumnN, FB3DOM, FBReader) {
+        function ReaderPage(ColumnN, FB3DOM, FBReader, Prev) {
             this.ColumnN = ColumnN;
             this.FB3DOM = FB3DOM;
             this.FBReader = FBReader;
-            this.Ready = false;
-            this.PageN = 0;
+            this.Busy = false;
+            this.Reseted = false;
+            if (Prev) {
+                Prev.Next = this;
+            }
         }
-        ReaderPage.prototype.Show = // column number
-        function () {
+        ReaderPage.prototype.Show = function () {
         };
         ReaderPage.prototype.Hide = function () {
         };
         ReaderPage.prototype.GetInitHTML = function (ID) {
             this.ID = ID;
-            return '<div id="FB3ReaderColumn' + this.ID + '" class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderAbsDiv">...</div></div>';
+            return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderContentDiv" id="FB3ReaderColumn' + this.ID + '">...</div></div>';
         };
         ReaderPage.prototype.BindToHTMLDoc = function (Site) {
             this.Element = Site.getElementById('FB3ReaderColumn' + this.ID);
         };
-        ReaderPage.prototype.DrawInit = function (StartPos, OnDrawDone) {
+        ReaderPage.prototype.DrawInit = function (PagesToRender) {
             var _this = this;
-            var FragmentEnd = StartPos[0] + 10;
-            if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
-                FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+            if (PagesToRender.length == 0) {
+                return;
             }
-            var Range = {
-                From: StartPos,
-                To: [
-                    FragmentEnd
-                ]
-            };
-            this.OnDrawDone = OnDrawDone;
+            this.Busy = true;
+            this.Reseted = false;
+            this.RenderInstr = PagesToRender.shift();
+            this.PagesToRender = PagesToRender;
+            var Range;
+            if (this.RenderInstr.Range) {
+                Range = this.RenderInstr.Range;
+            } else {
+                if (!this.RenderInstr.Start) {
+                    this.RenderInstr.Start = [
+                        0
+                    ];
+                }
+                var FragmentEnd = this.RenderInstr.Start[0] * 1 + 10;
+                if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+                    FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+                }
+                Range = {
+                    From: this.RenderInstr.Start,
+                    To: [
+                        FragmentEnd
+                    ]
+                };
+            }
             this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, Range, function (HTML) {
                 return _this.DrawEnd(HTML);
             });
         };
-        ReaderPage.prototype.DrawEnd = function (HTML) {
-            this.Element.innerHTML = HTML;
-            this.OnDrawDone();
-        };
-        ReaderPage.prototype.EndPos = function () {
-            return null;
-        };
-        return ReaderPage;
-    })();    
-    var RenderQueue = (function () {
-        function RenderQueue(Pages, StartPos) {
-            this.Pages = Pages;
-            var _this = this;
-            this.Pages[0].DrawInit(StartPos, function () {
-                return _this.RenderNext();
-            });
-        }
-        RenderQueue.prototype.RenderNext = function () {
-            var _this = this;
-            this.Pos++;
-            var NextPage = this.Pages[this.Pos];
-            if (NextPage) {
-                setTimeout(function () {
-                    return _this._RenderNext();
-                }, 10);
+        ReaderPage.prototype.Reset = function () {
+            this.PagesToRender = null;
+            if (this.Busy) {
+                this.Reseted = true;
             }
         };
-        RenderQueue.prototype._RenderNext = function () {
+        ReaderPage.prototype.DrawEnd = function (HTML) {
             var _this = this;
-            this.Pages[this.Pos].DrawInit(this.Pages[this.Pos - 1].EndPos(), function () {
-                return _this.RenderNext();
-            });
+            this.Busy = false;
+            if (this.Reseted) {
+                this.Reseted = false;
+                return;
+            }
+            this.Element.innerHTML = HTML;
+            if (!this.RenderInstr.Range) {
+                this.RenderInstr.Range = {
+                    From: this.RenderInstr.Start,
+                    To: this.FallOut()
+                };
+                if (this.RenderInstr.CacheAs !== undefined) {
+                    this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr.Range);
+                }
+            }
+            if (this.PagesToRender && this.PagesToRender.length) {
+                if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
+                    this.PagesToRender[0].Start = this.RenderInstr.Range.To;
+                }
+                setTimeout(function () {
+                    _this.Next.DrawInit(_this.PagesToRender);
+                }, 1);
+            }
         };
-        return RenderQueue;
+        ReaderPage.prototype.FallOut = function () {
+            //			console.log('FallOut ' + this.ID);
+            var Element = this.Element;
+            var Parent = this.Element.parentElement;
+            var Limit = this.FBReader.Site.Canvas.offsetHeight;
+            var I = 0;
+            var GoodHeight = 0;
+            while(I < Element.children.length) {
+                var Child = Element.children[I];
+                var ChildBot = Child.offsetTop + Child.scrollHeight;
+                if (ChildBot < Limit) {
+                    I++;
+                } else {
+                    GoodHeight += Child.offsetTop;
+                    Element = Child;
+                    Limit = Limit - Child.offsetTop;
+                    I = 0;
+                }
+            }
+            this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';
+            return Element.id.split('_');
+        };
+        return ReaderPage;
     })();    
     var Reader = (function () {
         function Reader(ArtID, Site, FB3DOM, Bookmarks) {
@@ -79,13 +118,12 @@ var FB3Reader;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
             this.Bookmarks = Bookmarks;
-            // First we start loading data - hopefully it will happend in the background
-            this.Init();
             // Basic class init
             this.HyphON = true;
             this.NColumns = 2;
             this.CacheForward = 6;
             this.CacheBackward = 2;
+            this.PagesPositionsCache = new Array();
             // Environment research & canvas preparation
             this.PrepareCanvas();
             this.ResetCache();
@@ -93,13 +131,14 @@ var FB3Reader;
         Reader.prototype.Init = function () {
             var _this = this;
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
-                _this.LoadDone();
+                _this.LoadDone(1);
             });
             this.Bookmarks.Load(this.ArtID, function () {
-                _this.LoadDone();
+                _this.LoadDone(2);
             });
         };
-        Reader.prototype.LoadDone = function () {
+        Reader.prototype.LoadDone = function (a) {
+            console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
             if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
                 var ReadPos;
                 if (this.Bookmarks && this.Bookmarks.CurPos) {
@@ -112,9 +151,6 @@ var FB3Reader;
                 this.GoTO(ReadPos);
             }
         };
-        Reader.prototype.TestDOM = function (HTML) {
-            this.Site.getElementById('FB3ReaderColumn0').innerHTML = '<div class="FBReaderAbsDiv">' + HTML + '</div>';
-        };
         Reader.prototype.GoTO = function (NewPos) {
             var GotoPage = this.GetCachedPage(NewPos);
             if (GotoPage != undefined) {
@@ -126,7 +162,6 @@ var FB3Reader;
         Reader.prototype.GoTOPage = function (Page) {
         };
         Reader.prototype.GoToOpenPosition = function (NewPos) {
-            var _this = this;
             var FragmentEnd = NewPos[0] + 10;
             if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                 FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
@@ -137,17 +172,25 @@ var FB3Reader;
                     FragmentEnd
                 ]
             };
-            this.FB3DOM.GetHTMLAsync(this.HyphON, Range, function (HTML) {
-                return _this.TestDOM(HTML);
-            });
+            console.log('GoToOpenPosition ' + NewPos);
+            this.Pages[0].DrawInit([
+                {
+                    Start: NewPos
+                }, 
+                {}
+            ]);
         };
         Reader.prototype.TOC = function () {
             return this.FB3DOM.TOC;
         };
         Reader.prototype.ResetCache = function () {
+            this.PagesPositionsCache = new Array();
         };
         Reader.prototype.GetCachedPage = function (NewPos) {
             return undefined;
+        };
+        Reader.prototype.StoreCachedPage = function (Page, Range) {
+            this.PagesPositionsCache[Page] = Range;
         };
         Reader.prototype.SearchForText = function (Text) {
             return null;
@@ -157,13 +200,17 @@ var FB3Reader;
             this.Pages = new Array();
             for(var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
                 for(var J = 0; J < this.NColumns; J++) {
-                    var NewPage = new ReaderPage(J, this.FB3DOM, this);
+                    var NewPage = new ReaderPage(J, this.FB3DOM, this, this.Pages[this.Pages.length - 1]);
                     this.Pages[this.Pages.length] = NewPage;
-                    InnerHTML += NewPage.GetInitHTML(I * J);
+                    InnerHTML += NewPage.GetInitHTML(I * this.NColumns + J);
                 }
             }
+            this.Pages[this.Pages.length - 1].Next = this.Pages[0];
             InnerHTML += '</div>';
             this.Site.Canvas.innerHTML = InnerHTML;
+            for(var I = 0; I < this.Pages.length; I++) {
+                this.Pages[I].BindToHTMLDoc(this.Site);
+            }
         };
         return Reader;
     })();

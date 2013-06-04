@@ -27,8 +27,12 @@ module FB3DOM {
 
 		public GetXPID(): string {
 			var ID: string = "";
+			var ParID: string;
 			if (this.Parent) {
-				ID = this.Parent.GetXPID() + '_';
+				ParID = this.Parent.GetXPID();
+			}
+			if (ParID != '') {
+				ID = ParID + '_';
 			}
 			return ID + this.ID;
 		}
@@ -131,9 +135,9 @@ module FB3DOM {
 			//	out += ' style="' + this.data.css + '"';
 			//}
 
-			if (this.Data.i) {
+//			if (this.Data.i) {
 				Out += ' id="' + this.GetXPID() + '"';
-			}
+//			}
 			return Out + '>';
 
 		}

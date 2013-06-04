@@ -33,8 +33,12 @@ var FB3DOM;
         };
         FB3Text.prototype.GetXPID = function () {
             var ID = "";
+            var ParID;
             if (this.Parent) {
-                ID = this.Parent.GetXPID() + '_';
+                ParID = this.Parent.GetXPID();
+            }
+            if (ParID != '') {
+                ID = ParID + '_';
             }
             return ID + this.ID;
         };
@@ -131,9 +135,11 @@ var FB3DOM;
             if (ElementClasses.length) {
                 Out += ' class="' + ElementClasses.join(' ') + '"';
             }
-            if (this.Data.i) {
-                Out += ' id="' + this.GetXPID() + '"';
-            }
+            //if (this.data.css) {
+            //	out += ' style="' + this.data.css + '"';
+            //}
+            //			if (this.Data.i) {
+            Out += ' id="' + this.GetXPID() + '"';
             return Out + '>';
         };
         return FB3Tag;

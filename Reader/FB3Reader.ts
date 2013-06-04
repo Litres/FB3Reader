@@ -1,68 +1,121 @@
 ﻿/// <reference path="FB3ReaderHead.ts" />
 
 module FB3Reader {
-	interface IDumbCallback {()}
+//	interface IDumbCallback { () }
+
+	interface IPageRenderInstruction {
+		Range?: FB3DOM.IRange;
+		Start?: IPosition;
+		CacheAs?: number;
+	}
 
 	class ReaderPage {
 		private Element: HTMLDivElement;
 		private ID: number;
-		private OnDrawDone: IDumbCallback;
-		public Ready: bool;
-		public PageN: number;
-		 // column number
+		private PagesToRender: IPageRenderInstruction[];
+		private End: IPosition;
+		private RenderInstr: IPageRenderInstruction;
+		public Next: ReaderPage;
+		public Busy: boolean;
+		public Reseted: boolean;
 		Show(): void { }
 		Hide(): void { }
 		constructor(public ColumnN: number,
 			private FB3DOM: FB3DOM.IFB3DOM,
-			private FBReader: IFBReader) {
-			this.Ready = false;
-			this.PageN = 0;
+			private FBReader: Reader,
+			Prev: ReaderPage) {
+			this.Busy = false;
+			this.Reseted = false;
+			if (Prev) {
+				Prev.Next = this;
+			}
 		}
 		GetInitHTML(ID: number): FB3DOM.InnerHTML {
 			this.ID = ID;
-			return '<div id="FB3ReaderColumn' + this.ID + '" class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderAbsDiv">...</div></div>';
+			return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderContentDiv" id="FB3ReaderColumn' + this.ID + '">...</div></div>';
 		}
 		BindToHTMLDoc(Site: FB3ReaderSite.IFB3ReaderSite): void {
 			this.Element = <HTMLDivElement> Site.getElementById('FB3ReaderColumn' + this.ID);
 		}
 
-		DrawInit(StartPos: IPosition, OnDrawDone: IDumbCallback): void {
-			var FragmentEnd = StartPos[0] + 10;
-			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
-				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+		DrawInit(PagesToRender: IPageRenderInstruction[]): void {
+			if (PagesToRender.length == 0) return;
+			this.Busy = true;
+			this.Reseted = false;
+
+			this.RenderInstr = PagesToRender.shift();
+			this.PagesToRender = PagesToRender;
+
+			var Range: FB3DOM.IRange;
+			if (this.RenderInstr.Range) { // Exact fragment (must be a cache?)
+				Range = this.RenderInstr.Range;
+			} else {
+				if (!this.RenderInstr.Start) { // It's fake instruction. We consider in as "Render from start" request
+					this.RenderInstr.Start = [0];
+				} // Start point defined
+
+				var FragmentEnd = this.RenderInstr.Start[0] * 1 + 10;
+				if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+					FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+				}
+				Range = { From: this.RenderInstr.Start, To: [FragmentEnd] };
 			}
-			var Range: FB3DOM.IRange = { From: StartPos, To: [FragmentEnd] };
-			this.OnDrawDone = OnDrawDone;
+
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, Range, (HTML: string) => this.DrawEnd(HTML));
 		}
 
+		Reset() {
+			this.PagesToRender = null;
+			if (this.Busy) {
+				this.Reseted = true;
+			}
+		}
+
 		DrawEnd(HTML: string) {
+			this.Busy = false;
+			//			console.log('DrawEnd ' + this.ID);
+			if (this.Reseted) {
+				this.Reseted = false;
+				return;
+			}
+
 			this.Element.innerHTML = HTML;
-			this.OnDrawDone();
+			if (!this.RenderInstr.Range) {
+				this.RenderInstr.Range = { From: this.RenderInstr.Start, To: this.FallOut() };
+				if (this.RenderInstr.CacheAs !== undefined) {
+					this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr.Range);
+				}
+			}
+			if (this.PagesToRender && this.PagesToRender.length) {
+				// we fire setTimeout to let the browser draw the page before we render the next
+				if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
+					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
+				}
+				setTimeout(() => { this.Next.DrawInit(this.PagesToRender) },1)
+			}
 		}
 
 		FallOut(): IPosition {
-			for (var I = 0; I < this.Element.childNodes.length; I++) {
-
+//			console.log('FallOut ' + this.ID);
+			var Element = <HTMLElement> this.Element;
+			var Parent = <HTMLElement> this.Element.parentElement;
+			var Limit = this.FBReader.Site.Canvas.offsetHeight;
+			var I = 0;
+			var GoodHeight = 0;
+			while (I < Element.children.length) {
+				var Child = <HTMLElement> Element.children[I];
+				var ChildBot = Child.offsetTop + Child.scrollHeight;
+				if (ChildBot < Limit) {
+					I++;
+				} else {
+					GoodHeight += Child.offsetTop;
+					Element = Child;
+					Limit = Limit - Child.offsetTop;
+					I = 0;
+				}
 			}
-		}
-	}
-
-	class RenderQueue {
-		private timeoutId: any;
-		private Pos: number;
-		constructor(public Pages: ReaderPage[], StartPos: IPosition) {
-			this.Pages[0].DrawInit(StartPos, () => this.RenderNext());
-		}
-		RenderNext(): void {
-			this.Pos++;
-			var NextPage = this.Pages[this.Pos];
-			if (NextPage) {
-				setTimeout(() => this._RenderNext(), 10);
-			}
-		}
-		_RenderNext(): void {
-			this.Pages[this.Pos].DrawInit(this.Pages[this.Pos - 1].FallOut(), () => this.RenderNext());
+			this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';
+			return Element.id.split('_');
 		}
 	}
 
@@ -76,19 +129,19 @@ module FB3Reader {
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: ReaderPage[];
+		private PagesPositionsCache: FB3DOM.IRange[];
 
 		constructor(public ArtID: string,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM,
 			public Bookmarks: FB3Bookmarks.IBookmarks) {
-			// First we start loading data - hopefully it will happend in the background
-			this.Init();
 
 			// Basic class init
 			this.HyphON = true;
 			this.NColumns = 2;
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
+			this.PagesPositionsCache = new Array();
 
 			// Environment research & canvas preparation
 			this.PrepareCanvas();
@@ -96,11 +149,12 @@ module FB3Reader {
 		}
 
 		public Init(): void {
-			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.LoadDone() } );
-			this.Bookmarks.Load(this.ArtID, () => { this.LoadDone() } );
+			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.LoadDone(1) } );
+			this.Bookmarks.Load(this.ArtID, () => { this.LoadDone(2) } );
 		}
 
-		private LoadDone(): void {
+		private LoadDone(a): void {
+			console.log('LoadDone ' +a +'/'+ this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
 			if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
 				var ReadPos: Array;
 				if (this.Bookmarks && this.Bookmarks.CurPos) {
@@ -109,14 +163,9 @@ module FB3Reader {
 					ReadPos = [0];
 				}
 				this.GoTO(ReadPos);
-				//var Range: FB3DOM.IRange = { From: [0, 0, 2], To: [4, 5] };
-				//this.FB3DOM.GetHTMLAsync(true, Range, (HTML: string) => this.TestDOM(HTML));
 			}
 		}
 
-		private TestDOM(HTML: string) { // fake
-			this.Site.getElementById('FB3ReaderColumn0').innerHTML = '<div class="FBReaderAbsDiv">'+HTML+'</div>';
-		}
 
 		public GoTO(NewPos: IPosition) {
 			var GotoPage = this.GetCachedPage(NewPos);
@@ -130,15 +179,14 @@ module FB3Reader {
 
 		}
 
-		private FillPage
-
 		public GoToOpenPosition(NewPos: IPosition): void {
 			var FragmentEnd = NewPos[0] + 10;
 			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
 				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
 			}
 			var Range: FB3DOM.IRange = { From: NewPos, To: [FragmentEnd] };
-			this.FB3DOM.GetHTMLAsync(this.HyphON, Range, (HTML: string) => this.TestDOM(HTML));
+			console.log('GoToOpenPosition ' + NewPos);
+			this.Pages[0].DrawInit([{Start: NewPos }, {}]);
 		}
 
 
@@ -146,8 +194,10 @@ module FB3Reader {
 			return this.FB3DOM.TOC;
 		}
 
-		public ResetCache(): void { }
+		public ResetCache(): void { this.PagesPositionsCache = new Array();}
 		public GetCachedPage(NewPos: IPosition): number { return undefined }
+		public StoreCachedPage(Page: number, Range: FB3DOM.IRange) { this.PagesPositionsCache[Page] = Range }
+
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
 
 		private PrepareCanvas() {
@@ -155,13 +205,17 @@ module FB3Reader {
 			this.Pages = new Array();
 			for (var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
 				for (var J = 0; J < this.NColumns; J++) {
-					var NewPage = new ReaderPage(J, this.FB3DOM, this);
+					var NewPage = new ReaderPage(J, this.FB3DOM, this, this.Pages[this.Pages.length-1]);
 					this.Pages[this.Pages.length] = NewPage;
-					InnerHTML += NewPage.GetInitHTML(I*J);
+					InnerHTML += NewPage.GetInitHTML(I * this.NColumns + J);
 				}
 			}
+			this.Pages[this.Pages.length-1].Next = this.Pages[0];
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
+			for (var I = 0; I < this.Pages.length; I++) {
+				this.Pages[I].BindToHTMLDoc(this.Site);
+			}
 		}
 
 //		private DrawPageFromPoint

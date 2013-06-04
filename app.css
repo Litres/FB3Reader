@@ -4,17 +4,20 @@
     font-family: 'Segoe UI', sans-serif
 }
 
+div, p {
+    position: relative;
+}
+
 #reader {
     height:50%;
     width:100%;
 }
 div.FB2readerPage {
-    height: 100%;
     overflow:hidden;
 }
 
-div.FB2readerPage div.FBReaderAbsDiv {
-    /*position: absolute;*/
+div.FB2readerPage div.FBReaderContentDiv {
+    padding:10px;
 }
 
 

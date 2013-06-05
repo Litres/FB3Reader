@@ -11,7 +11,9 @@ module FB3Reader {
 		HyphON: bool;
 		BookStyleNotes: bool;
 		NColumns: number;
-		Position: number;
+		TextPercent: number;	// Percantage of the shown text - progress
+		CurStartPos: IPosition;		// Adress of the first visible block
+
 		Init(): void;
 		CacheForward: number; // Number of PAGES (!) of forward cache
 		CacheBackward: number; // Number of PAGES (!) of backward cache

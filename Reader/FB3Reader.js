@@ -22,6 +22,8 @@ var FB3Reader;
         };
         ReaderPage.prototype.BindToHTMLDoc = function (Site) {
             this.Element = Site.getElementById('FB3ReaderColumn' + this.ID);
+            this.Width = this.Element.offsetWidth;
+            this.Height = this.Element.parentElement.offsetHeight;
         };
         ReaderPage.prototype.DrawInit = function (PagesToRender) {
             var _this = this;
@@ -91,8 +93,7 @@ var FB3Reader;
         ReaderPage.prototype.FallOut = function () {
             //			console.log('FallOut ' + this.ID);
             var Element = this.Element;
-            var Parent = this.Element.parentElement;
-            var Limit = this.FBReader.Site.Canvas.offsetHeight;
+            var Limit = this.Height;
             var I = 0;
             var GoodHeight = 0;
             while(I < Element.children.length) {
@@ -124,9 +125,12 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
+            this.CurStartPos = [
+                5, 
+                14
+            ];
             // Environment research & canvas preparation
             this.PrepareCanvas();
-            this.ResetCache();
         }
         Reader.prototype.Init = function () {
             var _this = this;
@@ -138,20 +142,25 @@ var FB3Reader;
             });
         };
         Reader.prototype.LoadDone = function (a) {
-            console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
+            var _this = this;
+            //			console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
+            var ReadPos;
             if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-                var ReadPos;
+                window.addEventListener('resize', function () {
+                    setTimeout(function () {
+                        return _this.RefreshCanvas();
+                    }, 1000);
+                });
                 if (this.Bookmarks && this.Bookmarks.CurPos) {
                     ReadPos = this.Bookmarks.CurPos.Fragment.From;
                 } else {
-                    ReadPos = [
-                        0
-                    ];
+                    ReadPos = this.CurStartPos;
                 }
                 this.GoTO(ReadPos);
             }
         };
         Reader.prototype.GoTO = function (NewPos) {
+            this.CurStartPos = NewPos.slice(0);
             var GotoPage = this.GetCachedPage(NewPos);
             if (GotoPage != undefined) {
                 this.GoTOPage(GotoPage);
@@ -172,7 +181,7 @@ var FB3Reader;
                     FragmentEnd
                 ]
             };
-            console.log('GoToOpenPosition ' + NewPos);
+            //			console.log('GoToOpenPosition ' + NewPos);
             this.Pages[0].DrawInit([
                 {
                     Start: NewPos
@@ -196,6 +205,7 @@ var FB3Reader;
             return null;
         };
         Reader.prototype.PrepareCanvas = function () {
+            this.ResetCache();
             var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
             this.Pages = new Array();
             for(var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
@@ -211,6 +221,12 @@ var FB3Reader;
             for(var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].BindToHTMLDoc(this.Site);
             }
+        };
+        Reader.prototype.RefreshCanvas = function () {
+            this.PrepareCanvas();
+            this.GoTO([
+                0
+            ]);
         };
         return Reader;
     })();

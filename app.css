@@ -1,40 +1,47 @@
-﻿html,body
-{
-    height:100%;
-    font-family: 'Segoe UI', sans-serif
+﻿/* this are engine-required CSS, do not change it */
+html, body {
+    height: 100%;
 }
 
 div, p {
     position: relative;
 }
 
+div.FB2readerPage {
+    overflow:hidden;
+    float:left;
+    height: 100%;
+}
+
+div.FB3ReaderColumnset4 div.FB2readerPage {
+    width: 25%;
+}
+div.FB3ReaderColumnset3 div.FB2readerPage {
+    width: 33.3%;
+}
+div.FB3ReaderColumnset2 div.FB2readerPage {
+    width: 50%;
+}
+
+div.FB3ReaderColumnset1 div.FB2readerPage {
+    width: 100%;
+}
+/* engine-required CSS END */
+
+/* this are engine-independent CSS, do with it whatewer you want  */
+h1, h2 {
+   font-family: 'Times New Roman', serif
+}
+div, p, h3, h4, h5, h6 {
+    font-family: 'Segoe UI', sans-serif;
+}
 #reader {
     height:50%;
     width:100%;
 }
-div.FB2readerPage {
-    overflow:hidden;
-}
 
 div.FB2readerPage div.FBReaderContentDiv {
     padding:10px;
-}
-
-
-div.FB3ReaderColumnset3 div.FB2readerPage {
-    width: 33.3%;
-    height: 100%;
-    float:left;
-}
-div.FB3ReaderColumnset2 div.FB2readerPage {
-    width: 50%;
-    height: 100%;
-    float:left;
-}
-
-div.FB3ReaderColumnset1 div.FB2readerPage {
-    height: 100%;
-    width: 100%;
 }
 
 #FB3ReaderHostDiv {

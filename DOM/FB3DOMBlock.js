@@ -78,11 +78,11 @@ var FB3DOM;
                 To = this.Childs.length - 1;
             }
             if (To >= this.Childs.length) {
-                console.log('Invalid "To" on "GetHTML" call, element "' + this.GetXPID + '"');
+                //				console.log('Invalid "To" on "GetHTML" call, element "' + this.GetXPID + '"');
                 To = this.Childs.length - 1;
             }
             if (From < 0 || From >= this.Childs.length) {
-                console.log('Invalid "From" on "GetHTML" call, element "' + this.GetXPID + '"');
+                //				console.log('Invalid "From" on "GetHTML" call, element "' + this.GetXPID + '"');
                 From = 0;
             }
             for(var I = From; I <= To; I++) {

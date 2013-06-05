@@ -9,6 +9,7 @@ module FB3Reader {
 		CacheAs?: number;
 	}
 
+
 	class ReaderPage {
 		private Element: HTMLDivElement;
 		private ID: number;
@@ -18,6 +19,8 @@ module FB3Reader {
 		public Next: ReaderPage;
 		public Busy: boolean;
 		public Reseted: boolean;
+		public Width: number;
+		public Height: number;
 		Show(): void { }
 		Hide(): void { }
 		constructor(public ColumnN: number,
@@ -36,6 +39,8 @@ module FB3Reader {
 		}
 		BindToHTMLDoc(Site: FB3ReaderSite.IFB3ReaderSite): void {
 			this.Element = <HTMLDivElement> Site.getElementById('FB3ReaderColumn' + this.ID);
+			this.Width = this.Element.offsetWidth;
+			this.Height = this.Element.parentElement.offsetHeight;
 		}
 
 		DrawInit(PagesToRender: IPageRenderInstruction[]): void {
@@ -98,8 +103,7 @@ module FB3Reader {
 		FallOut(): IPosition {
 //			console.log('FallOut ' + this.ID);
 			var Element = <HTMLElement> this.Element;
-			var Parent = <HTMLElement> this.Element.parentElement;
-			var Limit = this.FBReader.Site.Canvas.offsetHeight;
+			var Limit = this.Height;
 			var I = 0;
 			var GoodHeight = 0;
 			while (I < Element.children.length) {
@@ -122,10 +126,11 @@ module FB3Reader {
 	export class Reader implements IFBReader {
 		public HyphON: bool;
 		public BookStyleNotes: bool;
-		public Position: number;
+		public TextPercent: number; 
 		public NColumns: number;
 		public CacheForward: number;
 		public CacheBackward: number;
+		public CurStartPos: IPosition;
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: ReaderPage[];
@@ -142,11 +147,11 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
+			this.CurStartPos = [5,14];
 
 			// Environment research & canvas preparation
 			this.PrepareCanvas();
-			this.ResetCache();
-		}
+			}
 
 		public Init(): void {
 			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.LoadDone(1) } );
@@ -154,13 +159,14 @@ module FB3Reader {
 		}
 
 		private LoadDone(a): void {
-			console.log('LoadDone ' +a +'/'+ this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
+//			console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
+			var ReadPos: IPosition;
 			if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-				var ReadPos: Array;
+				window.addEventListener('resize', () => { setTimeout(() => this.RefreshCanvas(), 1000) } );
 				if (this.Bookmarks && this.Bookmarks.CurPos) {
 					ReadPos = this.Bookmarks.CurPos.Fragment.From;
 				} else {
-					ReadPos = [0];
+					ReadPos = this.CurStartPos;
 				}
 				this.GoTO(ReadPos);
 			}
@@ -168,6 +174,7 @@ module FB3Reader {
 
 
 		public GoTO(NewPos: IPosition) {
+			this.CurStartPos = NewPos.slice(0); // NewPos is going to be destroyed, we need a hardcopy
 			var GotoPage = this.GetCachedPage(NewPos);
 			if (GotoPage != undefined) {
 				this.GoTOPage(GotoPage);
@@ -185,7 +192,7 @@ module FB3Reader {
 				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
 			}
 			var Range: FB3DOM.IRange = { From: NewPos, To: [FragmentEnd] };
-			console.log('GoToOpenPosition ' + NewPos);
+//			console.log('GoToOpenPosition ' + NewPos);
 			this.Pages[0].DrawInit([{Start: NewPos }, {}]);
 		}
 
@@ -201,6 +208,7 @@ module FB3Reader {
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
 
 		private PrepareCanvas() {
+			this.ResetCache();
 			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
 			this.Pages = new Array();
 			for (var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
@@ -213,11 +221,18 @@ module FB3Reader {
 			this.Pages[this.Pages.length-1].Next = this.Pages[0];
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
+
+			// this.Site.Canvas.addEventListener('resize', () => this.RefreshCanvas()); // not working for sime reason, hm
+
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].BindToHTMLDoc(this.Site);
 			}
 		}
 
+		private RefreshCanvas() {
+			this.PrepareCanvas();
+			this.GoTO([0]);
+		}
 //		private DrawPageFromPoint
 
 	}

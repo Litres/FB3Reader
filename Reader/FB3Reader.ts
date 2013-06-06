@@ -135,6 +135,7 @@ module FB3Reader {
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: ReaderPage[];
 		private PagesPositionsCache: FB3DOM.IRange[];
+		private OnResizeTimeout: any;
 
 		constructor(public ArtID: string,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
@@ -162,7 +163,6 @@ module FB3Reader {
 //			console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
 			var ReadPos: IPosition;
 			if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-				window.addEventListener('resize', () => { setTimeout(() => this.RefreshCanvas(), 1000) } );
 				if (this.Bookmarks && this.Bookmarks.CurPos) {
 					ReadPos = this.Bookmarks.CurPos.Fragment.From;
 				} else {
@@ -229,11 +229,16 @@ module FB3Reader {
 			}
 		}
 
-		private RefreshCanvas() {
-			this.PrepareCanvas();
-			this.GoTO([0]);
+		public AfterCanvasResize() {
+			if (this.OnResizeTimeout) {
+				clearTimeout(this.OnResizeTimeout);
+			}
+			this.OnResizeTimeout = setTimeout(() => {
+				this.PrepareCanvas();
+				this.GoTO([0]);
+				this.OnResizeTimeout = undefined;
+			} , 200)
 		}
-//		private DrawPageFromPoint
 
 	}
 

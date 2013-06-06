@@ -15,5 +15,8 @@ window.onload = function () {
     AFB3Reader.NColumns = 2;
     AFB3Reader.HyphON = true;
     AFB3Reader.Init();
+    window.addEventListener('resize', function () {
+        return AFB3Reader.AfterCanvasResize();
+    });
 };
 //@ sourceMappingURL=app.js.map

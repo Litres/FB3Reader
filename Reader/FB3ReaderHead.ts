@@ -25,6 +25,7 @@ module FB3Reader {
 		ResetCache(): void;
 		GetCachedPage(NewPos: IPosition): number;
 		SearchForText(Text: string): FB3DOM.ITOC[];
+		AfterCanvasResize(): void;
 
 	}
 }

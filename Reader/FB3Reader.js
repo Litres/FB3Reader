@@ -142,15 +142,9 @@ var FB3Reader;
             });
         };
         Reader.prototype.LoadDone = function (a) {
-            var _this = this;
             //			console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
             var ReadPos;
             if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-                window.addEventListener('resize', function () {
-                    setTimeout(function () {
-                        return _this.RefreshCanvas();
-                    }, 1000);
-                });
                 if (this.Bookmarks && this.Bookmarks.CurPos) {
                     ReadPos = this.Bookmarks.CurPos.Fragment.From;
                 } else {
@@ -222,11 +216,18 @@ var FB3Reader;
                 this.Pages[I].BindToHTMLDoc(this.Site);
             }
         };
-        Reader.prototype.RefreshCanvas = function () {
-            this.PrepareCanvas();
-            this.GoTO([
-                0
-            ]);
+        Reader.prototype.AfterCanvasResize = function () {
+            var _this = this;
+            if (this.OnResizeTimeout) {
+                clearTimeout(this.OnResizeTimeout);
+            }
+            this.OnResizeTimeout = setTimeout(function () {
+                _this.PrepareCanvas();
+                _this.GoTO([
+                    0
+                ]);
+                _this.OnResizeTimeout = undefined;
+            }, 300);
         };
         return Reader;
     })();

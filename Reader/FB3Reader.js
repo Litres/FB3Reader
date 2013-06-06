@@ -1,6 +1,11 @@
 /// <reference path="FB3ReaderHead.ts" />
 var FB3Reader;
 (function (FB3Reader) {
+    function IsNodePageBreaker(Node) {
+    }
+    function IsNodeUnbreakable(Node) {
+        return Node.childNodes[0].nodeName.match(/^p$/i) ? true : false;
+    }
     var ReaderPage = (function () {
         function ReaderPage(ColumnN, FB3DOM, FBReader, Prev) {
             this.ColumnN = ColumnN;
@@ -58,12 +63,6 @@ var FB3Reader;
                 return _this.DrawEnd(HTML);
             });
         };
-        ReaderPage.prototype.Reset = function () {
-            this.PagesToRender = null;
-            if (this.Busy) {
-                this.Reseted = true;
-            }
-        };
         ReaderPage.prototype.DrawEnd = function (HTML) {
             var _this = this;
             this.Busy = false;
@@ -90,26 +89,43 @@ var FB3Reader;
                 }, 1);
             }
         };
-        ReaderPage.prototype.FallOut = function () {
+        ReaderPage.prototype.Reset = function () {
+            this.PagesToRender = null;
+            if (this.Busy) {
+                this.Reseted = true;
+            }
+        };
+        ReaderPage.prototype.FallOut = function (FakeLimit) {
             //			console.log('FallOut ' + this.ID);
             var Element = this.Element;
             var Limit = this.Height;
             var I = 0;
             var GoodHeight = 0;
-            while(I < Element.children.length) {
+            var ChildsCount = Element.children.length;
+            while(I < ChildsCount) {
                 var Child = Element.children[I];
                 var ChildBot = Child.offsetTop + Child.scrollHeight;
-                if (ChildBot < Limit) {
+                var PrevPageBreaker;
+                if (ChildBot < Limit && !PrevPageBreaker) {
                     I++;
                 } else {
                     GoodHeight += Child.offsetTop;
                     Element = Child;
+                    ChildsCount = IsNodeUnbreakable(Element) ? 0 : Element.children.length;
                     Limit = Limit - Child.offsetTop;
                     I = 0;
+                    if (PrevPageBreaker) {
+                        break;
+                    }
                 }
+                PrevPageBreaker = IsNodePageBreaker(Child);
             }
-            this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';
-            return Element.id.split('_');
+            if (!FakeLimit) {
+                this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';
+            }
+            var Addr = Element.id.split('_');
+            Addr.shift();
+            return Addr;
         };
         return ReaderPage;
     })();    
@@ -125,9 +141,9 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
+            //			this.CurStartPos = [5, 14];
             this.CurStartPos = [
-                5, 
-                14
+                0
             ];
             // Environment research & canvas preparation
             this.PrepareCanvas();
@@ -223,11 +239,9 @@ var FB3Reader;
             }
             this.OnResizeTimeout = setTimeout(function () {
                 _this.PrepareCanvas();
-                _this.GoTO([
-                    0
-                ]);
+                _this.GoTO(_this.CurStartPos);
                 _this.OnResizeTimeout = undefined;
-            }, 300);
+            }, 200);
         };
         return Reader;
     })();

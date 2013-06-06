@@ -139,7 +139,7 @@ var FB3DOM;
             //	out += ' style="' + this.data.css + '"';
             //}
             //			if (this.Data.i) {
-            Out += ' id="' + this.GetXPID() + '"';
+            Out += ' id="n_' + this.GetXPID() + '"';
             return Out + '>';
         };
         return FB3Tag;

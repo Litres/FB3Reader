@@ -9,6 +9,15 @@ module FB3Reader {
 		CacheAs?: number;
 	}
 
+	function IsNodePageBreaker(Node:HTMLElement):boolean {
+		//return Node.childNodes[0].nodeName.toLowerCase() == 'h1' ? true : false;
+		return false;
+	}
+
+	function IsNodeUnbreakable(Node: HTMLElement): boolean {
+//		return Node.childNodes[0].nodeName.match(/^h\d$/i) ? true : false;
+		return Node.childNodes[0].nodeName.match(/^p$/i) ? true : false;
+	}
 
 	class ReaderPage {
 		private Element: HTMLDivElement;
@@ -69,13 +78,6 @@ module FB3Reader {
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, Range, (HTML: string) => this.DrawEnd(HTML));
 		}
 
-		Reset() {
-			this.PagesToRender = null;
-			if (this.Busy) {
-				this.Reseted = true;
-			}
-		}
-
 		DrawEnd(HTML: string) {
 			this.Busy = false;
 			//			console.log('DrawEnd ' + this.ID);
@@ -100,26 +102,41 @@ module FB3Reader {
 			}
 		}
 
-		FallOut(): IPosition {
+		Reset() {
+			this.PagesToRender = null;
+			if (this.Busy) {
+				this.Reseted = true;
+			}
+		}
+		FallOut(FakeLimit?): IPosition {
 //			console.log('FallOut ' + this.ID);
 			var Element = <HTMLElement> this.Element;
 			var Limit = this.Height;
 			var I = 0;
 			var GoodHeight = 0;
-			while (I < Element.children.length) {
+			var ChildsCount = Element.children.length;
+			while (I < ChildsCount) {
 				var Child = <HTMLElement> Element.children[I];
 				var ChildBot = Child.offsetTop + Child.scrollHeight;
-				if (ChildBot < Limit) {
+				var PrevPageBreaker:boolean;
+				if (ChildBot < Limit && !PrevPageBreaker) {
 					I++;
 				} else {
 					GoodHeight += Child.offsetTop;
 					Element = Child;
+					ChildsCount = IsNodeUnbreakable(Element)?0:Element.children.length;
 					Limit = Limit - Child.offsetTop;
 					I = 0;
+					if (PrevPageBreaker) break;
 				}
+				PrevPageBreaker = IsNodePageBreaker(Child);
 			}
-			this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';
-			return Element.id.split('_');
+			if (!FakeLimit) {
+				this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';
+			}
+			var Addr = Element.id.split('_');
+			Addr.shift();
+			return Addr;
 		}
 	}
 
@@ -148,7 +165,8 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-			this.CurStartPos = [5,14];
+//			this.CurStartPos = [5, 14];
+			this.CurStartPos = [0];
 
 			// Environment research & canvas preparation
 			this.PrepareCanvas();
@@ -235,7 +253,7 @@ module FB3Reader {
 			}
 			this.OnResizeTimeout = setTimeout(() => {
 				this.PrepareCanvas();
-				this.GoTO([0]);
+				this.GoTO(this.CurStartPos);
 				this.OnResizeTimeout = undefined;
 			} , 200)
 		}

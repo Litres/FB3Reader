@@ -136,7 +136,7 @@ module FB3DOM {
 			//}
 
 //			if (this.Data.i) {
-				Out += ' id="' + this.GetXPID() + '"';
+				Out += ' id="n_' + this.GetXPID() + '"';
 //			}
 			return Out + '>';
 

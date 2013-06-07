@@ -59,6 +59,9 @@ module FB3DOM {
 //				console.log('Invalid "From" on "GetHTML" call, element "' + this.GetXPID + '"');
 				From = 0;
 			}
+
+			From *= 1;
+			To *= 1;
 			for (var I = From; I <= To; I++) {
 				var KidRange: IRange = {From:[] , To:[]};
 				if (I == From) {

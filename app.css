@@ -11,6 +11,20 @@ div.FB2readerPage {
     overflow:hidden;
     float:left;
     height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.cut_top {
+    padding-top:0;
+    margin-top:0;
+    border-top: none;
+}
+
+.cut_bot {
+    padding-bottom:0;
+    margin-bottom:0;
+    border-bottom: none;
 }
 
 div.FB3ReaderColumnset4 div.FB2readerPage {

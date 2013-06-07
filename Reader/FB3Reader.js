@@ -2,10 +2,10 @@
 var FB3Reader;
 (function (FB3Reader) {
     function IsNodePageBreaker(Node) {
-        return Node.childNodes[0].nodeName.toLowerCase() == 'h1' ? true : false;
+        return Node.children[0] && Node.children[0].nodeName.toLowerCase() == 'h1' ? true : false;
     }
     function IsNodeUnbreakable(Node) {
-        return Node.childNodes[0].nodeName.match(/^h\d$/i) ? true : false;
+        return Node.children[0] && Node.children[0].nodeName.match(/^h\d$/i) ? true : false;
     }
     var ReaderPage = (function () {
         function ReaderPage(ColumnN, FB3DOM, FBReader, Prev) {
@@ -17,7 +17,7 @@ var FB3Reader;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 1;
+            this.PrerenderBlocks = 10;
         }
         ReaderPage.prototype.Show = function () {
         };
@@ -31,6 +31,13 @@ var FB3Reader;
             this.Element = Site.getElementById('FB3ReaderColumn' + this.ID);
             this.Width = this.Element.offsetWidth;
             this.Height = this.Element.parentElement.offsetHeight;
+            if (document.all) {
+                this.MarginTop = parseInt(this.Element.currentStyle.marginTop, 10) + parseInt(this.Element.currentStyle.paddingTop, 10);
+                this.MarginBottom = parseInt(this.Element.currentStyle.marginBottom, 10) + parseInt(this.Element.currentStyle.paddingBottom, 10);
+            } else {
+                this.MarginTop = parseInt(getComputedStyle(this.Element, '').getPropertyValue('margin-top')) + parseInt(getComputedStyle(this.Element, '').getPropertyValue('padding-top'));
+                this.MarginBottom = parseInt(getComputedStyle(this.Element, '').getPropertyValue('margin-bottom')) + parseInt(getComputedStyle(this.Element, '').getPropertyValue('padding-bottom'));
+            }
         };
         ReaderPage.prototype.DrawInit = function (PagesToRender) {
             var _this = this;
@@ -74,23 +81,57 @@ var FB3Reader;
             }
             this.Element.innerHTML = HTML;
             if (!this.RenderInstr.Range) {
-                this.RenderInstr.Range = {
-                    From: this.RenderInstr.Start,
-                    To: this.FallOut()
-                };
-                if (!this.RenderInstr.Range.To) {
+                var FallOut = this.FallOut(this.Height - this.MarginBottom);
+                if (!FallOut) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
+                    bah();
                     this.PrerenderBlocks *= 2;
                     this.RenderInstr.Range = null;
                     this.DrawInit([
                         this.RenderInstr
-                    ].concat(this.PagesToRender.slice(0)));
+                    ].concat(this.PagesToRender));
                     return;
                 }
+                this.RenderInstr.Range = {
+                    From: this.RenderInstr.Start.splice(0),
+                    To: FallOut.FallOut
+                };
+                this.RenderInstr.Height = FallOut.Height;
                 if (this.RenderInstr.CacheAs !== undefined) {
-                    this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr.Range);
+                    this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr);
+                }
+                // Ok, we have rendered the page nice. Now we can check, wether we have created
+                // a page long enough to fin the NEXT page. If so, we are going to estimate it's
+                // content to create next page(s) with EXACTLY the required html - this will
+                // speed up the render
+                var LastChild = this.Element.children[this.Element.children.length - 1];
+                if (LastChild) {
+                    var CollectedHeight = FallOut.Height;
+                    for(var I = 0; I < this.PagesToRender.length; I++) {
+                        var TestHeight = CollectedHeight + this.Height - this.MarginBottom - this.MarginTop;
+                        if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
+                            var NextPageFallOut = this.FallOut(TestHeight);
+                            if (NextPageFallOut) {
+                                var NextPageRange = {
+                                    From: (I == 0 ? this.RenderInstr.Range.To : this.PagesToRender[I - 1].Range.To).splice(0),
+                                    To: NextPageFallOut.FallOut
+                                };
+                                this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.MarginTop;
+                                CollectedHeight = NextPageFallOut.Height;
+                                if (this.PagesToRender[I].CacheAs !== undefined) {
+                                    this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
+                                }
+                                this.PagesToRender[I].Range = NextPageRange;
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
                 }
             }
+            this.Element.parentElement.style.height = this.RenderInstr.Height + 'px';
             if (this.PagesToRender && this.PagesToRender.length) {
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
                     this.PagesToRender[0].Start = this.RenderInstr.Range.To;
@@ -106,10 +147,16 @@ var FB3Reader;
                 this.Reseted = true;
             }
         };
-        ReaderPage.prototype.FallOut = function (FakeLimit) {
+        ReaderPage.prototype.PutPagePlace = function (Place) {
+            if (Place < 0) {
+                this.Element.style.display = 'none';
+            } else {
+                this.Element.style.display = 'block';
+            }
+        };
+        ReaderPage.prototype.FallOut = function (Limit) {
             //		CSS3 tabs - DIY
             var Element = this.Element;
-            var Limit = this.Height;
             var I = 0;
             var GoodHeight = 0;
             var ChildsCount = Element.children.length;
@@ -121,7 +168,7 @@ var FB3Reader;
                 var Child = Element.children[I];
                 var ChildBot = Child.offsetTop + Child.scrollHeight;
                 var PrevPageBreaker;
-                if (ChildBot < Limit && !PrevPageBreaker) {
+                if ((ChildBot < Limit) && !PrevPageBreaker) {
                     I++;
                     ForceDenyElementBreaking = false;
                 } else {
@@ -136,6 +183,7 @@ var FB3Reader;
                     LastOffsetShift = CurShift;
                     GoodHeight += ApplyShift;
                     LastOffsetParent = Child.offsetParent;
+                    //Child.className += ' cut_bot';
                     Element = Child;
                     ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
                     Limit = Limit - ApplyShift;
@@ -149,12 +197,12 @@ var FB3Reader;
             if (!GotTheBottom) {
                 return null;
             }
-            if (!FakeLimit) {
-                this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';
-            }
             var Addr = Element.id.split('_');
             Addr.shift();
-            return Addr;
+            return {
+                FallOut: Addr,
+                Height: GoodHeight
+            };
         };
         return ReaderPage;
     })();    
@@ -170,15 +218,14 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
-            //			this.CurStartPos = [5, 14];
             this.CurStartPos = [
-                0
+                5, 
+                14
             ];
-            // Environment research & canvas preparation
-            this.PrepareCanvas();
         }
         Reader.prototype.Init = function () {
             var _this = this;
+            this.PrepareCanvas();
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
                 _this.LoadDone(1);
             });
@@ -221,12 +268,15 @@ var FB3Reader;
                 ]
             };
             //			console.log('GoToOpenPosition ' + NewPos);
-            this.Pages[0].DrawInit([
+            var NewInstr = [
                 {
                     Start: NewPos
-                }, 
-                {}
-            ]);
+                }
+            ];
+            for(var I = 0; I < this.CacheForward * this.NColumns; I++) {
+                NewInstr.push({});
+            }
+            this.Pages[0].DrawInit(NewInstr);
         };
         Reader.prototype.TOC = function () {
             return this.FB3DOM.TOC;
@@ -247,7 +297,7 @@ var FB3Reader;
             this.ResetCache();
             var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
             this.Pages = new Array();
-            for(var I = 0; I < (this.CacheBackward + this.CacheForward + 1); I++) {
+            for(var I = 0; I < this.CacheBackward + this.CacheForward; I++) {
                 for(var J = 0; J < this.NColumns; J++) {
                     var NewPage = new ReaderPage(J, this.FB3DOM, this, this.Pages[this.Pages.length - 1]);
                     this.Pages[this.Pages.length] = NewPage;

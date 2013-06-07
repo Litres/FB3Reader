@@ -29,7 +29,7 @@ var FB3DOM;
             this.Chars = text.length;
         }
         FB3Text.prototype.GetHTML = function (HyphOn, Range) {
-            return '<span id="' + this.GetXPID() + '">' + this.text + '</span>';
+            return '<span id="n_' + this.GetXPID() + '">' + this.text + '</span>';
         };
         FB3Text.prototype.GetXPID = function () {
             var ID = "";

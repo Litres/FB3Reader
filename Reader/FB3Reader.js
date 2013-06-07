@@ -2,9 +2,10 @@
 var FB3Reader;
 (function (FB3Reader) {
     function IsNodePageBreaker(Node) {
+        return Node.childNodes[0].nodeName.toLowerCase() == 'h1' ? true : false;
     }
     function IsNodeUnbreakable(Node) {
-        return Node.childNodes[0].nodeName.match(/^p$/i) ? true : false;
+        return Node.childNodes[0].nodeName.match(/^h\d$/i) ? true : false;
     }
     var ReaderPage = (function () {
         function ReaderPage(ColumnN, FB3DOM, FBReader, Prev) {
@@ -102,23 +103,36 @@ var FB3Reader;
             var I = 0;
             var GoodHeight = 0;
             var ChildsCount = Element.children.length;
+            var ForceDenyElementBreaking = true;
+            var LastOffsetParent;
+            var LastOffsetShift;
             while(I < ChildsCount) {
                 var Child = Element.children[I];
                 var ChildBot = Child.offsetTop + Child.scrollHeight;
                 var PrevPageBreaker;
                 if (ChildBot < Limit && !PrevPageBreaker) {
                     I++;
+                    ForceDenyElementBreaking = false;
                 } else {
-                    GoodHeight += Child.offsetTop;
+                    var CurShift = Child.offsetTop;
+                    var ApplyShift;
+                    if (LastOffsetParent == Child.offsetParent) {
+                        ApplyShift = CurShift - LastOffsetShift;
+                    } else {
+                        ApplyShift = CurShift;
+                    }
+                    LastOffsetShift = CurShift;
+                    GoodHeight += ApplyShift;
+                    LastOffsetParent = Child.offsetParent;
                     Element = Child;
-                    ChildsCount = IsNodeUnbreakable(Element) ? 0 : Element.children.length;
-                    Limit = Limit - Child.offsetTop;
+                    ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
+                    Limit = Limit - ApplyShift;
                     I = 0;
                     if (PrevPageBreaker) {
                         break;
                     }
                 }
-                PrevPageBreaker = IsNodePageBreaker(Child);
+                PrevPageBreaker = !ForceDenyElementBreaking && IsNodePageBreaker(Child);
             }
             if (!FakeLimit) {
                 this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';

@@ -17,6 +17,7 @@ var FB3Reader;
             if (Prev) {
                 Prev.Next = this;
             }
+            this.PrerenderBlocks = 1;
         }
         ReaderPage.prototype.Show = function () {
         };
@@ -49,12 +50,12 @@ var FB3Reader;
                         0
                     ];
                 }
-                var FragmentEnd = this.RenderInstr.Start[0] * 1 + 10;
+                var FragmentEnd = this.RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
                 if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                     FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
                 }
                 Range = {
-                    From: this.RenderInstr.Start,
+                    From: this.RenderInstr.Start.slice(0),
                     To: [
                         FragmentEnd
                     ]
@@ -77,6 +78,15 @@ var FB3Reader;
                     From: this.RenderInstr.Start,
                     To: this.FallOut()
                 };
+                if (!this.RenderInstr.Range.To) {
+                    // Ups, our page is incomplete - have to retry filling it. Take more data now
+                    this.PrerenderBlocks *= 2;
+                    this.RenderInstr.Range = null;
+                    this.DrawInit([
+                        this.RenderInstr
+                    ].concat(this.PagesToRender.slice(0)));
+                    return;
+                }
                 if (this.RenderInstr.CacheAs !== undefined) {
                     this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr.Range);
                 }
@@ -97,7 +107,7 @@ var FB3Reader;
             }
         };
         ReaderPage.prototype.FallOut = function (FakeLimit) {
-            //			console.log('FallOut ' + this.ID);
+            //		CSS3 tabs - DIY
             var Element = this.Element;
             var Limit = this.Height;
             var I = 0;
@@ -106,6 +116,7 @@ var FB3Reader;
             var ForceDenyElementBreaking = true;
             var LastOffsetParent;
             var LastOffsetShift;
+            var GotTheBottom = false;
             while(I < ChildsCount) {
                 var Child = Element.children[I];
                 var ChildBot = Child.offsetTop + Child.scrollHeight;
@@ -114,6 +125,7 @@ var FB3Reader;
                     I++;
                     ForceDenyElementBreaking = false;
                 } else {
+                    GotTheBottom = true;
                     var CurShift = Child.offsetTop;
                     var ApplyShift;
                     if (LastOffsetParent == Child.offsetParent) {
@@ -133,6 +145,9 @@ var FB3Reader;
                     }
                 }
                 PrevPageBreaker = !ForceDenyElementBreaking && IsNodePageBreaker(Child);
+            }
+            if (!GotTheBottom) {
+                return null;
             }
             if (!FakeLimit) {
                 this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';

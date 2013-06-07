@@ -30,6 +30,7 @@ module FB3Reader {
 		public Reseted: boolean;
 		public Width: number;
 		public Height: number;
+		public PrerenderBlocks: number;
 		Show(): void { }
 		Hide(): void { }
 		constructor(public ColumnN: number,
@@ -41,6 +42,7 @@ module FB3Reader {
 			if (Prev) {
 				Prev.Next = this;
 			}
+			this.PrerenderBlocks = 5;
 		}
 		GetInitHTML(ID: number): FB3DOM.InnerHTML {
 			this.ID = ID;
@@ -68,11 +70,11 @@ module FB3Reader {
 					this.RenderInstr.Start = [0];
 				} // Start point defined
 
-				var FragmentEnd = this.RenderInstr.Start[0] * 1 + 10;
+				var FragmentEnd = this.RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
 				if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
 					FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
 				}
-				Range = { From: this.RenderInstr.Start, To: [FragmentEnd] };
+				Range = { From: this.RenderInstr.Start.slice(0), To: [FragmentEnd] };
 			}
 
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, Range, (HTML: string) => this.DrawEnd(HTML));
@@ -88,7 +90,19 @@ module FB3Reader {
 
 			this.Element.innerHTML = HTML;
 			if (!this.RenderInstr.Range) {
-				this.RenderInstr.Range = { From: this.RenderInstr.Start, To: this.FallOut() };
+				this.RenderInstr.Range = {
+					From: this.RenderInstr.Start,
+					To: this.FallOut()
+				};
+
+				if (!this.RenderInstr.Range.To) {
+					// Ups, our page is incomplete - have to retry filling it. Take more data now
+					this.PrerenderBlocks *= 2;
+					this.RenderInstr.Range = null;
+					this.DrawInit([this.RenderInstr].concat(this.PagesToRender.slice(0)));
+					return;
+				}
+
 				if (this.RenderInstr.CacheAs !== undefined) {
 					this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr.Range);
 				}
@@ -109,7 +123,7 @@ module FB3Reader {
 			}
 		}
 		FallOut(FakeLimit?): IPosition {
-//			console.log('FallOut ' + this.ID);
+//		CSS3 tabs - DIY
 			var Element = <HTMLElement> this.Element;
 			var Limit = this.Height;
 			var I = 0;
@@ -118,6 +132,7 @@ module FB3Reader {
 			var ForceDenyElementBreaking = true;
 			var LastOffsetParent: Element;
 			var LastOffsetShift: number;
+			var GotTheBottom = false;
 			while (I < ChildsCount) {
 				var Child = <HTMLElement> Element.children[I];
 				var ChildBot = Child.offsetTop + Child.scrollHeight;
@@ -126,6 +141,7 @@ module FB3Reader {
 					I++;
 					ForceDenyElementBreaking = false;
 				} else {
+					GotTheBottom = true;
 					var CurShift = Child.offsetTop;
 					var ApplyShift:number;
 					if (LastOffsetParent == Child.offsetParent) {
@@ -144,6 +160,10 @@ module FB3Reader {
 					if (PrevPageBreaker) break;
 				}
 				PrevPageBreaker = !ForceDenyElementBreaking && IsNodePageBreaker(Child);
+			}
+
+			if (!GotTheBottom) { // We had not enough data on the page!
+				return null;
 			}
 			if (!FakeLimit) {
 				this.Element.parentElement.style.height = (GoodHeight - 1) + 'px';

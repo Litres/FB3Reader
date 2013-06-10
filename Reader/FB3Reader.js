@@ -92,7 +92,6 @@ var FB3Reader;
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
                     this.PrerenderBlocks *= 2;
                     this.RenderInstr.Range = null;
-                    bah();
                     this.DrawInit([
                         this.RenderInstr
                     ].concat(this.PagesToRender));
@@ -161,7 +160,7 @@ var FB3Reader;
             }
         };
         ReaderPage.prototype.FallOut = function (Limit) {
-            //		CSS3 tabs - DIY
+            //		Hand mage CSS3 tabs. I thouth it would take more than this
             var Element = this.Element;
             var I = 0;
             var GoodHeight = 0;

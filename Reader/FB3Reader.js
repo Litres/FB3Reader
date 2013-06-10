@@ -7,6 +7,12 @@ var FB3Reader;
     function IsNodeUnbreakable(Node) {
         return Node.children[0] && Node.children[0].nodeName.match(/^h\d$/i) ? true : false;
     }
+    function RangeClone(BaseRange) {
+        return {
+            From: BaseRange.From.slice(0),
+            To: BaseRange.To.slice(0)
+        };
+    }
     var ReaderPage = (function () {
         function ReaderPage(ColumnN, FB3DOM, FBReader, Prev) {
             this.ColumnN = ColumnN;
@@ -68,7 +74,7 @@ var FB3Reader;
                     ]
                 };
             }
-            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, Range, function (HTML) {
+            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), function (HTML) {
                 return _this.DrawEnd(HTML);
             });
         };
@@ -84,9 +90,9 @@ var FB3Reader;
                 var FallOut = this.FallOut(this.Height - this.MarginBottom);
                 if (!FallOut) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
-                    bah();
                     this.PrerenderBlocks *= 2;
                     this.RenderInstr.Range = null;
+                    bah();
                     this.DrawInit([
                         this.RenderInstr
                     ].concat(this.PagesToRender));

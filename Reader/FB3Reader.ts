@@ -22,7 +22,14 @@ module FB3Reader {
 
 	function IsNodeUnbreakable(Node: HTMLElement): boolean {
 		return Node.children[0] && Node.children[0].nodeName.match(/^h\d$/i) ? true : false;
-//		return Node.nodeName.match(/^p$/i) ? true : false;
+		//		return Node.nodeName.match(/^p$/i) ? true : false;
+	}
+
+	function RangeClone(BaseRange: FB3DOM.IRange): FB3DOM.IRange {
+		return {
+			From: BaseRange.From.slice(0),
+			To: BaseRange.To.slice(0)
+		}
 	}
 
 	class ReaderPage {
@@ -97,7 +104,7 @@ module FB3Reader {
 				Range = { From: this.RenderInstr.Start.slice(0), To: [FragmentEnd] };
 			}
 
-			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, Range, (HTML: string) => this.DrawEnd(HTML));
+			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), (HTML: string) => this.DrawEnd(HTML));
 		}
 
 		DrawEnd(HTML: string) {
@@ -113,9 +120,9 @@ module FB3Reader {
 				var FallOut = this.FallOut(this.Height - this.MarginBottom);
 				if (!FallOut) {
 					// Ups, our page is incomplete - have to retry filling it. Take more data now
-					bah();
 					this.PrerenderBlocks *= 2;
 					this.RenderInstr.Range = null;
+					bah();
 					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
 					return;
 				}

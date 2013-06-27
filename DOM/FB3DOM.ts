@@ -14,7 +14,7 @@ module FB3DOM {
 			}
 			if (!this.WaitedBlocks.length) {
 				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range);
-				this.OnDone(HTML);
+				this.OnDone(HTML.join(''));
 				return true;
 			} else {
 				return false;
@@ -39,6 +39,7 @@ module FB3DOM {
 		public Ready: bool;
 		private OnDoneFunc: any;
 		private ArtID: string;
+		public XPID: string;
 		
 		constructor(public Alert: FB3ReaderSite.IAlert,
 			public Progressor: FB3ReaderSite.ILoadProgress,
@@ -46,13 +47,14 @@ module FB3DOM {
 			super(null, null, 0);
 			this.ActiveRequests = [];
 			this.Ready = false;
+			this.XPID = '';
 		}
 
 		public GetCloseTag(Range: IRange): string {
 			return '';
 		}
-		public GetInitTag(Range: IRange): string {
-			return '';
+		public GetInitTag(Range: IRange): InnerHTML[] {
+			return [];
 		}
 
 		private CheckAndPullRequiredBlocks(Range: IRange): number[] {
@@ -77,9 +79,10 @@ module FB3DOM {
 			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void {
+			
 			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
 			if (MissingChunks.length == 0) {
-				Callback(this.GetHTML(HyphOn, Range));
+				Callback(this.GetHTML(HyphOn, Range).join(''));
 			} else {
 				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, Callback));
 				for (var I = 0; I < MissingChunks.length; I++) {
@@ -91,6 +94,7 @@ module FB3DOM {
 					}
 				}
 			}
+			
 		}
 
 		public ChunkUrl(N: number): string {
@@ -98,6 +102,7 @@ module FB3DOM {
 		}
 
 		private OnChunkLoaded(Data: Array, CustomData?: any):void {
+			
 			var LoadedChunk: number = CustomData.ChunkN;
 			var Shift = this.DataChunks[LoadedChunk].s;
 			for (var I = 0; I < Data.length; I++) {
@@ -113,6 +118,7 @@ module FB3DOM {
 					I++;
 				}
 			}
+			
 		}
 
 		private CheckRangeLoaded(From: number, To: number): number[] {
@@ -133,7 +139,6 @@ module FB3DOM {
 			}
 			return ChunksMissing;
 		}
-		public GetXPID(): string { return '' }
 	}
 
 }

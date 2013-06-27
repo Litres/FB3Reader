@@ -18,24 +18,39 @@ module FB3DOM {
 
 	export class FB3Text implements IFB3Block {
 		public Chars: number;
+		public XPID: string;
 		constructor(private text: string, public Parent: IFB3Block, public ID: number) {
 			this.Chars = text.length;
+//			this.text = this.text.replace('\u00AD', '&shy;')
+			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 		}
-		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML {
-			return '<span id="n_' + this.GetXPID() + '">'+this.text+'</span>';  // todo - HyphOn must work, must just replace shy with ''
+		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML[]{
+			var OutStr = this.text;
+			if (Range.To[0]) {
+				OutStr = OutStr.substr(0, Range.To[0]);
+			}
+			if (Range.From[0]) {
+				OutStr = OutStr.substr(Range.From[0]);
+			}
+
+			return ['<span id="n_' + this.XPID + '">',
+				OutStr,
+				'</span>'];  // todo - HyphOn must work, must just replace shy with ''
 		}
 
-		public GetXPID(): string {
-			var ID: string = "";
-			var ParID: string;
-			if (this.Parent) {
-				ParID = this.Parent.GetXPID();
-			}
-			if (ParID != '') {
-				ID = ParID + '_';
-			}
-			return ID + this.ID;
-		}
+		//public GetXPID(): string {
+		//	
+		//	var ID: string = "";
+		//	var ParID: string;
+		//	if (this.Parent) {
+		//		ParID = this.Parent.GetXPID();
+		//	}
+		//	if (ParID != '') {
+		//		ID = ParID + '_';
+		//	}
+		//	
+		//	return ID + this.ID;
+		//}
 	}
 
 
@@ -44,19 +59,19 @@ module FB3DOM {
 		public TagName: string;
 		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML {
-			var Out = [this.GetInitTag(Range)];
+		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML[] {
+			var Out = this.GetInitTag(Range);
 			var CloseTag = this.GetCloseTag(Range);
 			var From = Range.From.shift() || 0;
 			var To = Range.To.shift();
 			if (To === undefined)
 				To = this.Childs.length - 1;
 			if (To >= this.Childs.length) {
-//				console.log('Invalid "To" on "GetHTML" call, element "' + this.GetXPID + '"');
+//				console.log('Invalid "To" on "GetHTML" call, element "' + this.XPID + '"');
 				To = this.Childs.length - 1;
 			}
 			if (From < 0 || From >= this.Childs.length) {
-//				console.log('Invalid "From" on "GetHTML" call, element "' + this.GetXPID + '"');
+//				console.log('Invalid "From" on "GetHTML" call, element "' + this.XPID + '"');
 				From = 0;
 			}
 
@@ -70,10 +85,10 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				Out.push(<string>this.Childs[I].GetHTML(HyphOn, KidRange));
+				Out = Out.concat(this.Childs[I].GetHTML(HyphOn, KidRange));
 			}
 			Out.push(CloseTag);
-			return Out.join(''); // Hope one join is faster than several concats
+			return Out; // Hope one join is faster than several concats
 		}
 
 		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number) {
@@ -110,7 +125,7 @@ module FB3DOM {
 		public GetCloseTag(Range: IRange): string {
 			return '</' + this.HTMLTagName() + '>';
 		}
-		public GetInitTag(Range: IRange): string {
+		public GetInitTag(Range: IRange): InnerHTML[] {
 			var ElementClasses = new Array();
 			if (Range.From[0]) {
 				ElementClasses.push('cut_top')
@@ -129,20 +144,18 @@ module FB3DOM {
 				ElementClasses.push(this.Data.nc)
 			}
 
-			var Out = '<' + this.HTMLTagName();
+			var Out = ['<' + this.HTMLTagName()];
 			if (ElementClasses.length) {
-				Out += ' class="' + ElementClasses.join(' ') + '"';
+				Out.push(' class="' + ElementClasses.join(' ') + '"');
 			}
 
 			//if (this.data.css) {
 			//	out += ' style="' + this.data.css + '"';
 			//}
 
-//			if (this.Data.i) {
-				Out += ' id="n_' + this.GetXPID() + '"';
-//			}
-			return Out + '>';
-
+			//			if (this.Data.i) {}
+			Out.push(' id="n_' + this.XPID + '">');
+			return Out;
 		}
 	}
 }

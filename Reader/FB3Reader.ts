@@ -78,10 +78,13 @@ module FB3Reader {
 				this.MarginBottom = parseInt(getComputedStyle(this.Element, '').getPropertyValue('margin-bottom'))
 				+ parseInt(getComputedStyle(this.Element, '').getPropertyValue('padding-bottom'));
 			}
-//			console.log(this.MarginTop + ':' + this.MarginBottom);
+			//			console.log(this.MarginTop + ':' + this.MarginBottom);
 		}
 
 		DrawInit(PagesToRender: IPageRenderInstruction[]): void {
+			
+			
+			
 			if (PagesToRender.length == 0) return;
 			this.Busy = true;
 			this.Reseted = false;
@@ -104,14 +107,18 @@ module FB3Reader {
 				Range = { From: this.RenderInstr.Start.slice(0), To: [FragmentEnd] };
 			}
 
+			
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), (HTML: string) => this.DrawEnd(HTML));
+			
 		}
 
 		DrawEnd(HTML: string) {
+			
 			this.Busy = false;
 			//			console.log('DrawEnd ' + this.ID);
 			if (this.Reseted) {
 				this.Reseted = false;
+				
 				return;
 			}
 
@@ -123,6 +130,7 @@ module FB3Reader {
 					this.PrerenderBlocks *= 2;
 					this.RenderInstr.Range = null;
 					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+					
 					return;
 				}
 				this.RenderInstr.Range = {
@@ -173,6 +181,7 @@ module FB3Reader {
 				}
 				setTimeout(() => { this.Next.DrawInit(this.PagesToRender) },1)
 			}
+			
 		}
 
 		Reset() {
@@ -201,15 +210,41 @@ module FB3Reader {
 			var LastOffsetParent: Element;
 			var LastOffsetShift: number;
 			var GotTheBottom = false;
+			var NormHeight = 100500;
+			var TextShift = 0;
 			while (I < ChildsCount) {
 				var Child = <HTMLElement> Element.children[I];
-				var ChildBot = Child.offsetTop + Child.scrollHeight;
+				var ElHeight = Math.max(Child.scrollHeight, Child.offsetHeight);
+				var ChildBot = Child.offsetTop + ElHeight;
 				var PrevPageBreaker: boolean;
 				if ((ChildBot < Limit) && !PrevPageBreaker) {
 					I++;
 					ForceDenyElementBreaking = false;
+					NormHeight = ElHeight;
 				} else {
 					GotTheBottom = true;
+					var InnerHTML = Child.innerHTML;
+					if (InnerHTML.match(/^[^<]*\u00AD[^<]*$/) && ElHeight > NormHeight) {
+						// Hack to work with hyphens - as long as webkit can't make hyphens on the end 
+						// of the Element, we will have to manage this ourselves :(
+						var Parts = InnerHTML.split(/\u00AD/);
+						InnerHTML = '';
+						for (var I = 0; I < Parts.length; I++) {
+							var Addon = '';
+							if (InnerHTML) {
+								Addon = '\u00AD';
+							}
+							Addon += Parts[I]
+							Child.innerHTML = InnerHTML + Addon+' ';
+							if (Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight) >= Limit) {
+								Child.innerHTML = InnerHTML + '- ' + Parts.slice(I).join('');
+								break;
+							}
+							InnerHTML += Addon;
+						}
+						TextShift = InnerHTML.length;
+					}
+
 					var CurShift = Child.offsetTop;
 					var ApplyShift: number;
 					if (LastOffsetParent == Child.offsetParent) {
@@ -222,6 +257,8 @@ module FB3Reader {
 					GoodHeight += ApplyShift;
 					LastOffsetParent = Child.offsetParent;
 					//Child.className += ' cut_bot';
+
+					//var Sibling = Element.children[I - 1];
 					Element = Child;
 					ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
 					Limit = Limit - ApplyShift;
@@ -232,10 +269,14 @@ module FB3Reader {
 			}
 
 			if (!GotTheBottom) { // We had not enough data on the page!
+				
 				return null;
 			}
-			var Addr = Element.id.split('_');
+			var Addr:Array = Element.id.split('_');
 			Addr.shift();
+			if (TextShift) {
+				Addr.push(TextShift);
+			}
 			return { FallOut: Addr, Height: GoodHeight };
 		}
 	}

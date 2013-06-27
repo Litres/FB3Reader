@@ -33,11 +33,11 @@ module FB3DOM {
 
 	export interface IFB3Block {
 		Parent: IFB3Block;
+		XPID: string;				// XPAth-like ID for this DOM-node, allows for reverse search for block
 		Chars: number;			// Length of the node - pure characters and spaces
 		ID: number;					// Position of this node within the parent. Used to generate GetXPID
 		TagName?: string;		// Native tag name. May be mapped to HTML with another tag name
-		GetXPID(): string;	// XPAth-like ID for this DOM-node, allows for reverse search for block
-		GetHTML(HyphOn: bool, Range: IRange): InnerHTML;	// Returns partial HTML for this node
+		GetHTML(HyphOn: bool, Range: IRange): InnerHTML[];	// Returns partial HTML for this node
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }

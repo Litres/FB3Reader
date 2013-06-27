@@ -27,20 +27,22 @@ var FB3DOM;
             this.Parent = Parent;
             this.ID = ID;
             this.Chars = text.length;
+            //			this.text = this.text.replace('\u00AD', '&shy;')
+            this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
         }
         FB3Text.prototype.GetHTML = function (HyphOn, Range) {
-            return '<span id="n_' + this.GetXPID() + '">' + this.text + '</span>';
-        };
-        FB3Text.prototype.GetXPID = function () {
-            var ID = "";
-            var ParID;
-            if (this.Parent) {
-                ParID = this.Parent.GetXPID();
+            var OutStr = this.text;
+            if (Range.To[0]) {
+                OutStr = OutStr.substr(0, Range.To[0]);
             }
-            if (ParID != '') {
-                ID = ParID + '_';
+            if (Range.From[0]) {
+                OutStr = OutStr.substr(Range.From[0]);
             }
-            return ID + this.ID;
+            return [
+                '<span id="n_' + this.XPID + '">', 
+                OutStr, 
+                '</span>'
+            ];
         };
         return FB3Text;
     })();
@@ -68,9 +70,7 @@ var FB3DOM;
             }
         }
         FB3Tag.prototype.GetHTML = function (HyphOn, Range) {
-            var Out = [
-                this.GetInitTag(Range)
-            ];
+            var Out = this.GetInitTag(Range);
             var CloseTag = this.GetCloseTag(Range);
             var From = Range.From.shift() || 0;
             var To = Range.To.shift();
@@ -78,11 +78,11 @@ var FB3DOM;
                 To = this.Childs.length - 1;
             }
             if (To >= this.Childs.length) {
-                //				console.log('Invalid "To" on "GetHTML" call, element "' + this.GetXPID + '"');
+                //				console.log('Invalid "To" on "GetHTML" call, element "' + this.XPID + '"');
                 To = this.Childs.length - 1;
             }
             if (From < 0 || From >= this.Childs.length) {
-                //				console.log('Invalid "From" on "GetHTML" call, element "' + this.GetXPID + '"');
+                //				console.log('Invalid "From" on "GetHTML" call, element "' + this.XPID + '"');
                 From = 0;
             }
             From *= 1;
@@ -98,10 +98,10 @@ var FB3DOM;
                 if (I == To) {
                     KidRange.To = Range.To;
                 }
-                Out.push(this.Childs[I].GetHTML(HyphOn, KidRange));
+                Out = Out.concat(this.Childs[I].GetHTML(HyphOn, KidRange));
             }
             Out.push(CloseTag);
-            return Out.join('');
+            return Out;
         };
         FB3Tag.prototype.HTMLTagName = function () {
             if (FB3DOM.TagMapper[this.TagName]) {
@@ -133,16 +133,18 @@ var FB3DOM;
             if (this.Data.nc) {
                 ElementClasses.push(this.Data.nc);
             }
-            var Out = '<' + this.HTMLTagName();
+            var Out = [
+                '<' + this.HTMLTagName()
+            ];
             if (ElementClasses.length) {
-                Out += ' class="' + ElementClasses.join(' ') + '"';
+                Out.push(' class="' + ElementClasses.join(' ') + '"');
             }
             //if (this.data.css) {
             //	out += ' style="' + this.data.css + '"';
             //}
-            //			if (this.Data.i) {
-            Out += ' id="n_' + this.GetXPID() + '"';
-            return Out + '>';
+            //			if (this.Data.i) {}
+            Out.push(' id="n_' + this.XPID + '">');
+            return Out;
         };
         return FB3Tag;
     })(FB3Text);

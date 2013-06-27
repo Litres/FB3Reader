@@ -47,7 +47,7 @@ module FB3DataProvider {
 		}
 
 		public onTransferComplete() {
-			try {
+//			try {
 				if (this.Req.readyState != 4) {
 					this.Progressor.Tick(this);
 				} else {
@@ -58,10 +58,10 @@ module FB3DataProvider {
 						this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
 					}
 				}
-			} catch (err) {
-				this.Progressor.HourglassOff(this);
-				this.Progressor.Alert('Failed to load "' + this.URL + '" (unknown error "' + err.description+'")');
-			}
+			//} catch (err) {
+			//	this.Progressor.HourglassOff(this);
+			//	this.Progressor.Alert('Failed to load "' + this.URL + '" (unknown error "' + err.description+'")');
+			//}
 		}
 
 		private onUpdateProgress(e: ProgressEvent) {
@@ -106,7 +106,8 @@ module FB3DataProvider {
 			//this.Progressor.Alert("Invalid JSON");
 
 			// all shis safe and pretty stuff is nice, but I stick to simple
-			return (new Function("return " + data))();
+			var Data = (new Function("return " + data))()
+			return Data;
 		}
 	}
 }

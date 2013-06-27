@@ -27,7 +27,7 @@ var FB3DOM;
             }
             if (!this.WaitedBlocks.length) {
                 var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range);
-                this.OnDone(HTML);
+                this.OnDone(HTML.join(''));
                 return true;
             } else {
                 return false;
@@ -45,12 +45,13 @@ var FB3DOM;
             this.DataProvider = DataProvider;
             this.ActiveRequests = [];
             this.Ready = false;
+            this.XPID = '';
         }
         DOM.prototype.GetCloseTag = function (Range) {
             return '';
         };
         DOM.prototype.GetInitTag = function (Range) {
-            return '';
+            return [];
         };
         DOM.prototype.CheckAndPullRequiredBlocks = function (Range) {
             return [
@@ -80,7 +81,7 @@ var FB3DOM;
             var _this = this;
             var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
             if (MissingChunks.length == 0) {
-                Callback(this.GetHTML(HyphOn, Range));
+                Callback(this.GetHTML(HyphOn, Range).join(''));
             } else {
                 this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, Callback));
                 for(var I = 0; I < MissingChunks.length; I++) {
@@ -122,9 +123,6 @@ var FB3DOM;
                 }
             }
             return ChunksMissing;
-        };
-        DOM.prototype.GetXPID = function () {
-            return '';
         };
         return DOM;
     })(FB3DOM.FB3Tag);

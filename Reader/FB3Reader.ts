@@ -203,14 +203,17 @@ module FB3Reader {
 			var GotTheBottom = false;
 			while (I < ChildsCount) {
 				var Child = <HTMLElement> Element.children[I];
-				var ChildBot = Child.offsetTop + Child.scrollHeight;
+				var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);;
 				var PrevPageBreaker: boolean;
 				if ((ChildBot < Limit) && !PrevPageBreaker) {
 					I++;
 					ForceDenyElementBreaking = false;
 				} else {
 					GotTheBottom = true;
-					var CurShift = Child.offsetTop;
+					var CurShift:number = Child.offsetTop;
+					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
+						CurShift += Math.floor(Math.max(Child.scrollHeight, Child.offsetHeight) / 2);
+					}
 					var ApplyShift: number;
 					if (LastOffsetParent == Child.offsetParent) {
 						ApplyShift = CurShift - LastOffsetShift;

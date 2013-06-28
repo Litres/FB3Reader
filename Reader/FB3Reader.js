@@ -169,38 +169,15 @@ var FB3Reader;
             var LastOffsetParent;
             var LastOffsetShift;
             var GotTheBottom = false;
-            var NormHeight = 100500;
             while(I < ChildsCount) {
                 var Child = Element.children[I];
-                var ElHeight = Math.max(Child.scrollHeight, Child.offsetHeight);
-                var ChildBot = Child.offsetTop + ElHeight;
+                var ChildBot = Child.offsetTop + Child.scrollHeight;
                 var PrevPageBreaker;
                 if ((ChildBot < Limit) && !PrevPageBreaker) {
                     I++;
                     ForceDenyElementBreaking = false;
-                    NormHeight = ElHeight;
                 } else {
                     GotTheBottom = true;
-                    var InnerHTML = Child.innerHTML;
-                    if (InnerHTML.match(/^[^<]*\u00AD[^<]*$/) && ElHeight > NormHeight) {
-                        // Hack to work with hyphens - as long as webkit can't make hyphens on the end
-                        // of the Element, we will have to manage this ourselves :(
-                        var Parts = InnerHTML.split(/\u00AD/);
-                        InnerHTML = '';
-                        for(var I = 0; I < Parts.length; I++) {
-                            var Addon = '';
-                            if (InnerHTML) {
-                                Addon = '\u00AD';
-                            }
-                            Addon += Parts[I];
-                            Child.innerHTML = InnerHTML + Addon + ' ';
-                            if (Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight) >= Limit) {
-                                Child.innerHTML = '<span id="' + Child.id + '_' + InnerHTML.length + '">' + InnerHTML + '- </span><span id="' + Child.id + '_' + (InnerHTML.length + 1) + '">' + Parts.slice(I).join('') + '</span>';
-                                break;
-                            }
-                            InnerHTML += Addon;
-                        }
-                    }
                     var CurShift = Child.offsetTop;
                     var ApplyShift;
                     if (LastOffsetParent == Child.offsetParent) {
@@ -212,7 +189,6 @@ var FB3Reader;
                     GoodHeight += ApplyShift;
                     LastOffsetParent = Child.offsetParent;
                     //Child.className += ' cut_bot';
-                    //var Sibling = Element.children[I - 1];
                     Element = Child;
                     ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
                     Limit = Limit - ApplyShift;

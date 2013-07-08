@@ -19,13 +19,14 @@ module FB3DOM {
 		c?: ITOC[];	// contents (subitems)
 	}
 	export interface IJSONBlock {	// Compact notation for the same reason
-		t: string;		// Tag name
-		xp?: number[];// XPAth shurtcut for this node in the native XML
-		c?: any[];		// Child nodes/text for this tag (array)
-		nc?: string;	// Native class name for the block
-		css?: string; // Native CSS for the block
-		i?: string;		// FB/HTML ID (may be user as anchor target f.e.)
-		href?: string;// Anchor
+		t: string;				// Tag name
+		xp?: number[];		// XPAth shurtcut for this node in the native XML
+		c?: any[];				// Child nodes/text for this tag (array)
+		nc?: string;			// Native class name for the block
+		css?: string;			// Native CSS for the block
+		i?: string;				// FB/HTML ID (may be user as anchor target f.e.)
+		href?: string;		// Anchor
+		f?: any;					// Footnote contents
 	}
 
 	export interface IDataDisposition {

@@ -23,7 +23,7 @@ var FB3Reader;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 10;
+            this.PrerenderBlocks = 4;
         }
         ReaderPage.prototype.Show = function () {
         };
@@ -88,7 +88,11 @@ var FB3Reader;
                 this.Reseted = false;
                 return;
             }
-            this.Element.innerHTML = PageData.Body.join('');
+            var Footnotes = '';
+            if (PageData.FootNotes.length) {
+                Footnotes = '<div class="footnoteshost">' + PageData.FootNotes.join('') + '</div>';
+            }
+            this.Element.innerHTML = PageData.Body.join('') + Footnotes;
             if (!this.RenderInstr.Range) {
                 var FallOut = this.FallOut(this.Height - this.MarginBottom);
                 if (!FallOut) {

@@ -19,13 +19,15 @@ var FB3DOM;
         v: 'p',
         'empty-line': 'hr',
         emphasis: 'em',
-        style: 'span'
+        style: 'span',
+        footnote: 'div'
     };
     var FB3Text = (function () {
-        function FB3Text(text, Parent, ID) {
+        function FB3Text(text, Parent, ID, IsFootnote) {
             this.text = text;
             this.Parent = Parent;
             this.ID = ID;
+            this.IsFootnote = IsFootnote;
             this.Chars = text.length;
             //			this.text = this.text.replace('\u00AD', '&shy;')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
@@ -38,35 +40,47 @@ var FB3DOM;
             if (Range.From[0]) {
                 OutStr = OutStr.substr(Range.From[0]);
             }
-            PageData.Body.push('<span id="n_' + this.XPID + '">' + OutStr + '</span>');
+            var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
+            TargetStream.push('<span id="n_' + this.XPID + '">' + OutStr + '</span>');
         };
         return FB3Text;
     })();
     FB3DOM.FB3Text = FB3Text;    
     var FB3Tag = (function (_super) {
         __extends(FB3Tag, _super);
-        function FB3Tag(Data, Parent, ID) {
-            _super.call(this, '', Parent, ID);
+        function FB3Tag(Data, Parent, ID, IsFootnote) {
+            _super.call(this, '', Parent, ID, IsFootnote);
             this.Data = Data;
             if (Data === null) {
                 return;
             }
             this.TagName = Data.t;
             this.Childs = new Array();
+            var Base = 0;
+            if (Data.f) {
+                Base++;
+                var NKid = new FB3Tag(Data.f, this, Base, true);
+                this.Childs.push(NKid);
+                this.Chars += NKid.Chars;
+            }
             for(var I = 0; I < Data.c.length; I++) {
                 var Itm = Data.c[I];
                 var Kid;
                 if (typeof Itm === "string") {
-                    Kid = new FB3Text(Itm, this, I);
+                    Kid = new FB3Text(Itm, this, I + Base, IsFootnote);
                 } else {
-                    Kid = new FB3Tag(Itm, this, I);
+                    Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);
                 }
                 this.Childs.push(Kid);
                 this.Chars += Kid.Chars;
             }
         }
         FB3Tag.prototype.GetHTML = function (HyphOn, Range, PageData) {
-            PageData.Body = PageData.Body.concat(this.GetInitTag(Range));
+            if (this.IsFootnote) {
+                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range));
+            } else {
+                PageData.Body = PageData.Body.concat(this.GetInitTag(Range));
+            }
             var CloseTag = this.GetCloseTag(Range);
             var From = Range.From.shift() || 0;
             var To = Range.To.shift();
@@ -96,7 +110,7 @@ var FB3DOM;
                 }
                 this.Childs[I].GetHTML(HyphOn, KidRange, PageData);
             }
-            PageData.Body.push(CloseTag);
+            (this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
         };
         FB3Tag.prototype.HTMLTagName = function () {
             if (FB3DOM.TagMapper[this.TagName]) {
@@ -119,8 +133,13 @@ var FB3DOM;
             if (Range.To[0] < this.Childs.length - 1) {
                 ElementClasses.push('cut_bot');
             }
-            if (this.Data.xp.length) {
+            if (this.Data.xp && this.Data.xp.length) {
                 ElementClasses.push('xp_' + this.Data.xp.join('_'));
+            }
+            if (this.IsFootnote) {
+                ElementClasses.push('footnote');
+            } else if (this.Data.f) {
+                ElementClasses.push('footnote_attached');
             }
             if (FB3DOM.TagMapper[this.TagName]) {
                 ElementClasses.push('tag_' + this.TagName);
@@ -134,11 +153,11 @@ var FB3DOM;
             if (ElementClasses.length) {
                 Out.push(' class="' + ElementClasses.join(' ') + '"');
             }
-            //if (this.data.css) {
-            //	out += ' style="' + this.data.css + '"';
-            //}
-            //			if (this.Data.i) {}
-            Out.push(' id="n_' + this.XPID + '">');
+            if (this.IsFootnote) {
+                Out.push(' id="fn_' + this.Parent.XPID + '">');
+            } else {
+                Out.push(' id="n_' + this.XPID + '">');
+            }
             return Out;
         };
         return FB3Tag;

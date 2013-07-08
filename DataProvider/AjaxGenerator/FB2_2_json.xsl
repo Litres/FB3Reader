@@ -34,6 +34,7 @@
 		select="@style"/>'</xsl:if><xsl:if test="*|text()">,c:[<xsl:apply-templates/>]</xsl:if></xsl:template>
 	<xsl:template match="*">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
 	<xsl:template match="&blocklvl;" mode="footnote">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
+	<xsl:template match="fb:section" mode="footnote">{t:'footnote',c:[<xsl:apply-templates mode="footnote"/>]}</xsl:template>
 
 	<xsl:template match="&blocklvl;">{chars:<xsl:value-of select="string-length(.)"/>,<xsl:call-template name="tag2js"/>},<xsl:text >&#010;</xsl:text></xsl:template>
 	
@@ -60,7 +61,7 @@
 		<xsl:choose>
 			<xsl:when test="key('note-link',$NoteID)/parent::fb:body or
 				not(key('note-link',$NoteID)/ancestor-or-self::fb:section[parent::fb:body]/preceding-sibling::fb:section)"
-					>f:[<xsl:apply-templates select="key('note-link',$NoteID)/*" mode="footnote"/>]</xsl:when>
+					>f:<xsl:apply-templates select="key('note-link',$NoteID)" mode="footnote"/></xsl:when>
 				<xsl:otherwise>href:'<xsl:value-of select="substring-after(@xlink:href,'#')"/>'</xsl:otherwise>
 		</xsl:choose>
 		<xsl:text>}</xsl:text>

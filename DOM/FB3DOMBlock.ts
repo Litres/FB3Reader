@@ -13,13 +13,14 @@ module FB3DOM {
 		cite: 'blockquote',
 		v: 'p',
 		'empty-line': 'hr',
-		emphasis: 'em',		style: 'span'
+		emphasis: 'em',		style: 'span',
+		footnote: 'div'
 	};
 
 	export class FB3Text implements IFB3Block {
 		public Chars: number;
 		public XPID: string;
-		constructor(private text: string, public Parent: IFB3Block, public ID: number) {
+		constructor(private text: string, public Parent: IFB3Block, public ID: number, public IsFootnote?: boolean) {
 			this.Chars = text.length;
 //			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
@@ -33,7 +34,9 @@ module FB3DOM {
 				OutStr = OutStr.substr(Range.From[0]);
 			}
 
-			PageData.Body.push('<span id="n_' + this.XPID + '">'+OutStr+'</span>');  // todo - HyphOn must work, must just replace shy with ''
+			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
+
+			TargetStream.push('<span id="n_' + this.XPID + '">'+OutStr+'</span>');  // todo - HyphOn must work, must just replace shy with ''
 		}
 
 		//public GetXPID(): string {
@@ -57,8 +60,12 @@ module FB3DOM {
 		public TagName: string;
 		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: bool, Range: IRange, PageData: IPageContainer){
-			PageData.Body = PageData.Body.concat(this.GetInitTag(Range));
+		public GetHTML(HyphOn: bool, Range: IRange, PageData: IPageContainer) {
+			if (this.IsFootnote) {
+				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range));
+			} else {
+				PageData.Body = PageData.Body.concat(this.GetInitTag(Range));
+			}
 			var CloseTag = this.GetCloseTag(Range);
 			var From = Range.From.shift() || 0;
 			var To = Range.To.shift();
@@ -85,23 +92,30 @@ module FB3DOM {
 				}
 				this.Childs[I].GetHTML(HyphOn, KidRange, PageData);
 			}
-			PageData.Body.push(CloseTag);
+			(this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
 		}
 
-		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number) {
-			super('', Parent, ID);
-			
+		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean) {
+			super('', Parent, ID, IsFootnote);
+
 			if (Data === null) return;
 
 			this.TagName = Data.t;
 			this.Childs = new Array();
+			var Base = 0;
+			if (Data.f) {
+				Base++;
+				var NKid = new FB3Tag(Data.f, this, Base, true);
+				this.Childs.push(NKid);
+				this.Chars += NKid.Chars;
+			}
 			for (var I = 0; I < Data.c.length; I++) {
 				var Itm = Data.c[I];
 				var Kid: IFB3Block;
 				if (typeof Itm === "string") {
-					Kid = new FB3Text(Itm, this, I);
+					Kid = new FB3Text(Itm, this, I + Base, IsFootnote);
 				} else {
-					Kid = new FB3Tag(Itm, this, I);
+					Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);
 				}
 				this.Childs.push(Kid);
 				this.Chars += Kid.Chars;
@@ -130,8 +144,14 @@ module FB3DOM {
 			if (Range.To[0] < this.Childs.length - 1) {
 				ElementClasses.push('cut_bot')
 			}
-			if (this.Data.xp.length) {
+			if (this.Data.xp && this.Data.xp.length) {
 				ElementClasses.push('xp_' + this.Data.xp.join('_'))
+			}
+
+			if (this.IsFootnote) {
+				ElementClasses.push('footnote')
+			} else if (this.Data.f) {
+				ElementClasses.push('footnote_attached')
 			}
 
 			if (TagMapper[this.TagName]) {
@@ -151,7 +171,11 @@ module FB3DOM {
 			//}
 
 			//			if (this.Data.i) {}
-			Out.push(' id="n_' + this.XPID + '">');
+			if (this.IsFootnote) {
+				Out.push(' id="fn_' + this.Parent.XPID + '">');
+			} else {
+				Out.push(' id="n_' + this.XPID + '">');
+			}
 			return Out;
 		}
 	}

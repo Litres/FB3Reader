@@ -66,3 +66,13 @@ div.FB2readerPage div.FBReaderContentDiv {
 div.FB2readerPage p {
     text-align: justify;
 }
+
+div.FB2readerPage div.footnote {
+    font-size: 80%;
+    clear:both;
+}
+div.FB2readerPage p.footnote {
+    text-align: left;
+    font-size: 80%;
+    width:auto;
+}

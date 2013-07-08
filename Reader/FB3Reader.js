@@ -50,8 +50,11 @@ var FB3Reader;
             if (PagesToRender.length == 0) {
                 return;
             }
+            if (this.Reseted) {
+                this.Reseted = false;
+                return;
+            }
             this.Busy = true;
-            this.Reseted = false;
             this.RenderInstr = PagesToRender.shift();
             this.PagesToRender = PagesToRender;
             var Range;
@@ -106,21 +109,33 @@ var FB3Reader;
                     this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr);
                 }
                 // Ok, we have rendered the page nice. Now we can check, wether we have created
-                // a page long enough to fin the NEXT page. If so, we are going to estimate it's
+                // a page long enough to fit the NEXT page. If so, we are going to estimate it's
                 // content to create next page(s) with EXACTLY the required html - this will
                 // speed up the render
                 var LastChild = this.Element.children[this.Element.children.length - 1];
                 if (LastChild) {
                     var CollectedHeight = FallOut.Height;
+                    var PrevTo;
                     for(var I = 0; I < this.PagesToRender.length; I++) {
                         var TestHeight = CollectedHeight + this.Height - this.MarginBottom - this.MarginTop;
                         if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
                             var NextPageFallOut = this.FallOut(TestHeight);
                             if (NextPageFallOut) {
-                                var NextPageRange = {
-                                    From: (I == 0 ? this.RenderInstr.Range.To : this.PagesToRender[I - 1].Range.To).splice(0),
-                                    To: NextPageFallOut.FallOut
-                                };
+                                var NextPageRange = {};
+                                NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
+                                PrevTo = NextPageFallOut.FallOut.slice(0);
+                                NextPageRange.To = NextPageFallOut.FallOut.slice(0);
+                                //  As we host hyphen in the NEXT element(damn webkit) and a hyphen has it's width,
+                                //  we always need to have one more inline - element to make sure the element without
+                                //  a hyphen(and thus enormously narrow) will not be left on the page as a last element,
+                                //  while it should fall down being too wide with hyphen attached Like this:
+                                //  Wrong:                                            Right:
+                                //  |aaa bb-|                                         |aaa bb-|
+                                //  |bb cccc|                                         |bb cccc|
+                                //  |d eeeee|<page cut>                               |d  eee-| << this hyphen fits ok, next will not
+                                //  |-ee    |<< this hyphen must be the               |eeee   | << this tail bring excess part down
+                                //              6-th char, so "eeeee" would NOT fit
+                                NextPageRange.To[NextPageRange.To.length - 1]++;
                                 this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.MarginTop;
                                 CollectedHeight = NextPageFallOut.Height;
                                 if (this.PagesToRender[I].CacheAs !== undefined) {
@@ -141,16 +156,16 @@ var FB3Reader;
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
                     this.PagesToRender[0].Start = this.RenderInstr.Range.To;
                 }
-                setTimeout(function () {
+                this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
                 }, 1);
             }
         };
         ReaderPage.prototype.Reset = function () {
+            clearTimeout(this.RenderMoreTimeout);
+            //			console.log('Reset ' + this.ID);
             this.PagesToRender = null;
-            if (this.Busy) {
-                this.Reseted = true;
-            }
+            this.Reseted = true;
         };
         ReaderPage.prototype.PutPagePlace = function (Place) {
             if (Place < 0) {
@@ -182,6 +197,11 @@ var FB3Reader;
                     var CurShift = Child.offsetTop;
                     if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
                         CurShift += Math.floor(Math.max(Child.scrollHeight, Child.offsetHeight) / 2);
+                    } else {
+                        var NextChild = Element.children[I + 1];
+                        if (NextChild && NextChild.innerHTML.match(/^\u00AD/)) {
+                            Child.innerHTML += '_';
+                        }
                     }
                     var ApplyShift;
                     if (LastOffsetParent == Child.offsetParent) {
@@ -192,7 +212,7 @@ var FB3Reader;
                     LastOffsetShift = CurShift;
                     GoodHeight += ApplyShift;
                     LastOffsetParent = Child.offsetParent;
-                    //Child.className += ' cut_bot';
+                    Child.className += ' cut_bot';
                     Element = Child;
                     ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
                     Limit = Limit - ApplyShift;
@@ -255,6 +275,7 @@ var FB3Reader;
             }
         };
         Reader.prototype.GoTO = function (NewPos) {
+            //			console.log('GoTO ' + NewPos);
             this.CurStartPos = NewPos.slice(0);
             var GotoPage = this.GetCachedPage(NewPos);
             if (GotoPage != undefined) {
@@ -326,6 +347,9 @@ var FB3Reader;
                 clearTimeout(this.OnResizeTimeout);
             }
             this.OnResizeTimeout = setTimeout(function () {
+                for(var I = 0; I < _this.Pages.length; I++) {
+                    _this.Pages[I].Reset();
+                }
                 _this.PrepareCanvas();
                 _this.GoTO(_this.CurStartPos);
                 _this.OnResizeTimeout = undefined;

@@ -7,7 +7,11 @@ module FB3DOM {
 		From: number[];
 		To: number[];
 	}
-	export interface IDOMTextReadyCallback { (HTML: InnerHTML): void; }
+	export interface IPageContainer {
+		Body: InnerHTML[];
+		FootNotes: InnerHTML[];
+	}
+	export interface IDOMTextReadyCallback { (PageData: IPageContainer): void; }
 	export interface ITOC {				// Compact notation as we plan to transfer this over network, why create overload
 		t?: string;	// title
 		s: number;	// start root node N
@@ -37,7 +41,7 @@ module FB3DOM {
 		Chars: number;			// Length of the node - pure characters and spaces
 		ID: number;					// Position of this node within the parent. Used to generate GetXPID
 		TagName?: string;		// Native tag name. May be mapped to HTML with another tag name
-		GetHTML(HyphOn: bool, Range: IRange): InnerHTML[];	// Returns partial HTML for this node
+		GetHTML(HyphOn: bool, Range: IRange, PageData: IPageContainer);	// Returns partial HTML for this node
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }

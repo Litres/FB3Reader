@@ -30,7 +30,7 @@ var FB3DOM;
             //			this.text = this.text.replace('\u00AD', '&shy;')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
         }
-        FB3Text.prototype.GetHTML = function (HyphOn, Range) {
+        FB3Text.prototype.GetHTML = function (HyphOn, Range, PageData) {
             var OutStr = this.text;
             if (Range.To[0]) {
                 OutStr = OutStr.substr(0, Range.To[0]);
@@ -38,11 +38,7 @@ var FB3DOM;
             if (Range.From[0]) {
                 OutStr = OutStr.substr(Range.From[0]);
             }
-            return [
-                '<span id="n_' + this.XPID + '">', 
-                OutStr, 
-                '</span>'
-            ];
+            PageData.Body.push('<span id="n_' + this.XPID + '">' + OutStr + '</span>');
         };
         return FB3Text;
     })();
@@ -69,8 +65,8 @@ var FB3DOM;
                 this.Chars += Kid.Chars;
             }
         }
-        FB3Tag.prototype.GetHTML = function (HyphOn, Range) {
-            var Out = this.GetInitTag(Range);
+        FB3Tag.prototype.GetHTML = function (HyphOn, Range, PageData) {
+            PageData.Body = PageData.Body.concat(this.GetInitTag(Range));
             var CloseTag = this.GetCloseTag(Range);
             var From = Range.From.shift() || 0;
             var To = Range.To.shift();
@@ -98,10 +94,9 @@ var FB3DOM;
                 if (I == To) {
                     KidRange.To = Range.To;
                 }
-                Out = Out.concat(this.Childs[I].GetHTML(HyphOn, KidRange));
+                this.Childs[I].GetHTML(HyphOn, KidRange, PageData);
             }
-            Out.push(CloseTag);
-            return Out;
+            PageData.Body.push(CloseTag);
         };
         FB3Tag.prototype.HTMLTagName = function () {
             if (FB3DOM.TagMapper[this.TagName]) {

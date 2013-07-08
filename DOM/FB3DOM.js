@@ -26,8 +26,9 @@ var FB3DOM;
                 }
             }
             if (!this.WaitedBlocks.length) {
-                var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range);
-                this.OnDone(HTML.join(''));
+                var PageData = new PageContainer();
+                var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, PageData);
+                this.OnDone(PageData);
                 return true;
             } else {
                 return false;
@@ -36,6 +37,13 @@ var FB3DOM;
         return AsyncLoadConsumer;
     })();    
     ;
+    var PageContainer = (function () {
+        function PageContainer() {
+            this.Body = new Array();
+            this.FootNotes = new Array();
+        }
+        return PageContainer;
+    })();    
     var DOM = (function (_super) {
         __extends(DOM, _super);
         function DOM(Alert, Progressor, DataProvider) {
@@ -81,7 +89,9 @@ var FB3DOM;
             var _this = this;
             var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
             if (MissingChunks.length == 0) {
-                Callback(this.GetHTML(HyphOn, Range).join(''));
+                var PageData = new PageContainer();
+                this.GetHTML(HyphOn, Range, PageData);
+                Callback(PageData);
             } else {
                 this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, Callback));
                 for(var I = 0; I < MissingChunks.length; I++) {

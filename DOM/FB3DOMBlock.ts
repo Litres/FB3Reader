@@ -24,7 +24,7 @@ module FB3DOM {
 //			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 		}
-		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML[]{
+		public GetHTML(HyphOn: bool, Range: IRange, PageData: IPageContainer) {
 			var OutStr = this.text;
 			if (Range.To[0]) {
 				OutStr = OutStr.substr(0, Range.To[0]);
@@ -33,9 +33,7 @@ module FB3DOM {
 				OutStr = OutStr.substr(Range.From[0]);
 			}
 
-			return ['<span id="n_' + this.XPID + '">',
-				OutStr,
-				'</span>'];  // todo - HyphOn must work, must just replace shy with ''
+			PageData.Body.push('<span id="n_' + this.XPID + '">'+OutStr+'</span>');  // todo - HyphOn must work, must just replace shy with ''
 		}
 
 		//public GetXPID(): string {
@@ -59,8 +57,8 @@ module FB3DOM {
 		public TagName: string;
 		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: bool, Range: IRange): InnerHTML[] {
-			var Out = this.GetInitTag(Range);
+		public GetHTML(HyphOn: bool, Range: IRange, PageData: IPageContainer){
+			PageData.Body = PageData.Body.concat(this.GetInitTag(Range));
 			var CloseTag = this.GetCloseTag(Range);
 			var From = Range.From.shift() || 0;
 			var To = Range.To.shift();
@@ -85,10 +83,9 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				Out = Out.concat(this.Childs[I].GetHTML(HyphOn, KidRange));
+				this.Childs[I].GetHTML(HyphOn, KidRange, PageData);
 			}
-			Out.push(CloseTag);
-			return Out; // Hope one join is faster than several concats
+			PageData.Body.push(CloseTag);
 		}
 
 		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number) {

@@ -109,10 +109,10 @@ module FB3Reader {
 				Range = { From: this.RenderInstr.Start.slice(0), To: [FragmentEnd] };
 			}
 
-			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), (HTML: string) => this.DrawEnd(HTML));
+			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), (PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData));
 		}
 
-		DrawEnd(HTML: string) {
+		DrawEnd(PageData: FB3DOM.IPageContainer) {
 			this.Busy = false;
 			//			console.log('DrawEnd ' + this.ID);
 			if (this.Reseted) {
@@ -120,7 +120,7 @@ module FB3Reader {
 				return;
 			}
 
-			this.Element.innerHTML = HTML;
+			this.Element.innerHTML = PageData.Body.join('');
 			if (!this.RenderInstr.Range) {
 				var FallOut = this.FallOut(this.Height - this.MarginBottom);
 				if (!FallOut) {

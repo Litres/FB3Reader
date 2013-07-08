@@ -13,8 +13,9 @@ module FB3DOM {
 					this.WaitedBlocks.splice(I,1);
 			}
 			if (!this.WaitedBlocks.length) {
-				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range);
-				this.OnDone(HTML.join(''));
+				var PageData = new PageContainer();
+				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, PageData);
+				this.OnDone(PageData);
 				return true;
 			} else {
 				return false;
@@ -29,6 +30,15 @@ module FB3DOM {
 	}
 
 	interface IJSonLoadingDone{ (JSON: string) };
+
+	class PageContainer implements IPageContainer {
+		public Body: InnerHTML[];
+		public FootNotes: InnerHTML[];
+		constructor () {
+			this.Body = new Array();
+			this.FootNotes = new Array();
+		}
+	}
 
 	export class DOM extends FB3Tag implements IFB3DOM {
 		private LoadDequests: Array;
@@ -79,10 +89,12 @@ module FB3DOM {
 			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void {
-			
+		
 			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
 			if (MissingChunks.length == 0) {
-				Callback(this.GetHTML(HyphOn, Range).join(''));
+				var PageData = new PageContainer();
+				this.GetHTML(HyphOn, Range, PageData);
+				Callback(PageData);
 			} else {
 				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, Callback));
 				for (var I = 0; I < MissingChunks.length; I++) {

@@ -77,18 +77,18 @@ var FB3Reader;
                     ]
                 };
             }
-            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), function (HTML) {
-                return _this.DrawEnd(HTML);
+            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), function (PageData) {
+                return _this.DrawEnd(PageData);
             });
         };
-        ReaderPage.prototype.DrawEnd = function (HTML) {
+        ReaderPage.prototype.DrawEnd = function (PageData) {
             var _this = this;
             this.Busy = false;
             if (this.Reseted) {
                 this.Reseted = false;
                 return;
             }
-            this.Element.innerHTML = HTML;
+            this.Element.innerHTML = PageData.Body.join('');
             if (!this.RenderInstr.Range) {
                 var FallOut = this.FallOut(this.Height - this.MarginBottom);
                 if (!FallOut) {
@@ -132,7 +132,7 @@ var FB3Reader;
                                 //  Wrong:                                            Right:
                                 //  |aaa bb-|                                         |aaa bb-|
                                 //  |bb cccc|                                         |bb cccc|
-                                //  |d eeeee|<page cut>                               |d  eee-| << this hyphen fits ok, next will not
+                                //  |d eeeee|<if page cut here - error>               |d  eee-| << this hyphen fits ok, next will not
                                 //  |-ee    |<< this hyphen must be the               |eeee   | << this tail bring excess part down
                                 //              6-th char, so "eeeee" would NOT fit
                                 NextPageRange.To[NextPageRange.To.length - 1]++;

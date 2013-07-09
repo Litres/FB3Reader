@@ -13,6 +13,6 @@ var FB3Bookmarks;
         };
         return LitResBookmarksProcessor;
     })();
-    FB3Bookmarks.LitResBookmarksProcessor = LitResBookmarksProcessor;    
+    FB3Bookmarks.LitResBookmarksProcessor = LitResBookmarksProcessor;
 })(FB3Bookmarks || (FB3Bookmarks = {}));
 //@ sourceMappingURL=FB3Bookmarks.js.map

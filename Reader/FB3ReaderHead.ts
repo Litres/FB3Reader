@@ -2,7 +2,7 @@
 
 module FB3Reader {
 
-	export interface IPosition extends Array {}
+	export interface IPosition extends Array<number> {}
 	// General-purpose interfaces
 	export interface IFBReader {
 		Site: FB3ReaderSite.IFB3ReaderSite;

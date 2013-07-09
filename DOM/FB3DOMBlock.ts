@@ -113,6 +113,9 @@ module FB3DOM {
 				var Itm = Data.c[I];
 				var Kid: IFB3Block;
 				if (typeof Itm === "string") {
+					if (Data.f) {
+						Itm = Itm.replace(/[\[\]\{\}\(\)]+/g, '');
+					}
 					Kid = new FB3Text(Itm, this, I + Base, IsFootnote);
 				} else {
 					Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);

@@ -12,7 +12,7 @@ var FB3ReaderSite;
         };
         return ExampleSite;
     })();
-    FB3ReaderSite.ExampleSite = ExampleSite;    
+    FB3ReaderSite.ExampleSite = ExampleSite;
     var ExampleProgressor = (function () {
         function ExampleProgressor() {
             this.Hourglasses = {};
@@ -30,7 +30,7 @@ var FB3ReaderSite;
             this.Progresses[Owner] = Progress;
             var N = 0;
             var OverallProgress = 0;
-            for(var Progress in this.Progresses) {
+            for (var Progress in this.Progresses) {
                 N++;
                 OverallProgress = this.Progresses[Progress];
             }
@@ -40,7 +40,7 @@ var FB3ReaderSite;
         ExampleProgressor.prototype.HourglassOff = function (Owner) {
             this.Hourglasses[Owner] = 0;
             var HaveLive = 0;
-            for(var Hourglass in this.Hourglasses) {
+            for (var Hourglass in this.Hourglasses) {
                 if (this.Hourglasses[Hourglass] > 0) {
                     HaveLive = 1;
                     break;
@@ -64,6 +64,6 @@ var FB3ReaderSite;
         };
         return ExampleProgressor;
     })();
-    FB3ReaderSite.ExampleProgressor = ExampleProgressor;    
+    FB3ReaderSite.ExampleProgressor = ExampleProgressor;
 })(FB3ReaderSite || (FB3ReaderSite = {}));
 //@ sourceMappingURL=FB3ReaderSite.js.map

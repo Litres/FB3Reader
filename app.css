@@ -42,11 +42,13 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
 }
 /* engine-required CSS END */
 
-/* this are engine-independent CSS, do with it whatewer you want  */
-h1, h2 {
+/* this are engine-independent CSS, do with it whatewer you see fit  */
+.FBReaderContentDiv h1, .FBReaderContentDiv h2 {
    font-family: 'Times New Roman', serif
 }
-div, p, h3, h4, h5, h6 {
+.FBReaderContentDiv div, .FBReaderContentDiv p,
+.FBReaderContentDiv h3, .FBReaderContentDiv h4,
+.FBReaderContentDiv h5, .FBReaderContentDiv h6 {
     font-family: 'Segoe UI', sans-serif;
 }
 #reader {
@@ -63,6 +65,13 @@ div.FB2readerPage div.FBReaderContentDiv {
     color:yellow;
 }
 
+div.FB2readerPage a.footnote_attached {
+    font-size: 70%;
+    vertical-align: super;
+    line-height:30%;
+    margin:0 -0.1em 0 0.1em;
+}
+
 div.FB2readerPage p {
     text-align: justify;
 }
@@ -75,4 +84,30 @@ div.FB2readerPage p.footnote {
     text-align: left;
     font-size: 80%;
     width:auto;
+}
+
+.FBReaderNotesDiv {
+    border-top: 1px dotted #ffff5d;
+    padding: 0.3em 10px 10px 0;
+    margin: 0.4em 30px 0 10px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.FBReaderNotesDiv div.tag_footnote div.tag_title {
+    display: inline-block;
+}
+.FBReaderNotesDiv div.tag_footnote div.tag_title h2,
+.FBReaderNotesDiv div.tag_footnote div.tag_title h3,
+.FBReaderNotesDiv div.tag_footnote div.tag_title h4,
+.FBReaderNotesDiv div.tag_footnote div.tag_title h5,
+.FBReaderNotesDiv div.tag_footnote div.tag_title h6 {
+    font-size: 80%;
+    vertical-align: super;
+    margin:0 0 0.2em 0;
+    padding:0;
+}
+
+.FBReaderNotesDiv p.footnote {
+    display: inline;
+    margin-left: 0.3em;
 }

@@ -8,11 +8,13 @@ module FB3Reader {
 		Start?: IPosition;
 		CacheAs?: number;
 		Height?: number;
+		NotesHeight?: number;
 	}
 
 	interface IFallOut {
 		FallOut: IPosition; // Agress of the first element to not fit the page
 		Height: number;			// Height of the page we've examined
+		NotesHeight: number;
 	}
 
 	function IsNodePageBreaker(Node:HTMLElement):boolean {
@@ -32,20 +34,26 @@ module FB3Reader {
 		}
 	}
 
+	interface ElementDesc {
+		Node: HTMLDivElement;
+		Width: number;
+		Height: number;
+		MarginTop: number;
+		MarginBottom: number;
+	}
+
 	class ReaderPage {
-		private Element: HTMLDivElement;
+		private Element: ElementDesc;
+		private NotesElement: ElementDesc;
 		private ID: number;
 		private PagesToRender: IPageRenderInstruction[];
 		private End: IPosition;
 		private RenderInstr: IPageRenderInstruction;
 		private RenderMoreTimeout: number;
+		private Site: FB3ReaderSite.IFB3ReaderSite;
 		public Next: ReaderPage;
 		public Busy: boolean;
 		public Reseted: boolean;
-		public Width: number;
-		public Height: number;
-		public MarginTop: number;
-		public MarginBottom: number;
 		public PrerenderBlocks: number;
 		Show(): void { }
 		Hide(): void { }
@@ -62,24 +70,33 @@ module FB3Reader {
 		}
 		GetInitHTML(ID: number): FB3DOM.InnerHTML {
 			this.ID = ID;
-			return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderContentDiv" id="FB3ReaderColumn' + this.ID + '">...</div></div>';
+			return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns +
+				' FB2readerPage"><div class="FBReaderContentDiv" id="FB3ReaderColumn' + this.ID +
+				'">...</div><div class="FBReaderNotesDiv" id="FB3ReaderNotes' + this.ID + '">...</div></div>';
+		}
+
+		FillElementData(ID: string): ElementDesc {
+			var Element = <HTMLDivElement> this.Site.getElementById(ID);
+			var Width = Element.offsetWidth;
+			var Height = Element.parentElement.offsetHeight;
+			var MarginTop; var MarginBottom;
+			if (document.all) {// IE
+				MarginTop = parseInt(Element.currentStyle.marginTop, 10)
+				+ parseInt(Element.currentStyle.paddingTop, 10);
+				MarginBottom = parseInt(Element.currentStyle.marginBottom, 10)
+				+ parseInt(Element.currentStyle.paddingBottom, 10);
+			} else {// Mozilla
+				MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top'))
+				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
+				MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom'))
+				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
+			}
+			return { Node: Element, Width: Width, Height: Height, MarginTop: MarginTop, MarginBottom: MarginBottom};
 		}
 		BindToHTMLDoc(Site: FB3ReaderSite.IFB3ReaderSite): void {
-			this.Element = <HTMLDivElement> Site.getElementById('FB3ReaderColumn' + this.ID);
-			this.Width = this.Element.offsetWidth;
-			this.Height = this.Element.parentElement.offsetHeight;
-			if (document.all) {// IE
-				this.MarginTop = parseInt(this.Element.currentStyle.marginTop, 10)
-				+ parseInt(this.Element.currentStyle.paddingTop, 10);
-				this.MarginBottom = parseInt(this.Element.currentStyle.marginBottom, 10)
-				+ parseInt(this.Element.currentStyle.paddingBottom, 10);
-			} else {// Mozilla
-				this.MarginTop = parseInt(getComputedStyle(this.Element, '').getPropertyValue('margin-top'))
-				+ parseInt(getComputedStyle(this.Element, '').getPropertyValue('padding-top'));
-				this.MarginBottom = parseInt(getComputedStyle(this.Element, '').getPropertyValue('margin-bottom'))
-				+ parseInt(getComputedStyle(this.Element, '').getPropertyValue('padding-bottom'));
-			}
-//			console.log(this.MarginTop + ':' + this.MarginBottom);
+			this.Site = Site;
+			this.Element = this.FillElementData('FB3ReaderColumn' + this.ID);
+			this.NotesElement = this.FillElementData('FB3ReaderNotes' + this.ID);
 		}
 
 		DrawInit(PagesToRender: IPageRenderInstruction[]): void {
@@ -119,13 +136,12 @@ module FB3Reader {
 				this.Reseted = false;
 				return;
 			}
-			var Footnotes = '';
+			this.Element.Node.innerHTML =  PageData.Body.join('');
 			if (PageData.FootNotes.length) {
-				Footnotes = '<div class="footnoteshost">' + PageData.FootNotes.join('') + '</div>';
+				this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
 			}
-			this.Element.innerHTML = PageData.Body.join('') + Footnotes;
 			if (!this.RenderInstr.Range) {
-				var FallOut = this.FallOut(this.Height - this.MarginBottom);
+				var FallOut = this.FallOut(this.Element.Height - this.Element.MarginBottom,0);
 				if (!FallOut) {
 					// Ups, our page is incomplete - have to retry filling it. Take more data now
 					this.PrerenderBlocks *= 2;
@@ -138,6 +154,7 @@ module FB3Reader {
 					To: FallOut.FallOut
 				};
 				this.RenderInstr.Height = FallOut.Height;
+				this.RenderInstr.NotesHeight = FallOut.NotesHeight;
 
 
 				if (this.RenderInstr.CacheAs !== undefined) {
@@ -148,14 +165,14 @@ module FB3Reader {
 				// a page long enough to fit the NEXT page. If so, we are going to estimate it's
 				// content to create next page(s) with EXACTLY the required html - this will
 				// speed up the render
-				var LastChild = <HTMLElement> this.Element.children[this.Element.children.length - 1];
+				var LastChild = <HTMLElement> this.Element.Node.children[this.Element.Node.children.length - 1];
 				if (LastChild) {
 					var CollectedHeight = FallOut.Height;
 					var PrevTo: Array;
 					for (var I = 0; I < this.PagesToRender.length; I++) {
-						var TestHeight = CollectedHeight +this.Height - this.MarginBottom - this.MarginTop;
+						var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginBottom - this.Element.MarginTop;
 						if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-							var NextPageFallOut = this.FallOut(TestHeight);
+							var NextPageFallOut = this.FallOut(TestHeight, 0);
 							if (NextPageFallOut) {
 								var NextPageRange = <any> {};
 								NextPageRange.From = (PrevTo?PrevTo:this.RenderInstr.Range.To).slice(0);
@@ -174,7 +191,7 @@ module FB3Reader {
 								//              6-th char, so "eeeee" would NOT fit
 								NextPageRange.To[NextPageRange.To.length - 1]++;
 
-								this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.MarginTop;
+								this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.Element.MarginTop;
 								CollectedHeight = NextPageFallOut.Height;
 								if (this.PagesToRender[I].CacheAs !== undefined) {
 									this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
@@ -186,7 +203,9 @@ module FB3Reader {
 				}
 			}
 
-			this.Element.parentElement.style.height = this.RenderInstr.Height + 'px';
+			this.Element.Node.parentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight) + 'px';
+			this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop)+ 'px';
+			this.Element.Node.style.overflow = 'hidden';
 
 			if (this.PagesToRender && this.PagesToRender.length) {
 				// we fire setTimeout to let the browser draw the page before we render the next
@@ -206,16 +225,16 @@ module FB3Reader {
 
 		public PutPagePlace(Place: number) {
 			if (Place < 0) {
-				this.Element.style.display = 'none';
+				this.Element.Node.style.display = 'none';
 			} else {
-				this.Element.style.display = 'block';
+				this.Element.Node.style.display = 'block';
 
 			}
 		}
 
-		FallOut(Limit: number): IFallOut {
-      //		Hand mage CSS3 tabs. I thouth it would take more than this
-			var Element = <HTMLElement> this.Element;
+		FallOut(Limit: number, NotesShift: number): IFallOut {
+			//		Hand mage CSS3 tabs. I thouth it would take more than this
+			var Element = <HTMLElement> this.Element.Node;
 			var I = 0;
 			var GoodHeight = 0;
 			var ChildsCount = Element.children.length;
@@ -223,11 +242,30 @@ module FB3Reader {
 			var LastOffsetParent: Element;
 			var LastOffsetShift: number;
 			var GotTheBottom = false;
+			var FootnotesAddon = 0;
 			while (I < ChildsCount) {
 				var Child = <HTMLElement> Element.children[I];
-				var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);;
+				var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);
+
+				// Footnotes kind of expand element height
+				if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
+					var NoteElement = this.Site.getElementById('f' + Child.id);
+					if (NoteElement) {
+						FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight + this.NotesElement.MarginTop;
+					}
+				} else {
+					var FootNotes = Child.getElementsByTagName('a');
+					for (var J = FootNotes.length -1; J >=0 ; J--) {
+						if (FootNotes[J].className.match(/\bfootnote_attached\b/)) {
+							var NoteElement = this.Site.getElementById('f' + FootNotes[J].id);
+							FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight + this.NotesElement.MarginTop;
+							break;
+						}
+					}
+				}
+
 				var PrevPageBreaker: boolean;
-				if ((ChildBot < Limit) && !PrevPageBreaker) {
+				if ((ChildBot + FootnotesAddon < Limit) && !PrevPageBreaker) {
 					I++;
 					ForceDenyElementBreaking = false;
 				} else {
@@ -236,7 +274,7 @@ module FB3Reader {
 					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
 						CurShift += Math.floor(Math.max(Child.scrollHeight, Child.offsetHeight) / 2);
 					} else {
-						var NextChild = Element.children[I + 1];
+						var NextChild = <HTMLElement> Element.children[I + 1];
 						if (NextChild && NextChild.innerHTML.match(/^\u00AD/)) {
 							Child.innerHTML += '_';
 						}
@@ -264,9 +302,9 @@ module FB3Reader {
 			if (!GotTheBottom) { // We had not enough data on the page!
 				return null;
 			}
-			var Addr = Element.id.split('_');
+			var Addr = <any> Element.id.split('_');
 			Addr.shift();
-			return { FallOut: Addr, Height: GoodHeight };
+			return { FallOut: Addr, Height: GoodHeight, NotesHeight: FootnotesAddon};
 		}
 	}
 

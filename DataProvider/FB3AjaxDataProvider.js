@@ -2,7 +2,8 @@
 var FB3DataProvider;
 (function (FB3DataProvider) {
     var AJAXDataProvider = (function () {
-        function AJAXDataProvider() { }
+        function AJAXDataProvider() {
+        }
         AJAXDataProvider.prototype.Request = function (URL, Callback, Progressor, CustomData) {
             new AjaxLoader(URL, Callback, Progressor, CustomData);
         };
@@ -15,21 +16,22 @@ var FB3DataProvider;
             }
             return OutURL;
         };
+
         AJAXDataProvider.prototype.zeroPad = function (num, places) {
             var zero = places - num.toString().length + 1;
             return Array(+(zero > 0 && zero)).join("0") + num;
         };
         return AJAXDataProvider;
     })();
-    FB3DataProvider.AJAXDataProvider = AJAXDataProvider;    
+    FB3DataProvider.AJAXDataProvider = AJAXDataProvider;
 
     var AjaxLoader = (function () {
         function AjaxLoader(URL, Callback, Progressor, CustomData) {
+            var _this = this;
             this.URL = URL;
             this.Callback = Callback;
             this.Progressor = Progressor;
             this.CustomData = CustomData;
-            var _this = this;
             this.Progressor.HourglassOn(this, false, 'Loading ' + URL);
             this.Req = this.HttpRequest();
             try  {
@@ -62,6 +64,7 @@ var FB3DataProvider;
                 }
             }
         };
+
         AjaxLoader.prototype.onUpdateProgress = function (e) {
             this.Progressor.Progress(this, e.loaded / e.total * 100);
         };
@@ -73,6 +76,7 @@ var FB3DataProvider;
             this.Progressor.HourglassOff(this);
             this.Progressor.Alert('Failed to load "' + URL + '" (interrupted)');
         };
+
         AjaxLoader.prototype.HttpRequest = function () {
             var ref = null;
             if (window.XMLHttpRequest) {
@@ -86,6 +90,7 @@ var FB3DataProvider;
             if (data === undefined || data == '') {
                 return null;
             }
+
             // trim for IE
             //data = data.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
             // Attempt to parse using the native JSON parser first
@@ -104,6 +109,6 @@ var FB3DataProvider;
             return Data;
         };
         return AjaxLoader;
-    })();    
+    })();
 })(FB3DataProvider || (FB3DataProvider = {}));
 //@ sourceMappingURL=FB3AjaxDataProvider.js.map

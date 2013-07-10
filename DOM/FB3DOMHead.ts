@@ -42,7 +42,7 @@ module FB3DOM {
 		Chars: number;			// Length of the node - pure characters and spaces
 		ID: number;					// Position of this node within the parent. Used to generate GetXPID
 		TagName?: string;		// Native tag name. May be mapped to HTML with another tag name
-		GetHTML(HyphOn: bool, Range: IRange, PageData: IPageContainer);	// Returns partial HTML for this node
+		GetHTML(HyphOn: bool, Range: IRange, IDPrefix: string, PageData: IPageContainer);	// Returns partial HTML for this node
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -59,6 +59,7 @@ module FB3DOM {
 			OnDone: IIFB3DOMReadyFunc);
 		GetHTMLAsync(HyphOn: bool,
 			Range: IRange,
+			IDPrefix: string,
 			Callback: IDOMTextReadyCallback): void;
 	}
 

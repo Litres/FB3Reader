@@ -6,7 +6,21 @@ var FB3Reader;
     }
 
     function IsNodeUnbreakable(Node) {
-        return Node.children[0] && Node.children[0].nodeName.match(/^h\d$/i) ? true : false;
+        if (Node.nodeName.match(/^(h\d|a)$/i)) {
+            return true;
+        }
+
+        if (Node.className.match(/\btag_nobr\b/)) {
+            return true;
+        }
+
+        var Chld1 = Node.children[0];
+        if (Chld1) {
+            if (Chld1.nodeName.match(/^h\d$/i)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function RangeClone(BaseRange) {
@@ -74,7 +88,15 @@ var FB3Reader;
 
             var Range;
             if (this.RenderInstr.Range) {
-                Range = this.RenderInstr.Range;
+                Range = {
+                    From: this.RenderInstr.Range.From.slice(0),
+                    To: this.RenderInstr.Range.To.slice(0)
+                };
+
+                if (Range.To[Range.To.length - 1]) {
+                    Range.To[Range.To.length - 1]++;
+                } else {
+                }
             } else {
                 if (!this.RenderInstr.Start) {
                     this.RenderInstr.Start = [0];
@@ -87,7 +109,7 @@ var FB3Reader;
                 Range = { From: this.RenderInstr.Start.slice(0), To: [FragmentEnd] };
             }
 
-            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), function (PageData) {
+            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), this.ID + '_', function (PageData) {
                 return _this.DrawEnd(PageData);
             });
         };
@@ -104,8 +126,9 @@ var FB3Reader;
             if (PageData.FootNotes.length) {
                 this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
             }
+            this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
-                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginBottom, 0);
+                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop, 0);
                 if (!FallOut) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
                     this.PrerenderBlocks *= 2;
@@ -131,31 +154,22 @@ var FB3Reader;
                 var LastChild = this.Element.Node.children[this.Element.Node.children.length - 1];
                 if (LastChild) {
                     var CollectedHeight = FallOut.Height;
+                    var CollectedNotesHeight = FallOut.NotesHeight;
                     var PrevTo;
                     for (var I = 0; I < this.PagesToRender.length; I++) {
-                        var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginBottom - this.Element.MarginTop;
+                        var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop;
                         if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-                            var NextPageFallOut = this.FallOut(TestHeight, 0);
+                            var NextPageFallOut = this.FallOut(TestHeight, CollectedNotesHeight);
                             if (NextPageFallOut) {
                                 var NextPageRange = {};
                                 NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
                                 PrevTo = NextPageFallOut.FallOut.slice(0);
                                 NextPageRange.To = NextPageFallOut.FallOut.slice(0);
 
-                                //  As we host hyphen in the NEXT element(damn webkit) and a hyphen has it's width,
-                                //  we always need to have one more inline - element to make sure the element without
-                                //  a hyphen(and thus enormously narrow) will not be left on the page as a last element,
-                                //  while it should fall down being too wide with hyphen attached Like this:
-                                //  Wrong:                                            Right:
-                                //  |aaa bb-|                                         |aaa bb-|
-                                //  |bb cccc|                                         |bb cccc|
-                                //  |d eeeee|<if page cut here - error>               |d  eee-| << this hyphen fits ok, next will not
-                                //  |-ee    |<< this hyphen must be the               |eeee   | << this tail bring excess part down
-                                //              6-th char, so "eeeee" would NOT fit
-                                NextPageRange.To[NextPageRange.To.length - 1]++;
-
                                 this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.Element.MarginTop;
+                                this.PagesToRender[I].NotesHeight = NextPageFallOut.NotesHeight + this.NotesElement.MarginTop;
                                 CollectedHeight = NextPageFallOut.Height;
+                                CollectedNotesHeight = NextPageFallOut.NotesHeight;
                                 if (this.PagesToRender[I].CacheAs !== undefined) {
                                     this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
                                 }
@@ -172,6 +186,9 @@ var FB3Reader;
 
             this.Element.Node.parentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight) + 'px';
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
+            if (this.RenderInstr.NotesHeight) {
+                this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight - this.NotesElement.MarginTop) + 'px';
+            }
             this.Element.Node.style.overflow = 'hidden';
 
             if (this.PagesToRender && this.PagesToRender.length) {
@@ -210,31 +227,51 @@ var FB3Reader;
             var LastOffsetParent;
             var LastOffsetShift;
             var GotTheBottom = false;
-            var FootnotesAddon = 0;
+            var FootnotesAddonCollected = 0;
+
+            // To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
+            var LastLineBreakerParent;
+            var LastLineBreakerPos;
+            var LastFullLinePosition;
+
+            var PrevPageBreaker = false;
             while (I < ChildsCount) {
+                var FootnotesAddon = 0;
                 var Child = Element.children[I];
                 var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);
 
                 if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
                     var NoteElement = this.Site.getElementById('f' + Child.id);
                     if (NoteElement) {
-                        FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight + this.NotesElement.MarginTop;
+                        FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight;
                     }
                 } else {
                     var FootNotes = Child.getElementsByTagName('a');
                     for (var J = FootNotes.length - 1; J >= 0; J--) {
                         if (FootNotes[J].className.match(/\bfootnote_attached\b/)) {
                             var NoteElement = this.Site.getElementById('f' + FootNotes[J].id);
-                            FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight + this.NotesElement.MarginTop;
+                            FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight;
                             break;
                         }
                     }
                 }
+                if (FootnotesAddon) {
+                    FootnotesAddon += this.NotesElement.MarginTop - NotesShift;
+                }
 
-                var PrevPageBreaker;
-                if ((ChildBot + FootnotesAddon < Limit) && !PrevPageBreaker) {
-                    I++;
+                var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : FootnotesAddonCollected;
+                if ((ChildBot + FootnotesHeightNow < Limit) && !PrevPageBreaker) {
                     ForceDenyElementBreaking = false;
+                    if (FootnotesAddon) {
+                        FootnotesAddonCollected = FootnotesAddon;
+                    }
+                    ;
+                    if (LastFullLinePosition != ChildBot) {
+                        LastLineBreakerParent = Element;
+                        LastLineBreakerPos = I;
+                        LastFullLinePosition = ChildBot;
+                    }
+                    I++;
                 } else {
                     GotTheBottom = true;
                     var CurShift = Child.offsetTop;
@@ -242,9 +279,6 @@ var FB3Reader;
                         CurShift += Math.floor(Math.max(Child.scrollHeight, Child.offsetHeight) / 2);
                     } else {
                         var NextChild = Element.children[I + 1];
-                        if (NextChild && NextChild.innerHTML.match(/^\u00AD/)) {
-                            Child.innerHTML += '_';
-                        }
                     }
                     var ApplyShift;
                     if (LastOffsetParent == Child.offsetParent) {
@@ -256,15 +290,26 @@ var FB3Reader;
 
                     GoodHeight += ApplyShift;
                     LastOffsetParent = Child.offsetParent;
-                    Child.className += ' cut_bot';
+
+                    //					Child.className += ' cut_bot';
                     Element = Child;
                     ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
+
+                    if (ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected) {
+                        // So, it looks like we do not fit because of the footnote, not the falling out text itself.
+                        // Let's force page break on the previous line end - kind of time machine
+                        I = LastLineBreakerPos;
+                        Element = LastLineBreakerParent;
+                        PrevPageBreaker = true;
+                        ChildsCount = Element.children.length;
+                        continue;
+                    }
                     Limit = Limit - ApplyShift;
                     I = 0;
                     if (PrevPageBreaker)
                         break;
                 }
-                PrevPageBreaker = !ForceDenyElementBreaking && IsNodePageBreaker(Child);
+                PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && IsNodePageBreaker(Child);
             }
 
             if (!GotTheBottom) {
@@ -272,7 +317,8 @@ var FB3Reader;
             }
             var Addr = Element.id.split('_');
             Addr.shift();
-            return { FallOut: Addr, Height: GoodHeight, NotesHeight: FootnotesAddon };
+            Addr.shift();
+            return { FallOut: Addr, Height: GoodHeight, NotesHeight: FootnotesAddonCollected };
         };
         return ReaderPage;
     })();

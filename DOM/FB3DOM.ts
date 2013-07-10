@@ -14,7 +14,7 @@ module FB3DOM {
 			}
 			if (!this.WaitedBlocks.length) {
 				var PageData = new PageContainer();
-				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, PageData);
+				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, PageData);
 				this.OnDone(PageData);
 				return true;
 			} else {
@@ -25,6 +25,7 @@ module FB3DOM {
 			private WaitedBlocks: number[],
 			private HyphOn: bool,
 			private Range: IRange,
+			private IDPrefix: string,
 			private OnDone: IDOMTextReadyCallback) {
 		}
 	}
@@ -88,15 +89,15 @@ module FB3DOM {
 			this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 			this.Progressor.HourglassOff(this);
 		}
-		public GetHTMLAsync(HyphOn: bool, Range: IRange, Callback: IDOMTextReadyCallback): void {
+		public GetHTMLAsync(HyphOn: bool, Range: IRange, IDPrefix: string, Callback: IDOMTextReadyCallback): void {
 		
 			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
 			if (MissingChunks.length == 0) {
 				var PageData = new PageContainer();
-				this.GetHTML(HyphOn, Range, PageData);
+				this.GetHTML(HyphOn, Range, IDPrefix, PageData);
 				Callback(PageData);
 			} else {
-				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, Callback));
+				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, IDPrefix, Callback));
 				for (var I = 0; I < MissingChunks.length; I++) {
 					if (!this.DataChunks[MissingChunks[I]].loaded) {
 						var AjRequest = this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]),

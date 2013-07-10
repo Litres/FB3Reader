@@ -21,7 +21,8 @@ var FB3DOM;
         'empty-line': 'hr',
         emphasis: 'em',
         style: 'span',
-        footnote: 'div'
+        footnote: 'div',
+        nobr: 'span'
     };
 
     var FB3Text = (function () {
@@ -35,7 +36,7 @@ var FB3DOM;
             //			this.text = this.text.replace('\u00AD', '&shy;')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
         }
-        FB3Text.prototype.GetHTML = function (HyphOn, Range, PageData) {
+        FB3Text.prototype.GetHTML = function (HyphOn, Range, IDPrefix, PageData) {
             var OutStr = this.text;
             if (Range.To[0]) {
                 OutStr = OutStr.substr(0, Range.To[0]);
@@ -46,7 +47,7 @@ var FB3DOM;
 
             var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
-            TargetStream.push('<span id="n_' + this.XPID + '">' + OutStr + '</span>');
+            TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">' + OutStr + '</span>');
         };
         return FB3Text;
     })();
@@ -85,11 +86,11 @@ var FB3DOM;
                 this.Chars += Kid.Chars;
             }
         }
-        FB3Tag.prototype.GetHTML = function (HyphOn, Range, PageData) {
+        FB3Tag.prototype.GetHTML = function (HyphOn, Range, IDPrefix, PageData) {
             if (this.IsFootnote) {
-                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range));
+                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix));
             } else {
-                PageData.Body = PageData.Body.concat(this.GetInitTag(Range));
+                PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix));
             }
             var CloseTag = this.GetCloseTag(Range);
             var From = Range.From.shift() || 0;
@@ -115,7 +116,7 @@ var FB3DOM;
                 if (I == To) {
                     KidRange.To = Range.To;
                 }
-                this.Childs[I].GetHTML(HyphOn, KidRange, PageData);
+                this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, PageData);
             }
             (this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
         };
@@ -134,7 +135,7 @@ var FB3DOM;
         FB3Tag.prototype.GetCloseTag = function (Range) {
             return '</' + this.HTMLTagName() + '>';
         };
-        FB3Tag.prototype.GetInitTag = function (Range) {
+        FB3Tag.prototype.GetInitTag = function (Range, IDPrefix) {
             var ElementClasses = new Array();
             if (Range.From[0]) {
                 ElementClasses.push('cut_top');
@@ -165,9 +166,9 @@ var FB3DOM;
             }
 
             if (this.IsFootnote) {
-                Out.push(' id="fn_' + this.Parent.XPID + '">');
+                Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
             } else {
-                Out.push(' id="n_' + this.XPID + '">');
+                Out.push(' id="n_' + IDPrefix + this.XPID + '">');
             }
             return Out;
         };

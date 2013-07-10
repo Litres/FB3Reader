@@ -5,6 +5,7 @@ BEGIN{
 };
 
 use XPortal::Hyphenate;
+use XPortal::Settings;
 
 use strict;
 use XML::LibXSLT;
@@ -23,7 +24,7 @@ my $Out = $ARGV[2];
 #my $Out = 'C:\Work\FictionHub\cgi\static\out.html';
 
 unless ($Out){
-	print "fb2json converter. Usage:\nfb2json.pl <stcfile.fb2> <stylesheet.xsl> <out>\n";
+	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <out>\n";
 	exit(0);
 }
 my %HyphCache;
@@ -52,6 +53,40 @@ sub EscString{
 	$Esc =~ s/\r?\n\r?/ /g;
 	$Esc =~ s/ $//;
 	return $Esc;
+}
+my $TmpXML;
+if (-f $XML) {
+	use File::Basename;
+
+	open XML, $XML or die "Cannot open file $XML";
+	my $XMLData = Encode::decode_utf8(join '', (<XML>));
+	close XML;
+
+	$XMLData =~ s/([\s>])([^\s<>]+)(<a\s+.*?type="note".*?>[^<]{1,10}<\/a>)/$1.HypheNOBR($2,$3)/ges;
+
+	$TmpXML = $XPortal::Settings::TMPPath . "/". $$ . "_" . basename($XML) . ".xml";
+
+	open TMPXML, ">", $TmpXML or die "Cannot open tmp file $TmpXML";
+	print TMPXML Encode::encode_utf8($XMLData);
+	close TMPXML;
+
+	$XML = $TmpXML;
+} else {
+	warn "'$XML' not found";
+	exit 0;
+}
+
+sub HypheNOBR {
+	my ($Word, $NOBRCharSeq) = @_;
+
+	$Word = EscString($Word);
+	my $Esc = $HyphCache{$Word} || XPortal::Hyphenate::HyphString($Word);
+
+	unless ($Esc =~ s/\xAD?([^\xAD]+)$/<nobr>$1/s) {
+		$Esc = '<nobr>'.$Esc;
+	}
+
+	return $Esc . $NOBRCharSeq . '</nobr>';
 }
 
 my $xslt = XML::LibXSLT->new();
@@ -134,6 +169,8 @@ for (my $i=0;$i<=$Max;$i++) {
 }
 print $OutFile "]}";
 close $OutFile;
+
+unlink $TmpXML if $TmpXML;
 
 sub CloseFile{
 	my $OutFile = shift;

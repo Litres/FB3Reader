@@ -15,6 +15,7 @@ module FB3Reader {
 		FallOut: IPosition; // Agress of the first element to not fit the page
 		Height: number;			// Height of the page we've examined
 		NotesHeight: number;
+		FalloutElementN: number;
 	}
 
 	function IsNodePageBreaker(Node:HTMLElement):boolean {
@@ -210,17 +211,17 @@ module FB3Reader {
 						var TestHeight = CollectedHeight + this.Element.Height
 							- this.Element.MarginTop;
 						if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-							var NextPageFallOut = this.FallOut(TestHeight, CollectedNotesHeight);
-							if (NextPageFallOut) {
+							FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
+							if (FallOut) {
 								var NextPageRange = <any> {};
 								NextPageRange.From = (PrevTo?PrevTo:this.RenderInstr.Range.To).slice(0);
-								PrevTo = NextPageFallOut.FallOut.slice(0);
-								NextPageRange.To = NextPageFallOut.FallOut.slice(0);
+								PrevTo = FallOut.FallOut.slice(0);
+								NextPageRange.To = FallOut.FallOut.slice(0);
 
-								this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.Element.MarginTop;
-								this.PagesToRender[I].NotesHeight = NextPageFallOut.NotesHeight;
-								CollectedHeight = NextPageFallOut.Height;
-								CollectedNotesHeight += NextPageFallOut.NotesHeight;
+								this.PagesToRender[I].Height = FallOut.Height - CollectedHeight + this.Element.MarginTop;
+								this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
+								CollectedHeight = FallOut.Height;
+								CollectedNotesHeight += FallOut.NotesHeight;
 								if (this.PagesToRender[I].CacheAs !== undefined) {
 									this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
 								}
@@ -263,10 +264,10 @@ module FB3Reader {
 			}
 		}
 
-		FallOut(Limit: number, NotesShift: number): IFallOut {
+		FallOut(Limit: number, NotesShift: number, SkipUntill?: number): IFallOut {
 			//		Hand mage CSS3 tabs. I thouth it would take more than this
 			var Element = <HTMLElement> this.Element.Node;
-			var I = 0;
+			var I = SkipUntill > 0 ? SkipUntill : 0;
 			var GoodHeight = 0;
 			var ChildsCount = Element.children.length;
 			var ForceDenyElementBreaking = true;
@@ -278,10 +279,11 @@ module FB3Reader {
 			// To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
 			var LastLineBreakerParent: HTMLElement;
 			var LastLineBreakerPos: number;
-			var LastFullLinePosition: number;
+			var LastFullLinePosition = 0;
 
 			var PrevPageBreaker = false;
 			var NoMoreFootnotesHere = false;
+			var FalloutElementN = -1;
 			while (I < ChildsCount) {
 				var FootnotesAddon = 0;
 				var Child = <HTMLElement> Element.children[I];
@@ -313,7 +315,7 @@ module FB3Reader {
 				if ((ChildBot + FootnotesHeightNow < Limit) && !PrevPageBreaker) {
 					ForceDenyElementBreaking = false;
 					if (FootnotesAddon) { FootnotesAddonCollected = FootnotesAddon };
-					if (LastFullLinePosition != ChildBot) {
+					if (LastFullLinePosition + 1 < ChildBot) { // +1 because of the browser positioning rounding on the zoomed screen
 						LastLineBreakerParent = Element;
 						LastLineBreakerPos = I;
 						LastFullLinePosition = ChildBot;
@@ -321,6 +323,9 @@ module FB3Reader {
 					I++;
 				} else {
 					GotTheBottom = true;
+					if (FalloutElementN == -1) {
+//						FalloutElementN = I
+					}
 					if (!FootnotesAddon) {
 						NoMoreFootnotesHere = true;
 					}
@@ -369,7 +374,12 @@ module FB3Reader {
 			var Addr = <any> Element.id.split('_');
 			Addr.shift();
 			Addr.shift();
-			return { FallOut: Addr, Height: GoodHeight, NotesHeight: FootnotesAddonCollected - this.NotesElement.MarginTop};
+			return {
+				FallOut: Addr,
+				Height: GoodHeight,
+				NotesHeight: FootnotesAddonCollected - this.NotesElement.MarginTop,
+				FalloutElementN: FalloutElementN
+			};
 		}
 	}
 

@@ -159,17 +159,17 @@ var FB3Reader;
                     for (var I = 0; I < this.PagesToRender.length; I++) {
                         var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop;
                         if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-                            var NextPageFallOut = this.FallOut(TestHeight, CollectedNotesHeight);
-                            if (NextPageFallOut) {
+                            FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
+                            if (FallOut) {
                                 var NextPageRange = {};
                                 NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
-                                PrevTo = NextPageFallOut.FallOut.slice(0);
-                                NextPageRange.To = NextPageFallOut.FallOut.slice(0);
+                                PrevTo = FallOut.FallOut.slice(0);
+                                NextPageRange.To = FallOut.FallOut.slice(0);
 
-                                this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.Element.MarginTop;
-                                this.PagesToRender[I].NotesHeight = NextPageFallOut.NotesHeight;
-                                CollectedHeight = NextPageFallOut.Height;
-                                CollectedNotesHeight += NextPageFallOut.NotesHeight;
+                                this.PagesToRender[I].Height = FallOut.Height - CollectedHeight + this.Element.MarginTop;
+                                this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
+                                CollectedHeight = FallOut.Height;
+                                CollectedNotesHeight += FallOut.NotesHeight;
                                 if (this.PagesToRender[I].CacheAs !== undefined) {
                                     this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
                                 }
@@ -217,10 +217,10 @@ var FB3Reader;
             }
         };
 
-        ReaderPage.prototype.FallOut = function (Limit, NotesShift) {
+        ReaderPage.prototype.FallOut = function (Limit, NotesShift, SkipUntill) {
             //		Hand mage CSS3 tabs. I thouth it would take more than this
             var Element = this.Element.Node;
-            var I = 0;
+            var I = SkipUntill > 0 ? SkipUntill : 0;
             var GoodHeight = 0;
             var ChildsCount = Element.children.length;
             var ForceDenyElementBreaking = true;
@@ -232,10 +232,11 @@ var FB3Reader;
             // To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
             var LastLineBreakerParent;
             var LastLineBreakerPos;
-            var LastFullLinePosition;
+            var LastFullLinePosition = 0;
 
             var PrevPageBreaker = false;
             var NoMoreFootnotesHere = false;
+            var FalloutElementN = -1;
             while (I < ChildsCount) {
                 var FootnotesAddon = 0;
                 var Child = Element.children[I];
@@ -269,7 +270,7 @@ var FB3Reader;
                         FootnotesAddonCollected = FootnotesAddon;
                     }
                     ;
-                    if (LastFullLinePosition != ChildBot) {
+                    if (LastFullLinePosition + 1 < ChildBot) {
                         LastLineBreakerParent = Element;
                         LastLineBreakerPos = I;
                         LastFullLinePosition = ChildBot;
@@ -277,6 +278,8 @@ var FB3Reader;
                     I++;
                 } else {
                     GotTheBottom = true;
+                    if (FalloutElementN == -1) {
+                    }
                     if (!FootnotesAddon) {
                         NoMoreFootnotesHere = true;
                     }
@@ -324,7 +327,12 @@ var FB3Reader;
             var Addr = Element.id.split('_');
             Addr.shift();
             Addr.shift();
-            return { FallOut: Addr, Height: GoodHeight, NotesHeight: FootnotesAddonCollected - this.NotesElement.MarginTop };
+            return {
+                FallOut: Addr,
+                Height: GoodHeight,
+                NotesHeight: FootnotesAddonCollected - this.NotesElement.MarginTop,
+                FalloutElementN: FalloutElementN
+            };
         };
         return ReaderPage;
     })();

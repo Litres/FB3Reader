@@ -167,9 +167,9 @@ var FB3Reader;
                                 NextPageRange.To = NextPageFallOut.FallOut.slice(0);
 
                                 this.PagesToRender[I].Height = NextPageFallOut.Height - CollectedHeight + this.Element.MarginTop;
-                                this.PagesToRender[I].NotesHeight = NextPageFallOut.NotesHeight + this.NotesElement.MarginTop;
+                                this.PagesToRender[I].NotesHeight = NextPageFallOut.NotesHeight;
                                 CollectedHeight = NextPageFallOut.Height;
-                                CollectedNotesHeight = NextPageFallOut.NotesHeight;
+                                CollectedNotesHeight += NextPageFallOut.NotesHeight;
                                 if (this.PagesToRender[I].CacheAs !== undefined) {
                                     this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
                                 }
@@ -184,10 +184,10 @@ var FB3Reader;
                 }
             }
 
-            this.Element.Node.parentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight) + 'px';
+            this.Element.Node.parentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
             if (this.RenderInstr.NotesHeight) {
-                this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight - this.NotesElement.MarginTop) + 'px';
+                this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
             }
             this.Element.Node.style.overflow = 'hidden';
 
@@ -235,23 +235,26 @@ var FB3Reader;
             var LastFullLinePosition;
 
             var PrevPageBreaker = false;
+            var NoMoreFootnotesHere = false;
             while (I < ChildsCount) {
                 var FootnotesAddon = 0;
                 var Child = Element.children[I];
                 var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);
 
-                if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
-                    var NoteElement = this.Site.getElementById('f' + Child.id);
-                    if (NoteElement) {
-                        FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight;
-                    }
-                } else {
-                    var FootNotes = Child.getElementsByTagName('a');
-                    for (var J = FootNotes.length - 1; J >= 0; J--) {
-                        if (FootNotes[J].className.match(/\bfootnote_attached\b/)) {
-                            var NoteElement = this.Site.getElementById('f' + FootNotes[J].id);
+                if (!NoMoreFootnotesHere) {
+                    if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
+                        var NoteElement = this.Site.getElementById('f' + Child.id);
+                        if (NoteElement) {
                             FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight;
-                            break;
+                        }
+                    } else {
+                        var FootNotes = Child.getElementsByTagName('a');
+                        for (var J = FootNotes.length - 1; J >= 0; J--) {
+                            if (FootNotes[J].className.match(/\bfootnote_attached\b/)) {
+                                var NoteElement = this.Site.getElementById('f' + FootNotes[J].id);
+                                FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight;
+                                break;
+                            }
                         }
                     }
                 }
@@ -274,6 +277,9 @@ var FB3Reader;
                     I++;
                 } else {
                     GotTheBottom = true;
+                    if (!FootnotesAddon) {
+                        NoMoreFootnotesHere = true;
+                    }
                     var CurShift = Child.offsetTop;
                     if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
                         CurShift += Math.floor(Math.max(Child.scrollHeight, Child.offsetHeight) / 2);
@@ -318,7 +324,7 @@ var FB3Reader;
             var Addr = Element.id.split('_');
             Addr.shift();
             Addr.shift();
-            return { FallOut: Addr, Height: GoodHeight, NotesHeight: FootnotesAddonCollected };
+            return { FallOut: Addr, Height: GoodHeight, NotesHeight: FootnotesAddonCollected - this.NotesElement.MarginTop };
         };
         return ReaderPage;
     })();

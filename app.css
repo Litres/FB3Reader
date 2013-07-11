@@ -15,6 +15,12 @@ div.FB2readerPage {
     margin: 0;
 }
 
+.FBReaderNotesDiv {
+    padding: 0 10px  0;
+    margin: 10px 3em 0 10px;
+}
+
+
 .cut_top {
     padding-top:0;
     margin-top:0;
@@ -42,7 +48,8 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
 }
 /* engine-required CSS END */
 
-/* this are engine-independent CSS, do with it whatewer you see fit  */
+/* this are engine-independent CSS, do with it whatewer you see fit */
+/* just do not mess with em/ex in heights and vertical margins/paddings */
 .FBReaderContentDiv h1, .FBReaderContentDiv h2 {
    font-family: 'Times New Roman', serif
 }
@@ -52,7 +59,7 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
     font-family: 'Segoe UI', sans-serif;
 }
 #reader {
-    height:30%;
+    height:50%;
     width:100%;
 }
 
@@ -88,8 +95,6 @@ div.FB2readerPage p.footnote {
 
 .FBReaderNotesDiv {
     border-top: 1px dotted #ffff5d;
-    padding: 0.3em 10px 10px 0;
-    margin: 0.4em 30px 0 10px;
     font-family: 'Segoe UI', sans-serif;
     background-color: #000070;
 }
@@ -104,7 +109,7 @@ div.FB2readerPage p.footnote {
 .FBReaderNotesDiv div.tag_footnote div.tag_title h6 {
     font-size: 80%;
     vertical-align: super;
-    margin:0 0 0.2em 0;
+    margin:0 0 10px 0;
     padding:0;
 }
 

@@ -144,7 +144,7 @@ var FB3Reader;
                 this.RenderInstr.NotesHeight = FallOut.NotesHeight;
 
                 if (this.RenderInstr.CacheAs !== undefined) {
-                    this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr);
+                    this.FBReader.StoreCachedPage(this.RenderInstr);
                 }
 
                 // Ok, we have rendered the page nice. Now we can check, wether we have created
@@ -171,7 +171,7 @@ var FB3Reader;
                                 CollectedHeight = FallOut.Height;
                                 CollectedNotesHeight += FallOut.NotesHeight;
                                 if (this.PagesToRender[I].CacheAs !== undefined) {
-                                    this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
+                                    this.FBReader.StoreCachedPage(this.RenderInstr);
                                 }
                                 this.PagesToRender[I].Range = NextPageRange;
                             } else {
@@ -242,6 +242,10 @@ var FB3Reader;
                 var Child = Element.children[I];
                 var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);
 
+                if (Child.scrollHeight != Child.offsetHeight) {
+                    ChildBot++;
+                }
+
                 if (!NoMoreFootnotesHere) {
                     if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
                         var NoteElement = this.Site.getElementById('f' + Child.id);
@@ -270,7 +274,7 @@ var FB3Reader;
                         FootnotesAddonCollected = FootnotesAddon;
                     }
                     ;
-                    if (LastFullLinePosition + 1 < ChildBot) {
+                    if (Math.abs(LastFullLinePosition - ChildBot) > 1) {
                         LastLineBreakerParent = Element;
                         LastLineBreakerPos = I;
                         LastFullLinePosition = ChildBot;
@@ -349,7 +353,9 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
-            this.CurStartPos = [5, 14];
+
+            //			this.CurStartPos = [5, 14];
+            this.CurStartPos = [0];
         }
         Reader.prototype.Init = function () {
             var _this = this;
@@ -397,8 +403,16 @@ var FB3Reader;
 
             //			console.log('GoToOpenPosition ' + NewPos);
             var NewInstr = [{ Start: NewPos }];
-            for (var I = 0; I < this.CacheForward * this.NColumns; I++) {
+
+            var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
+            if (ShouldWeCachePositions) {
+                NewInstr[0].CacheAs = 0;
+            }
+            for (var I = 1; I < (this.CacheForward + 1) * this.NColumns; I++) {
                 NewInstr.push({});
+                if (ShouldWeCachePositions) {
+                    NewInstr[I].CacheAs = I;
+                }
             }
             this.Pages[0].DrawInit(NewInstr);
         };
@@ -413,8 +427,8 @@ var FB3Reader;
         Reader.prototype.GetCachedPage = function (NewPos) {
             return undefined;
         };
-        Reader.prototype.StoreCachedPage = function (Page, Range) {
-            this.PagesPositionsCache[Page] = Range;
+        Reader.prototype.StoreCachedPage = function (Range) {
+            this.PagesPositionsCache[Range.CacheAs] = Range;
         };
 
         Reader.prototype.SearchForText = function (Text) {
@@ -425,7 +439,7 @@ var FB3Reader;
             this.ResetCache();
             var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
             this.Pages = new Array();
-            for (var I = 0; I < this.CacheBackward + this.CacheForward; I++) {
+            for (var I = 0; I < this.CacheBackward + this.CacheForward + 1; I++) {
                 for (var J = 0; J < this.NColumns; J++) {
                     var NewPage = new ReaderPage(J, this.FB3DOM, this, this.Pages[this.Pages.length - 1]);
                     this.Pages[this.Pages.length] = NewPage;
@@ -433,6 +447,11 @@ var FB3Reader;
                 }
             }
             this.Pages[this.Pages.length - 1].Next = this.Pages[0];
+
+            this.BackgroundDetector = new ReaderPage(0, this.FB3DOM, this, null);
+            InnerHTML += this.BackgroundDetector.GetInitHTML(this.Pages.length);
+            this.BackgroundDetector.Next = this.BackgroundDetector;
+
             InnerHTML += '</div>';
             this.Site.Canvas.innerHTML = InnerHTML;
 

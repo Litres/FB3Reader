@@ -195,7 +195,7 @@ module FB3Reader {
 
 
 				if (this.RenderInstr.CacheAs !== undefined) {
-					this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, this.RenderInstr);
+					this.FBReader.StoreCachedPage(this.RenderInstr);
 				}
 
 				// Ok, we have rendered the page nice. Now we can check, wether we have created
@@ -223,7 +223,7 @@ module FB3Reader {
 								CollectedHeight = FallOut.Height;
 								CollectedNotesHeight += FallOut.NotesHeight;
 								if (this.PagesToRender[I].CacheAs !== undefined) {
-									this.FBReader.StoreCachedPage(this.RenderInstr.CacheAs, NextPageRange);
+									this.FBReader.StoreCachedPage(this.RenderInstr);
 								}
 								this.PagesToRender[I].Range = NextPageRange;
 							} else { break }
@@ -289,6 +289,10 @@ module FB3Reader {
 				var Child = <HTMLElement> Element.children[I];
 				var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);
 
+				if (Child.scrollHeight != Child.offsetHeight) {
+					ChildBot++;
+				}
+
 				if (!NoMoreFootnotesHere) {
 					// Footnotes kind of expand element height - NoMoreFootnotesHere is for making things faster
 					if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
@@ -315,7 +319,7 @@ module FB3Reader {
 				if ((ChildBot + FootnotesHeightNow < Limit) && !PrevPageBreaker) {
 					ForceDenyElementBreaking = false;
 					if (FootnotesAddon) { FootnotesAddonCollected = FootnotesAddon };
-					if (LastFullLinePosition + 1 < ChildBot) { // +1 because of the browser positioning rounding on the zoomed screen
+					if (Math.abs(LastFullLinePosition - ChildBot) > 1) { // +1 because of the browser positioning rounding on the zoomed screen
 						LastLineBreakerParent = Element;
 						LastLineBreakerPos = I;
 						LastFullLinePosition = ChildBot;
@@ -395,6 +399,7 @@ module FB3Reader {
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: ReaderPage[];
 		private PagesPositionsCache: IPageRenderInstruction[];
+		private BackgroundDetector: ReaderPage;
 		private OnResizeTimeout: any;
 
 		constructor(public ArtID: string,
@@ -408,8 +413,8 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-			this.CurStartPos = [5, 14];
-//			this.CurStartPos = [0];
+//			this.CurStartPos = [5, 14];
+			this.CurStartPos = [0];
 		}
 
 		public Init(): void {
@@ -453,9 +458,17 @@ module FB3Reader {
 			}
 			var Range: FB3DOM.IRange = { From: NewPos, To: [FragmentEnd] };
 			//			console.log('GoToOpenPosition ' + NewPos);
-			var NewInstr = <any> [{ Start: NewPos }];
-			for (var I = 0; I < this.CacheForward * this.NColumns; I++) {
+			var NewInstr: IPageRenderInstruction[] = [{ Start: NewPos }];
+
+			var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
+			if (ShouldWeCachePositions) { // If we render from the begining, we can safely cache page layaut
+				NewInstr[0].CacheAs = 0;
+			}
+			for (var I = 1; I < (this.CacheForward + 1) * this.NColumns; I++) {
 				NewInstr.push({});
+				if (ShouldWeCachePositions) {
+					NewInstr[I].CacheAs = I;
+				}
 			}
 			this.Pages[0].DrawInit(NewInstr);
 		}
@@ -467,7 +480,7 @@ module FB3Reader {
 
 		public ResetCache(): void { this.PagesPositionsCache = new Array();}
 		public GetCachedPage(NewPos: IPosition): number { return undefined }
-		public StoreCachedPage(Page: number, Range: IPageRenderInstruction) { this.PagesPositionsCache[Page] = Range }
+		public StoreCachedPage(Range: IPageRenderInstruction) { this.PagesPositionsCache[Range.CacheAs] = Range }
 
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
 
@@ -475,14 +488,20 @@ module FB3Reader {
 			this.ResetCache();
 			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
 			this.Pages = new Array();
-			for (var I = 0; I < this.CacheBackward + this.CacheForward; I++) {
+			for (var I = 0; I < this.CacheBackward + this.CacheForward + 1; I++) { // Visible page + precached ones
 				for (var J = 0; J < this.NColumns; J++) {
 					var NewPage = new ReaderPage(J, this.FB3DOM, this, this.Pages[this.Pages.length-1]);
 					this.Pages[this.Pages.length] = NewPage;
 					InnerHTML += NewPage.GetInitHTML(I * this.NColumns + J);
 				}
 			}
-			this.Pages[this.Pages.length-1].Next = this.Pages[0];
+			this.Pages[this.Pages.length-1].Next = this.Pages[0]; // Cycled canvas reuse
+
+			this.BackgroundDetector = new ReaderPage(0, this.FB3DOM, this, null); // Meet the background page borders detector!
+			InnerHTML += this.BackgroundDetector.GetInitHTML(this.Pages.length);
+			this.BackgroundDetector.Next = this.BackgroundDetector;  //  It's supposed to be eating its tail, right
+
+
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
 

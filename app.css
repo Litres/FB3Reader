@@ -49,7 +49,21 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
 /* engine-required CSS END */
 
 /* this are engine-independent CSS, do with it whatewer you see fit */
-/* just do not mess with em/ex in heights and vertical margins/paddings */
+/*
+  Several things to note:
+
+    - never mess with em/ex in heights and/or vertical margins/paddings
+      (for the text size it's probably ok, but still avoid it)
+
+    - You can make whatever changes to column styles depending on it's
+      position using FB2readerCell1of2 classes and the like, yes. UNTILL.
+      Untill every page's (height|width|inner element sizes) are identical.
+      As engine renders first page and then the next page's borders are
+      quessed analising it in the belief the next page will behave exactly
+      as the first one does and so on. Background, symmetrical margins
+      and all that - at your service
+    
+*/
 .FBReaderContentDiv h1, .FBReaderContentDiv h2 {
    font-family: 'Times New Roman', serif
 }
@@ -81,8 +95,13 @@ div.FB2readerPage a.footnote_attached {
 
 div.FB2readerPage p {
     text-align: justify;
+    padding:0;
+    margin:0;
+    text-indent:1.3em;
 }
-
+div.FB2readerPage p.cut_top {
+    text-indent:0;
+}
 div.FB2readerPage div.footnote {
     font-size: 80%;
     clear:both;
@@ -109,8 +128,9 @@ div.FB2readerPage p.footnote {
 .FBReaderNotesDiv div.tag_footnote div.tag_title h6 {
     font-size: 80%;
     vertical-align: super;
-    margin:0 0 10px 0;
+    margin:0;
     padding:0;
+    margin-left: -10px;
 }
 
 .FBReaderNotesDiv p.footnote {

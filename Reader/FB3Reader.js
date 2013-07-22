@@ -30,6 +30,13 @@ var FB3Reader;
         };
     }
 
+    function HardcoreParseInt(Input) {
+        Input.replace(/\D/g, '');
+        if (Input == '')
+            Input = 0;
+        return parseInt(Input);
+    }
+
     var ReaderPage = (function () {
         function ReaderPage(ColumnN, FB3DOM, FBReader, Prev) {
             this.ColumnN = ColumnN;
@@ -59,8 +66,8 @@ var FB3Reader;
             var MarginTop;
             var MarginBottom;
             if (document.all) {
-                MarginTop = parseInt(Element.currentStyle.marginTop, 10) + parseInt(Element.currentStyle.paddingTop, 10);
-                MarginBottom = parseInt(Element.currentStyle.marginBottom, 10) + parseInt(Element.currentStyle.paddingBottom, 10);
+                MarginTop = HardcoreParseInt(Element.currentStyle.marginTop, 10) + HardcoreParseInt(Element.currentStyle.paddingTop, 10);
+                MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom, 10) + HardcoreParseInt(Element.currentStyle.paddingBottom, 10);
             } else {
                 MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
                 MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
@@ -283,6 +290,7 @@ var FB3Reader;
                 } else {
                     GotTheBottom = true;
                     if (FalloutElementN == -1) {
+                        FalloutElementN = I;
                     }
                     if (!FootnotesAddon) {
                         NoMoreFootnotesHere = true;
@@ -334,7 +342,7 @@ var FB3Reader;
             return {
                 FallOut: Addr,
                 Height: GoodHeight,
-                NotesHeight: FootnotesAddonCollected - this.NotesElement.MarginTop,
+                NotesHeight: FootnotesAddonCollected ? FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
                 FalloutElementN: FalloutElementN
             };
         };

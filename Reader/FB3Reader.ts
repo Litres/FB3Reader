@@ -49,6 +49,13 @@ module FB3Reader {
 		}
 	}
 
+	function HardcoreParseInt(Input: string): number {
+		Input.replace(/\D/g, '');
+		if (Input == '')
+			Input = 0;
+		return parseInt(Input);
+	}
+
 	interface ElementDesc {
 		Node: HTMLDivElement;
 		Width: number;
@@ -96,10 +103,10 @@ module FB3Reader {
 			var Height = Element.parentElement.offsetHeight;
 			var MarginTop; var MarginBottom;
 			if (document.all) {// IE
-				MarginTop = parseInt(Element.currentStyle.marginTop, 10)
-				+ parseInt(Element.currentStyle.paddingTop, 10);
-				MarginBottom = parseInt(Element.currentStyle.marginBottom, 10)
-				+ parseInt(Element.currentStyle.paddingBottom, 10);
+				MarginTop = HardcoreParseInt(Element.currentStyle.marginTop, 10)
+				+ HardcoreParseInt(Element.currentStyle.paddingTop, 10);
+				MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom, 10)
+				+ HardcoreParseInt(Element.currentStyle.paddingBottom, 10);
 			} else {// Mozilla
 				MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top'))
 				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
@@ -328,7 +335,7 @@ module FB3Reader {
 				} else {
 					GotTheBottom = true;
 					if (FalloutElementN == -1) {
-//						FalloutElementN = I
+						FalloutElementN = I
 					}
 					if (!FootnotesAddon) {
 						NoMoreFootnotesHere = true;
@@ -381,7 +388,7 @@ module FB3Reader {
 			return {
 				FallOut: Addr,
 				Height: GoodHeight,
-				NotesHeight: FootnotesAddonCollected - this.NotesElement.MarginTop,
+				NotesHeight: FootnotesAddonCollected?FootnotesAddonCollected - this.NotesElement.MarginTop:0,
 				FalloutElementN: FalloutElementN
 			};
 		}

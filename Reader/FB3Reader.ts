@@ -52,7 +52,7 @@ module FB3Reader {
 	function HardcoreParseInt(Input: string): number {
 		Input.replace(/\D/g, '');
 		if (Input == '')
-			Input = 0;
+			Input = '0';
 		return parseInt(Input);
 	}
 
@@ -73,7 +73,7 @@ module FB3Reader {
 		private RenderInstr: IPageRenderInstruction;
 		private RenderMoreTimeout: number;
 		private Site: FB3ReaderSite.IFB3ReaderSite;
-		public Next: ReaderPage;
+		public Next: ReaderPage; // If null - it's not a page but prerender container
 		public Busy: boolean;
 		public Reseted: boolean;
 		public PrerenderBlocks: number;
@@ -88,7 +88,7 @@ module FB3Reader {
 			if (Prev) {
 				Prev.Next = this;
 			}
-			this.PrerenderBlocks = 4;
+			this.PrerenderBlocks = 5;
 		}
 		GetInitHTML(ID: number): FB3DOM.InnerHTML {
 			this.ID = ID;
@@ -103,10 +103,10 @@ module FB3Reader {
 			var Height = Element.parentElement.offsetHeight;
 			var MarginTop; var MarginBottom;
 			if (document.all) {// IE
-				MarginTop = HardcoreParseInt(Element.currentStyle.marginTop, 10)
-				+ HardcoreParseInt(Element.currentStyle.paddingTop, 10);
-				MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom, 10)
-				+ HardcoreParseInt(Element.currentStyle.paddingBottom, 10);
+				MarginTop = HardcoreParseInt(Element.currentStyle.marginTop)
+				+ HardcoreParseInt(Element.currentStyle.paddingTop);
+				MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom)
+				+ HardcoreParseInt(Element.currentStyle.paddingBottom);
 			} else {// Mozilla
 				MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top'))
 				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
@@ -251,7 +251,9 @@ module FB3Reader {
 				if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
 					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
 				}
-				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) },1)
+				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 1)
+			} else {
+				this.FBReader.IdleOn();
 			}
 		}
 
@@ -294,9 +296,11 @@ module FB3Reader {
 			while (I < ChildsCount) {
 				var FootnotesAddon = 0;
 				var Child = <HTMLElement> Element.children[I];
-				var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);
+				var SH = Child.scrollHeight;
+				var OH = Child.offsetHeight;
+				var ChildBot = Child.offsetTop + Math.max(SH, OH);
 
-				if (Child.scrollHeight != Child.offsetHeight) {
+				if (SH != OH) {
 					ChildBot++;
 				}
 
@@ -342,15 +346,16 @@ module FB3Reader {
 					}
 					var CurShift: number = Child.offsetTop;
 					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
-						CurShift += Math.floor(Math.max(Child.scrollHeight, Child.offsetHeight) / 2);
+						CurShift += Math.floor(Math.max(SH, OH) / 2);
 					} else {
 						var NextChild = <HTMLElement> Element.children[I + 1];
 						//if (NextChild && NextChild.innerHTML.match(/^\u00AD/)) {
 						//	Child.innerHTML += '_';
 						//}
 					}
+					var OffsetParent = Child.offsetParent;
 					var ApplyShift: number;
-					if (LastOffsetParent == Child.offsetParent) {
+					if (LastOffsetParent == OffsetParent) {
 						ApplyShift = CurShift - LastOffsetShift;
 					} else {
 						ApplyShift = CurShift;
@@ -358,7 +363,7 @@ module FB3Reader {
 					LastOffsetShift = CurShift;
 
 					GoodHeight += ApplyShift;
-					LastOffsetParent = Child.offsetParent;
+					LastOffsetParent = OffsetParent;
 //					Child.className += ' cut_bot';
 					Element = Child;
 					ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
@@ -408,6 +413,7 @@ module FB3Reader {
 		private PagesPositionsCache: IPageRenderInstruction[];
 		private BackgroundDetector: ReaderPage;
 		private OnResizeTimeout: any;
+		private IsIdle: boolean;
 
 		constructor(public ArtID: string,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
@@ -420,8 +426,9 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-//			this.CurStartPos = [5, 14];
+			//this.CurStartPos = [5, 14];
 			this.CurStartPos = [0];
+			this.IdleOff();
 		}
 
 		public Init(): void {
@@ -445,6 +452,7 @@ module FB3Reader {
 
 
 		public GoTO(NewPos: IPosition) {
+			this.IdleOff();
 //			console.log('GoTO ' + NewPos);
 			this.CurStartPos = NewPos.slice(0); // NewPos is going to be destroyed, we need a hardcopy
 			var GotoPage = this.GetCachedPage(NewPos);
@@ -506,8 +514,6 @@ module FB3Reader {
 
 			this.BackgroundDetector = new ReaderPage(0, this.FB3DOM, this, null); // Meet the background page borders detector!
 			InnerHTML += this.BackgroundDetector.GetInitHTML(this.Pages.length);
-			this.BackgroundDetector.Next = this.BackgroundDetector;  //  It's supposed to be eating its tail, right
-
 
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
@@ -533,6 +539,35 @@ module FB3Reader {
 			} , 200)
 		}
 
+		private FirstUncashedPage(): IPageRenderInstruction {
+			var FirstUncached: IPageRenderInstruction;
+			if (this.PagesPositionsCache.length) {
+				FirstUncached = {
+					Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To,
+					CacheAs: this.PagesPositionsCache.length
+				}
+			} else {
+				FirstUncached = {
+					Start: [0],
+					CacheAs: 0
+				}
+			}
+			return FirstUncached;
+		}
+		private IdleGo(): void {
+			if (!this.IsIdle) {
+				return;
+			}
+//			alert('idle');
+		}
+		public IdleOn(): void {
+			this.IsIdle = true;
+			this.IdleGo()
+		}
+
+		public IdleOff(): void {
+			this.IsIdle = false;
+		}
 	}
 
 }

@@ -73,12 +73,13 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
     font-family: 'Segoe UI', sans-serif;
 }
 #reader {
-    height:50%;
+    height:80%;
     width:100%;
 }
 
 div.FB2readerPage div.FBReaderContentDiv {
     padding:10px;
+    margin:0;
 }
 
 #FB3ReaderHostDiv {

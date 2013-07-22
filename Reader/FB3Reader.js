@@ -33,7 +33,7 @@ var FB3Reader;
     function HardcoreParseInt(Input) {
         Input.replace(/\D/g, '');
         if (Input == '')
-            Input = 0;
+            Input = '0';
         return parseInt(Input);
     }
 
@@ -47,7 +47,7 @@ var FB3Reader;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 4;
+            this.PrerenderBlocks = 5;
         }
         ReaderPage.prototype.Show = function () {
         };
@@ -66,8 +66,8 @@ var FB3Reader;
             var MarginTop;
             var MarginBottom;
             if (document.all) {
-                MarginTop = HardcoreParseInt(Element.currentStyle.marginTop, 10) + HardcoreParseInt(Element.currentStyle.paddingTop, 10);
-                MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom, 10) + HardcoreParseInt(Element.currentStyle.paddingBottom, 10);
+                MarginTop = HardcoreParseInt(Element.currentStyle.marginTop) + HardcoreParseInt(Element.currentStyle.paddingTop);
+                MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom) + HardcoreParseInt(Element.currentStyle.paddingBottom);
             } else {
                 MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
                 MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
@@ -205,6 +205,8 @@ var FB3Reader;
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
                 }, 1);
+            } else {
+                this.FBReader.IdleOn();
             }
         };
 
@@ -247,9 +249,11 @@ var FB3Reader;
             while (I < ChildsCount) {
                 var FootnotesAddon = 0;
                 var Child = Element.children[I];
-                var ChildBot = Child.offsetTop + Math.max(Child.scrollHeight, Child.offsetHeight);
+                var SH = Child.scrollHeight;
+                var OH = Child.offsetHeight;
+                var ChildBot = Child.offsetTop + Math.max(SH, OH);
 
-                if (Child.scrollHeight != Child.offsetHeight) {
+                if (SH != OH) {
                     ChildBot++;
                 }
 
@@ -297,12 +301,13 @@ var FB3Reader;
                     }
                     var CurShift = Child.offsetTop;
                     if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
-                        CurShift += Math.floor(Math.max(Child.scrollHeight, Child.offsetHeight) / 2);
+                        CurShift += Math.floor(Math.max(SH, OH) / 2);
                     } else {
                         var NextChild = Element.children[I + 1];
                     }
+                    var OffsetParent = Child.offsetParent;
                     var ApplyShift;
-                    if (LastOffsetParent == Child.offsetParent) {
+                    if (LastOffsetParent == OffsetParent) {
                         ApplyShift = CurShift - LastOffsetShift;
                     } else {
                         ApplyShift = CurShift;
@@ -310,7 +315,7 @@ var FB3Reader;
                     LastOffsetShift = CurShift;
 
                     GoodHeight += ApplyShift;
-                    LastOffsetParent = Child.offsetParent;
+                    LastOffsetParent = OffsetParent;
 
                     //					Child.className += ' cut_bot';
                     Element = Child;
@@ -362,8 +367,9 @@ var FB3Reader;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
 
-            //			this.CurStartPos = [5, 14];
+            //this.CurStartPos = [5, 14];
             this.CurStartPos = [0];
+            this.IdleOff();
         }
         Reader.prototype.Init = function () {
             var _this = this;
@@ -390,6 +396,8 @@ var FB3Reader;
         };
 
         Reader.prototype.GoTO = function (NewPos) {
+            this.IdleOff();
+
             //			console.log('GoTO ' + NewPos);
             this.CurStartPos = NewPos.slice(0);
             var GotoPage = this.GetCachedPage(NewPos);
@@ -458,7 +466,6 @@ var FB3Reader;
 
             this.BackgroundDetector = new ReaderPage(0, this.FB3DOM, this, null);
             InnerHTML += this.BackgroundDetector.GetInitHTML(this.Pages.length);
-            this.BackgroundDetector.Next = this.BackgroundDetector;
 
             InnerHTML += '</div>';
             this.Site.Canvas.innerHTML = InnerHTML;
@@ -481,6 +488,35 @@ var FB3Reader;
                 _this.GoTO(_this.CurStartPos);
                 _this.OnResizeTimeout = undefined;
             }, 200);
+        };
+
+        Reader.prototype.FirstUncashedPage = function () {
+            var FirstUncached;
+            if (this.PagesPositionsCache.length) {
+                FirstUncached = {
+                    Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To,
+                    CacheAs: this.PagesPositionsCache.length
+                };
+            } else {
+                FirstUncached = {
+                    Start: [0],
+                    CacheAs: 0
+                };
+            }
+            return FirstUncached;
+        };
+        Reader.prototype.IdleGo = function () {
+            if (!this.IsIdle) {
+                return;
+            }
+        };
+        Reader.prototype.IdleOn = function () {
+            this.IsIdle = true;
+            this.IdleGo();
+        };
+
+        Reader.prototype.IdleOff = function () {
+            this.IsIdle = false;
         };
         return Reader;
     })();

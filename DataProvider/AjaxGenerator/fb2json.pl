@@ -108,26 +108,17 @@ my $OutFile;
 my @BlockMap;
 my $RootTOC = {};
 my $TOC = $RootTOC;
+my @DataToWrite;
 
-for my $Line (@JSonArr){
-	unless ($OutFile){
-		push @BlockMap,{s=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN)};
-		open $OutFile, ">:utf8", $BlockMap[$FileN]->{fn};
-		print $OutFile '[';
-	}
-
+for my $Line (@JSonArr) {
 	if ($Line =~ s/\{chars:(\d+)\,/{/){
 		$PageStack += $1;
+		push @DataToWrite,$Line;
 		if ($PageStack >= $PartLimit){
-			$Line =~ s/,\s*$//;
-			print $OutFile $Line;
+			FlushFile();
 			$PageStack -= $PartLimit;
-			CloseFile($OutFile);
-			undef $OutFile;
 			$BlockMap[$FileN]->{e} = $BlockN;
 			$FileN++;
-		} else {
-			print $OutFile $Line."\n";
 		}
 		$BlockN++;
 	} elsif ($Line =~ />>>(.*)/){
@@ -144,10 +135,8 @@ for my $Line (@JSonArr){
 
 }
 
-if ($OutFile){
-	CloseFile($OutFile);
-	$BlockMap[$FileN]->{e} = $BlockN-1;
-}
+FlushFile();;
+$BlockMap[$FileN]->{e} = $BlockN-1 if @DataToWrite;
 
 open $OutFile, ">:utf8","$Out.toc.js";
 print $OutFile "{Body: [";
@@ -161,8 +150,10 @@ for (my $i=0;$i<=$Max;$i++) {
 print $OutFile "],Parts:[";
 $Max = @BlockMap - 1;
 for (my $i=0;$i<=$Max;$i++) {
-	print $OutFile "{s:",$BlockMap[$i]->{s},",e:".$BlockMap[$i]->{e}.",url:'".
-		$BlockMap[$i]->{fn}."'}";
+	my $ShortFN = $BlockMap[$i]->{fn};
+	$ShortFN =~ s/.*[\/\\]//;
+	$ShortFN =~ s/'/\\'/g;
+	print $OutFile "{s:",$BlockMap[$i]->{s},",e:".$BlockMap[$i]->{e}.",url:'$ShortFN'}";
 	if ($i != $Max){
 		print $OutFile ",\n";
 	}
@@ -172,10 +163,14 @@ close $OutFile;
 
 unlink $TmpXML if $TmpXML;
 
-sub CloseFile{
-	my $OutFile = shift;
-	print $OutFile ']';
-	close $OutFile;
+sub FlushFile{
+	return unless @DataToWrite;
+	push @BlockMap,{s=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN)};
+	open OUTFILE, ">:utf8", $BlockMap[$FileN]->{fn};
+	$DataToWrite[$#DataToWrite] =~ s/\s*,\s*$//;
+	print  OUTFILE '['.join("\n",@DataToWrite).']';
+	close  OUTFILE;
+	@DataToWrite=();
 }
 
 

@@ -2,7 +2,7 @@
 var FB3Reader;
 (function (FB3Reader) {
     function IsNodePageBreaker(Node) {
-        return Node.children[0] && Node.children[0].nodeName.toLowerCase() == 'h1' ? true : false;
+        return Node.nodeName.toLowerCase() == 'h1' ? true : false;
     }
 
     function IsNodeUnbreakable(Node) {
@@ -316,8 +316,6 @@ var FB3Reader;
 
                     GoodHeight += ApplyShift;
                     LastOffsetParent = OffsetParent;
-
-                    //					Child.className += ' cut_bot';
                     Element = Child;
                     ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
 
@@ -336,6 +334,9 @@ var FB3Reader;
                         break;
                 }
                 PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && IsNodePageBreaker(Child);
+                if (PrevPageBreaker) {
+                    Child.className += ' cut_bot';
+                }
             }
 
             if (!GotTheBottom) {
@@ -367,7 +368,7 @@ var FB3Reader;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
 
-            //this.CurStartPos = [5, 14];
+            //this.CurStartPos = [3, 14];
             this.CurStartPos = [0];
             this.IdleOff();
         }

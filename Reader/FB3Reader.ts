@@ -19,8 +19,7 @@ module FB3Reader {
 	}
 
 	function IsNodePageBreaker(Node:HTMLElement):boolean {
-		return Node.children[0] && Node.children[0].nodeName.toLowerCase() == 'h1' ? true : false;
-		//return false;
+		return Node.nodeName.toLowerCase() == 'h1' ? true : false;
 	}
 
 	function IsNodeUnbreakable(Node: HTMLElement): boolean {
@@ -364,7 +363,6 @@ module FB3Reader {
 
 					GoodHeight += ApplyShift;
 					LastOffsetParent = OffsetParent;
-//					Child.className += ' cut_bot';
 					Element = Child;
 					ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
 
@@ -382,6 +380,9 @@ module FB3Reader {
 					if (PrevPageBreaker) break;
 				}
 				PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && IsNodePageBreaker(Child);
+				if (PrevPageBreaker) {
+					Child.className += ' cut_bot';
+				}
 			}
 
 			if (!GotTheBottom) { // We had not enough data on the page!
@@ -426,7 +427,7 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-			//this.CurStartPos = [5, 14];
+			//this.CurStartPos = [3, 14];
 			this.CurStartPos = [0];
 			this.IdleOff();
 		}

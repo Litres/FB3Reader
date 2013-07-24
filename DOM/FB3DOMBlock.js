@@ -8,7 +8,6 @@ var __extends = this.__extends || function (d, b) {
 var FB3DOM;
 (function (FB3DOM) {
     FB3DOM.TagMapper = {
-        title: 'div',
         poem: 'div',
         stanza: 'div',
         subtitle: 'h6',
@@ -124,9 +123,11 @@ var FB3DOM;
         FB3Tag.prototype.HTMLTagName = function () {
             if (FB3DOM.TagMapper[this.TagName]) {
                 return FB3DOM.TagMapper[this.TagName];
-            } else if (this.TagName == 'p' && this.Parent && this.Parent.TagName == 'title' && this.Data.xp) {
-                var lvl = this.Data.xp.length - 2;
+            } else if (this.TagName == 'title' && this.Data.xp) {
+                var lvl = this.Data.xp.length - 1;
                 return 'h' + (lvl < 6 ? lvl : 5);
+            } else if (this.TagName == 'p' && this.Parent && this.Parent.TagName == 'title') {
+                return 'div';
             } else {
                 return this.TagName;
             }

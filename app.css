@@ -3,8 +3,10 @@ html, body {
     height: 100%;
 }
 
-div, p, h1, h2, h3, h4, h5, h6 {
+div, p, h1, h2, h3, h4, h5, h6, blockquote {
     position: relative;
+    margin-bottom: 0; /* Messing mith margins in DOM as a hell, I'll return to this later on */
+    margin-top: 0;
 }
 
 div.FB2readerPage {
@@ -28,7 +30,7 @@ div.FB2readerPage {
 }
 
 .cut_bot {
-    padding-bottom:0;
+/*    padding-bottom:0;*/
     margin-bottom:0;
     border-bottom: none;
 }
@@ -64,8 +66,13 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
       and all that - at your service
     
 */
-.FBReaderContentDiv h1, .FBReaderContentDiv h2 {
-   font-family: 'Times New Roman', serif
+.FBReaderContentDiv h1 {
+    font-family: 'Times New Roman', serif;
+    padding: 5px 0 10px 0;
+}
+.FBReaderContentDiv h2 {
+    font-family: 'Times New Roman', serif;
+    padding: 4px 0 8px 0;
 }
 .FBReaderContentDiv div, .FBReaderContentDiv p,
 .FBReaderContentDiv h3, .FBReaderContentDiv h4,
@@ -119,14 +126,18 @@ div.FB2readerPage p.footnote {
     background-color: #000070;
 }
 
-.FBReaderNotesDiv div.tag_footnote div.tag_title {
+.FBReaderNotesDiv h2,
+.FBReaderNotesDiv h3,
+.FBReaderNotesDiv h4,
+.FBReaderNotesDiv h5,
+.FBReaderNotesDiv h6 {
     display: inline-block;
 }
-.FBReaderNotesDiv div.tag_footnote div.tag_title h2,
-.FBReaderNotesDiv div.tag_footnote div.tag_title h3,
-.FBReaderNotesDiv div.tag_footnote div.tag_title h4,
-.FBReaderNotesDiv div.tag_footnote div.tag_title h5,
-.FBReaderNotesDiv div.tag_footnote div.tag_title h6 {
+.FBReaderNotesDiv h2.footnote,
+.FBReaderNotesDiv h3.footnote,
+.FBReaderNotesDiv h4.footnote,
+.FBReaderNotesDiv h5.footnote,
+.FBReaderNotesDiv h6.footnote{
     font-size: 80%;
     vertical-align: super;
     margin:0;

@@ -109,6 +109,7 @@ my @BlockMap;
 my $RootTOC = {};
 my $TOC = $RootTOC;
 my @DataToWrite;
+my $Start = 0;
 
 for my $Line (@JSonArr) {
 	if ($Line =~ s/\{chars:(\d+)\,/{/){
@@ -117,7 +118,6 @@ for my $Line (@JSonArr) {
 		if ($PageStack >= $PartLimit){
 			FlushFile();
 			$PageStack -= $PartLimit;
-			$BlockMap[$FileN]->{e} = $BlockN;
 			$FileN++;
 		}
 		$BlockN++;
@@ -135,8 +135,10 @@ for my $Line (@JSonArr) {
 
 }
 
-FlushFile();;
-$BlockMap[$FileN]->{e} = $BlockN-1 if @DataToWrite;
+if (@DataToWrite){
+	$BlockN--;
+	FlushFile();;
+}
 
 open $OutFile, ">:utf8","$Out.toc.js";
 print $OutFile "{Body: [";
@@ -165,12 +167,13 @@ unlink $TmpXML if $TmpXML;
 
 sub FlushFile{
 	return unless @DataToWrite;
-	push @BlockMap,{s=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN)};
+	push @BlockMap,{s=>$Start,e=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN)};
 	open OUTFILE, ">:utf8", $BlockMap[$FileN]->{fn};
 	$DataToWrite[$#DataToWrite] =~ s/\s*,\s*$//;
 	print  OUTFILE '['.join("\n",@DataToWrite).']';
 	close  OUTFILE;
 	@DataToWrite=();
+	$Start = $BlockN + 1;
 }
 
 

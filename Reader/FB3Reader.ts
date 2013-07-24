@@ -3,19 +3,12 @@
 module FB3Reader {
 //	interface IDumbCallback { () }
 
-	export interface IPageRenderInstruction {
-		Range?: FB3DOM.IRange;
-		Start?: IPosition;
-		CacheAs?: number;
-		Height?: number;
-		NotesHeight?: number;
-	}
-
 	interface IFallOut {
 		FallOut: IPosition; // Agress of the first element to not fit the page
 		Height: number;			// Height of the page we've examined
 		NotesHeight: number;
 		FalloutElementN: number;
+		EndReached: boolean;
 	}
 
 	function IsNodePageBreaker(Node:HTMLElement):boolean {
@@ -66,12 +59,12 @@ module FB3Reader {
 	class ReaderPage {
 		private Element: ElementDesc;
 		private NotesElement: ElementDesc;
-		private ID: number;
-		private PagesToRender: IPageRenderInstruction[];
 		private End: IPosition;
-		private RenderInstr: IPageRenderInstruction;
 		private RenderMoreTimeout: number;
 		private Site: FB3ReaderSite.IFB3ReaderSite;
+		public PagesToRender: IPageRenderInstruction[];
+		public ID: number;
+		public RenderInstr: IPageRenderInstruction;
 		public Next: ReaderPage; // If null - it's not a page but prerender container
 		public Busy: boolean;
 		public Reseted: boolean;
@@ -112,7 +105,7 @@ module FB3Reader {
 				MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom'))
 				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
 			}
-			return { Node: Element, Width: Width, Height: Height, MarginTop: MarginTop, MarginBottom: MarginBottom};
+			return { Node: Element, Width: Width, Height: Height, MarginTop: MarginTop, MarginBottom: MarginBottom };
 		}
 		BindToHTMLDoc(Site: FB3ReaderSite.IFB3ReaderSite): void {
 			this.Site = Site;
@@ -121,7 +114,7 @@ module FB3Reader {
 		}
 
 		DrawInit(PagesToRender: IPageRenderInstruction[]): void {
-//			console.log('DrawInit '+this.ID);
+			//			console.log('DrawInit '+this.ID);
 			if (PagesToRender.length == 0) return;
 			if (this.Reseted) {
 				this.Reseted = false;
@@ -161,14 +154,18 @@ module FB3Reader {
 					this.RenderInstr.Start = [0];
 				} // Start point defined
 
-				var FragmentEnd = this.RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
-				if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
-					FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
-				}
-				Range = { From: this.RenderInstr.Start.slice(0), To: [FragmentEnd] };
+				Range = this.DefaultRangeApply(this.RenderInstr);
 			}
 
-			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range),this.ID+'_', (PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData));
+			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), this.ID + '_', (PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData));
+		}
+
+		DefaultRangeApply(RenderInstr: IPageRenderInstruction) {
+			var FragmentEnd = RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
+			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+			}
+			return { From: RenderInstr.Start.slice(0), To: [FragmentEnd] };
 		}
 
 		DrawEnd(PageData: FB3DOM.IPageContainer) {
@@ -184,8 +181,12 @@ module FB3Reader {
 			}
 			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
-				var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop,0);
-				if (!FallOut) {
+				var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop, 0);
+				
+				// We can have not enough content to fill the page. Sometimes we will refill it,
+				// but sometimes (doc end or we only 
+				if (!FallOut.EndReached &&
+					this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
 					// Ups, our page is incomplete - have to retry filling it. Take more data now
 					this.PrerenderBlocks *= 2;
 					this.RenderInstr.Range = null;
@@ -218,7 +219,7 @@ module FB3Reader {
 							- this.Element.MarginTop;
 						if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
 							FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
-							if (FallOut) {
+							if (FallOut.EndReached) {
 								var NextPageRange = <any> {};
 								NextPageRange.From = (PrevTo?PrevTo:this.RenderInstr.Range.To).slice(0);
 								PrevTo = FallOut.FallOut.slice(0);
@@ -228,10 +229,10 @@ module FB3Reader {
 								this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
 								CollectedHeight = FallOut.Height;
 								CollectedNotesHeight += FallOut.NotesHeight;
-								if (this.PagesToRender[I].CacheAs !== undefined) {
-									this.FBReader.StoreCachedPage(this.RenderInstr);
-								}
 								this.PagesToRender[I].Range = NextPageRange;
+								if (this.PagesToRender[I].CacheAs !== undefined) {
+									this.FBReader.StoreCachedPage(this.PagesToRender[I]);
+								}
 							} else { break }
 						} else { break }
 					}
@@ -244,14 +245,15 @@ module FB3Reader {
 				this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
 			}
 			this.Element.Node.style.overflow = 'hidden';
-
-			if (this.PagesToRender && this.PagesToRender.length) {
+			
+			// We have a queue waiting and it is not a background renderer frame - then fire the next page fullfilment
+			if (this.PagesToRender && this.PagesToRender.length && this.Next) {
 				// we fire setTimeout to let the browser draw the page before we render the next
 				if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
 					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
 				}
 				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 1)
-			} else {
+			} else if (this.Next) {
 				this.FBReader.IdleOn();
 			}
 		}
@@ -281,7 +283,7 @@ module FB3Reader {
 			var ForceDenyElementBreaking = true;
 			var LastOffsetParent: Element;
 			var LastOffsetShift: number;
-			var GotTheBottom = false;
+			var EndReached = false;
 			var FootnotesAddonCollected = 0;
 
 			// To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
@@ -336,7 +338,7 @@ module FB3Reader {
 					}
 					I++;
 				} else {
-					GotTheBottom = true;
+					EndReached = true;
 					if (FalloutElementN == -1) {
 						FalloutElementN = I
 					}
@@ -385,17 +387,21 @@ module FB3Reader {
 				}
 			}
 
-			if (!GotTheBottom) { // We had not enough data on the page!
-				return null;
+			var Addr: any;
+			if (EndReached) {
+				Addr = Element.id.split('_');
+			} else {
+				Addr = Child.id.split('_');
 			}
-			var Addr = <any> Element.id.split('_');
+
 			Addr.shift();
 			Addr.shift();
 			return {
 				FallOut: Addr,
 				Height: GoodHeight,
 				NotesHeight: FootnotesAddonCollected?FootnotesAddonCollected - this.NotesElement.MarginTop:0,
-				FalloutElementN: FalloutElementN
+				FalloutElementN: FalloutElementN,
+				EndReached: EndReached
 			};
 		}
 	}
@@ -408,13 +414,16 @@ module FB3Reader {
 		public CacheForward: number;
 		public CacheBackward: number;
 		public CurStartPos: IPosition;
+		public PagesPositionsCache: IPageRenderInstruction[];
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: ReaderPage[];
-		private PagesPositionsCache: IPageRenderInstruction[];
-		private BackgroundDetector: ReaderPage;
+		private BackgroundRenderFrame: ReaderPage;
 		private OnResizeTimeout: any;
+
 		private IsIdle: boolean;
+		private IdleAction: string;
+		private ItleTimeoutID: number;
 
 		constructor(public ArtID: string,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
@@ -494,9 +503,20 @@ module FB3Reader {
 			return this.FB3DOM.TOC;
 		}
 
-		public ResetCache(): void { this.PagesPositionsCache = new Array();}
+		public ResetCache(): void {
+			this.IdleAction = 'load_page';
+			this.IdleOff();
+			this.PagesPositionsCache = new Array();
+		}
 		public GetCachedPage(NewPos: IPosition): number { return undefined }
-		public StoreCachedPage(Range: IPageRenderInstruction) { this.PagesPositionsCache[Range.CacheAs] = Range }
+		public StoreCachedPage(Range: IPageRenderInstruction) {
+			this.PagesPositionsCache[Range.CacheAs] = {
+				Range: RangeClone(Range.Range),
+				CacheAs: Range.CacheAs,
+				Height: Range.Height,
+				NotesHeight: Range.NotesHeight,
+			};
+		}
 
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
 
@@ -513,8 +533,8 @@ module FB3Reader {
 			}
 			this.Pages[this.Pages.length-1].Next = this.Pages[0]; // Cycled canvas reuse
 
-			this.BackgroundDetector = new ReaderPage(0, this.FB3DOM, this, null); // Meet the background page borders detector!
-			InnerHTML += this.BackgroundDetector.GetInitHTML(this.Pages.length);
+			this.BackgroundRenderFrame = new ReaderPage(0, this.FB3DOM, this, null); // Meet the background page borders detector!
+			InnerHTML += this.BackgroundRenderFrame.GetInitHTML(this.Pages.length);
 
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
@@ -524,6 +544,9 @@ module FB3Reader {
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].BindToHTMLDoc(this.Site);
 			}
+
+			this.BackgroundRenderFrame.BindToHTMLDoc(this.Site);
+			this.BackgroundRenderFrame.PagesToRender = new Array(100);
 		}
 
 		public AfterCanvasResize() {
@@ -544,7 +567,7 @@ module FB3Reader {
 			var FirstUncached: IPageRenderInstruction;
 			if (this.PagesPositionsCache.length) {
 				FirstUncached = {
-					Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To,
+					Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To.slice(0),
 					CacheAs: this.PagesPositionsCache.length
 				}
 			} else {
@@ -555,18 +578,47 @@ module FB3Reader {
 			}
 			return FirstUncached;
 		}
-		private IdleGo(): void {
-			if (!this.IsIdle) {
-				return;
+		private IdleGo(PageData?: FB3DOM.IPageContainer): void {
+			if (this.IsIdle) {
+				switch (this.IdleAction) {
+					case 'load_page':
+						var PageToPrerender = this.FirstUncashedPage();
+						if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
+							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
+							this.IdleOff();
+							return;
+						}
+						this.IdleAction = 'fill_page';
+
+						// Kind of lightweight DrawInit here, it looks like copy-paste is reasonable here
+						this.BackgroundRenderFrame.RenderInstr = PageToPrerender;
+
+						for (var I = 0; I < 100; I++) { // There is a little chance PrerenderBlocks will give us 100 pages at once
+							this.BackgroundRenderFrame.PagesToRender[I] = { CacheAs: PageToPrerender.CacheAs + I + 1}
+						}
+
+						var Range: FB3DOM.IRange;
+						Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
+
+						this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_',
+							(PageData: FB3DOM.IPageContainer) => this.IdleGo(PageData));
+					case 'fill_page':
+						if (PageData) {
+							this.BackgroundRenderFrame.DrawEnd(PageData)
+							this.IdleAction = 'load_page';
+						}
+					default:
+				}
 			}
-//			alert('idle');
 		}
 		public IdleOn(): void {
 			this.IsIdle = true;
 			this.IdleGo()
+			this.ItleTimeoutID = setInterval(() => { this.IdleGo() }, 20)
 		}
 
 		public IdleOff(): void {
+			clearInterval(this.ItleTimeoutID);
 			this.IsIdle = false;
 		}
 	}

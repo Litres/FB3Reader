@@ -109,16 +109,20 @@ var FB3Reader;
                     this.RenderInstr.Start = [0];
                 }
 
-                var FragmentEnd = this.RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
-                if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
-                    FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
-                }
-                Range = { From: this.RenderInstr.Start.slice(0), To: [FragmentEnd] };
+                Range = this.DefaultRangeApply(this.RenderInstr);
             }
 
             this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), this.ID + '_', function (PageData) {
                 return _this.DrawEnd(PageData);
             });
+        };
+
+        ReaderPage.prototype.DefaultRangeApply = function (RenderInstr) {
+            var FragmentEnd = RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
+            if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+                FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+            }
+            return { From: RenderInstr.Start.slice(0), To: [FragmentEnd] };
         };
 
         ReaderPage.prototype.DrawEnd = function (PageData) {
@@ -136,7 +140,8 @@ var FB3Reader;
             this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
                 var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop, 0);
-                if (!FallOut) {
+
+                if (!FallOut.EndReached && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
                     this.PrerenderBlocks *= 2;
                     this.RenderInstr.Range = null;
@@ -167,7 +172,7 @@ var FB3Reader;
                         var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop;
                         if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
                             FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
-                            if (FallOut) {
+                            if (FallOut.EndReached) {
                                 var NextPageRange = {};
                                 NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
                                 PrevTo = FallOut.FallOut.slice(0);
@@ -177,10 +182,10 @@ var FB3Reader;
                                 this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
                                 CollectedHeight = FallOut.Height;
                                 CollectedNotesHeight += FallOut.NotesHeight;
-                                if (this.PagesToRender[I].CacheAs !== undefined) {
-                                    this.FBReader.StoreCachedPage(this.RenderInstr);
-                                }
                                 this.PagesToRender[I].Range = NextPageRange;
+                                if (this.PagesToRender[I].CacheAs !== undefined) {
+                                    this.FBReader.StoreCachedPage(this.PagesToRender[I]);
+                                }
                             } else {
                                 break;
                             }
@@ -198,14 +203,14 @@ var FB3Reader;
             }
             this.Element.Node.style.overflow = 'hidden';
 
-            if (this.PagesToRender && this.PagesToRender.length) {
+            if (this.PagesToRender && this.PagesToRender.length && this.Next) {
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
                     this.PagesToRender[0].Start = this.RenderInstr.Range.To;
                 }
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
                 }, 1);
-            } else {
+            } else if (this.Next) {
                 this.FBReader.IdleOn();
             }
         };
@@ -235,7 +240,7 @@ var FB3Reader;
             var ForceDenyElementBreaking = true;
             var LastOffsetParent;
             var LastOffsetShift;
-            var GotTheBottom = false;
+            var EndReached = false;
             var FootnotesAddonCollected = 0;
 
             // To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
@@ -292,7 +297,7 @@ var FB3Reader;
                     }
                     I++;
                 } else {
-                    GotTheBottom = true;
+                    EndReached = true;
                     if (FalloutElementN == -1) {
                         FalloutElementN = I;
                     }
@@ -339,17 +344,21 @@ var FB3Reader;
                 }
             }
 
-            if (!GotTheBottom) {
-                return null;
+            var Addr;
+            if (EndReached) {
+                Addr = Element.id.split('_');
+            } else {
+                Addr = Child.id.split('_');
             }
-            var Addr = Element.id.split('_');
+
             Addr.shift();
             Addr.shift();
             return {
                 FallOut: Addr,
                 Height: GoodHeight,
                 NotesHeight: FootnotesAddonCollected ? FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
-                FalloutElementN: FalloutElementN
+                FalloutElementN: FalloutElementN,
+                EndReached: EndReached
             };
         };
         return ReaderPage;
@@ -439,13 +448,20 @@ var FB3Reader;
         };
 
         Reader.prototype.ResetCache = function () {
+            this.IdleAction = 'load_page';
+            this.IdleOff();
             this.PagesPositionsCache = new Array();
         };
         Reader.prototype.GetCachedPage = function (NewPos) {
             return undefined;
         };
         Reader.prototype.StoreCachedPage = function (Range) {
-            this.PagesPositionsCache[Range.CacheAs] = Range;
+            this.PagesPositionsCache[Range.CacheAs] = {
+                Range: RangeClone(Range.Range),
+                CacheAs: Range.CacheAs,
+                Height: Range.Height,
+                NotesHeight: Range.NotesHeight
+            };
         };
 
         Reader.prototype.SearchForText = function (Text) {
@@ -465,8 +481,8 @@ var FB3Reader;
             }
             this.Pages[this.Pages.length - 1].Next = this.Pages[0];
 
-            this.BackgroundDetector = new ReaderPage(0, this.FB3DOM, this, null);
-            InnerHTML += this.BackgroundDetector.GetInitHTML(this.Pages.length);
+            this.BackgroundRenderFrame = new ReaderPage(0, this.FB3DOM, this, null);
+            InnerHTML += this.BackgroundRenderFrame.GetInitHTML(this.Pages.length);
 
             InnerHTML += '</div>';
             this.Site.Canvas.innerHTML = InnerHTML;
@@ -474,6 +490,9 @@ var FB3Reader;
             for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].BindToHTMLDoc(this.Site);
             }
+
+            this.BackgroundRenderFrame.BindToHTMLDoc(this.Site);
+            this.BackgroundRenderFrame.PagesToRender = new Array(100);
         };
 
         Reader.prototype.AfterCanvasResize = function () {
@@ -495,7 +514,7 @@ var FB3Reader;
             var FirstUncached;
             if (this.PagesPositionsCache.length) {
                 FirstUncached = {
-                    Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To,
+                    Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To.slice(0),
                     CacheAs: this.PagesPositionsCache.length
                 };
             } else {
@@ -506,17 +525,52 @@ var FB3Reader;
             }
             return FirstUncached;
         };
-        Reader.prototype.IdleGo = function () {
-            if (!this.IsIdle) {
-                return;
+        Reader.prototype.IdleGo = function (PageData) {
+            var _this = this;
+            if (this.IsIdle) {
+                switch (this.IdleAction) {
+                    case 'load_page':
+                        var PageToPrerender = this.FirstUncashedPage();
+                        if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
+                            alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
+                            this.IdleOff();
+                            return;
+                        }
+                        this.IdleAction = 'fill_page';
+
+                        // Kind of lightweight DrawInit here, it looks like copy-paste is reasonable here
+                        this.BackgroundRenderFrame.RenderInstr = PageToPrerender;
+
+                        for (var I = 0; I < 100; I++) {
+                            this.BackgroundRenderFrame.PagesToRender[I] = { CacheAs: PageToPrerender.CacheAs + I + 1 };
+                        }
+
+                        var Range;
+                        Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
+
+                        this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_', function (PageData) {
+                            return _this.IdleGo(PageData);
+                        });
+                    case 'fill_page':
+                        if (PageData) {
+                            this.BackgroundRenderFrame.DrawEnd(PageData);
+                            this.IdleAction = 'load_page';
+                        }
+                    default:
+                }
             }
         };
         Reader.prototype.IdleOn = function () {
+            var _this = this;
             this.IsIdle = true;
             this.IdleGo();
+            this.ItleTimeoutID = setInterval(function () {
+                _this.IdleGo();
+            }, 20);
         };
 
         Reader.prototype.IdleOff = function () {
+            clearInterval(this.ItleTimeoutID);
             this.IsIdle = false;
         };
         return Reader;

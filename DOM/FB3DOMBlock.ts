@@ -109,19 +109,21 @@ module FB3DOM {
 				this.Childs.push(NKid);
 				this.Chars += NKid.Chars;
 			}
-			for (var I = 0; I < Data.c.length; I++) {
-				var Itm = Data.c[I];
-				var Kid: IFB3Block;
-				if (typeof Itm === "string") {
-					if (Data.f) {
-						Itm = Itm.replace(/[\[\]\{\}\(\)]+/g, '');
+			if (Data.c) { // some tags. like <br/>, have no contents
+				for (var I = 0; I < Data.c.length; I++) {
+					var Itm = Data.c[I];
+					var Kid: IFB3Block;
+					if (typeof Itm === "string") {
+						if (Data.f) {
+							Itm = Itm.replace(/[\[\]\{\}\(\)]+/g, '');
+						}
+						Kid = new FB3Text(Itm, this, I + Base, IsFootnote);
+					} else {
+						Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);
 					}
-					Kid = new FB3Text(Itm, this, I + Base, IsFootnote);
-				} else {
-					Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);
+					this.Childs.push(Kid);
+					this.Chars += Kid.Chars;
 				}
-				this.Childs.push(Kid);
-				this.Chars += Kid.Chars;
 			}
 		}
 

@@ -3,7 +3,15 @@
 module FB3Reader {
 
 	export interface IPosition extends Array<number> {}
-	// General-purpose interfaces
+
+	export interface IPageRenderInstruction {
+		Range?: FB3DOM.IRange;
+		Start?: IPosition;
+		CacheAs?: number;
+		Height?: number;
+		NotesHeight?: number;
+	}
+
 	export interface IFBReader {
 		Site: FB3ReaderSite.IFB3ReaderSite;
 		Bookmarks: FB3Bookmarks.IBookmarks;
@@ -17,6 +25,8 @@ module FB3Reader {
 		Init(): void;
 		CacheForward: number; // Number of PAGES (!) of forward cache
 		CacheBackward: number; // Number of PAGES (!) of backward cache
+
+		PagesPositionsCache: IPageRenderInstruction[]; // Cached data for pages positions
 
 		TOC(): FB3DOM.ITOC[];
 		GoTO(NewPos: IPosition): void;

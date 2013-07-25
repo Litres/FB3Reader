@@ -4,10 +4,12 @@ module FB3ReaderSite {
 
 	export class ExampleSite implements IFB3ReaderSite {
 		public Progressor: ILoadProgress;
+		public IdleThreadProgressor:ILoadProgress;
 		public NotePopup: INotePopup;
 		public Alert: IAlert;
 		constructor(public Canvas: HTMLElement) {
-			this.Progressor = new ExampleProgressor();
+			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
+			this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
 			this.Alert = this.Progressor.Alert;
 		}
 		getElementById(elementId: string): HTMLElement {
@@ -19,13 +21,13 @@ module FB3ReaderSite {
 		private Hourglasses: any;
 		private Progresses: any;
 		public Alert(Message: string): void {
-			document.getElementById('AlertSpan').innerHTML = Message;
+			document.getElementById(this.AlertSpan).innerHTML = Message;
 			//			window.alert(Message);
 		}
 		HourglassOn(Owner: any, Message?: string): void {
 			this.Hourglasses[Owner.toString()] = 1;
-			document.getElementById('MessSpan').innerHTML = Message;
-			document.body.style.cursor = 'wait';
+			document.getElementById(this.MessSpan).innerHTML = Message;
+//			document.body.style.cursor = 'wait';
 		}
 		Progress(Owner: any, Progress: number): void {
 			this.Progresses[Owner] = Progress;
@@ -36,7 +38,7 @@ module FB3ReaderSite {
 				OverallProgress = this.Progresses[Progress];
 			}
 			OverallProgress = OverallProgress / N;
-			document.getElementById('ProgressSpan').innerHTML = OverallProgress.toFixed(1);
+			document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
 		}
 		HourglassOff(Owner: any): void {
 			this.Hourglasses[Owner] = 0;
@@ -50,7 +52,7 @@ module FB3ReaderSite {
 			if (!HaveLive) {
 				this.Hourglasses = {};
 				this.Progresses = {};
-				document.body.style.cursor = '';
+//				document.body.style.cursor = '';
 			} else {
 				this.Progress(Owner, 100);
 			}
@@ -63,7 +65,7 @@ module FB3ReaderSite {
 			}
 			this.Progress(Owner, this.Progresses[Owner]);
 		}
-		constructor() {
+		constructor(private AlertSpan: string, private MessSpan: string, private ProgressSpan:string) {
 			this.Hourglasses = {};
 			this.Progresses = {};
 		}

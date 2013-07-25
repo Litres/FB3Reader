@@ -18,11 +18,17 @@
 <body>
     <h1>FB3Reader basic example…</h1>
     <div id="reader">Loading…</div>
-    <div>Message: "<span id="MessSpan">-</span>"</div>
-    <div>Progress: <span id="ProgressSpan">-</span>%</div>
-    <div>Last Alert: <span id="AlertSpan">-</span>%</div>
-    <div></div>
-    <div></div>
-    <div></div>
+    <div style="float:left">
+        <b>Visible actions progress:</b>
+        <div>Message: "<span id="MessSpan">-</span>"</div>
+        <div>Progress: <span id="ProgressSpan">-</span>%</div>
+        <div>Last Alert: <span id="AlertSpan">-</span></div>
+     </div>
+    <div style="float:left">
+        <b>Background actions progress:</b>
+        <div>Message: "<span id="IdleMessSpan">-</span>"</div>
+        <div>Progress: <span id="IdleProgressSpan">-</span>%</div>
+        <div>Last Alert: <span id="IdleAlertSpan">-</span></div>
+     </div>
 </body>
 </html>

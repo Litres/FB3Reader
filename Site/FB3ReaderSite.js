@@ -4,7 +4,8 @@ var FB3ReaderSite;
     var ExampleSite = (function () {
         function ExampleSite(Canvas) {
             this.Canvas = Canvas;
-            this.Progressor = new ExampleProgressor();
+            this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
+            this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
             this.Alert = this.Progressor.Alert;
         }
         ExampleSite.prototype.getElementById = function (elementId) {
@@ -14,17 +15,19 @@ var FB3ReaderSite;
     })();
     FB3ReaderSite.ExampleSite = ExampleSite;
     var ExampleProgressor = (function () {
-        function ExampleProgressor() {
+        function ExampleProgressor(AlertSpan, MessSpan, ProgressSpan) {
+            this.AlertSpan = AlertSpan;
+            this.MessSpan = MessSpan;
+            this.ProgressSpan = ProgressSpan;
             this.Hourglasses = {};
             this.Progresses = {};
         }
         ExampleProgressor.prototype.Alert = function (Message) {
-            document.getElementById('AlertSpan').innerHTML = Message;
+            document.getElementById(this.AlertSpan).innerHTML = Message;
         };
         ExampleProgressor.prototype.HourglassOn = function (Owner, Message) {
             this.Hourglasses[Owner.toString()] = 1;
-            document.getElementById('MessSpan').innerHTML = Message;
-            document.body.style.cursor = 'wait';
+            document.getElementById(this.MessSpan).innerHTML = Message;
         };
         ExampleProgressor.prototype.Progress = function (Owner, Progress) {
             this.Progresses[Owner] = Progress;
@@ -35,7 +38,7 @@ var FB3ReaderSite;
                 OverallProgress = this.Progresses[Progress];
             }
             OverallProgress = OverallProgress / N;
-            document.getElementById('ProgressSpan').innerHTML = OverallProgress.toFixed(1);
+            document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
         };
         ExampleProgressor.prototype.HourglassOff = function (Owner) {
             this.Hourglasses[Owner] = 0;
@@ -49,7 +52,6 @@ var FB3ReaderSite;
             if (!HaveLive) {
                 this.Hourglasses = {};
                 this.Progresses = {};
-                document.body.style.cursor = '';
             } else {
                 this.Progress(Owner, 100);
             }

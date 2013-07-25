@@ -532,9 +532,13 @@ var FB3Reader;
                     case 'load_page':
                         var PageToPrerender = this.FirstUncashedPage();
                         if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
-                            alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
+                            //							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
                             this.IdleOff();
+                            this.Site.IdleThreadProgressor.Progress(this, 100);
+                            this.Site.IdleThreadProgressor.HourglassOff(this);
                             return;
+                        } else {
+                            this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
                         }
                         this.IdleAction = 'fill_page';
 
@@ -563,6 +567,7 @@ var FB3Reader;
         Reader.prototype.IdleOn = function () {
             var _this = this;
             this.IsIdle = true;
+            this.Site.IdleThreadProgressor.HourglassOn(this);
             this.IdleGo();
             this.ItleTimeoutID = setInterval(function () {
                 _this.IdleGo();

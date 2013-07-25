@@ -23,8 +23,8 @@ module FB3Reader {
 		CurStartPos: IPosition;		// Adress of the first visible block
 
 		Init(): void;
-		CacheForward: number; // Number of PAGES (!) of forward cache
-		CacheBackward: number; // Number of PAGES (!) of backward cache
+		CacheForward: number; // Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
+		CacheBackward: number; // Size of the backward cache (same structure)
 
 		PagesPositionsCache: IPageRenderInstruction[]; // Cached data for pages positions
 

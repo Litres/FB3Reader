@@ -5,6 +5,7 @@ module FB3ReaderSite {
 	// Mothership with all interfaces aboard - everybody will pick here
 	export interface IFB3ReaderSite {
 		Progressor: ILoadProgress;
+		IdleThreadProgressor: ILoadProgress;
 		Canvas: HTMLElement;
 		NotePopup: INotePopup;
 		Alert: IAlert;
@@ -14,13 +15,13 @@ module FB3ReaderSite {
 	// General-purpose interface for progress feedback
 	export interface ILoadProgress {
 		HourglassOn(Owner: any, LockUI?: boolean, Message?: string): void;
-		Progress(Owner: any, Progress: number): void;
+		Progress(Owner: any, Progress: number): void; // Progress vary 0 - 100, means percent
 		HourglassOff(Owner: any): void;
 		Tick(Owner: any): void;
 		Alert: IAlert;
 	}
 
-	// A dumb clone of window.alert(). Defined explicitly just to make this clear
+	// A dumb clone of window.alert(). Defined just to make this clear
 	export interface IAlert {
 		(Message: string): void;
 	}

@@ -12,7 +12,7 @@ module FB3Reader {
 		NotesHeight?: number;
 	}
 
-	export interface IFBReader {
+	export interface IFBReader { // Keep in mind - all action calls, like PageForward, are asyncroneous
 		Site: FB3ReaderSite.IFB3ReaderSite;
 		Bookmarks: FB3Bookmarks.IBookmarks;
 		ArtID: string;
@@ -21,6 +21,7 @@ module FB3Reader {
 		NColumns: number;
 		TextPercent: number;	// Percantage of the shown text - progress
 		CurStartPos: IPosition;		// Adress of the first visible block
+		CurStartPage: number;			// Number of the first visible page (if any)
 
 		Init(): void;
 		CacheForward: number; // Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
@@ -30,12 +31,15 @@ module FB3Reader {
 
 		TOC(): FB3DOM.ITOC[];
 		GoTO(NewPos: IPosition): void;
-		GoTOPage(Page: number): void;
+//		GoTOPage(Page: number): void;
 		GoToOpenPosition(NewPos: IPosition): void;
 		ResetCache(): void;
 		GetCachedPage(NewPos: IPosition): number;
 		SearchForText(Text: string): FB3DOM.ITOC[];
 		AfterCanvasResize(): void;
+		PageForward(): void;
+		PageBackward():void;
+		GoToPercent(Percent:number): void;
 		IdleOn(): void;
 		IdleOff(): void;
 	}

@@ -22,6 +22,21 @@ var FB3Reader;
         }
         return false;
     }
+    function PosCompare(Pos1, Pos2) {
+        var Result = 0;
+        for (var I = 0; I < Math.min(Pos1.length, Pos2.length); I++) {
+            if (Pos1[I] != Pos2[I]) {
+                Result = Pos1[I] > Pos2[I] ? 1 : -1;
+                break;
+            }
+        }
+
+        if (Result == 0 && Pos1.length != Pos2.length) {
+            Result = Pos1.length > Pos2.length ? 1 : -1;
+        }
+
+        return Result;
+    }
 
     function RangeClone(BaseRange) {
         return {
@@ -42,16 +57,25 @@ var FB3Reader;
             this.ColumnN = ColumnN;
             this.FB3DOM = FB3DOM;
             this.FBReader = FBReader;
-            this.Busy = false;
             this.Reseted = false;
             if (Prev) {
                 Prev.Next = this;
             }
             this.PrerenderBlocks = 5;
+            this.Ready = false;
         }
         ReaderPage.prototype.Show = function () {
+            if (!this.Visible) {
+                this.ParentElement.style.display = 'block';
+            }
         };
+
         ReaderPage.prototype.Hide = function () {
+            // It's breaking apart here somehow :(
+            die();
+            if (this.Visible) {
+                this.ParentElement.style.display = 'none';
+            }
         };
 
         ReaderPage.prototype.GetInitHTML = function (ID) {
@@ -78,6 +102,8 @@ var FB3Reader;
             this.Site = Site;
             this.Element = this.FillElementData('FB3ReaderColumn' + this.ID);
             this.NotesElement = this.FillElementData('FB3ReaderNotes' + this.ID);
+            this.ParentElement = this.Element.Node.parentElement;
+            this.Visible = true;
         };
 
         ReaderPage.prototype.DrawInit = function (PagesToRender) {
@@ -88,7 +114,7 @@ var FB3Reader;
                 this.Reseted = false;
                 return;
             }
-            this.Busy = true;
+            this.Ready = false;
 
             this.RenderInstr = PagesToRender.shift();
             this.PagesToRender = PagesToRender;
@@ -127,8 +153,6 @@ var FB3Reader;
 
         ReaderPage.prototype.DrawEnd = function (PageData) {
             var _this = this;
-            this.Busy = false;
-
             if (this.Reseted) {
                 this.Reseted = false;
                 return;
@@ -155,7 +179,8 @@ var FB3Reader;
                 this.RenderInstr.Height = FallOut.Height;
                 this.RenderInstr.NotesHeight = FallOut.NotesHeight;
 
-                if (this.RenderInstr.CacheAs !== undefined) {
+                this.PageN = this.RenderInstr.CacheAs;
+                if (this.PageN !== undefined) {
                     this.FBReader.StoreCachedPage(this.RenderInstr);
                 }
 
@@ -202,6 +227,8 @@ var FB3Reader;
                 this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
             }
             this.Element.Node.style.overflow = 'hidden';
+
+            this.Ready = true;
 
             if (this.PagesToRender && this.PagesToRender.length && this.Next) {
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
@@ -379,6 +406,7 @@ var FB3Reader;
 
             //this.CurStartPos = [3, 14];
             this.CurStartPos = [0];
+
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -418,6 +446,73 @@ var FB3Reader;
             }
         };
         Reader.prototype.GoTOPage = function (Page) {
+            // Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
+            // set, NColumns per one. Let's see what start column we are going to deal with
+            var RealStartPage = Math.floor(Page / this.NColumns) * this.NColumns;
+
+            var FirstPageNToRender;
+            var FirstFrameToFill;
+            var WeeHaveFoundReadyPage = false;
+
+            for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
+                var BasePage = I * this.NColumns;
+
+                if (this.Pages[BasePage].Ready && this.Pages[BasePage].PageN == RealStartPage) {
+                    this.PutBlockIntoView(BasePage);
+                    WeeHaveFoundReadyPage = true;
+
+                    // Ok, now we at least see ONE page, first one, from the right set. Let's deal with others
+                    var CrawlerCurrentPage = this.Pages[BasePage];
+                    for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
+                        CrawlerCurrentPage = CrawlerCurrentPage.Next;
+                        if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != BasePage + I) {
+                            // Here it is - the page with the wrong content. We set up our re-render queue
+                            FirstPageNToRender = BasePage + I;
+                            FirstFrameToFill = CrawlerCurrentPage;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (WeeHaveFoundReadyPage && !FirstFrameToFill) {
+                this.IdleOn();
+                return;
+            } else if (!WeeHaveFoundReadyPage) {
+                FirstPageNToRender = RealStartPage;
+                FirstFrameToFill = this.Pages[0];
+                this.PutBlockIntoView(0);
+            }
+
+            var CacheBroken = false;
+            var NewInstr = new Array();
+            for (var I = FirstPageNToRender; I < RealStartPage + (this.CacheForward + 1) * this.NColumns; I++) {
+                if (!CacheBroken && this.PagesPositionsCache[I]) {
+                    NewInstr.push(this.PagesPositionsCache[I]);
+                } else {
+                    if (!CacheBroken) {
+                        CacheBroken = true;
+                        NewInstr.push({ Start: this.PagesPositionsCache[I - 1].Range.To.slice(0) });
+                    } else {
+                        NewInstr.push({});
+                    }
+                    NewInstr[I].CacheAs = I;
+                }
+            }
+            this.CurStartPage = RealStartPage;
+            FirstFrameToFill.DrawInit(NewInstr);
+        };
+
+        Reader.prototype.PutBlockIntoView = function (Page) {
+            this.CurVisiblePage = Page;
+            for (var I = 0; I < this.Pages.length; I++) {
+                if (I < Page || I >= Page + this.NColumns) {
+                    this.Pages[I].Hide();
+                } else {
+                    this.Pages[I].Show();
+                }
+            }
         };
 
         Reader.prototype.GoToOpenPosition = function (NewPos) {
@@ -433,12 +528,19 @@ var FB3Reader;
             var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
             if (ShouldWeCachePositions) {
                 NewInstr[0].CacheAs = 0;
+                this.CurStartPage = 0;
+            } else {
+                this.CurStartPage = undefined;
             }
             for (var I = 1; I < (this.CacheForward + 1) * this.NColumns; I++) {
                 NewInstr.push({});
                 if (ShouldWeCachePositions) {
                     NewInstr[I].CacheAs = I;
                 }
+            }
+            this.PutBlockIntoView(0);
+            for (var I = 1; I < this.Pages.length; I++) {
+                this.Pages[I].Ready = false;
             }
             this.Pages[0].DrawInit(NewInstr);
         };
@@ -452,9 +554,16 @@ var FB3Reader;
             this.IdleOff();
             this.PagesPositionsCache = new Array();
         };
+
         Reader.prototype.GetCachedPage = function (NewPos) {
+            for (var I = 0; I < this.PagesPositionsCache.length; I++) {
+                if (PosCompare(this.PagesPositionsCache[I].Range.To, NewPos) > 0) {
+                    return I;
+                }
+            }
             return undefined;
         };
+
         Reader.prototype.StoreCachedPage = function (Range) {
             this.PagesPositionsCache[Range.CacheAs] = {
                 Range: RangeClone(Range.Range),
@@ -525,6 +634,50 @@ var FB3Reader;
             }
             return FirstUncached;
         };
+        Reader.prototype.PageForward = function () {
+            var _this = this;
+            clearTimeout(this.MoveTimeoutID);
+            if (this.CurStartPage !== undefined) {
+                if (this.CacheFinished) {
+                    if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) {
+                        this.GoTOPage(this.CurStartPage + this.NColumns);
+                    }
+                } else {
+                    this.MoveTimeoutID = setTimeout(function () {
+                        _this.PageForward();
+                    }, 50);
+                }
+            } else {
+                // First wee seek forward NColimns times to see if the page wee want to show is rendered. If not - we will wait untill it is
+                var PageToView = this.Pages[this.CurVisiblePage];
+                for (var I = 0; I < this.NColumns; I++) {
+                    PageToView = PageToView.Next;
+                }
+                if (!PageToView.Ready) {
+                    this.MoveTimeoutID = setTimeout(function () {
+                        _this.PageForward();
+                    }, 50);
+                } else {
+                    this.PutBlockIntoView(PageToView.ID);
+                }
+            }
+            return false;
+        };
+        Reader.prototype.PageBackward = function () {
+            clearTimeout(this.MoveTimeoutID);
+            if (this.CurStartPage !== undefined) {
+                if (this.CurStartPage > 0) {
+                    this.GoTOPage(this.CurStartPage - this.NColumns);
+                }
+            } else {
+            }
+        };
+
+        Reader.prototype.GoToPercent = function (Percent) {
+            var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
+            this.GoTO([BlockN]);
+        };
+
         Reader.prototype.IdleGo = function (PageData) {
             var _this = this;
             if (this.IsIdle) {
@@ -533,11 +686,13 @@ var FB3Reader;
                         var PageToPrerender = this.FirstUncashedPage();
                         if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
                             //							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
+                            this.CacheFinished = true;
                             this.IdleOff();
                             this.Site.IdleThreadProgressor.Progress(this, 100);
                             this.Site.IdleThreadProgressor.HourglassOff(this);
                             return;
                         } else {
+                            this.CacheFinished = false;
                             this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
                         }
                         this.IdleAction = 'fill_page';
@@ -556,6 +711,7 @@ var FB3Reader;
                             return _this.IdleGo(PageData);
                         });
                     case 'fill_page':
+                        this.CacheFinished = false;
                         if (PageData) {
                             this.BackgroundRenderFrame.DrawEnd(PageData);
                             this.IdleAction = 'load_page';

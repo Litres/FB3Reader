@@ -30,5 +30,10 @@
         <div>Progress: <span id="IdleProgressSpan">-</span>%</div>
         <div>Last Alert: <span id="IdleAlertSpan">-</span></div>
      </div>
+    <div style="float:left; margin-left: 2em;">
+        <input type="button" value="&lt;&lt; Page back" onclick="AFB3Reader.PageBackward()"/>&#160;&#160;&#160;
+        <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="AFB3Reader.GoToPercent(document.getElementById('gotopercent').value)"/>
+        &#160;&#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="AFB3Reader.PageForward()"/>
+    </div>
 </body>
 </html>

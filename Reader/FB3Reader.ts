@@ -33,6 +33,21 @@ module FB3Reader {
 		}
 		return false;
 	}
+	function PosCompare(Pos1: IPosition, Pos2: IPosition): number { // 0 on equal, 1 if Pos1 is PAST Pos2, -1 othervise
+		var Result = 0; // Positions are equal
+		for (var I = 0; I < Math.min(Pos1.length, Pos2.length); I++) {
+			if (Pos1[I] != Pos2[I]) {
+				Result = Pos1[I] > Pos2[I] ? 1 : -1;
+				break;
+			}
+		}
+
+		if (Result == 0 && Pos1.length != Pos2.length) {
+			Result = Pos1.length > Pos2.length ? 1 : -1;
+		}
+
+		return Result;
+	}
 
 	function RangeClone(BaseRange: FB3DOM.IRange): FB3DOM.IRange {
 		return {
@@ -58,30 +73,46 @@ module FB3Reader {
 
 	class ReaderPage {
 		private Element: ElementDesc;
+		private ParentElement: HTMLDivElement;
 		private NotesElement: ElementDesc;
-		private End: IPosition;
 		private RenderMoreTimeout: number;
 		private Site: FB3ReaderSite.IFB3ReaderSite;
+		private Visible: boolean;
+		public RenderInstr: IPageRenderInstruction;
 		public PagesToRender: IPageRenderInstruction[];
 		public ID: number;
-		public RenderInstr: IPageRenderInstruction;
 		public Next: ReaderPage; // If null - it's not a page but prerender container
-		public Busy: boolean;
+		public Ready: boolean;
 		public Reseted: boolean;
 		public PrerenderBlocks: number;
-		Show(): void { }
-		Hide(): void { }
+		public PageN: number;
+
 		constructor(public ColumnN: number,
 			private FB3DOM: FB3DOM.IFB3DOM,
 			private FBReader: Reader,
 			Prev: ReaderPage) {
-			this.Busy = false;
 			this.Reseted = false;
 			if (Prev) {
 				Prev.Next = this;
 			}
 			this.PrerenderBlocks = 5;
+			this.Ready = false;
 		}
+
+		Show(): void {
+			if (!this.Visible) {
+				this.ParentElement.style.display = 'block';
+			}
+		}
+
+		Hide(): void {
+			// It's breaking apart here somehow :(
+			die();
+			if (this.Visible) {
+				this.ParentElement.style.display = 'none';
+			}
+		}
+
 		GetInitHTML(ID: number): FB3DOM.InnerHTML {
 			this.ID = ID;
 			return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns +
@@ -111,6 +142,8 @@ module FB3Reader {
 			this.Site = Site;
 			this.Element = this.FillElementData('FB3ReaderColumn' + this.ID);
 			this.NotesElement = this.FillElementData('FB3ReaderNotes' + this.ID);
+			this.ParentElement = <HTMLDivElement> this.Element.Node.parentElement;
+			this.Visible = true;
 		}
 
 		DrawInit(PagesToRender: IPageRenderInstruction[]): void {
@@ -120,7 +153,7 @@ module FB3Reader {
 				this.Reseted = false;
 				return;
 			}
-			this.Busy = true;
+			this.Ready = false;
 
 			this.RenderInstr = PagesToRender.shift();
 			this.PagesToRender = PagesToRender;
@@ -169,7 +202,6 @@ module FB3Reader {
 		}
 
 		DrawEnd(PageData: FB3DOM.IPageContainer) {
-			this.Busy = false;
 			//			console.log('DrawEnd ' + this.ID);
 			if (this.Reseted) {
 				this.Reseted = false;
@@ -201,7 +233,8 @@ module FB3Reader {
 				this.RenderInstr.NotesHeight = FallOut.NotesHeight;
 
 
-				if (this.RenderInstr.CacheAs !== undefined) {
+				this.PageN = this.RenderInstr.CacheAs;
+				if (this.PageN !== undefined) {
 					this.FBReader.StoreCachedPage(this.RenderInstr);
 				}
 
@@ -245,6 +278,8 @@ module FB3Reader {
 				this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
 			}
 			this.Element.Node.style.overflow = 'hidden';
+
+			this.Ready = true;
 			
 			// We have a queue waiting and it is not a background renderer frame - then fire the next page fullfilment
 			if (this.PagesToRender && this.PagesToRender.length && this.Next) {
@@ -415,15 +450,19 @@ module FB3Reader {
 		public CacheBackward: number;
 		public CurStartPos: IPosition;
 		public PagesPositionsCache: IPageRenderInstruction[];
+		public CurStartPage: number;
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: ReaderPage[];
 		private BackgroundRenderFrame: ReaderPage;
 		private OnResizeTimeout: any;
+		private CurVisiblePage: number;
+		private MoveTimeoutID: number;
 
 		private IsIdle: boolean;
 		private IdleAction: string;
 		private ItleTimeoutID: number;
+		private CacheFinished: boolean;
 
 		constructor(public ArtID: string,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
@@ -438,6 +477,7 @@ module FB3Reader {
 			this.PagesPositionsCache = new Array();
 			//this.CurStartPos = [3, 14];
 			this.CurStartPos = [0];
+
 			this.IdleOff();
 		}
 
@@ -473,7 +513,73 @@ module FB3Reader {
 			}
 		}
 		public GoTOPage(Page: number): void {
+			// Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
+			// set, NColumns per one. Let's see what start column we are going to deal with
+			var RealStartPage = Math.floor(Page / this.NColumns) * this.NColumns;
 
+			var FirstPageNToRender: number;
+			var FirstFrameToFill: ReaderPage;
+			var WeeHaveFoundReadyPage = false;
+			// First let's check if the page was ALREADY rendered, so we can show it right away
+			for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
+				var BasePage = I * this.NColumns;
+				// Page is rendered, that's just great - we first show what we have, then render the rest, if required
+				if (this.Pages[BasePage].Ready && this.Pages[BasePage].PageN == RealStartPage) {
+					this.PutBlockIntoView(BasePage);
+					WeeHaveFoundReadyPage = true;
+					// Ok, now we at least see ONE page, first one, from the right set. Let's deal with others
+					var CrawlerCurrentPage = this.Pages[BasePage];
+					for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
+						CrawlerCurrentPage = CrawlerCurrentPage.Next;
+						if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != BasePage + I) {
+							// Here it is - the page with the wrong content. We set up our re-render queue
+							FirstPageNToRender = BasePage + I;
+							FirstFrameToFill = CrawlerCurrentPage;
+							break;
+						}
+					}
+					break;
+				}
+			}
+
+			if (WeeHaveFoundReadyPage && !FirstFrameToFill) { // Looks like we have our full pages set renderes already,
+				this.IdleOn();																	// maybe we go to the same place several times? Anyway, quit!
+				return;
+			} else if (!WeeHaveFoundReadyPage) {
+				FirstPageNToRender = RealStartPage;
+				FirstFrameToFill = this.Pages[0];
+				this.PutBlockIntoView(0);
+			}
+
+			var CacheBroken = false;
+			var NewInstr: IPageRenderInstruction[] = new Array();
+			for (var I = FirstPageNToRender; I < RealStartPage + (this.CacheForward + 1) * this.NColumns; I++) {
+				if (!CacheBroken && this.PagesPositionsCache[I]) {
+					NewInstr.push(this.PagesPositionsCache[I]);
+				} else {
+					if (!CacheBroken) {
+						CacheBroken = true;
+						NewInstr.push({ Start: this.PagesPositionsCache[I-1].Range.To.slice(0)});
+					} else {
+						NewInstr.push({});
+					}
+					NewInstr[I].CacheAs = I;
+				}
+			}
+			this.CurStartPage = RealStartPage;
+			FirstFrameToFill.DrawInit(NewInstr); // IdleOn will fire after the DrawInit chain ends
+
+		}
+
+		private PutBlockIntoView(Page: number): void {
+			this.CurVisiblePage = Page;
+			for (var I = 0; I < this.Pages.length; I++) {
+				if (I < Page || I >= Page + this.NColumns) {
+					this.Pages[I].Hide()
+				} else {
+					this.Pages[I].Show()
+				}
+			}
 		}
 
 		public GoToOpenPosition(NewPos: IPosition): void {
@@ -488,12 +594,19 @@ module FB3Reader {
 			var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
 			if (ShouldWeCachePositions) { // If we render from the begining, we can safely cache page layaut
 				NewInstr[0].CacheAs = 0;
+				this.CurStartPage = 0;
+			} else {
+				this.CurStartPage = undefined; // this means we are walking out of the ladder, right over the grass - this fact affects page turning greatly
 			}
 			for (var I = 1; I < (this.CacheForward + 1) * this.NColumns; I++) {
 				NewInstr.push({});
 				if (ShouldWeCachePositions) {
 					NewInstr[I].CacheAs = I;
 				}
+			}
+			this.PutBlockIntoView(0);
+			for (var I = 1; I < this.Pages.length; I++) {
+				this.Pages[I].Ready = false;
 			}
 			this.Pages[0].DrawInit(NewInstr);
 		}
@@ -508,7 +621,17 @@ module FB3Reader {
 			this.IdleOff();
 			this.PagesPositionsCache = new Array();
 		}
-		public GetCachedPage(NewPos: IPosition): number { return undefined }
+
+		public GetCachedPage(NewPos: IPosition): number {
+			for (var I = 0; I < this.PagesPositionsCache.length; I++) {
+				if (PosCompare(this.PagesPositionsCache[I].Range.To, NewPos) > 0) {
+					return I;
+				}
+			}
+			return undefined;
+		}
+
+
 		public StoreCachedPage(Range: IPageRenderInstruction) {
 			this.PagesPositionsCache[Range.CacheAs] = {
 				Range: RangeClone(Range.Range),
@@ -578,6 +701,46 @@ module FB3Reader {
 			}
 			return FirstUncached;
 		}
+		public PageForward() {
+			clearTimeout(this.MoveTimeoutID);
+			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
+				if (this.CacheFinished) { // We know have many pages we have so we can check if the next one exists
+					if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) {
+						this.GoTOPage(this.CurStartPage + this.NColumns);
+					}
+				} else { // If cache is not yet ready - let's wait a bit.
+					this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
+				}
+			} else { // Ouch, we are out of the ladder, this makes things a bit complicated
+				// First wee seek forward NColimns times to see if the page wee want to show is rendered. If not - we will wait untill it is
+				var PageToView = this.Pages[this.CurVisiblePage];
+				for (var I = 0; I < this.NColumns; I++) {
+					PageToView = PageToView.Next;
+				}
+				if (!PageToView.Ready) {
+					this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
+				} else {
+					this.PutBlockIntoView(PageToView.ID);
+				}
+			}
+			return false;
+		}
+		public PageBackward() {
+			clearTimeout(this.MoveTimeoutID);
+			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
+				if (this.CurStartPage > 0) {
+					this.GoTOPage(this.CurStartPage - this.NColumns);
+				}
+			} else {	// Ouch, we are out of the ladder, this makes things complicated like hell, sometimes
+								// we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
+			}
+		}
+
+		public GoToPercent(Percent: number): void {
+			var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
+			this.GoTO([BlockN]);
+		}
+
 		private IdleGo(PageData?: FB3DOM.IPageContainer): void {
 			if (this.IsIdle) {
 				switch (this.IdleAction) {
@@ -585,11 +748,13 @@ module FB3Reader {
 						var PageToPrerender = this.FirstUncashedPage();
 						if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
 							//							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
+							this.CacheFinished = true;
 							this.IdleOff();
 							this.Site.IdleThreadProgressor.Progress(this, 100);
 							this.Site.IdleThreadProgressor.HourglassOff(this);
 							return;
 						} else {
+							this.CacheFinished = false;
 							this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
 						}
 						this.IdleAction = 'fill_page';
@@ -607,6 +772,7 @@ module FB3Reader {
 						this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_',
 							(PageData: FB3DOM.IPageContainer) => this.IdleGo(PageData));
 					case 'fill_page':
+						this.CacheFinished = false;
 						if (PageData) {
 							this.BackgroundRenderFrame.DrawEnd(PageData)
 							this.IdleAction = 'load_page';

@@ -66,15 +66,15 @@ var FB3Reader;
         }
         ReaderPage.prototype.Show = function () {
             if (!this.Visible) {
-                this.ParentElement.style.display = 'block';
+                this.ParentElement.style.top = '0';
+                this.Visible = true;
             }
         };
 
         ReaderPage.prototype.Hide = function () {
-            // It's breaking apart here somehow :(
-            die();
             if (this.Visible) {
-                this.ParentElement.style.display = 'none';
+                this.ParentElement.style.top = '-100000px';
+                this.Visible = false;
             }
         };
 
@@ -103,7 +103,12 @@ var FB3Reader;
             this.Element = this.FillElementData('FB3ReaderColumn' + this.ID);
             this.NotesElement = this.FillElementData('FB3ReaderNotes' + this.ID);
             this.ParentElement = this.Element.Node.parentElement;
-            this.Visible = true;
+            this.Visible = false;
+            this.Width = Math.floor(this.Site.Canvas.scrollWidth / this.FBReader.NColumns);
+            this.ParentElement.style.width = this.Width + 'px';
+            this.ParentElement.style.position = 'absolute';
+            this.ParentElement.style.left = (this.Width * this.ColumnN) + 'px';
+            this.ParentElement.style.top = '-100000px';
         };
 
         ReaderPage.prototype.DrawInit = function (PagesToRender) {
@@ -221,7 +226,7 @@ var FB3Reader;
                 }
             }
 
-            this.Element.Node.parentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
+            this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
             if (this.RenderInstr.NotesHeight) {
                 this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
@@ -638,10 +643,8 @@ var FB3Reader;
             var _this = this;
             clearTimeout(this.MoveTimeoutID);
             if (this.CurStartPage !== undefined) {
-                if (this.CacheFinished) {
-                    if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) {
-                        this.GoTOPage(this.CurStartPage + this.NColumns);
-                    }
+                if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) {
+                    this.GoTOPage(this.CurStartPage + this.NColumns);
                 } else {
                     this.MoveTimeoutID = setTimeout(function () {
                         _this.PageForward();

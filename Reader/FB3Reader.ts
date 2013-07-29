@@ -78,6 +78,7 @@ module FB3Reader {
 		private RenderMoreTimeout: number;
 		private Site: FB3ReaderSite.IFB3ReaderSite;
 		private Visible: boolean;
+		private Width: number;
 		public RenderInstr: IPageRenderInstruction;
 		public PagesToRender: IPageRenderInstruction[];
 		public ID: number;
@@ -101,15 +102,17 @@ module FB3Reader {
 
 		Show(): void {
 			if (!this.Visible) {
-				this.ParentElement.style.display = 'block';
+				this.ParentElement.style.top = '0';
+				this.Visible = true;
 			}
 		}
 
 		Hide(): void {
 			// It's breaking apart here somehow :(
-			die();
+//			return;
 			if (this.Visible) {
-				this.ParentElement.style.display = 'none';
+				this.ParentElement.style.top = '-100000px';
+				this.Visible = false;
 			}
 		}
 
@@ -143,7 +146,12 @@ module FB3Reader {
 			this.Element = this.FillElementData('FB3ReaderColumn' + this.ID);
 			this.NotesElement = this.FillElementData('FB3ReaderNotes' + this.ID);
 			this.ParentElement = <HTMLDivElement> this.Element.Node.parentElement;
-			this.Visible = true;
+			this.Visible = false;
+			this.Width = Math.floor(this.Site.Canvas.scrollWidth / this.FBReader.NColumns);
+			this.ParentElement.style.width = this.Width + 'px';
+			this.ParentElement.style.position = 'absolute';
+			this.ParentElement.style.left = (this.Width * this.ColumnN)+'px';
+			this.ParentElement.style.top = '-100000px';
 		}
 
 		DrawInit(PagesToRender: IPageRenderInstruction[]): void {
@@ -272,7 +280,7 @@ module FB3Reader {
 				}
 			}
 
-			this.Element.Node.parentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
+			this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
 			this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
 			if (this.RenderInstr.NotesHeight) {
 				this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
@@ -704,10 +712,8 @@ module FB3Reader {
 		public PageForward() {
 			clearTimeout(this.MoveTimeoutID);
 			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
-				if (this.CacheFinished) { // We know have many pages we have so we can check if the next one exists
-					if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) {
-						this.GoTOPage(this.CurStartPage + this.NColumns);
-					}
+				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) { // We know have many pages we have so we can check if the next one exists
+					this.GoTOPage(this.CurStartPage + this.NColumns);
 				} else { // If cache is not yet ready - let's wait a bit.
 					this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
 				}

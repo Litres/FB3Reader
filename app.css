@@ -5,7 +5,7 @@ html, body {
 
 div, p, h1, h2, h3, h4, h5, h6, blockquote {
     position: relative;
-    margin-bottom: 0; /* Messing mith margins in DOM as a hell, I'll return to this later on */
+    margin-bottom: 0; /* Messing mith margins in DOM is a hell, I'll return to this later on */
     margin-top: 0;
 }
 

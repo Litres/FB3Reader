@@ -222,7 +222,7 @@ module FB3Reader {
 			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
 				var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop, 0);
-				
+
 				// We can have not enough content to fill the page. Sometimes we will refill it,
 				// but sometimes (doc end or we only 
 				if (!FallOut.EndReached &&
@@ -262,7 +262,7 @@ module FB3Reader {
 							FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
 							if (FallOut.EndReached) {
 								var NextPageRange = <any> {};
-								NextPageRange.From = (PrevTo?PrevTo:this.RenderInstr.Range.To).slice(0);
+								NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
 								PrevTo = FallOut.FallOut.slice(0);
 								NextPageRange.To = FallOut.FallOut.slice(0);
 
@@ -278,6 +278,8 @@ module FB3Reader {
 						} else { break }
 					}
 				}
+			} else {
+				this.PageN = this.RenderInstr.CacheAs;
 			}
 
 			this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
@@ -550,11 +552,12 @@ module FB3Reader {
 				}
 			}
 
-			if (WeeHaveFoundReadyPage && !FirstFrameToFill) { // Looks like we have our full pages set renderes already,
+			this.CurStartPage = RealStartPage;
+			if (WeeHaveFoundReadyPage && !FirstFrameToFill) { // Looks like we have our full pages set rendered already,
 				this.IdleOn();																	// maybe we go to the same place several times? Anyway, quit!
 				return;
-			} else if (!WeeHaveFoundReadyPage) {
-				FirstPageNToRender = RealStartPage;
+			} else if (!WeeHaveFoundReadyPage) {							// No prerendered page found, bad luck. We start rendering
+				FirstPageNToRender = RealStartPage;							// just as if we would while the application starts
 				FirstFrameToFill = this.Pages[0];
 				this.PutBlockIntoView(0);
 			}
@@ -574,7 +577,6 @@ module FB3Reader {
 					NewInstr[I].CacheAs = I;
 				}
 			}
-			this.CurStartPage = RealStartPage;
 			FirstFrameToFill.DrawInit(NewInstr); // IdleOn will fire after the DrawInit chain ends
 
 		}

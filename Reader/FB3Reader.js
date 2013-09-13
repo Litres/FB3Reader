@@ -224,6 +224,8 @@ var FB3Reader;
                         }
                     }
                 }
+            } else {
+                this.PageN = this.RenderInstr.CacheAs;
             }
 
             this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
@@ -481,6 +483,7 @@ var FB3Reader;
                 }
             }
 
+            this.CurStartPage = RealStartPage;
             if (WeeHaveFoundReadyPage && !FirstFrameToFill) {
                 this.IdleOn();
                 return;
@@ -505,7 +508,6 @@ var FB3Reader;
                     NewInstr[I].CacheAs = I;
                 }
             }
-            this.CurStartPage = RealStartPage;
             FirstFrameToFill.DrawInit(NewInstr);
         };
 

@@ -483,7 +483,7 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-			//this.CurStartPos = [3, 14];
+			//this.CurStartPos = [15, 105];
 			this.CurStartPos = [0];
 
 			this.IdleOff();
@@ -539,9 +539,9 @@ module FB3Reader {
 					var CrawlerCurrentPage = this.Pages[BasePage];
 					for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
 						CrawlerCurrentPage = CrawlerCurrentPage.Next;
-						if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != BasePage + I) {
+						if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != BasePage + J) {
 							// Here it is - the page with the wrong content. We set up our re-render queue
-							FirstPageNToRender = BasePage + I;
+							FirstPageNToRender = BasePage + J;
 							FirstFrameToFill = CrawlerCurrentPage;
 							break;
 						}

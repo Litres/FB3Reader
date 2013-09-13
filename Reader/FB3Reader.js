@@ -134,6 +134,10 @@ var FB3Reader;
                 if (Range.To[Range.To.length - 1]) {
                     Range.To[Range.To.length - 1]++;
                 } else {
+                    //while (Addr.length && Addr[Addr.length - 1] == 0) {
+                    //	Addr.pop();
+                    //	Addr[Addr.length - 1]--;
+                    //}
                 }
             } else {
                 if (!this.RenderInstr.Start) {
@@ -343,6 +347,9 @@ var FB3Reader;
                         CurShift += Math.floor(Math.max(SH, OH) / 2);
                     } else {
                         var NextChild = Element.children[I + 1];
+                        //if (NextChild && NextChild.innerHTML.match(/^\u00AD/)) {
+                        //	Child.innerHTML += '_';
+                        //}
                     }
                     var OffsetParent = Child.offsetParent;
                     var ApplyShift;
@@ -675,6 +682,7 @@ var FB3Reader;
                     this.GoTOPage(this.CurStartPage - this.NColumns);
                 }
             } else {
+                // we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
             }
         };
 
@@ -743,4 +751,4 @@ var FB3Reader;
     })();
     FB3Reader.Reader = Reader;
 })(FB3Reader || (FB3Reader = {}));
-//@ sourceMappingURL=FB3Reader.js.map
+//# sourceMappingURL=FB3Reader.js.map

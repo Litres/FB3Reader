@@ -16,8 +16,8 @@ module FB3Reader {
 		Site: FB3ReaderSite.IFB3ReaderSite;
 		Bookmarks: FB3Bookmarks.IBookmarks;
 		ArtID: string;
-		HyphON: bool;
-		BookStyleNotes: bool;
+		HyphON: boolean;
+		BookStyleNotes: boolean;
 		NColumns: number;
 		TextPercent: number;	// Percantage of the shown text - progress
 		CurStartPos: IPosition;		// Adress of the first visible block

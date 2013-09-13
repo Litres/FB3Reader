@@ -1,11 +1,11 @@
+/// <reference path="FB3DOMHead.ts" />
+/// <reference path="FB3DOMBlock.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="FB3DOMHead.ts" />
-/// <reference path="FB3DOMBlock.ts" />
 var FB3DOM;
 (function (FB3DOM) {
     var AsyncLoadConsumer = (function () {
@@ -143,4 +143,4 @@ var FB3DOM;
     })(FB3DOM.FB3Tag);
     FB3DOM.DOM = DOM;
 })(FB3DOM || (FB3DOM = {}));
-//@ sourceMappingURL=FB3DOM.js.map
+//# sourceMappingURL=FB3DOM.js.map

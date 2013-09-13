@@ -63,6 +63,10 @@ var FB3DataProvider;
                     this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
                 }
             }
+            //} catch (err) {
+            //	this.Progressor.HourglassOff(this);
+            //	this.Progressor.Alert('Failed to load "' + this.URL + '" (unknown error "' + err.description+'")');
+            //}
         };
 
         AjaxLoader.prototype.onUpdateProgress = function (e) {
@@ -111,4 +115,4 @@ var FB3DataProvider;
         return AjaxLoader;
     })();
 })(FB3DataProvider || (FB3DataProvider = {}));
-//@ sourceMappingURL=FB3AjaxDataProvider.js.map
+//# sourceMappingURL=FB3AjaxDataProvider.js.map

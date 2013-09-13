@@ -42,22 +42,22 @@ module FB3DOM {
 		Chars: number;			// Length of the node - pure characters and spaces
 		ID: number;					// Position of this node within the parent. Used to generate GetXPID
 		TagName?: string;		// Native tag name. May be mapped to HTML with another tag name
-		GetHTML(HyphOn: bool, Range: IRange, IDPrefix: string, PageData: IPageContainer);	// Returns partial HTML for this node
+		GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, PageData: IPageContainer);	// Returns partial HTML for this node
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
 
 	export interface IFB3DOM extends IFB3Block{
-		Ready: bool;
+		Ready: boolean;
 		Progressor: FB3ReaderSite.ILoadProgress;
 		Alert: FB3ReaderSite.IAlert;
 		DataProvider: FB3DataProvider.IJsonLoaderFactory;
 		TOC: ITOC[];
 		DataChunks: IDataDisposition[];
-		Init(HyphOn: bool,
+		Init(HyphOn: boolean,
 			ArtID: string,
 			OnDone: IIFB3DOMReadyFunc);
-		GetHTMLAsync(HyphOn: bool,
+		GetHTMLAsync(HyphOn: boolean,
 			Range: IRange,
 			IDPrefix: string,
 			Callback: IDOMTextReadyCallback): void;

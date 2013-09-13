@@ -20,4 +20,4 @@ window.onload = function () {
         return AFB3Reader.AfterCanvasResize();
     });
 };
-//@ sourceMappingURL=app.js.map
+//# sourceMappingURL=app.js.map

@@ -25,7 +25,7 @@ module FB3DOM {
 //			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 		}
-		public GetHTML(HyphOn: bool, Range: IRange, IDPrefix:string, PageData: IPageContainer) {
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix:string, PageData: IPageContainer) {
 			var OutStr = this.text;
 			if (Range.To[0]) {
 				OutStr = OutStr.substr(0, Range.To[0]);
@@ -60,7 +60,7 @@ module FB3DOM {
 		public TagName: string;
 		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: bool, Range: IRange, IDPrefix: string, PageData: IPageContainer) {
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, PageData: IPageContainer) {
 			if (this.IsFootnote) {
 				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix));
 			} else {

@@ -23,7 +23,7 @@ module FB3DOM {
 		}
 		constructor(private FB3DOM: IFB3DOM,
 			private WaitedBlocks: number[],
-			private HyphOn: bool,
+			private HyphOn: boolean,
 			private Range: IRange,
 			private IDPrefix: string,
 			private OnDone: IDOMTextReadyCallback) {
@@ -43,11 +43,11 @@ module FB3DOM {
 
 	export class DOM extends FB3Tag implements IFB3DOM {
 		private LoadDequests: Array;
-		private HyphOn: bool;
+		private HyphOn: boolean;
 		private ActiveRequests: AsyncLoadConsumer[];
 		public TOC: ITOC[];
 		public DataChunks: IDataDisposition[];
-		public Ready: bool;
+		public Ready: boolean;
 		private OnDoneFunc: any;
 		private ArtID: string;
 		public XPID: string;
@@ -80,7 +80,7 @@ module FB3DOM {
 		}
 
 		// Wondering why I make Init public? Because you can't inherite private methods, darling!
-		public Init(HyphOn: bool, ArtID: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
+		public Init(HyphOn: boolean, ArtID: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
 			this.HyphOn = HyphOn;
 			this.OnDoneFunc = OnDone;
 			this.ArtID = ArtID;
@@ -89,7 +89,7 @@ module FB3DOM {
 			this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 			this.Progressor.HourglassOff(this);
 		}
-		public GetHTMLAsync(HyphOn: bool, Range: IRange, IDPrefix: string, Callback: IDOMTextReadyCallback): void {
+		public GetHTMLAsync(HyphOn: boolean, Range: IRange, IDPrefix: string, Callback: IDOMTextReadyCallback): void {
 		
 			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
 			if (MissingChunks.length == 0) {
@@ -114,7 +114,7 @@ module FB3DOM {
 			return this.DataProvider.ArtID2URL(this.ArtID, N);
 		}
 
-		private OnChunkLoaded(Data: Array, CustomData?: any):void {
+		private OnChunkLoaded(Data: Array<IJSONBlock>, CustomData?: any):void {
 			
 			var LoadedChunk: number = CustomData.ChunkN;
 			var Shift = this.DataChunks[LoadedChunk].s;

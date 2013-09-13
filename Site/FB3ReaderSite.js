@@ -24,10 +24,12 @@ var FB3ReaderSite;
         }
         ExampleProgressor.prototype.Alert = function (Message) {
             document.getElementById(this.AlertSpan).innerHTML = Message;
+            //			window.alert(Message);
         };
         ExampleProgressor.prototype.HourglassOn = function (Owner, Message) {
             this.Hourglasses[Owner.toString()] = 1;
             document.getElementById(this.MessSpan).innerHTML = Message;
+            //			document.body.style.cursor = 'wait';
         };
         ExampleProgressor.prototype.Progress = function (Owner, Progress) {
             this.Progresses[Owner] = Progress;
@@ -52,6 +54,7 @@ var FB3ReaderSite;
             if (!HaveLive) {
                 this.Hourglasses = {};
                 this.Progresses = {};
+                //				document.body.style.cursor = '';
             } else {
                 this.Progress(Owner, 100);
             }
@@ -68,4 +71,4 @@ var FB3ReaderSite;
     })();
     FB3ReaderSite.ExampleProgressor = ExampleProgressor;
 })(FB3ReaderSite || (FB3ReaderSite = {}));
-//@ sourceMappingURL=FB3ReaderSite.js.map
+//# sourceMappingURL=FB3ReaderSite.js.map

@@ -452,8 +452,8 @@ module FB3Reader {
 	}
 
 	export class Reader implements IFBReader {
-		public HyphON: bool;
-		public BookStyleNotes: bool;
+		public HyphON: boolean;
+		public BookStyleNotes: boolean;
 		public TextPercent: number; 
 		public NColumns: number;
 		public CacheForward: number;

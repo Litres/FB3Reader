@@ -15,4 +15,4 @@ var FB3Bookmarks;
     })();
     FB3Bookmarks.LitResBookmarksProcessor = LitResBookmarksProcessor;
 })(FB3Bookmarks || (FB3Bookmarks = {}));
-//@ sourceMappingURL=FB3Bookmarks.js.map
+//# sourceMappingURL=FB3Bookmarks.js.map

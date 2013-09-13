@@ -1,10 +1,10 @@
+/// <reference path="FB3DOMHead.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="FB3DOMHead.ts" />
 var FB3DOM;
 (function (FB3DOM) {
     FB3DOM.TagMapper = {
@@ -179,4 +179,4 @@ var FB3DOM;
     })(FB3Text);
     FB3DOM.FB3Tag = FB3Tag;
 })(FB3DOM || (FB3DOM = {}));
-//@ sourceMappingURL=FB3DOMBlock.js.map
+//# sourceMappingURL=FB3DOMBlock.js.map

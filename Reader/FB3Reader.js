@@ -1,8 +1,11 @@
 ﻿/// <reference path="FB3ReaderHead.ts" />
 var FB3Reader;
 (function (FB3Reader) {
-    function IsNodePageBreaker(Node) {
-        return Node.nodeName.toLowerCase() == 'h1' ? true : false;
+    function PageBreakBefore(Node) {
+        return Node.nodeName.toLowerCase().match(/^h[1-3]/) ? true : false;
+    }
+    function PageBreakAfter(Node) {
+        return false;
     }
 
     function IsNodeUnbreakable(Node) {
@@ -292,6 +295,7 @@ var FB3Reader;
             while (I < ChildsCount) {
                 var FootnotesAddon = 0;
                 var Child = Element.children[I];
+                PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && PageBreakBefore(Child);
                 var SH = Child.scrollHeight;
                 var OH = Child.offsetHeight;
                 var ChildBot = Child.offsetTop + Math.max(SH, OH);
@@ -364,7 +368,6 @@ var FB3Reader;
                     LastOffsetParent = OffsetParent;
                     Element = Child;
                     ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
-
                     if (ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected) {
                         // So, it looks like we do not fit because of the footnote, not the falling out text itself.
                         // Let's force page break on the previous line end - kind of time machine
@@ -379,10 +382,9 @@ var FB3Reader;
                     if (PrevPageBreaker)
                         break;
                 }
-                PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && IsNodePageBreaker(Child);
-                if (PrevPageBreaker) {
-                    Child.className += ' cut_bot';
-                }
+                //if (PrevPageBreaker) {
+                //	Child.className += ' cut_bot';
+                //}
             }
 
             var Addr;
@@ -417,10 +419,9 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
+            this.CurStartPos = [90, 0];
 
-            //this.CurStartPos = [15, 105];
-            this.CurStartPos = [0];
-
+            //this.CurStartPos = [0];
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -479,9 +480,9 @@ var FB3Reader;
                     var CrawlerCurrentPage = this.Pages[BasePage];
                     for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
                         CrawlerCurrentPage = CrawlerCurrentPage.Next;
-                        if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != BasePage + J) {
+                        if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != RealStartPage + J) {
                             // Here it is - the page with the wrong content. We set up our re-render queue
-                            FirstPageNToRender = BasePage + J;
+                            FirstPageNToRender = RealStartPage + J;
                             FirstFrameToFill = CrawlerCurrentPage;
                             break;
                         }

@@ -11,8 +11,11 @@ module FB3Reader {
 		EndReached: boolean;
 	}
 
-	function IsNodePageBreaker(Node:HTMLElement):boolean {
-		return Node.nodeName.toLowerCase() == 'h1' ? true : false;
+	function PageBreakBefore(Node: HTMLElement): boolean {
+		return Node.nodeName.toLowerCase().match(/^h[1-3]/) ? true : false;
+	}
+	function PageBreakAfter(Node: HTMLElement): boolean {
+		return false; // todo
 	}
 
 	function IsNodeUnbreakable(Node: HTMLElement): boolean {
@@ -342,6 +345,7 @@ module FB3Reader {
 			while (I < ChildsCount) {
 				var FootnotesAddon = 0;
 				var Child = <HTMLElement> Element.children[I];
+				PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && PageBreakBefore(Child);
 				var SH = Child.scrollHeight;
 				var OH = Child.offsetHeight;
 				var ChildBot = Child.offsetTop + Math.max(SH, OH);
@@ -412,7 +416,6 @@ module FB3Reader {
 					LastOffsetParent = OffsetParent;
 					Element = Child;
 					ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
-
 					if (ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected) {
 						// So, it looks like we do not fit because of the footnote, not the falling out text itself.
 						// Let's force page break on the previous line end - kind of time machine
@@ -426,10 +429,9 @@ module FB3Reader {
 					I = 0;
 					if (PrevPageBreaker) break;
 				}
-				PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && IsNodePageBreaker(Child);
-				if (PrevPageBreaker) {
-					Child.className += ' cut_bot';
-				}
+				//if (PrevPageBreaker) {
+				//	Child.className += ' cut_bot';
+				//}
 			}
 
 			var Addr: any;
@@ -485,8 +487,8 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-			//this.CurStartPos = [15, 105];
-			this.CurStartPos = [0];
+			this.CurStartPos = [90,0];
+			//this.CurStartPos = [0];
 
 			this.IdleOff();
 		}
@@ -541,9 +543,9 @@ module FB3Reader {
 					var CrawlerCurrentPage = this.Pages[BasePage];
 					for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
 						CrawlerCurrentPage = CrawlerCurrentPage.Next;
-						if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != BasePage + J) {
+						if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != RealStartPage + J) {
 							// Here it is - the page with the wrong content. We set up our re-render queue
-							FirstPageNToRender = BasePage + J;
+							FirstPageNToRender = RealStartPage + J;
 							FirstFrameToFill = CrawlerCurrentPage;
 							break;
 						}

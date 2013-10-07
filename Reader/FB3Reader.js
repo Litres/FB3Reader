@@ -48,6 +48,15 @@ var FB3Reader;
         };
     }
 
+    function PRIClone(Range) {
+        return {
+            Range: RangeClone(Range.Range),
+            CacheAs: Range.CacheAs,
+            Height: Range.Height,
+            NotesHeight: Range.NotesHeight
+        };
+    }
+
     function HardcoreParseInt(Input) {
         Input.replace(/\D/g, '');
         if (Input == '')
@@ -440,9 +449,9 @@ var FB3Reader;
             var ReadPos;
             if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
                 if (this.Bookmarks && this.Bookmarks.CurPos) {
-                    ReadPos = this.Bookmarks.CurPos.Fragment.From;
+                    ReadPos = this.Bookmarks.CurPos.Fragment.From.slice(0);
                 } else {
-                    ReadPos = this.CurStartPos;
+                    ReadPos = this.CurStartPos.slice(0);
                 }
                 this.GoTO(ReadPos);
             }
@@ -500,12 +509,13 @@ var FB3Reader;
                 FirstFrameToFill = this.Pages[0];
                 this.PutBlockIntoView(0);
             }
+            this.CurStartPos = this.PagesPositionsCache[Page].Range.From.slice(0);
 
             var CacheBroken = false;
             var NewInstr = new Array();
             for (var I = FirstPageNToRender; I < RealStartPage + (this.CacheForward + 1) * this.NColumns; I++) {
                 if (!CacheBroken && this.PagesPositionsCache[I]) {
-                    NewInstr.push(this.PagesPositionsCache[I]);
+                    NewInstr.push(PRIClone(this.PagesPositionsCache[I]));
                 } else {
                     if (!CacheBroken) {
                         CacheBroken = true;
@@ -531,6 +541,7 @@ var FB3Reader;
         };
 
         Reader.prototype.GoToOpenPosition = function (NewPos) {
+            this.CurStartPos = NewPos.slice(0);
             var FragmentEnd = NewPos[0] + 10;
             if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                 FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
@@ -580,12 +591,7 @@ var FB3Reader;
         };
 
         Reader.prototype.StoreCachedPage = function (Range) {
-            this.PagesPositionsCache[Range.CacheAs] = {
-                Range: RangeClone(Range.Range),
-                CacheAs: Range.CacheAs,
-                Height: Range.Height,
-                NotesHeight: Range.NotesHeight
-            };
+            this.PagesPositionsCache[Range.CacheAs] = PRIClone(Range);
         };
 
         Reader.prototype.SearchForText = function (Text) {
@@ -629,7 +635,7 @@ var FB3Reader;
                     _this.Pages[I].Reset();
                 }
                 _this.PrepareCanvas();
-                _this.GoTO(_this.CurStartPos);
+                _this.GoTO(_this.CurStartPos.slice(0));
                 _this.OnResizeTimeout = undefined;
             }, 200);
         };
@@ -671,12 +677,14 @@ var FB3Reader;
                         _this.PageForward();
                     }, 50);
                 } else {
+                    this.CurStartPos = PageToView.RenderInstr.Range.From;
                     this.PutBlockIntoView(PageToView.ID);
                 }
             }
             return false;
         };
         Reader.prototype.PageBackward = function () {
+            var _this = this;
             clearTimeout(this.MoveTimeoutID);
             if (this.CurStartPage !== undefined) {
                 if (this.CurStartPage > 0) {
@@ -684,6 +692,14 @@ var FB3Reader;
                 }
             } else {
                 // we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
+                var GotoPage = this.GetCachedPage(this.CurStartPos);
+                if (GotoPage != undefined) {
+                    this.GoTOPage(GotoPage);
+                } else {
+                    this.MoveTimeoutID = setTimeout(function () {
+                        _this.PageBackward();
+                    }, 50);
+                }
             }
         };
 

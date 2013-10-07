@@ -59,6 +59,16 @@ module FB3Reader {
 		}
 	}
 
+	function PRIClone(Range: IPageRenderInstruction): IPageRenderInstruction {
+		return {
+			Range: RangeClone(Range.Range),
+			CacheAs: Range.CacheAs,
+			Height: Range.Height,
+			NotesHeight: Range.NotesHeight
+		};
+
+	}
+
 	function HardcoreParseInt(Input: string): number {
 		Input.replace(/\D/g, '');
 		if (Input == '')
@@ -504,9 +514,9 @@ module FB3Reader {
 			var ReadPos: IPosition;
 			if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
 				if (this.Bookmarks && this.Bookmarks.CurPos) {
-					ReadPos = this.Bookmarks.CurPos.Fragment.From;
+					ReadPos = this.Bookmarks.CurPos.Fragment.From.slice(0);
 				} else {
-					ReadPos = this.CurStartPos;
+					ReadPos = this.CurStartPos.slice(0);
 				}
 				this.GoTO(ReadPos);
 			}
@@ -554,6 +564,7 @@ module FB3Reader {
 				}
 			}
 
+
 			this.CurStartPage = RealStartPage;
 			if (WeeHaveFoundReadyPage && !FirstFrameToFill) { // Looks like we have our full pages set rendered already,
 				this.IdleOn();																	// maybe we go to the same place several times? Anyway, quit!
@@ -563,12 +574,13 @@ module FB3Reader {
 				FirstFrameToFill = this.Pages[0];
 				this.PutBlockIntoView(0);
 			}
+			this.CurStartPos = this.PagesPositionsCache[Page].Range.From.slice(0);
 
 			var CacheBroken = false;
 			var NewInstr: IPageRenderInstruction[] = new Array();
 			for (var I = FirstPageNToRender; I < RealStartPage + (this.CacheForward + 1) * this.NColumns; I++) {
 				if (!CacheBroken && this.PagesPositionsCache[I]) {
-					NewInstr.push(this.PagesPositionsCache[I]);
+					NewInstr.push(PRIClone(this.PagesPositionsCache[I]));
 				} else {
 					if (!CacheBroken) {
 						CacheBroken = true;
@@ -595,6 +607,7 @@ module FB3Reader {
 		}
 
 		public GoToOpenPosition(NewPos: IPosition): void {
+			this.CurStartPos = NewPos.slice(0);
 			var FragmentEnd = NewPos[0] + 10;
 			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
 				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
@@ -645,12 +658,7 @@ module FB3Reader {
 
 
 		public StoreCachedPage(Range: IPageRenderInstruction) {
-			this.PagesPositionsCache[Range.CacheAs] = {
-				Range: RangeClone(Range.Range),
-				CacheAs: Range.CacheAs,
-				Height: Range.Height,
-				NotesHeight: Range.NotesHeight,
-			};
+			this.PagesPositionsCache[Range.CacheAs] = PRIClone(Range);
 		}
 
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
@@ -693,7 +701,7 @@ module FB3Reader {
 					this.Pages[I].Reset();
 				}
 				this.PrepareCanvas();
-				this.GoTO(this.CurStartPos);
+				this.GoTO(this.CurStartPos.slice(0));
 				this.OnResizeTimeout = undefined;
 			} , 200)
 		}
@@ -730,6 +738,7 @@ module FB3Reader {
 				if (!PageToView.Ready) {
 					this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
 				} else {
+					this.CurStartPos = PageToView.RenderInstr.Range.From;
 					this.PutBlockIntoView(PageToView.ID);
 				}
 			}
@@ -743,6 +752,12 @@ module FB3Reader {
 				}
 			} else {	// Ouch, we are out of the ladder, this makes things complicated like hell, sometimes
 								// we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
+				var GotoPage = this.GetCachedPage(this.CurStartPos);
+				if (GotoPage != undefined) {// All right, first we check if our current page IS on the ladder already
+					this.GoTOPage(GotoPage);  // If so - go to the ledder and never care of the rest
+				} else {										// If not - we can only wait for the ladder to come to us
+					this.MoveTimeoutID = setTimeout(() => { this.PageBackward() }, 50);
+				}
 			}
 		}
 

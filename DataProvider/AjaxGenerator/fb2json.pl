@@ -12,10 +12,19 @@ use XML::LibXSLT;
 use XML::LibXML;
 use utf8;
 use Encode;
+use Image::Size;
+use MIME::Base64;
+
+my $FBURI='http://www.gribuser.ru/xml/fictionbook/2.0';
+my $PartLimit = 10000;
 
 my $XML = $ARGV[0];
 my $XSL = $ARGV[1];
 my $Out = $ARGV[2];
+
+my $OutFolder = $Out;
+$OutFolder =~ s/([\/\\])([^\/\\]+)$/$1/;
+#my $PathAdd = $2;
 
 
 #
@@ -27,6 +36,9 @@ unless ($Out){
 	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <out>\n";
 	exit(0);
 }
+
+my %DocumentImages;
+
 my %HyphCache;
 sub SplitString{
 	my $Esc=shift || return undef;
@@ -54,6 +66,7 @@ sub EscString{
 	$Esc =~ s/ $//;
 	return $Esc;
 }
+
 my $TmpXML;
 if (-f $XML) {
 	use File::Basename;
@@ -92,15 +105,24 @@ sub HypheNOBR {
 my $xslt = XML::LibXSLT->new();
 $xslt->register_function ('FB2JS','SplitString',\&SplitString);
 $xslt->register_function ('FB2JS','Escape',\&EscString);
+$xslt->register_function ('FB2JS','GetImgW',\&GetImgW);
+$xslt->register_function ('FB2JS','GetImgH',\&GetImgH);
+$xslt->register_function ('FB2JS','GetImgID',\&GetImageID);
+
+my $xpc = XML::LibXML::XPathContext->new();
+$xpc->registerNs('fb', $FBURI);
 
 my $parser = XML::LibXML->new();
 my $source = $parser->parse_file($XML);
+
 my $style_doc = $parser->parse_file($XSL);
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
+
 my $results = $stylesheet->transform($source);
+
 my $JSonSTR = $stylesheet->output_string($results);
 my @JSonArr = split /[\r\n]+/,$JSonSTR;
-my $PartLimit = 10000;
+
 my $BlockN = 0;
 my $FileN = 0;
 my $PageStack = 0;
@@ -192,4 +214,47 @@ sub DumpTOC{
 		push @Out,']';
 	}
 	return join '',@Out,'}';
+}
+
+sub CanonizeName {
+	my $ImgName = lc(shift);
+	$ImgName =~ s/[^\w\.]//g;
+	$ImgName =~ s/\.\.+/\./g;
+	return $ImgName;
+}
+
+
+sub GetImageID {
+	my $ImgID = shift;
+	my $id;
+	for ($xpc->findnodes("/fb:FictionBook/fb:binary[\@id='$ImgID']",$source)) {
+		$id=CanonizeName($_->getAttribute('id'));
+
+		return $DocumentImages{$id}->[0] if $DocumentImages{$id};
+
+		my $ContentType=$_->getAttribute('content-type');
+
+		if (defined($id) && $ContentType=~ /image\/(jpeg|png|gif)/i) {
+			my $FN="$OutFolder$id";
+			open IMGFILE, ">$FN" or die "$FN: $!";
+			binmode IMGFILE;
+			print (IMGFILE decode_base64($_->string_value()));
+			close IMGFILE;
+
+			$DocumentImages{$id}=[$id,Image::Size::imgsize($FN)];
+		} elsif (defined($id) && $ContentType){
+			die "Unknown type '$ContentType' binary found!";
+		}
+	}
+	return $id;
+}
+
+sub GetImgW{
+	my $Img = CanonizeName(shift);
+	return $DocumentImages{$Img}->[0];
+}
+
+sub GetImgH{
+	my $Img = CanonizeName(shift);
+	return $DocumentImages{$Img}->[1];
 }

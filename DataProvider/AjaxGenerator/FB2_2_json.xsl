@@ -31,10 +31,11 @@
 	
 	<xsl:template name="tag2js">t:'<xsl:value-of select="name(.)"/>',xp:[<xsl:call-template name="reverse_id"
 		/>]<xsl:if test="@id">,i:'<xsl:value-of select="@id"/>'</xsl:if><xsl:if test="@style and @style != ''">,nc:'<xsl:value-of
-		select="@style"/>'</xsl:if><xsl:if test="*|text()">,c:[<xsl:apply-templates/>]</xsl:if></xsl:template>
+		select="@style"/>'</xsl:if><xsl:if test="*|text()">,c:[<xsl:apply-templates/>]</xsl:if><xsl:if test="self::fb:image">,s:'<xsl:value-of select="fb2js:GetImgID(substring-after(@xlink:href,'#'))"
+		/>',w:<xsl:value-of select="fb2js:GetImgW(substring-after(@xlink:href,'#'))"/>,h:<xsl:value-of select="fb2js:GetImgH(substring-after(@xlink:href,'#'))"/></xsl:if></xsl:template>
 	<xsl:template match="*">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
 	<xsl:template match="&blocklvl;" mode="footnote">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
-	<xsl:template match="fb:section" mode="footnote">{t:'footnote',c:[<xsl:apply-templates mode="footnote"/>]}</xsl:template>
+	<xsl:template match="fb:section" mode="footnote">{t:'footnote',xp:[<xsl:call-template name="reverse_id"/>],c:[<xsl:apply-templates mode="footnote"/>]}</xsl:template>
 
 	<xsl:template match="&blocklvl;">{chars:<xsl:value-of select="string-length(.)"/>,<xsl:call-template name="tag2js"/>},<xsl:text >&#010;</xsl:text></xsl:template>
 	

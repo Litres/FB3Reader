@@ -251,10 +251,10 @@ sub GetImageID {
 
 sub GetImgW{
 	my $Img = CanonizeName(shift);
-	return $DocumentImages{$Img}->[0];
+	return $DocumentImages{$Img}->[1];
 }
 
 sub GetImgH{
 	my $Img = CanonizeName(shift);
-	return $DocumentImages{$Img}->[1];
+	return $DocumentImages{$Img}->[2];
 }

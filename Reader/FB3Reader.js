@@ -621,13 +621,13 @@ var FB3Reader;
                 for (var J = 0; J < this.NColumns; J++) {
                     var NewPage = new ReaderPage(J, this.FB3DOM, this, this.Pages[this.Pages.length - 1]);
                     this.Pages[this.Pages.length] = NewPage;
-                    InnerHTML += NewPage.GetInitHTML(I * this.NColumns + J);
+                    InnerHTML += NewPage.GetInitHTML(I * this.NColumns + J + 1);
                 }
             }
             this.Pages[this.Pages.length - 1].Next = this.Pages[0];
 
             this.BackgroundRenderFrame = new ReaderPage(0, this.FB3DOM, this, null);
-            InnerHTML += this.BackgroundRenderFrame.GetInitHTML(this.Pages.length);
+            InnerHTML += this.BackgroundRenderFrame.GetInitHTML(0);
 
             InnerHTML += '</div>';
             this.Site.Canvas.innerHTML = InnerHTML;
@@ -697,7 +697,7 @@ var FB3Reader;
                     }
                 } else {
                     this.CurStartPos = PageToView.RenderInstr.Range.From;
-                    this.PutBlockIntoView(PageToView.ID);
+                    this.PutBlockIntoView(PageToView.ID - 1);
                 }
             }
             return false;
@@ -770,8 +770,8 @@ var FB3Reader;
                         this.LastPage = undefined;
                         if (PageData) {
                             this.BackgroundRenderFrame.DrawEnd(PageData);
-                            this.IdleAction = 'load_page';
                         }
+                        this.IdleAction = 'load_page';
                     default:
                 }
             }

@@ -48,6 +48,12 @@ div.FB3ReaderColumnset2 div.FB2readerPage {
 div.FB3ReaderColumnset1 div.FB2readerPage {
     width: 100%;
 }
+
+/* background renderer page - removed from sight here to avoid IE blinking bug */
+#FB3ReaderColumn0 {
+    background-color: lime;
+    top: 5000px;
+}
 /* engine-required CSS END */
 
 /* this are engine-independent CSS, do with it whatewer you see fit */
@@ -151,8 +157,3 @@ div.FB2readerPage p.footnote {
 }
 
 /* debug */
-
-#FB3ReaderColumn18 {
-    background-color: lime;
-    top: 5000px;
-}

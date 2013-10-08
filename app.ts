@@ -17,4 +17,26 @@ window.onload = () => {
 	AFB3Reader.HyphON = true;
 	AFB3Reader.Init();
 	window.addEventListener('resize', () => AFB3Reader.AfterCanvasResize());
+	ShowPosition();
 };
+
+function ShowPosition() {
+	document.getElementById('CurPos').innerHTML = AFB3Reader.CurStartPos.join('/');
+	document.getElementById('CurPosPercent').innerHTML = AFB3Reader.CurPosPercent()?AFB3Reader.CurPosPercent().toFixed(2):'?';
+	document.getElementById('CurPosPage').innerHTML = AFB3Reader.CurStartPage?(AFB3Reader.CurStartPage.toFixed(0) + '/' +
+		(AFB3Reader.LastPage ? AFB3Reader.LastPage.toFixed(0):'?')):'?';
+}
+function PageForward() {
+	AFB3Reader.PageForward();
+	ShowPosition();
+}
+
+function Pagebackward() {
+	AFB3Reader.PageBackward();
+	ShowPosition();
+}
+
+function GoToPercent() {
+	AFB3Reader.GoToPercent(parseFloat((<HTMLInputElement>document.getElementById('gotopercent')).value));
+	ShowPosition();
+}

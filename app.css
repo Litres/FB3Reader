@@ -149,3 +149,10 @@ div.FB2readerPage p.footnote {
     display: inline;
     margin-left: 0.3em;
 }
+
+/* debug */
+
+#FB3ReaderColumn18 {
+    background-color: lime;
+    top: 5000px;
+}

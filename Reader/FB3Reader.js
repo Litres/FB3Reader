@@ -29,7 +29,7 @@ var FB3Reader;
         var Result = 0;
         for (var I = 0; I < Math.min(Pos1.length, Pos2.length); I++) {
             if (Pos1[I] != Pos2[I]) {
-                Result = Pos1[I] > Pos2[I] ? 1 : -1;
+                Result = Pos1[I] * 1 > Pos2[I] * 1 ? 1 : -1;
                 break;
             }
         }
@@ -73,8 +73,9 @@ var FB3Reader;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 5;
+            this.PrerenderBlocks = 20;
             this.Ready = false;
+            this.Pending = false;
         }
         ReaderPage.prototype.Show = function () {
             if (!this.Visible) {
@@ -85,7 +86,7 @@ var FB3Reader;
 
         ReaderPage.prototype.Hide = function () {
             if (this.Visible) {
-                this.ParentElement.style.top = '-100000px';
+                this.ParentElement.style.top = '100000px';
                 this.Visible = false;
             }
         };
@@ -123,6 +124,14 @@ var FB3Reader;
             this.ParentElement.style.top = '-100000px';
         };
 
+        ReaderPage.prototype.SetPending = function (PagesToRender) {
+            var PageToPend = this;
+            for (var I = 0; I < PagesToRender.length; I++) {
+                PageToPend.Pending = true;
+                PageToPend = PageToPend.Next;
+            }
+        };
+
         ReaderPage.prototype.DrawInit = function (PagesToRender) {
             var _this = this;
             if (PagesToRender.length == 0)
@@ -132,6 +141,7 @@ var FB3Reader;
                 return;
             }
             this.Ready = false;
+            this.Pending = true;
 
             this.RenderInstr = PagesToRender.shift();
             this.PagesToRender = PagesToRender;
@@ -252,6 +262,7 @@ var FB3Reader;
             this.Element.Node.style.overflow = 'hidden';
 
             this.Ready = true;
+            this.Pending = false;
 
             if (this.PagesToRender && this.PagesToRender.length && this.Next) {
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
@@ -271,6 +282,7 @@ var FB3Reader;
             //			console.log('Reset ' + this.ID);
             this.PagesToRender = null;
             this.Reseted = true;
+            this.Pending = false;
         };
 
         ReaderPage.prototype.PutPagePlace = function (Place) {
@@ -428,9 +440,10 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
-            this.CurStartPos = [90, 0];
 
-            //this.CurStartPos = [0];
+            //			this.CurStartPos = [45, 174];
+            this.CurStartPos = [0];
+
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -523,9 +536,10 @@ var FB3Reader;
                     } else {
                         NewInstr.push({});
                     }
-                    NewInstr[I].CacheAs = I;
+                    NewInstr[NewInstr.length - 1].CacheAs = I;
                 }
             }
+            FirstFrameToFill.SetPending(NewInstr);
             FirstFrameToFill.DrawInit(NewInstr);
         };
 
@@ -568,6 +582,7 @@ var FB3Reader;
             for (var I = 1; I < this.Pages.length; I++) {
                 this.Pages[I].Ready = false;
             }
+            this.Pages[0].SetPending(NewInstr);
             this.Pages[0].DrawInit(NewInstr);
         };
 
@@ -673,9 +688,13 @@ var FB3Reader;
                     PageToView = PageToView.Next;
                 }
                 if (!PageToView.Ready) {
-                    this.MoveTimeoutID = setTimeout(function () {
-                        _this.PageForward();
-                    }, 50);
+                    if (PageToView.Pending) {
+                        this.MoveTimeoutID = setTimeout(function () {
+                            _this.PageForward();
+                        }, 50);
+                    } else {
+                        this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);
+                    }
                 } else {
                     this.CurStartPos = PageToView.RenderInstr.Range.From;
                     this.PutBlockIntoView(PageToView.ID);
@@ -708,6 +727,13 @@ var FB3Reader;
             this.GoTO([BlockN]);
         };
 
+        Reader.prototype.CurPosPercent = function () {
+            if (!this.FB3DOM.TOC) {
+                return undefined;
+            }
+            return 100 * this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+        };
+
         Reader.prototype.IdleGo = function (PageData) {
             var _this = this;
             if (this.IsIdle) {
@@ -716,13 +742,13 @@ var FB3Reader;
                         var PageToPrerender = this.FirstUncashedPage();
                         if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
                             //							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
-                            this.CacheFinished = true;
+                            this.LastPage = this.PagesPositionsCache.length - 1;
                             this.IdleOff();
                             this.Site.IdleThreadProgressor.Progress(this, 100);
                             this.Site.IdleThreadProgressor.HourglassOff(this);
                             return;
                         } else {
-                            this.CacheFinished = false;
+                            this.LastPage = undefined;
                             this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
                         }
                         this.IdleAction = 'fill_page';
@@ -741,7 +767,7 @@ var FB3Reader;
                             return _this.IdleGo(PageData);
                         });
                     case 'fill_page':
-                        this.CacheFinished = false;
+                        this.LastPage = undefined;
                         if (PageData) {
                             this.BackgroundRenderFrame.DrawEnd(PageData);
                             this.IdleAction = 'load_page';

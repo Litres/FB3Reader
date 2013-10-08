@@ -140,7 +140,7 @@ var FB3DOM;
         };
         FB3Tag.prototype.GetInitTag = function (Range, IDPrefix) {
             var ElementClasses = new Array();
-            if (Range.From[0]) {
+            if (Range.From[0] > 0) {
                 ElementClasses.push('cut_top');
             }
             if (Range.To[0] < this.Childs.length - 1) {

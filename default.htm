@@ -20,6 +20,12 @@
     <div id="reader">Loading…</div>
     <div style="float:left">
         <b>Visible actions progress:</b>
+        <div>Position xpath: /<span id="CurPos">-</span></div>
+        <div>Percent: <span id="CurPosPercent">-</span>%</div>
+        <div>Page number: <span id="CurPosPage">-</span></div>
+     </div>
+    <div style="float:left">
+        <b>Visible actions progress:</b>
         <div>Message: "<span id="MessSpan">-</span>"</div>
         <div>Progress: <span id="ProgressSpan">-</span>%</div>
         <div>Last Alert: <span id="AlertSpan">-</span></div>
@@ -31,9 +37,9 @@
         <div>Last Alert: <span id="IdleAlertSpan">-</span></div>
      </div>
     <div style="float:left; margin-left: 2em;">
-        <input type="button" value="&lt;&lt; Page back" onclick="AFB3Reader.PageBackward()"/>&#160;&#160;&#160;
-        <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="AFB3Reader.GoToPercent(document.getElementById('gotopercent').value)"/>
-        &#160;&#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="AFB3Reader.PageForward()"/>
+        <input type="button" value="&lt;&lt; Page back" onclick="Pagebackward()"/>&#160;&#160;&#160;
+        <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="GoToPercent()"/>
+        &#160;&#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="PageForward()"/>
     </div>
 </body>
 </html>

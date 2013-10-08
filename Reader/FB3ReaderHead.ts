@@ -19,9 +19,10 @@ module FB3Reader {
 		HyphON: boolean;
 		BookStyleNotes: boolean;
 		NColumns: number;
-		TextPercent: number;	// Percantage of the shown text - progress
-		CurStartPos: IPosition;		// Adress of the first visible block
-		CurStartPage: number;			// Number of the first visible page (if any)
+		TextPercent: number;	  // Percantage of the shown text - progress
+		CurStartPos: IPosition;	// Adress of the first visible block
+		CurStartPage: number;		// Number of the first visible page (if any)
+		LastPage: number;				// Last page N. Undefined if calc in progress
 
 		Init(): void;
 		CacheForward: number; // Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
@@ -31,16 +32,17 @@ module FB3Reader {
 
 		TOC(): FB3DOM.ITOC[];
 		GoTO(NewPos: IPosition): void;
-//		GoTOPage(Page: number): void;
+		//		GoTOPage(Page: number): void;
 		GoToOpenPosition(NewPos: IPosition): void;
 		ResetCache(): void;
 		GetCachedPage(NewPos: IPosition): number;
 		SearchForText(Text: string): FB3DOM.ITOC[];
 		AfterCanvasResize(): void;
 		PageForward(): void;
-		PageBackward():void;
-		GoToPercent(Percent:number): void;
+		PageBackward(): void;
+		GoToPercent(Percent: number): void;
 		IdleOn(): void;
 		IdleOff(): void;
+		CurPosPercent(): number;
 	}
 }

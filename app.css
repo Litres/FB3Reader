@@ -19,7 +19,11 @@ div.FB2readerPage {
 
 .FBReaderNotesDiv {
     padding: 0 10px  0;
-    margin: 10px 3em 0 10px;
+    margin-top: 10px;
+    margin-right: 3em;
+    margin-left: 10px;
+    overflow: hidden;
+    position: absolute;
 }
 
 
@@ -67,7 +71,7 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
       position using FB2readerCell1of2 classes and the like, yes. UNTILL.
       Untill every page's (height|width|inner element sizes) are identical.
       As engine renders first page and then the next page's borders are
-      quessed analising it in the belief the next page will behave exactly
+      guessed analising it in the belief the next page will behave exactly
       as the first one does and so on. Background, symmetrical margins
       and all that - at your service
     
@@ -130,6 +134,7 @@ div.FB2readerPage p.footnote {
     border-top: 1px dotted #ffff5d;
     font-family: 'Segoe UI', sans-serif;
     background-color: #000070;
+    margin-bottom: 6px;
 }
 
 .FBReaderNotesDiv h2,

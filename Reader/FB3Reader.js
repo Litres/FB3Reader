@@ -73,7 +73,7 @@ var FB3Reader;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 20;
+            this.PrerenderBlocks = 10;
             this.Ready = false;
             this.Pending = false;
         }
@@ -174,6 +174,7 @@ var FB3Reader;
             });
         };
 
+        // Take a poind and add PrerenderBlocks of blocks to it
         ReaderPage.prototype.DefaultRangeApply = function (RenderInstr) {
             var FragmentEnd = RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
             if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
@@ -192,9 +193,9 @@ var FB3Reader;
             if (PageData.FootNotes.length) {
                 this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
             }
-            this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
+
             if (!this.RenderInstr.Range) {
-                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop, 0);
+                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom, 0);
 
                 if (!FallOut.EndReached && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
@@ -225,7 +226,7 @@ var FB3Reader;
                     var CollectedNotesHeight = FallOut.NotesHeight;
                     var PrevTo;
                     for (var I = 0; I < this.PagesToRender.length; I++) {
-                        var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop;
+                        var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
                         if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
                             FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
                             if (FallOut.EndReached) {
@@ -254,10 +255,14 @@ var FB3Reader;
                 this.PageN = this.RenderInstr.CacheAs;
             }
 
-            this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
+            //			this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
             if (this.RenderInstr.NotesHeight) {
+                this.NotesElement.Node.style.display = 'block';
                 this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
+                this.NotesElement.Node.style.top = (this.Element.Height - this.Element.MarginTop - this.RenderInstr.NotesHeight - this.NotesElement.MarginBottom) + 'px';
+            } else {
+                this.NotesElement.Node.style.display = 'none';
             }
             this.Element.Node.style.overflow = 'hidden';
 
@@ -270,7 +275,7 @@ var FB3Reader;
                 }
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
-                }, 1);
+                }, 50);
             } else if (this.Next) {
                 this.FBReader.IdleOn();
             }
@@ -440,10 +445,9 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
+            this.CurStartPos = [735, 76];
 
-            //			this.CurStartPos = [45, 174];
-            this.CurStartPos = [0];
-
+            //			this.CurStartPos = [0];
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -638,6 +642,8 @@ var FB3Reader;
 
             this.BackgroundRenderFrame.BindToHTMLDoc(this.Site);
             this.BackgroundRenderFrame.PagesToRender = new Array(100);
+            this.CanvasW = this.Site.Canvas.clientWidth;
+            this.CanvasH = this.Site.Canvas.clientHeight;
         };
 
         Reader.prototype.AfterCanvasResize = function () {
@@ -646,12 +652,14 @@ var FB3Reader;
                 clearTimeout(this.OnResizeTimeout);
             }
             this.OnResizeTimeout = setTimeout(function () {
-                for (var I = 0; I < _this.Pages.length; I++) {
-                    _this.Pages[I].Reset();
+                if (_this.CanvasW != _this.Site.Canvas.clientWidth || _this.CanvasH != _this.Site.Canvas.clientHeight) {
+                    for (var I = 0; I < _this.Pages.length; I++) {
+                        _this.Pages[I].Reset();
+                    }
+                    _this.PrepareCanvas();
+                    _this.GoTO(_this.CurStartPos.slice(0));
+                    _this.OnResizeTimeout = undefined;
                 }
-                _this.PrepareCanvas();
-                _this.GoTO(_this.CurStartPos.slice(0));
-                _this.OnResizeTimeout = undefined;
             }, 200);
         };
 
@@ -751,7 +759,7 @@ var FB3Reader;
                             this.LastPage = undefined;
                             this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
                         }
-                        this.IdleAction = 'fill_page';
+                        this.IdleAction = 'wait';
 
                         // Kind of lightweight DrawInit here, it looks like copy-paste is reasonable here
                         this.BackgroundRenderFrame.RenderInstr = PageToPrerender;
@@ -764,30 +772,35 @@ var FB3Reader;
                         Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
                         this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_', function (PageData) {
-                            return _this.IdleGo(PageData);
+                            _this.IdleAction = 'fill_page';
+                            _this.IdleGo(PageData);
                         });
+                        break;
                     case 'fill_page':
                         this.LastPage = undefined;
                         if (PageData) {
                             this.BackgroundRenderFrame.DrawEnd(PageData);
                         }
                         this.IdleAction = 'load_page';
+                        break;
                     default:
                 }
             }
         };
         Reader.prototype.IdleOn = function () {
             var _this = this;
+            clearInterval(this.IdleTimeoutID);
             this.IsIdle = true;
             this.Site.IdleThreadProgressor.HourglassOn(this);
             this.IdleGo();
-            this.ItleTimeoutID = setInterval(function () {
+
+            // Looks like small delay prevents garbage collector from doing it's job - so we let it breath a bit
+            this.IdleTimeoutID = setInterval(function () {
                 _this.IdleGo();
-            }, 20);
+            }, 100);
         };
 
         Reader.prototype.IdleOff = function () {
-            clearInterval(this.ItleTimeoutID);
             this.IsIdle = false;
         };
         return Reader;

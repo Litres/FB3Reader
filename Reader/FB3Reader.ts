@@ -110,7 +110,7 @@ module FB3Reader {
 				if (Prev) {
 					Prev.Next = this;
 				}
-				this.PrerenderBlocks = 20;
+				this.PrerenderBlocks = 10;
 				this.Ready = false;
 				this.Pending = false;
 		}
@@ -224,7 +224,8 @@ module FB3Reader {
 
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), this.ID + '_', (PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData));
 		}
-
+		
+		// Take a poind and add PrerenderBlocks of blocks to it
 		DefaultRangeApply(RenderInstr: IPageRenderInstruction) {
 			var FragmentEnd = RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
 			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
@@ -243,9 +244,9 @@ module FB3Reader {
 			if (PageData.FootNotes.length) {
 				this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
 			}
-			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
+//			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
-				var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop, 0);
+				var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom, 0);
 
 				// We can have not enough content to fill the page. Sometimes we will refill it,
 				// but sometimes (doc end or we only 
@@ -281,7 +282,7 @@ module FB3Reader {
 					var PrevTo: Array;
 					for (var I = 0; I < this.PagesToRender.length; I++) {
 						var TestHeight = CollectedHeight + this.Element.Height
-							- this.Element.MarginTop;
+							- this.Element.MarginTop - this.Element.MarginBottom;
 						if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
 							FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
 							if (FallOut.EndReached) {
@@ -306,10 +307,17 @@ module FB3Reader {
 				this.PageN = this.RenderInstr.CacheAs;
 			}
 
-			this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
+//			this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
 			this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
 			if (this.RenderInstr.NotesHeight) {
+				this.NotesElement.Node.style.display = 'block'
 				this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
+				this.NotesElement.Node.style.top = (this.Element.Height
+					- this.Element.MarginTop
+					- this.RenderInstr.NotesHeight
+					- this.NotesElement.MarginBottom) + 'px'
+			} else {
+				this.NotesElement.Node.style.display = 'none'
 			}
 			this.Element.Node.style.overflow = 'hidden';
 
@@ -322,7 +330,7 @@ module FB3Reader {
 				if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
 					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
 				}
-				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 1)
+				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 50)
 			} else if (this.Next) {
 				this.FBReader.IdleOn();
 			}
@@ -497,7 +505,10 @@ module FB3Reader {
 
 		private IsIdle: boolean;
 		private IdleAction: string;
-		private ItleTimeoutID: number;
+		private IdleTimeoutID: number;
+
+		private CanvasW: number;
+		private CanvasH: number;
 
 		constructor(public ArtID: string,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
@@ -510,8 +521,8 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-//			this.CurStartPos = [45, 174];
-			this.CurStartPos = [0];
+				this.CurStartPos = [735,76];
+//			this.CurStartPos = [0];
 
 			this.IdleOff();
 		}
@@ -705,6 +716,8 @@ module FB3Reader {
 
 			this.BackgroundRenderFrame.BindToHTMLDoc(this.Site);
 			this.BackgroundRenderFrame.PagesToRender = new Array(100);
+			this.CanvasW = this.Site.Canvas.clientWidth;
+			this.CanvasH = this.Site.Canvas.clientHeight;
 		}
 
 		public AfterCanvasResize() {
@@ -712,12 +725,16 @@ module FB3Reader {
 				clearTimeout(this.OnResizeTimeout);
 			}
 			this.OnResizeTimeout = setTimeout(() => {
-				for (var I = 0; I < this.Pages.length; I++) {
-					this.Pages[I].Reset();
+				// This was a real resise
+				if (this.CanvasW != this.Site.Canvas.clientWidth ||
+					this.CanvasH != this.Site.Canvas.clientHeight) {
+					for (var I = 0; I < this.Pages.length; I++) {
+						this.Pages[I].Reset();
+					}
+					this.PrepareCanvas();
+					this.GoTO(this.CurStartPos.slice(0));
+					this.OnResizeTimeout = undefined;
 				}
-				this.PrepareCanvas();
-				this.GoTO(this.CurStartPos.slice(0));
-				this.OnResizeTimeout = undefined;
 			} , 200)
 		}
 
@@ -809,7 +826,7 @@ module FB3Reader {
 							this.LastPage = undefined;
 							this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
 						}
-						this.IdleAction = 'fill_page';
+						this.IdleAction = 'wait';
 
 						// Kind of lightweight DrawInit here, it looks like copy-paste is reasonable here
 						this.BackgroundRenderFrame.RenderInstr = PageToPrerender;
@@ -822,26 +839,32 @@ module FB3Reader {
 						Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
 						this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_',
-							(PageData: FB3DOM.IPageContainer) => this.IdleGo(PageData));
+							(PageData: FB3DOM.IPageContainer) => {
+								this.IdleAction = 'fill_page';
+								this.IdleGo(PageData)
+							});
+						break;
 					case 'fill_page':
 						this.LastPage = undefined;
 						if (PageData) {
 							this.BackgroundRenderFrame.DrawEnd(PageData)
 						}
 						this.IdleAction = 'load_page';
+						break;
 					default:
 				}
 			}
 		}
 		public IdleOn(): void {
+			clearInterval(this.IdleTimeoutID);
 			this.IsIdle = true;
 			this.Site.IdleThreadProgressor.HourglassOn(this);
-			this.IdleGo()
-			this.ItleTimeoutID = setInterval(() => { this.IdleGo() }, 20)
+			this.IdleGo();
+			// Looks like small delay prevents garbage collector from doing it's job - so we let it breath a bit
+			this.IdleTimeoutID = setInterval(() => { this.IdleGo() }, 100);
 		}
 
 		public IdleOff(): void {
-			clearInterval(this.ItleTimeoutID);
 			this.IsIdle = false;
 		}
 	}

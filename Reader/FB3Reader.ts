@@ -243,6 +243,7 @@ module FB3Reader {
 			this.Element.Node.innerHTML =  PageData.Body.join('');
 			if (PageData.FootNotes.length) {
 				this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
+				this.NotesElement.Node.style.display = 'block';
 			}
 //			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
@@ -310,7 +311,6 @@ module FB3Reader {
 //			this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
 			this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
 			if (this.RenderInstr.NotesHeight) {
-				this.NotesElement.Node.style.display = 'block'
 				this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
 				this.NotesElement.Node.style.top = (this.Element.Height
 					- this.Element.MarginTop
@@ -382,7 +382,9 @@ module FB3Reader {
 				var ChildBot = Child.offsetTop + Math.max(SH, OH);
 
 				if (SH != OH) {
-					ChildBot++;
+					// While calculating browser's widths&heights you can find that 1+1+3. We "round" it up
+					// if things look suspisiously
+					ChildBot++; 
 				}
 
 				if (!NoMoreFootnotesHere) {
@@ -427,13 +429,13 @@ module FB3Reader {
 					}
 					var CurShift: number = Child.offsetTop;
 					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
-						CurShift += Math.floor(Math.max(SH, OH) / 2);
-					} else {
-						var NextChild = <HTMLElement> Element.children[I + 1];
+						CurShift += Math.floor(Math.max(SH, OH) / 2); // what is this, hm?
+					}// else {
+					//	var NextChild = <HTMLElement> Element.children[I + 1];
 						//if (NextChild && NextChild.innerHTML.match(/^\u00AD/)) {
 						//	Child.innerHTML += '_';
 						//}
-					}
+					//}
 					var OffsetParent = Child.offsetParent;
 					var ApplyShift: number;
 					if (LastOffsetParent == OffsetParent) {
@@ -447,7 +449,7 @@ module FB3Reader {
 					LastOffsetParent = OffsetParent;
 					Element = Child;
 					ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
-					if (ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected) {
+					if (!PrevPageBreaker && ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected) {
 						// So, it looks like we do not fit because of the footnote, not the falling out text itself.
 						// Let's force page break on the previous line end - kind of time machine
 						I = LastLineBreakerPos;
@@ -521,8 +523,8 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-				this.CurStartPos = [735,76];
-//			this.CurStartPos = [0];
+//				this.CurStartPos = [735,76];
+			this.CurStartPos = [1];
 
 			this.IdleOff();
 		}
@@ -856,6 +858,7 @@ module FB3Reader {
 			}
 		}
 		public IdleOn(): void {
+			return; // debug
 			clearInterval(this.IdleTimeoutID);
 			this.IsIdle = true;
 			this.Site.IdleThreadProgressor.HourglassOn(this);

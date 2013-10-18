@@ -35,9 +35,9 @@ var FB3ReaderSite;
             this.Progresses[Owner] = Progress;
             var N = 0;
             var OverallProgress = 0;
-            for (var Progress in this.Progresses) {
+            for (var ProgressInst in this.Progresses) {
                 N++;
-                OverallProgress = this.Progresses[Progress];
+                OverallProgress = this.Progresses[ProgressInst];
             }
             OverallProgress = OverallProgress / N;
             document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);

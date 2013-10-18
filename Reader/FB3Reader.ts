@@ -578,6 +578,7 @@ module FB3Reader {
 
 
 		public GoTO(NewPos: IPosition) {
+			clearTimeout(this.MoveTimeoutID);
 			this.IdleOff();
 //			console.log('GoTO ' + NewPos);
 			this.CurStartPos = NewPos.slice(0); // NewPos is going to be destroyed, we need a hardcopy
@@ -591,6 +592,7 @@ module FB3Reader {
 		public GoTOPage(Page: number): void {
 			// Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
 			// set, NColumns per one. Let's see what start column we are going to deal with
+			clearTimeout(this.MoveTimeoutID);
 			var RealStartPage = Math.floor(Page / this.NColumns) * this.NColumns;
 
 			var FirstPageNToRender: number;
@@ -662,6 +664,7 @@ module FB3Reader {
 		}
 
 		public GoToOpenPosition(NewPos: IPosition): void {
+			clearTimeout(this.MoveTimeoutID);
 			this.CurStartPos = NewPos.slice(0);
 			var FragmentEnd = NewPos[0] + 10;
 			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {

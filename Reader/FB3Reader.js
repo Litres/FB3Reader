@@ -494,6 +494,7 @@ var FB3Reader;
         };
 
         Reader.prototype.GoTO = function (NewPos) {
+            clearTimeout(this.MoveTimeoutID);
             this.IdleOff();
 
             //			console.log('GoTO ' + NewPos);
@@ -508,6 +509,7 @@ var FB3Reader;
         Reader.prototype.GoTOPage = function (Page) {
             // Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
             // set, NColumns per one. Let's see what start column we are going to deal with
+            clearTimeout(this.MoveTimeoutID);
             var RealStartPage = Math.floor(Page / this.NColumns) * this.NColumns;
 
             var FirstPageNToRender;
@@ -578,6 +580,7 @@ var FB3Reader;
         };
 
         Reader.prototype.GoToOpenPosition = function (NewPos) {
+            clearTimeout(this.MoveTimeoutID);
             this.CurStartPos = NewPos.slice(0);
             var FragmentEnd = NewPos[0] + 10;
             if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {

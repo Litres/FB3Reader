@@ -22,12 +22,6 @@ my $XML = $ARGV[0];
 my $XSL = $ARGV[1];
 my $Out = $ARGV[2];
 
-my $OutFolder = $Out;
-$OutFolder =~ s/([\/\\])([^\/\\]+)$/$1/;
-#my $PathAdd = $2;
-
-
-#
 #my $XML = 'C:/Work/FictionHub/tmp/Vyigotskiyi_vyi_L._Psihologiya_Iskusstva.fb2';
 #my $XSL = 'C:/Work/FictionHub/xsl/convert/FB2_2_json.xsl';
 #my $Out = 'C:\Work\FictionHub\cgi\static\out.html';
@@ -92,7 +86,7 @@ if (-f $XML) {
 sub HypheNOBR {
 	my ($Word, $NOBRCharSeq) = @_;
 
-	$Word = EscString($Word);
+#	$Word = EscString($Word);
 	my $Esc = $HyphCache{$Word} || XPortal::Hyphenate::HyphString($Word);
 
 	unless ($Esc =~ s/\xAD?([^\xAD]+)$/<nobr>$1/s) {
@@ -235,7 +229,7 @@ sub GetImageID {
 		my $ContentType=$_->getAttribute('content-type');
 
 		if (defined($id) && $ContentType=~ /image\/(jpeg|png|gif)/i) {
-			my $FN="$OutFolder$id";
+			my $FN="$Out.$id";
 			open IMGFILE, ">$FN" or die "$FN: $!";
 			binmode IMGFILE;
 			print (IMGFILE decode_base64($_->string_value()));

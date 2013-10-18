@@ -161,4 +161,22 @@ div.FB2readerPage p.footnote {
     margin-left: 0.3em;
 }
 
+.FB2readerPage img {
+    background-color:white;
+    text-align: center;
+}
+
+a.ZoomAnchor {
+    text-decoration:none;
+}
+div.SmallImgZoom2 {
+    padding: 0.1em 0.2em 0.2em 0.2em;
+    background-color: silver;
+    border: 1px solid black;
+} 
+div.SmallImgZoom1 {
+    opacity: 0.4;
+    filter: alpha(opacity=40); /* For IE8 and earlier */
+}
+
 /* debug */

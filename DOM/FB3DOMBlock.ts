@@ -1,4 +1,4 @@
-/// <reference path="FB3DOMHead.ts" />
+﻿/// <reference path="FB3DOMHead.ts" />
 
 module FB3DOM {
 	export var TagMapper = {
@@ -14,7 +14,8 @@ module FB3DOM {
 		'empty-line': 'hr',
 		emphasis: 'em',		style: 'span',
 		footnote: 'div',
-		nobr: 'span'
+		nobr: 'span',
+		image: 'img',
 	};
 
 	export class FB3Text implements IFB3Block {
@@ -25,7 +26,7 @@ module FB3DOM {
 //			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 		}
-		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix:string, PageData: IPageContainer) {
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
 			var OutStr = this.text;
 			if (Range.To[0]) {
 				OutStr = OutStr.substr(0, Range.To[0]);
@@ -37,6 +38,10 @@ module FB3DOM {
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
 			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">'+OutStr+'</span>');  // todo - HyphOn must work, must just replace shy with ''
+		}
+
+		public ArtID2URL(Chunk?: string): string {
+			return this.Parent.ArtID2URL(Chunk);
 		}
 
 		//public GetXPID(): string {
@@ -60,11 +65,11 @@ module FB3DOM {
 		public TagName: string;
 		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, PageData: IPageContainer) {
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
 			if (this.IsFootnote) {
-				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix));
+				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
 			} else {
-				PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix));
+				PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
 			}
 			var CloseTag = this.GetCloseTag(Range);
 			var From = Range.From.shift() || 0;
@@ -90,7 +95,7 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, PageData);
+				this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData);
 			}
 			(this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
 		}
@@ -143,7 +148,7 @@ module FB3DOM {
 		public GetCloseTag(Range: IRange): string {
 			return '</' + this.HTMLTagName() + '>';
 		}
-		public GetInitTag(Range: IRange, IDPrefix:string): InnerHTML[] {
+		public GetInitTag(Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number): InnerHTML[] {
 			var ElementClasses = new Array();
 			if (Range.From[0] > 0) {
 				ElementClasses.push('cut_top')
@@ -168,11 +173,33 @@ module FB3DOM {
 				ElementClasses.push(this.Data.nc)
 			}
 
-			var Out = ['<' + this.HTMLTagName()];
+			var Out: string[];
+
+			if (this.TagName == 'image') {
+				var W = this.Data.w;
+				var H = this.Data.h;
+				var Path = this.ArtID2URL(this.Data.s);
+				// Image is loo large to fit the screen - forcibly zoom it out
+				if (W > ViewPortW || H > ViewPortH) {
+					var Aspect = Math.min((ViewPortW - 1) / W, (ViewPortH - 1) / H);
+					W = Math.floor(W * Aspect);
+					H = Math.floor(H * Aspect);
+					ElementClasses.push('zoomedout');
+					Out = ['<div style="position:absolute;" class="SmallImgZoom1"><div style="position:relative;left:0.5em;top:0.5em;" class="SmallImgZoom2"><a href="javascript:ZoomImg(\''
+						+ Path + '\',' + this.Data.w + ',' + this.Data.h + ');return false;" class="ZoomAnchor">◄ Zoom ►</a></div></div><'
+						+ this.HTMLTagName()];
+				} else {
+					Out = ['<' + this.HTMLTagName()];
+				}
+
+				Out.push(' width="' + W + '" height="' + H + '" src="' + Path + '" alt="-"');
+			} else {
+				Out = ['<' + this.HTMLTagName()];
+			}
+
 			if (ElementClasses.length) {
 				Out.push(' class="' + ElementClasses.join(' ') + '"');
 			}
-
 			//if (this.data.css) {
 			//	out += ' style="' + this.data.css + '"';
 			//}

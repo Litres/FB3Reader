@@ -11,6 +11,8 @@ var FB3DataProvider;
             var OutURL = '/DataProvider/AjaxExample/' + ArtID + '.';
             if (Chunk == null) {
                 OutURL += 'toc.js';
+            } else if (Chunk.match(/\./)) {
+                OutURL += Chunk;
             } else {
                 OutURL += this.zeroPad(Chunk, 3) + '.js?rand=' + Math.random();
             }

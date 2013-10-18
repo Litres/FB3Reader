@@ -27,6 +27,9 @@ module FB3DOM {
 		i?: string;				// FB/HTML ID (may be user as anchor target f.e.)
 		href?: string;		// Anchor
 		f?: any;					// Footnote contents
+		w?: number;				// image width
+		h?: number;				// image height
+		s?: string;				// image src attribute
 	}
 
 	export interface IDataDisposition {
@@ -42,7 +45,9 @@ module FB3DOM {
 		Chars: number;			// Length of the node - pure characters and spaces
 		ID: number;					// Position of this node within the parent. Used to generate GetXPID
 		TagName?: string;		// Native tag name. May be mapped to HTML with another tag name
-		GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, PageData: IPageContainer);	// Returns partial HTML for this node
+		// Returns partial HTML for this node
+		ArtID2URL(Chunk?: string): string;
+		GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer);
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -54,12 +59,15 @@ module FB3DOM {
 		DataProvider: FB3DataProvider.IJsonLoaderFactory;
 		TOC: ITOC[];
 		DataChunks: IDataDisposition[];
+		ArtID2URL(Chunk?: string): string;
 		Init(HyphOn: boolean,
 			ArtID: string,
 			OnDone: IIFB3DOMReadyFunc);
 		GetHTMLAsync(HyphOn: boolean,
 			Range: IRange,
 			IDPrefix: string,
+			ViewPortW: number,
+			ViewPortH: number,
 			Callback: IDOMTextReadyCallback): void;
 	}
 

@@ -82,6 +82,8 @@ module FB3Reader {
 		Height: number;
 		MarginTop: number;
 		MarginBottom: number;
+		MarginLeft: number;
+		MarginRight: number;
 	}
 
 	class ReaderPage {
@@ -92,6 +94,8 @@ module FB3Reader {
 		private Site: FB3ReaderSite.IFB3ReaderSite;
 		private Visible: boolean;
 		private Width: number;
+		public ViewPortW: number;
+		public ViewPortH: number;
 		public RenderInstr: IPageRenderInstruction;
 		public PagesToRender: IPageRenderInstruction[];
 		public ID: number;
@@ -143,18 +147,35 @@ module FB3Reader {
 			var Width = Element.offsetWidth;
 			var Height = Element.parentElement.offsetHeight;
 			var MarginTop; var MarginBottom;
+			var MarginLeft; var MarginRight;
 			if (document.all) {// IE
 				MarginTop = HardcoreParseInt(Element.currentStyle.marginTop)
-				+ HardcoreParseInt(Element.currentStyle.paddingTop);
+					+ HardcoreParseInt(Element.currentStyle.paddingTop);
 				MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom)
-				+ HardcoreParseInt(Element.currentStyle.paddingBottom);
+					+ HardcoreParseInt(Element.currentStyle.paddingBottom);
+				MarginLeft = HardcoreParseInt(Element.currentStyle.marginTop)
+					+ HardcoreParseInt(Element.currentStyle.paddingLeft);
+				MarginRight = HardcoreParseInt(Element.currentStyle.marginRight)
+					+ HardcoreParseInt(Element.currentStyle.paddingRight);
 			} else {// Mozilla
 				MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top'))
 				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
 				MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom'))
 				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
+				MarginLeft = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-left'))
+				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-left'));
+				MarginRight = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-right'))
+				+ parseInt(getComputedStyle(Element, '').getPropertyValue('padding-right'));
 			}
-			return { Node: Element, Width: Width, Height: Height, MarginTop: MarginTop, MarginBottom: MarginBottom };
+			return {
+				Node: Element,
+				Width: Width,
+				Height: Height,
+				MarginTop: MarginTop,
+				MarginBottom: MarginBottom,
+				MarginLeft: MarginLeft,
+				MarginRight: MarginRight
+			};
 		}
 		BindToHTMLDoc(Site: FB3ReaderSite.IFB3ReaderSite): void {
 			this.Site = Site;
@@ -163,6 +184,8 @@ module FB3Reader {
 			this.ParentElement = <HTMLDivElement> this.Element.Node.parentElement;
 			this.Visible = false;
 			this.Width = Math.floor(this.Site.Canvas.scrollWidth / this.FBReader.NColumns);
+			this.ViewPortH = this.ParentElement.scrollHeight - this.Element.MarginTop - this.Element.MarginBottom;
+			this.ViewPortW = this.Element.Width - this.Element.MarginLeft - this.Element.MarginRight;
 			this.ParentElement.style.width = this.Width + 'px';
 			this.ParentElement.style.position = 'absolute';
 			this.ParentElement.style.left = (this.Width * this.ColumnN)+'px';
@@ -222,7 +245,12 @@ module FB3Reader {
 				Range = this.DefaultRangeApply(this.RenderInstr);
 			}
 
-			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), this.ID + '_', (PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData));
+			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON,
+				RangeClone(Range),
+				this.ID + '_',
+				this.ViewPortW,
+				this.ViewPortH,
+				(PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData));
 		}
 		
 		// Take a poind and add PrerenderBlocks of blocks to it
@@ -523,8 +551,8 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-//				this.CurStartPos = [735,76];
-			this.CurStartPos = [1];
+				this.CurStartPos = [495,0];
+//			this.CurStartPos = [1];
 
 			this.IdleOff();
 		}
@@ -840,7 +868,11 @@ module FB3Reader {
 						var Range: FB3DOM.IRange;
 						Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
-						this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_',
+						this.FB3DOM.GetHTMLAsync(this.HyphON,
+							RangeClone(Range),
+							this.BackgroundRenderFrame.ID + '_',
+							this.BackgroundRenderFrame.ViewPortW,
+							this.BackgroundRenderFrame.ViewPortH,
 							(PageData: FB3DOM.IPageContainer) => {
 								this.IdleAction = 'fill_page';
 								this.IdleGo(PageData)
@@ -858,7 +890,6 @@ module FB3Reader {
 			}
 		}
 		public IdleOn(): void {
-			return; // debug
 			clearInterval(this.IdleTimeoutID);
 			this.IsIdle = true;
 			this.Site.IdleThreadProgressor.HourglassOn(this);

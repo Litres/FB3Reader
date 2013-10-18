@@ -1,4 +1,4 @@
-/// <reference path="FB3DOMHead.ts" />
+﻿/// <reference path="FB3DOMHead.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -21,7 +21,8 @@ var FB3DOM;
         emphasis: 'em',
         style: 'span',
         footnote: 'div',
-        nobr: 'span'
+        nobr: 'span',
+        image: 'img'
     };
 
     var FB3Text = (function () {
@@ -35,7 +36,7 @@ var FB3DOM;
             //			this.text = this.text.replace('\u00AD', '&shy;')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
         }
-        FB3Text.prototype.GetHTML = function (HyphOn, Range, IDPrefix, PageData) {
+        FB3Text.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
             var OutStr = this.text;
             if (Range.To[0]) {
                 OutStr = OutStr.substr(0, Range.To[0]);
@@ -47,6 +48,10 @@ var FB3DOM;
             var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
             TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">' + OutStr + '</span>');
+        };
+
+        FB3Text.prototype.ArtID2URL = function (Chunk) {
+            return this.Parent.ArtID2URL(Chunk);
         };
         return FB3Text;
     })();
@@ -87,11 +92,11 @@ var FB3DOM;
                 }
             }
         }
-        FB3Tag.prototype.GetHTML = function (HyphOn, Range, IDPrefix, PageData) {
+        FB3Tag.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
             if (this.IsFootnote) {
-                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix));
+                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
             } else {
-                PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix));
+                PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
             }
             var CloseTag = this.GetCloseTag(Range);
             var From = Range.From.shift() || 0;
@@ -117,7 +122,7 @@ var FB3DOM;
                 if (I == To) {
                     KidRange.To = Range.To;
                 }
-                this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, PageData);
+                this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData);
             }
             (this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
         };
@@ -138,7 +143,7 @@ var FB3DOM;
         FB3Tag.prototype.GetCloseTag = function (Range) {
             return '</' + this.HTMLTagName() + '>';
         };
-        FB3Tag.prototype.GetInitTag = function (Range, IDPrefix) {
+        FB3Tag.prototype.GetInitTag = function (Range, IDPrefix, ViewPortW, ViewPortH) {
             var ElementClasses = new Array();
             if (Range.From[0] > 0) {
                 ElementClasses.push('cut_top');
@@ -163,7 +168,30 @@ var FB3DOM;
                 ElementClasses.push(this.Data.nc);
             }
 
-            var Out = ['<' + this.HTMLTagName()];
+            var Out;
+
+            if (this.TagName == 'image') {
+                var W = this.Data.w;
+                var H = this.Data.h;
+                var Path = this.ArtID2URL(this.Data.s);
+
+                if (W > ViewPortW || H > ViewPortH) {
+                    var Aspect = Math.min((ViewPortW - 1) / W, (ViewPortH - 1) / H);
+                    W = Math.floor(W * Aspect);
+                    H = Math.floor(H * Aspect);
+                    ElementClasses.push('zoomedout');
+                    Out = [
+                        '<div style="position:absolute;" class="SmallImgZoom1"><div style="position:relative;left:0.5em;top:0.5em;" class="SmallImgZoom2"><a href="javascript:ZoomImg(\'' + Path + '\',' + this.Data.w + ',' + this.Data.h + ');return false;" class="ZoomAnchor">◄ Zoom ►</a></div></div><' + this.HTMLTagName()
+                    ];
+                } else {
+                    Out = ['<' + this.HTMLTagName()];
+                }
+
+                Out.push(' width="' + W + '" height="' + H + '" src="' + Path + '" alt="-"');
+            } else {
+                Out = ['<' + this.HTMLTagName()];
+            }
+
             if (ElementClasses.length) {
                 Out.push(' class="' + ElementClasses.join(' ') + '"');
             }

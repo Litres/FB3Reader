@@ -9,12 +9,14 @@ var __extends = this.__extends || function (d, b) {
 var FB3DOM;
 (function (FB3DOM) {
     var AsyncLoadConsumer = (function () {
-        function AsyncLoadConsumer(FB3DOM, WaitedBlocks, HyphOn, Range, IDPrefix, OnDone) {
+        function AsyncLoadConsumer(FB3DOM, WaitedBlocks, HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, OnDone) {
             this.FB3DOM = FB3DOM;
             this.WaitedBlocks = WaitedBlocks;
             this.HyphOn = HyphOn;
             this.Range = Range;
             this.IDPrefix = IDPrefix;
+            this.ViewPortW = ViewPortW;
+            this.ViewPortH = ViewPortH;
             this.OnDone = OnDone;
         }
         AsyncLoadConsumer.prototype.BlockLoaded = function (N) {
@@ -26,7 +28,7 @@ var FB3DOM;
             }
             if (!this.WaitedBlocks.length) {
                 var PageData = new PageContainer();
-                var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, PageData);
+                var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
                 this.OnDone(PageData);
                 return true;
             } else {
@@ -88,15 +90,15 @@ var FB3DOM;
             }, this.Progressor);
             this.Progressor.HourglassOff(this);
         };
-        DOM.prototype.GetHTMLAsync = function (HyphOn, Range, IDPrefix, Callback) {
+        DOM.prototype.GetHTMLAsync = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, Callback) {
             var _this = this;
             var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
             if (MissingChunks.length == 0) {
                 var PageData = new PageContainer();
-                this.GetHTML(HyphOn, Range, IDPrefix, PageData);
+                this.GetHTML(HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
                 Callback(PageData);
             } else {
-                this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, IDPrefix, Callback));
+                this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, Callback));
                 for (var I = 0; I < MissingChunks.length; I++) {
                     if (!this.DataChunks[MissingChunks[I]].loaded) {
                         var AjRequest = this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]), function (Data, CustomData) {
@@ -109,7 +111,11 @@ var FB3DOM;
         };
 
         DOM.prototype.ChunkUrl = function (N) {
-            return this.DataProvider.ArtID2URL(this.ArtID, N);
+            return this.ArtID2URL(N);
+        };
+
+        DOM.prototype.ArtID2URL = function (Chunk) {
+            return this.DataProvider.ArtID2URL(this.ArtID, Chunk.toString());
         };
 
         DOM.prototype.OnChunkLoaded = function (Data, CustomData) {

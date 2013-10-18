@@ -6,10 +6,12 @@ module FB3DataProvider {
 		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
 			new AjaxLoader(URL, Callback, Progressor, CustomData);
 		}
-		public ArtID2URL(ArtID: string, Chunk?: number): string {
+		public ArtID2URL(ArtID: string, Chunk?: string): string {
 			var OutURL = '/DataProvider/AjaxExample/' + ArtID+'.';
 			if (Chunk == null) {
 				OutURL += 'toc.js';
+			} else if (Chunk.match(/\./)) {
+				OutURL += Chunk;
 			} else {
 				OutURL += this.zeroPad(Chunk,3) + '.js?rand=' + Math.random();
 			}

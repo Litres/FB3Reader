@@ -102,14 +102,28 @@ var FB3Reader;
             var Height = Element.parentElement.offsetHeight;
             var MarginTop;
             var MarginBottom;
+            var MarginLeft;
+            var MarginRight;
             if (document.all) {
                 MarginTop = HardcoreParseInt(Element.currentStyle.marginTop) + HardcoreParseInt(Element.currentStyle.paddingTop);
                 MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom) + HardcoreParseInt(Element.currentStyle.paddingBottom);
+                MarginLeft = HardcoreParseInt(Element.currentStyle.marginTop) + HardcoreParseInt(Element.currentStyle.paddingLeft);
+                MarginRight = HardcoreParseInt(Element.currentStyle.marginRight) + HardcoreParseInt(Element.currentStyle.paddingRight);
             } else {
                 MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
                 MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
+                MarginLeft = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-left')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-left'));
+                MarginRight = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-right')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-right'));
             }
-            return { Node: Element, Width: Width, Height: Height, MarginTop: MarginTop, MarginBottom: MarginBottom };
+            return {
+                Node: Element,
+                Width: Width,
+                Height: Height,
+                MarginTop: MarginTop,
+                MarginBottom: MarginBottom,
+                MarginLeft: MarginLeft,
+                MarginRight: MarginRight
+            };
         };
         ReaderPage.prototype.BindToHTMLDoc = function (Site) {
             this.Site = Site;
@@ -118,6 +132,8 @@ var FB3Reader;
             this.ParentElement = this.Element.Node.parentElement;
             this.Visible = false;
             this.Width = Math.floor(this.Site.Canvas.scrollWidth / this.FBReader.NColumns);
+            this.ViewPortH = this.ParentElement.scrollHeight - this.Element.MarginTop - this.Element.MarginBottom;
+            this.ViewPortW = this.Element.Width - this.Element.MarginLeft - this.Element.MarginRight;
             this.ParentElement.style.width = this.Width + 'px';
             this.ParentElement.style.position = 'absolute';
             this.ParentElement.style.left = (this.Width * this.ColumnN) + 'px';
@@ -169,7 +185,7 @@ var FB3Reader;
                 Range = this.DefaultRangeApply(this.RenderInstr);
             }
 
-            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), this.ID + '_', function (PageData) {
+            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, RangeClone(Range), this.ID + '_', this.ViewPortW, this.ViewPortH, function (PageData) {
                 return _this.DrawEnd(PageData);
             });
         };
@@ -448,10 +464,9 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
+            this.CurStartPos = [495, 0];
 
-            //				this.CurStartPos = [735,76];
-            this.CurStartPos = [1];
-
+            //			this.CurStartPos = [1];
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -775,7 +790,7 @@ var FB3Reader;
                         var Range;
                         Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
-                        this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_', function (PageData) {
+                        this.FB3DOM.GetHTMLAsync(this.HyphON, RangeClone(Range), this.BackgroundRenderFrame.ID + '_', this.BackgroundRenderFrame.ViewPortW, this.BackgroundRenderFrame.ViewPortH, function (PageData) {
                             _this.IdleAction = 'fill_page';
                             _this.IdleGo(PageData);
                         });
@@ -793,7 +808,6 @@ var FB3Reader;
         };
         Reader.prototype.IdleOn = function () {
             var _this = this;
-            return;
             clearInterval(this.IdleTimeoutID);
             this.IsIdle = true;
             this.Site.IdleThreadProgressor.HourglassOn(this);

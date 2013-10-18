@@ -14,7 +14,7 @@ module FB3DOM {
 			}
 			if (!this.WaitedBlocks.length) {
 				var PageData = new PageContainer();
-				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, PageData);
+				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
 				this.OnDone(PageData);
 				return true;
 			} else {
@@ -26,6 +26,8 @@ module FB3DOM {
 			private HyphOn: boolean,
 			private Range: IRange,
 			private IDPrefix: string,
+			private ViewPortW: number,
+			private ViewPortH: number,
 			private OnDone: IDOMTextReadyCallback) {
 		}
 	}
@@ -89,15 +91,15 @@ module FB3DOM {
 			this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 			this.Progressor.HourglassOff(this);
 		}
-		public GetHTMLAsync(HyphOn: boolean, Range: IRange, IDPrefix: string, Callback: IDOMTextReadyCallback): void {
+		public GetHTMLAsync(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, Callback: IDOMTextReadyCallback): void {
 		
 			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
 			if (MissingChunks.length == 0) {
 				var PageData = new PageContainer();
-				this.GetHTML(HyphOn, Range, IDPrefix, PageData);
+				this.GetHTML(HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
 				Callback(PageData);
 			} else {
-				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, IDPrefix, Callback));
+				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, Callback));
 				for (var I = 0; I < MissingChunks.length; I++) {
 					if (!this.DataChunks[MissingChunks[I]].loaded) {
 						var AjRequest = this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]),
@@ -111,8 +113,13 @@ module FB3DOM {
 		}
 
 		public ChunkUrl(N: number): string {
-			return this.DataProvider.ArtID2URL(this.ArtID, N);
+			return this.ArtID2URL(N);
 		}
+
+		public ArtID2URL(Chunk?: number): string {
+			return this.DataProvider.ArtID2URL(this.ArtID, Chunk.toString());
+		}
+
 
 		private OnChunkLoaded(Data: Array<IJSONBlock>, CustomData?: any):void {
 			

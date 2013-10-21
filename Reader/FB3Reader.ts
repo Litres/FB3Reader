@@ -262,6 +262,13 @@ module FB3Reader {
 			return { From: RenderInstr.Start.slice(0), To: [FragmentEnd] };
 		}
 
+		CleanPage() {
+			this.NotesElement.Node.innerHTML = this.Element.Node.innerHTML = '';
+			this.PageN = undefined;
+			this.Ready = true;
+			this.Pending = false;
+		}
+
 		DrawEnd(PageData: FB3DOM.IPageContainer) {
 			//			console.log('DrawEnd ' + this.ID);
 			if (this.Reseted) {
@@ -279,18 +286,34 @@ module FB3Reader {
 
 				// We can have not enough content to fill the page. Sometimes we will refill it,
 				// but sometimes (doc end or we only 
-				if (!FallOut.EndReached &&
-					this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
-					// Ups, our page is incomplete - have to retry filling it. Take more data now
-					this.PrerenderBlocks *= 2;
-					this.RenderInstr.Range = null;
-					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-					return;
+				if (!FallOut.EndReached) {
+					if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
+						// Ups, our page is incomplete - have to retry filling it. Take more data now
+						this.PrerenderBlocks *= 2;
+						this.RenderInstr.Range = null;
+						this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+						return;
+					} else if (this.Next) { // Unless this is prerender frrame, otherwase no need to bother
+						var NP = this;
+						for (var I = 0; I < this.PagesToRender.length; I++) {
+							NP = NP.Next;
+							NP.CleanPage();
+							NP.Ready = false;
+							NP.RenderInstr.Range = { From: [-1], To: [-1] };
+						}
+					}
+					this.PagesToRender = [];
+					this.RenderInstr.Range = {
+						From: this.RenderInstr.Start.splice(0),
+						To: FallOut.FallOut
+					};
+					this.RenderInstr.Range.To[0]++;
+				} else {
+					this.RenderInstr.Range = {
+						From: this.RenderInstr.Start.splice(0),
+						To: FallOut.FallOut
+					};
 				}
-				this.RenderInstr.Range = {
-					From: this.RenderInstr.Start.splice(0),
-					To: FallOut.FallOut
-				};
 				this.RenderInstr.Height = FallOut.Height;
 				this.RenderInstr.NotesHeight = FallOut.NotesHeight;
 
@@ -305,7 +328,7 @@ module FB3Reader {
 				// content to create next page(s) with EXACTLY the required html - this will
 				// speed up the render
 				var LastChild = <HTMLElement> this.Element.Node.children[this.Element.Node.children.length - 1];
-				if (LastChild) {
+				if (FallOut.EndReached && LastChild) {
 					var CollectedHeight = FallOut.Height;
 					var CollectedNotesHeight = FallOut.NotesHeight;
 					var PrevTo: Array;
@@ -438,7 +461,7 @@ module FB3Reader {
 				}
 
 				var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : FootnotesAddonCollected;
-				if ((ChildBot + FootnotesHeightNow < Limit) && !PrevPageBreaker) {
+				if ((ChildBot + FootnotesHeightNow < Limit) && !PrevPageBreaker) { // Page is still not filled
 					ForceDenyElementBreaking = false;
 					if (FootnotesAddon) { FootnotesAddonCollected = FootnotesAddon };
 					if (Math.abs(LastFullLinePosition - ChildBot) > 1) { // +1 because of the browser positioning rounding on the zoomed screen
@@ -500,6 +523,7 @@ module FB3Reader {
 				Addr = Element.id.split('_');
 			} else {
 				Addr = Child.id.split('_');
+				GoodHeight = this.Element.Node.scrollHeight;
 			}
 
 			Addr.shift();
@@ -590,6 +614,10 @@ module FB3Reader {
 			}
 		}
 		public GoTOPage(Page: number): void {
+			if (this.LastPage && Page > this.LastPage) {
+				this.Site.NotePopup('Paging beyong the file end');
+				return;
+			}
 			// Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
 			// set, NColumns per one. Let's see what start column we are going to deal with
 			clearTimeout(this.MoveTimeoutID);
@@ -626,7 +654,7 @@ module FB3Reader {
 				this.IdleOn();																	// maybe we go to the same place several times? Anyway, quit!
 				return;
 			} else if (!WeeHaveFoundReadyPage) {							// No prerendered page found, bad luck. We start rendering
-				FirstPageNToRender = RealStartPage;							// just as if we would while the application starts
+				FirstPageNToRender = RealStartPage;							// just as if we would during the application start
 				FirstFrameToFill = this.Pages[0];
 				this.PutBlockIntoView(0);
 			}
@@ -634,18 +662,28 @@ module FB3Reader {
 
 			var CacheBroken = false;
 			var NewInstr: IPageRenderInstruction[] = new Array();
+			var PageWeThinkAbout = FirstFrameToFill;
 			for (var I = FirstPageNToRender; I < RealStartPage + (this.CacheForward + 1) * this.NColumns; I++) {
-				if (!CacheBroken && this.PagesPositionsCache[I]) {
-					NewInstr.push(PRIClone(this.PagesPositionsCache[I]));
-				} else {
-					if (!CacheBroken) {
-						CacheBroken = true;
-						NewInstr.push({ Start: this.PagesPositionsCache[I-1].Range.To.slice(0)});
-					} else {
-						NewInstr.push({});
+				if (this.LastPage && this.LastPage < I) { // This is the end, baby. The book is over
+					if (I < RealStartPage + this.NColumns) {
+						PageWeThinkAbout.CleanPage(); // We need some empty pages
+					} else {												// But only if they are visible
+						break;
 					}
-					NewInstr[NewInstr.length - 1].CacheAs = I;
+				} else {
+					if (!CacheBroken && this.PagesPositionsCache[I]) {
+						NewInstr.push(PRIClone(this.PagesPositionsCache[I]));
+					} else {
+						if (!CacheBroken) {
+							CacheBroken = true;
+							NewInstr.push({ Start: this.PagesPositionsCache[I - 1].Range.To.slice(0) });
+						} else {
+							NewInstr.push({});
+						}
+						NewInstr[NewInstr.length - 1].CacheAs = I;
+					}
 				}
+				PageWeThinkAbout = FirstFrameToFill.Next;
 			}
 			FirstFrameToFill.SetPending(NewInstr);
 			FirstFrameToFill.DrawInit(NewInstr); // IdleOn will fire after the DrawInit chain ends
@@ -666,12 +704,7 @@ module FB3Reader {
 		public GoToOpenPosition(NewPos: IPosition): void {
 			clearTimeout(this.MoveTimeoutID);
 			this.CurStartPos = NewPos.slice(0);
-			var FragmentEnd = NewPos[0] + 10;
-			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
-				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
-			}
-			var Range: FB3DOM.IRange = { From: NewPos, To: [FragmentEnd] };
-			//			console.log('GoToOpenPosition ' + NewPos);
+
 			var NewInstr: IPageRenderInstruction[] = [{ Start: NewPos }];
 
 			var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
@@ -791,6 +824,8 @@ module FB3Reader {
 			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
 				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) { // We know have many pages we have so we can check if the next one exists
 					this.GoTOPage(this.CurStartPage + this.NColumns);
+				} else if (this.LastPage && this.LastPage < this.CurStartPage + this.NColumns) {
+					return;
 				} else { // If cache is not yet ready - let's wait a bit.
 					this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
 				}
@@ -803,6 +838,8 @@ module FB3Reader {
 				if (!PageToView.Ready) {
 					if (PageToView.Pending) {
 						this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
+					} else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1) {
+						return; // EOF reached, the book is over
 					} else {
 						this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);
 					}
@@ -811,7 +848,7 @@ module FB3Reader {
 					this.PutBlockIntoView(PageToView.ID-1);
 				}
 			}
-			return false;
+			return;
 		}
 		public PageBackward() {
 			clearTimeout(this.MoveTimeoutID);
@@ -854,6 +891,7 @@ module FB3Reader {
 							this.IdleOff();
 							this.Site.IdleThreadProgressor.Progress(this, 100);
 							this.Site.IdleThreadProgressor.HourglassOff(this);
+							clearInterval(this.IdleTimeoutID);
 							return;
 						} else {
 							this.LastPage = undefined;
@@ -893,6 +931,7 @@ module FB3Reader {
 			}
 		}
 		public IdleOn(): void {
+			// return; // debug - switch off background caching.
 			clearInterval(this.IdleTimeoutID);
 			this.IsIdle = true;
 			this.Site.IdleThreadProgressor.HourglassOn(this);

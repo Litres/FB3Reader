@@ -114,7 +114,7 @@ module FB3Reader {
 				if (Prev) {
 					Prev.Next = this;
 				}
-				this.PrerenderBlocks = 10;
+				this.PrerenderBlocks = 4;
 				this.Ready = false;
 				this.Pending = false;
 		}
@@ -289,9 +289,11 @@ module FB3Reader {
 				if (!FallOut.EndReached) {
 					if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
 						// Ups, our page is incomplete - have to retry filling it. Take more data now
-						this.PrerenderBlocks *= 2;
+						//var BasePrerender = this.PrerenderBlocks;
+						this.PrerenderBlocks += 2;
 						this.RenderInstr.Range = null;
 						this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+						//this.PrerenderBlocks = BasePrerender;
 						return;
 					} else if (this.Next) { // Unless this is prerender frrame, otherwase no need to bother
 						var NP = this;
@@ -565,6 +567,7 @@ module FB3Reader {
 		private CanvasH: number;
 
 		constructor(public ArtID: string,
+			public EnableBackgroundPreRender: boolean,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM,
 			public Bookmarks: FB3Bookmarks.IBookmarks) {
@@ -575,8 +578,8 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.PagesPositionsCache = new Array();
-				this.CurStartPos = [495,0];
-//			this.CurStartPos = [1];
+//				this.CurStartPos = [495,0];
+			this.CurStartPos = [0];
 
 			this.IdleOff();
 		}
@@ -862,7 +865,11 @@ module FB3Reader {
 				if (GotoPage != undefined) {// All right, first we check if our current page IS on the ladder already
 					this.GoTOPage(GotoPage);  // If so - go to the ledder and never care of the rest
 				} else {										// If not - we can only wait for the ladder to come to us
-					this.MoveTimeoutID = setTimeout(() => { this.PageBackward() }, 50);
+					if (this.EnableBackgroundPreRender) { // We hope some day this will happend
+						this.MoveTimeoutID = setTimeout(() => { this.PageBackward() }, 50);
+					} else {  // No hope to have previous page rendered - for now we husr croak
+						alert('Backward paging not implemented yet, sory');
+					}
 				}
 			}
 		}
@@ -931,7 +938,9 @@ module FB3Reader {
 			}
 		}
 		public IdleOn(): void {
-			// return; // debug - switch off background caching.
+			if (!this.EnableBackgroundPreRender) {
+				return; // We do not want to prerender pages.
+			}
 			clearInterval(this.IdleTimeoutID);
 			this.IsIdle = true;
 			this.Site.IdleThreadProgressor.HourglassOn(this);

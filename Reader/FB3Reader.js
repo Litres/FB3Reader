@@ -73,7 +73,7 @@ var FB3Reader;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 10;
+            this.PrerenderBlocks = 4;
             this.Ready = false;
             this.Pending = false;
         }
@@ -224,9 +224,12 @@ var FB3Reader;
                 if (!FallOut.EndReached) {
                     if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
                         // Ups, our page is incomplete - have to retry filling it. Take more data now
-                        this.PrerenderBlocks *= 2;
+                        //var BasePrerender = this.PrerenderBlocks;
+                        this.PrerenderBlocks += 2;
                         this.RenderInstr.Range = null;
                         this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+
+                        //this.PrerenderBlocks = BasePrerender;
                         return;
                     } else if (this.Next) {
                         var NP = this;
@@ -478,8 +481,9 @@ var FB3Reader;
     })();
 
     var Reader = (function () {
-        function Reader(ArtID, Site, FB3DOM, Bookmarks) {
+        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks) {
             this.ArtID = ArtID;
+            this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
             this.Bookmarks = Bookmarks;
@@ -489,9 +493,10 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.PagesPositionsCache = new Array();
-            this.CurStartPos = [495, 0];
 
-            //			this.CurStartPos = [1];
+            //				this.CurStartPos = [495,0];
+            this.CurStartPos = [0];
+
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -783,9 +788,13 @@ var FB3Reader;
                 if (GotoPage != undefined) {
                     this.GoTOPage(GotoPage);
                 } else {
-                    this.MoveTimeoutID = setTimeout(function () {
-                        _this.PageBackward();
-                    }, 50);
+                    if (this.EnableBackgroundPreRender) {
+                        this.MoveTimeoutID = setTimeout(function () {
+                            _this.PageBackward();
+                        }, 50);
+                    } else {
+                        alert('Backward paging not implemented yet, sory');
+                    }
                 }
             }
         };
@@ -850,7 +859,9 @@ var FB3Reader;
         };
         Reader.prototype.IdleOn = function () {
             var _this = this;
-            // return; // debug - switch off background caching.
+            if (!this.EnableBackgroundPreRender) {
+                return;
+            }
             clearInterval(this.IdleTimeoutID);
             this.IsIdle = true;
             this.Site.IdleThreadProgressor.HourglassOn(this);

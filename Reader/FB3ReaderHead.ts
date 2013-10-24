@@ -19,6 +19,7 @@ module FB3Reader {
 		HyphON: boolean;
 		BookStyleNotes: boolean;
 		NColumns: number;
+		EnableBackgroundPreRender: boolean; // Should we scan the document?
 		TextPercent: number;	  // Percantage of the shown text - progress
 		CurStartPos: IPosition;	// Adress of the first visible block
 		CurStartPage: number;		// Number of the first visible page (if any)

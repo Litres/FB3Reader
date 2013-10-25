@@ -3,6 +3,7 @@
 /// <reference path="DOM/FB3DOM.ts" />
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
 /// <reference path="Bookmarks/FB3Bookmarks.ts" />
+/// <reference path="Reader/PagesPositionsCache/PPCache.ts" />
 var AFB3Reader;
 window.onload = function () {
     var ArtID = '120421';
@@ -12,7 +13,8 @@ window.onload = function () {
     var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
     var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
     BookmarksProcessor.Load(ArtID);
-    AFB3Reader = new FB3Reader.Reader(ArtID, false, AReaderSite, AReaderDOM, BookmarksProcessor);
+    var FB3PPCache = new FB3PPCache.PPCache();
+    AFB3Reader = new FB3Reader.Reader(ArtID, false, AReaderSite, AReaderDOM, BookmarksProcessor, FB3PPCache);
     AFB3Reader.NColumns = 3;
     AFB3Reader.HyphON = true;
     AFB3Reader.Init();

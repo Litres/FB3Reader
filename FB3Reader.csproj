@@ -19,37 +19,18 @@
     <Content Include="app.css" />
     <TypeScriptCompile Include="DataProvider\FB3AjaxDataProvider.ts" />
     <TypeScriptCompile Include="Bookmarks\FB3Bookmarks.ts" />
-    <Content Include="Bookmarks\FB3Bookmarks.js">
-      <DependentUpon>FB3Bookmarks.ts</DependentUpon>
-    </Content>
     <TypeScriptCompile Include="Bookmarks\FB3BookmarksHead.ts" />
-    <Content Include="DataProvider\FB3AjaxDataProvider.js">
-      <DependentUpon>FB3AjaxDataProvider.ts</DependentUpon>
-    </Content>
     <TypeScriptCompile Include="DataProvider\FB3DataProviderHead.ts" />
     <Content Include="default.htm" />
-    <Content Include="app.js">
-      <DependentUpon>app.ts</DependentUpon>
-    </Content>
     <TypeScriptCompile Include="DOM\FB3DOM.ts" />
-    <Content Include="DOM\FB3DOM.js">
-      <DependentUpon>FB3DOM.ts</DependentUpon>
-    </Content>
     <TypeScriptCompile Include="DOM\FB3DOMBlock.ts" />
-    <Content Include="DOM\FB3DOMBlock.js">
-      <DependentUpon>FB3DOMBlock.ts</DependentUpon>
-    </Content>
     <Content Include="DOM\FB3DOMHead.ts" />
     <TypeScriptCompile Include="Reader\FB3Reader.ts" />
-    <Content Include="Reader\FB3Reader.js">
-      <DependentUpon>FB3Reader.ts</DependentUpon>
-    </Content>
     <Content Include="FB3ReaderHeaders.ts" />
     <Content Include="Reader\FB3ReaderHead.ts" />
     <TypeScriptCompile Include="Site\FB3ReaderSite.ts" />
-    <Content Include="Site\FB3ReaderSite.js">
-      <DependentUpon>FB3ReaderSite.ts</DependentUpon>
-    </Content>
+    <TypeScriptCompile Include="Reader\PagesPositionsCache\PPCacheHead.ts" />
+    <TypeScriptCompile Include="Reader\PagesPositionsCache\PPCache.ts" />
     <Content Include="Site\FB3ReaderSiteHead.ts" />
   </ItemGroup>
   <ItemGroup>

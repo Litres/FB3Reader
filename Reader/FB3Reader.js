@@ -481,18 +481,18 @@ var FB3Reader;
     })();
 
     var Reader = (function () {
-        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks) {
+        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, PagesPositionsCache) {
             this.ArtID = ArtID;
             this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
             this.Bookmarks = Bookmarks;
+            this.PagesPositionsCache = PagesPositionsCache;
             // Basic class init
             this.HyphON = true;
             this.NColumns = 2;
             this.CacheForward = 6;
             this.CacheBackward = 2;
-            this.PagesPositionsCache = new Array();
 
             //				this.CurStartPos = [495,0];
             this.CurStartPos = [0];
@@ -582,7 +582,7 @@ var FB3Reader;
                 FirstFrameToFill = this.Pages[0];
                 this.PutBlockIntoView(0);
             }
-            this.CurStartPos = this.PagesPositionsCache[Page].Range.From.slice(0);
+            this.CurStartPos = this.PagesPositionsCache.Get(Page).Range.From.slice(0);
 
             var CacheBroken = false;
             var NewInstr = new Array();
@@ -595,12 +595,12 @@ var FB3Reader;
                         break;
                     }
                 } else {
-                    if (!CacheBroken && this.PagesPositionsCache[I]) {
-                        NewInstr.push(PRIClone(this.PagesPositionsCache[I]));
+                    if (!CacheBroken && this.PagesPositionsCache.Get(I)) {
+                        NewInstr.push(PRIClone(this.PagesPositionsCache.Get(I)));
                     } else {
                         if (!CacheBroken) {
                             CacheBroken = true;
-                            NewInstr.push({ Start: this.PagesPositionsCache[I - 1].Range.To.slice(0) });
+                            NewInstr.push({ Start: this.PagesPositionsCache.Get(I - 1).Range.To.slice(0) });
                         } else {
                             NewInstr.push({});
                         }
@@ -658,12 +658,12 @@ var FB3Reader;
         Reader.prototype.ResetCache = function () {
             this.IdleAction = 'load_page';
             this.IdleOff();
-            this.PagesPositionsCache = new Array();
+            this.PagesPositionsCache.Reset();
         };
 
         Reader.prototype.GetCachedPage = function (NewPos) {
-            for (var I = 0; I < this.PagesPositionsCache.length; I++) {
-                if (PosCompare(this.PagesPositionsCache[I].Range.To, NewPos) > 0) {
+            for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
+                if (PosCompare(this.PagesPositionsCache.Get(I).Range.To, NewPos) > 0) {
                     return I;
                 }
             }
@@ -671,7 +671,7 @@ var FB3Reader;
         };
 
         Reader.prototype.StoreCachedPage = function (Range) {
-            this.PagesPositionsCache[Range.CacheAs] = PRIClone(Range);
+            this.PagesPositionsCache.Set(Range.CacheAs, PRIClone(Range));
         };
 
         Reader.prototype.SearchForText = function (Text) {
@@ -726,10 +726,10 @@ var FB3Reader;
 
         Reader.prototype.FirstUncashedPage = function () {
             var FirstUncached;
-            if (this.PagesPositionsCache.length) {
+            if (this.PagesPositionsCache.Length()) {
                 FirstUncached = {
-                    Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To.slice(0),
-                    CacheAs: this.PagesPositionsCache.length
+                    Start: this.PagesPositionsCache.Get(this.PagesPositionsCache.Length() - 1).Range.To.slice(0),
+                    CacheAs: this.PagesPositionsCache.Length()
                 };
             } else {
                 FirstUncached = {
@@ -743,7 +743,7 @@ var FB3Reader;
             var _this = this;
             clearTimeout(this.MoveTimeoutID);
             if (this.CurStartPage !== undefined) {
-                if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) {
+                if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) {
                     this.GoTOPage(this.CurStartPage + this.NColumns);
                 } else if (this.LastPage && this.LastPage < this.CurStartPage + this.NColumns) {
                     return;
@@ -819,7 +819,7 @@ var FB3Reader;
                         var PageToPrerender = this.FirstUncashedPage();
                         if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
                             //							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
-                            this.LastPage = this.PagesPositionsCache.length - 1;
+                            this.LastPage = this.PagesPositionsCache.Length() - 1;
                             this.IdleOff();
                             this.Site.IdleThreadProgressor.Progress(this, 100);
                             this.Site.IdleThreadProgressor.HourglassOff(this);

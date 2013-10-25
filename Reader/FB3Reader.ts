@@ -548,7 +548,6 @@ module FB3Reader {
 		public CacheForward: number;
 		public CacheBackward: number;
 		public CurStartPos: IPosition;
-		public PagesPositionsCache: IPageRenderInstruction[];
 		public CurStartPage: number;
 		public LastPage: number;
 
@@ -570,14 +569,14 @@ module FB3Reader {
 			public EnableBackgroundPreRender: boolean,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM,
-			public Bookmarks: FB3Bookmarks.IBookmarks) {
+			public Bookmarks: FB3Bookmarks.IBookmarks,
+			private PagesPositionsCache: FB3PPCache.IFB3PPCache) {
 
 			// Basic class init
 			this.HyphON = true;
 			this.NColumns = 2;
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
-			this.PagesPositionsCache = new Array();
 //				this.CurStartPos = [495,0];
 			this.CurStartPos = [0];
 
@@ -661,7 +660,7 @@ module FB3Reader {
 				FirstFrameToFill = this.Pages[0];
 				this.PutBlockIntoView(0);
 			}
-			this.CurStartPos = this.PagesPositionsCache[Page].Range.From.slice(0);
+			this.CurStartPos = this.PagesPositionsCache.Get(Page).Range.From.slice(0);
 
 			var CacheBroken = false;
 			var NewInstr: IPageRenderInstruction[] = new Array();
@@ -674,12 +673,12 @@ module FB3Reader {
 						break;
 					}
 				} else {
-					if (!CacheBroken && this.PagesPositionsCache[I]) {
-						NewInstr.push(PRIClone(this.PagesPositionsCache[I]));
+					if (!CacheBroken && this.PagesPositionsCache.Get(I)) {
+						NewInstr.push(PRIClone(this.PagesPositionsCache.Get(I)));
 					} else {
 						if (!CacheBroken) {
 							CacheBroken = true;
-							NewInstr.push({ Start: this.PagesPositionsCache[I - 1].Range.To.slice(0) });
+							NewInstr.push({ Start: this.PagesPositionsCache.Get(I - 1).Range.To.slice(0) });
 						} else {
 							NewInstr.push({});
 						}
@@ -739,12 +738,12 @@ module FB3Reader {
 		public ResetCache(): void {
 			this.IdleAction = 'load_page';
 			this.IdleOff();
-			this.PagesPositionsCache = new Array();
+			this.PagesPositionsCache.Reset();
 		}
 
 		public GetCachedPage(NewPos: IPosition): number {
-			for (var I = 0; I < this.PagesPositionsCache.length; I++) {
-				if (PosCompare(this.PagesPositionsCache[I].Range.To, NewPos) > 0) {
+			for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
+				if (PosCompare(this.PagesPositionsCache.Get(I).Range.To, NewPos) > 0) {
 					return I;
 				}
 			}
@@ -753,7 +752,7 @@ module FB3Reader {
 
 
 		public StoreCachedPage(Range: IPageRenderInstruction) {
-			this.PagesPositionsCache[Range.CacheAs] = PRIClone(Range);
+			this.PagesPositionsCache.Set(Range.CacheAs,PRIClone(Range));
 		}
 
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
@@ -809,10 +808,10 @@ module FB3Reader {
 
 		private FirstUncashedPage(): IPageRenderInstruction {
 			var FirstUncached: IPageRenderInstruction;
-			if (this.PagesPositionsCache.length) {
+			if (this.PagesPositionsCache.Length()) {
 				FirstUncached = {
-					Start: this.PagesPositionsCache[this.PagesPositionsCache.length - 1].Range.To.slice(0),
-					CacheAs: this.PagesPositionsCache.length
+					Start: this.PagesPositionsCache.Get(this.PagesPositionsCache.Length() - 1).Range.To.slice(0),
+					CacheAs: this.PagesPositionsCache.Length()
 				}
 			} else {
 				FirstUncached = {
@@ -825,7 +824,7 @@ module FB3Reader {
 		public PageForward() {
 			clearTimeout(this.MoveTimeoutID);
 			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
-				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.length) { // We know have many pages we have so we can check if the next one exists
+				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) { // We know have many pages we have so we can check if the next one exists
 					this.GoTOPage(this.CurStartPage + this.NColumns);
 				} else if (this.LastPage && this.LastPage < this.CurStartPage + this.NColumns) {
 					return;
@@ -894,7 +893,7 @@ module FB3Reader {
 						var PageToPrerender = this.FirstUncashedPage();
 						if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
 							//							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
-							this.LastPage = this.PagesPositionsCache.length - 1;
+							this.LastPage = this.PagesPositionsCache.Length() - 1;
 							this.IdleOff();
 							this.Site.IdleThreadProgressor.Progress(this, 100);
 							this.Site.IdleThreadProgressor.HourglassOff(this);

@@ -12,7 +12,6 @@ module FB3Reader {
 		NotesHeight?: number;
 	}
 
-
 	export interface IFBReader { // Keep in mind - all action calls, like PageForward, are asyncroneous
 		Site: FB3ReaderSite.IFB3ReaderSite;
 		Bookmarks: FB3Bookmarks.IBookmarks;
@@ -24,9 +23,8 @@ module FB3Reader {
 		TextPercent: number;	  // Percantage of the shown text - progress
 		CurStartPos: IPosition;	// Adress of the first visible block
 		CurStartPage: number;		// Number of the first visible page (if any)
-		LastPage: number;				// Last page N. Undefined if calc in progress
 
-		Init(): void;
+		Init(): void;						
 		CacheForward: number; // Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
 		CacheBackward: number; // Size of the backward cache (same structure)
 

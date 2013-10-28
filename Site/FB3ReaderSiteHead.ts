@@ -9,6 +9,7 @@ module FB3ReaderSite {
 		Canvas: HTMLElement;
 		NotePopup: INotePopup;
 		Alert: IAlert;
+		Key: string; // Settings key, like font size and name, user for cache srore/read
 		getElementById(elementId: string): HTMLElement;
 	}
 

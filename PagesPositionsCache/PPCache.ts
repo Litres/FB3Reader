@@ -5,12 +5,14 @@ module FB3PPCache {
 	interface IPageRenderInstructionsCacheEntry {
 		Time: Date;
 		Key: string;
+		LastPage: number;
 		Cache: FB3Reader.IPageRenderInstruction[];
 	}
 
-	class PPCache implements IFB3PPCache {
+	export class PPCache implements IFB3PPCache {
 		private PagesPositionsCache: FB3Reader.IPageRenderInstruction[];
 		private CacheMarkupsList: IPageRenderInstructionsCacheEntry[];
+		private LastPageN: number;
 
 		constructor() {
 			this.Reset();
@@ -39,7 +41,7 @@ module FB3PPCache {
 			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
 				// localStorage support required
 				if (!this.CacheMarkupsList) {
-					this.CacheMarkupsList = JSON.parse(localStorage['FB3Reader1.0']);
+					this.LoadOrFillEmptyData();
 				}
 				var RowToFillID: string;
 				var OldestIDTime: number;
@@ -55,7 +57,8 @@ module FB3PPCache {
 						{
 							Time: new Date,
 							Key: Key,
-							Cache: this.PagesPositionsCache
+							Cache: this.PagesPositionsCache,
+							LastPage: this.LastPageN
 						}
 					);
 				localStorage['FB3Reader1.0'] = JSON.stringify(this.CacheMarkupsList);
@@ -65,13 +68,37 @@ module FB3PPCache {
 		public Load(Key: string): void {
 			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
 				if (!this.CacheMarkupsList) {
-					this.CacheMarkupsList = JSON.parse(localStorage['FB3Reader1.0']);
+					this.LoadOrFillEmptyData();
 				}
 				for (var I = 0; I < this.CacheMarkupsList.length; I++) {
 					if (this.CacheMarkupsList[I].Key == Key) {
 						this.PagesPositionsCache = this.CacheMarkupsList[I].Cache;
+						this.LastPageN = this.CacheMarkupsList[I].LastPage;
+						break;
 					}
 				}
+			}
+		}
+
+		private LoadOrFillEmptyData(): void {
+			var CacheData = localStorage['FB3Reader1.0'];
+			var DataInitDone = false;
+			if (CacheData) {
+				try {
+					this.CacheMarkupsList = JSON.parse(CacheData);
+					DataInitDone = true;
+				} catch (e) { }
+			}
+			if (!DataInitDone) {
+				this.CacheMarkupsList = new Array();
+			}
+		}
+
+		public LastPage(LastPageN?: number): number {
+			if (LastPageN == undefined) {
+				return this.LastPageN;
+			} else {
+				this.LastPageN = LastPageN;
 			}
 		}
 

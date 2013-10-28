@@ -29,8 +29,9 @@
     <Content Include="FB3ReaderHeaders.ts" />
     <Content Include="Reader\FB3ReaderHead.ts" />
     <TypeScriptCompile Include="Site\FB3ReaderSite.ts" />
-    <TypeScriptCompile Include="Reader\PagesPositionsCache\PPCacheHead.ts" />
-    <TypeScriptCompile Include="Reader\PagesPositionsCache\PPCache.ts" />
+    <TypeScriptCompile Include="PagesPositionsCache\PPCacheHead.ts" />
+    <TypeScriptCompile Include="PagesPositionsCache\PPCache.ts" />
+    <TypeScriptCompile Include="Reader\FB3ReaderPage.ts" />
     <Content Include="Site\FB3ReaderSiteHead.ts" />
   </ItemGroup>
   <ItemGroup>

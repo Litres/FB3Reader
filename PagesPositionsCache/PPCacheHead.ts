@@ -1,5 +1,4 @@
-/// <reference path="../../FB3ReaderHeaders.ts" />
-/// <reference path="../FB3ReaderHead.ts" />
+/// <reference path="../FB3ReaderHeaders.ts" />
 
 module FB3PPCache {
 	export interface IFB3PPCache {
@@ -9,6 +8,7 @@ module FB3PPCache {
 		Load(Key: string): void;
 		Reset(): void;
 		Length(): number;
+		LastPage(LastPageN?:number): number;
 	}
 
 }

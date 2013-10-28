@@ -7,10 +7,12 @@ module FB3ReaderSite {
 		public IdleThreadProgressor:ILoadProgress;
 		public NotePopup: INotePopup;
 		public Alert: IAlert;
+		public Key: string;
 		constructor(public Canvas: HTMLElement) {
 			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
 			this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
 			this.Alert = this.Progressor.Alert;
+			this.Key = 'Times:16';
 		}
 		getElementById(elementId: string): HTMLElement {
 			return document.getElementById(elementId);

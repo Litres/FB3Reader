@@ -40,11 +40,47 @@
         <div>Progress: <span id="IdleProgressSpan">-</span>%</div>
         <div>Last Alert: <span id="IdleAlertSpan">-</span></div>
      </div>
-    <img width="200" height="200" alt="" style="position:absolute;top:0;left:0;width:100%; height:100%" src="z.gif"/>
+    <img width="200" height="200" alt="" style="position:absolute;top:0;left:0;width:100%; height:100%" src="z.gif"
+        onmousedown="HideMenu();"
+        onmouseup="HideMenu();"
+        oncontextmenu="ShowMenu('SelectStart',event);return false;"/>
     <div style="float:left; margin-left: 2em;">
         <input type="button" value="&lt;&lt; Page back" onclick="Pagebackward()"/>&#160;&#160;&#160;
         <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="GoToPercent()"/>
         &#160;&#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="PageForward()"/>
     </div>
+
+    <table border="1" cellspacing="0" class="contextmenu" id="SelectStart">
+        <tr>
+            <td onclick="InitNote(0,0)">Закладка на этот абзац</td>
+        </tr>
+        <tr>
+            <td onclick="InitNote(1,0)">Закладка на это слово</td>
+        </tr>
+        <tr>
+            <td onclick="InitNote(0,1)">Начать выделение цитаты со слова</td>
+        </tr>
+        <tr>
+            <td onclick="InitNote(1,1)">Начать выделение цитаты с абзаца</td>
+        </tr>
+        <tr>
+            <td onclick="CancelNote()">Отмена</td>
+        </tr>
+    </table>
+
+    <table border="1" cellpadding="5" cellspacing="0" class="contextmenu" id="SelectEnd">
+        <tr>
+            <td onclick="FinishNote(0);">Закончить выделение цитаты на абзаце</td>
+        </tr>
+        <tr>
+            <td onclick="FinishNote(1);">Закончить выделение цитаны на слове</td>
+        </tr>
+        <tr>
+            <td onclick="PageForward();HideMenu()">Перелистнуть страницу вперед</td>
+        </tr>
+        <tr>
+            <td onclick="CancelNote()">Отмена</td>
+        </tr>
+    </table>
 </body>
 </html>

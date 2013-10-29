@@ -26,6 +26,44 @@ window.onload = function () {
     ShowPosition();
 };
 
+function InitNote(ExactWord, InitOnly, NoteType) {
+    if (InitOnly) {
+        MarkupProgress.state = 'selectstart';
+    } else {
+        MarkupProgress.state = undefined;
+    }
+    HideMenu();
+}
+
+function CancelNote() {
+    MarkupProgress.state = undefined;
+    HideMenu();
+}
+
+var MenuShown;
+var MarkupProgress = {};
+function ShowMenu(control, e) {
+    if (MarkupProgress.state == 'selectstart') {
+        MenuShown = 'SelectEnd';
+    } else {
+        MenuShown = 'SelectStart';
+    }
+    MarkupProgress.x = e.clientX + window.pageXOffset;
+    MarkupProgress.y = e.clientY + window.pageYOffset;
+    var posx = e.clientX + window.pageXOffset + 3 + 'px';
+    var posy = e.clientY + window.pageYOffset + 3 + 'px';
+    document.getElementById(MenuShown).style.position = 'absolute';
+    document.getElementById(MenuShown).style.display = 'inline';
+    document.getElementById(MenuShown).style.left = posx;
+    document.getElementById(MenuShown).style.top = posy;
+}
+function HideMenu() {
+    if (MenuShown) {
+        document.getElementById(MenuShown).style.display = 'none';
+        MenuShown = undefined;
+    }
+}
+
 function ShowPosition() {
     document.getElementById('CurPos').innerHTML = AFB3Reader.CurStartPos.join('/');
     document.getElementById('CurPosPercent').innerHTML = AFB3Reader.CurPosPercent() ? AFB3Reader.CurPosPercent().toFixed(2) : '?';

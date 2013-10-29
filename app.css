@@ -179,4 +179,20 @@ div.SmallImgZoom1 {
     filter: alpha(opacity=40); /* For IE8 and earlier */
 }
 
+table.contextmenu {
+    border: 1px solid #808080;
+    border-collapse: collapse;
+    cursor: default;
+    background-color: silver;
+    display:none;
+}
+
+table.contextmenu tr :hover {
+    color:white;
+    background-color:darkblue;
+}
+table.contextmenu td {
+    padding: 5px 7px;
+}
+
 /* debug */

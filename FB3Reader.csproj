@@ -32,8 +32,6 @@
     <TypeScriptCompile Include="PagesPositionsCache\PPCacheHead.ts" />
     <TypeScriptCompile Include="PagesPositionsCache\PPCache.ts" />
     <TypeScriptCompile Include="Reader\FB3ReaderPage.ts" />
-    <TypeScriptCompile Include="Selection\FB3Selection.ts" />
-    <TypeScriptCompile Include="Selection\FB3SelectionHead.ts" />
     <Content Include="Site\FB3ReaderSiteHead.ts" />
   </ItemGroup>
   <ItemGroup>

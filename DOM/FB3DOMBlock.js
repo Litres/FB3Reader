@@ -45,6 +45,10 @@ var FB3DOM;
                 OutStr = OutStr.substr(Range.From[0]);
             }
 
+            if (!HyphOn) {
+                OutStr = OutStr.replace(/\u00AD/, '');
+            }
+
             var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
             TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">' + OutStr + '</span>');
@@ -52,6 +56,42 @@ var FB3DOM;
 
         FB3Text.prototype.ArtID2URL = function (Chunk) {
             return this.Parent.ArtID2URL(Chunk);
+        };
+
+        FB3Text.prototype.GetXPath = function (Position) {
+            if (Position.length) {
+                var ChildID = Position[0];
+                if (this.Childs && this.Childs[ChildID] && this.Childs[ChildID].Data.xp) {
+                    Position.shift();
+                    return this.Childs[ChildID].GetXPath(Position);
+                }
+            }
+            var XPath = '';
+            if (this.Data && this.Data.xp) {
+                XPath = '/' + this.Data.xp.join('/');
+            } else {
+                return '';
+            }
+
+            if (ChildID) {
+            }
+            if (this.Data && this.Data.xp) {
+                return '/' + this.Data.xp.join('/');
+            }
+
+            var XPath = this.Parent.GetXPath();
+            var PreceedingSt = '';
+            var PageData = new FB3DOM.PageContainer();
+
+            if (this.ID > 0) {
+                this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
+                if (PageData.Body.length) {
+                    var Body = PageData.Body.join('');
+                    Body = Body.replace(/<[^>]+>/, '');
+                    XPath += '.' + Body.length.toFixed(0);
+                }
+            }
+            return XPath;
         };
         return FB3Text;
     })();
@@ -150,9 +190,6 @@ var FB3DOM;
             }
             if (Range.To[0] < this.Childs.length - 1) {
                 ElementClasses.push('cut_bot');
-            }
-            if (this.Data.xp && this.Data.xp.length) {
-                ElementClasses.push('xp_' + this.Data.xp.join('_'));
             }
 
             if (this.IsFootnote) {

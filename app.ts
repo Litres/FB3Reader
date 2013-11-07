@@ -14,8 +14,7 @@ window.onload = () => {
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
 	var DataProvider = new FB3DataProvider.AJAXDataProvider();
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
-	var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
-	BookmarksProcessor.Load(ArtID);
+	var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor();
 	AFB3PPCache = new FB3PPCache.PPCache();
 	AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
 	AFB3Reader.NColumns = 3;
@@ -26,11 +25,26 @@ window.onload = () => {
 };
 
 
-function InitNote(ExactWord: boolean, InitOnly: boolean, NoteType: number) {
-	if (InitOnly) {
+//Тык
+//	Если тык на закладку
+//		ищем элемент и блок - элемент
+//		Открываем диалог с точкой
+//	Если тык на заметку
+//		ищем элемент и блок - элемент
+//		запоминаем найденное
+//		ждем тыка "конец заметки
+//	Если тык "конец заметки"
+//		ищем элемент и блок - элемент
+//		Открываем диалог с диапазоном
+
+var MarkupProgress: any = {};
+
+function InitNote(NoteType: string) {
+	if (NoteType == 'note') {
 		MarkupProgress.state = 'selectstart';
 	} else {
 		MarkupProgress.state = undefined;
+		ShowDialog(true);
 	}
 	HideMenu();
 }
@@ -41,17 +55,16 @@ function CancelNote() {
 }
 
 var MenuShown: string;
-var MarkupProgress: any = {};
 function ShowMenu(control: string, e: MouseEvent) {
+	HideDialog();
 	if (MarkupProgress.state == 'selectstart') {
 		MenuShown = 'SelectEnd';
 	} else {
-		MenuShown = 'SelectStart';
+		MenuShown = 'SelectStart'; 
 	}
-	MarkupProgress.x = e.clientX + window.pageXOffset;
-	MarkupProgress.y = e.clientY + window.pageYOffset;
-	var posx = e.clientX + window.pageXOffset + 3 + 'px'; //Left Position of Mouse Pointer
-	var posy = e.clientY + window.pageYOffset + 3 + 'px'; //Top Position of Mouse Pointer
+	MarkupProgress.start = { x: e.clientX + window.pageXOffset, y: e.clientY + window.pageYOffset };
+	var posx = MarkupProgress.start.x + 3 + 'px'; //Left Position of Mouse Pointer
+	var posy = MarkupProgress.start.y + 3 + 'px'; //Top Position of Mouse Pointer
 	document.getElementById(MenuShown).style.position = 'absolute';
 	document.getElementById(MenuShown).style.display = 'inline';
 	document.getElementById(MenuShown).style.left = posx;
@@ -63,7 +76,20 @@ function HideMenu() {
 		MenuShown = undefined;
 	}
 }
-       
+
+function HideAll() {
+	HideMenu();
+	HideDialog();
+}
+
+function ShowDialog(Bookmark: boolean) {
+	document.getElementById('notedialog').style.display = 'block';
+}
+
+function HideDialog() {
+	document.getElementById('notedialog').style.display = 'none';
+}
+
 
 function ShowPosition() {
 	document.getElementById('CurPos').innerHTML = AFB3Reader.CurStartPos.join('/');

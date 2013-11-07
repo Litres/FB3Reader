@@ -34,7 +34,7 @@ module FB3DOM {
 
 	interface IJSonLoadingDone{ (JSON: string) };
 
-	class PageContainer implements IPageContainer {
+	export class PageContainer implements IPageContainer {
 		public Body: InnerHTML[];
 		public FootNotes: InnerHTML[];
 		constructor () {
@@ -159,6 +159,7 @@ module FB3DOM {
 			}
 			return ChunksMissing;
 		}
+
 	}
 
 }

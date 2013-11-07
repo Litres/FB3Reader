@@ -24,7 +24,7 @@ module FB3Reader {
 		CurStartPos: IPosition;	// Adress of the first visible block
 		CurStartPage: number;		// Number of the first visible page (if any)
 
-		Init(): void;						
+		Init(): void;
 		CacheForward: number; // Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
 		CacheBackward: number; // Size of the backward cache (same structure)
 
@@ -42,5 +42,6 @@ module FB3Reader {
 		IdleOn(): void;
 		IdleOff(): void;
 		CurPosPercent(): number;
+		ElementAtXY(X: number, Y: number): IPosition;
 	}
 }

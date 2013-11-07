@@ -11,6 +11,7 @@ module FB3ReaderSite {
 		Alert: IAlert;
 		Key: string; // Settings key, like font size and name, user for cache srore/read
 		getElementById(elementId: string): HTMLElement;
+		elementFromPoint(x: number, y: number): Element;
 	}
 
 	// General-purpose interface for progress feedback

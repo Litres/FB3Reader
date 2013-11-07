@@ -12,6 +12,9 @@ var FB3ReaderSite;
         ExampleSite.prototype.getElementById = function (elementId) {
             return document.getElementById(elementId);
         };
+        ExampleSite.prototype.elementFromPoint = function (x, y) {
+            return document.elementFromPoint(x, y);
+        };
         return ExampleSite;
     })();
     FB3ReaderSite.ExampleSite = ExampleSite;

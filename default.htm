@@ -21,7 +21,9 @@
 </head>
 <body>
     <h1>FB3Reader basic example…</h1>
-    <div id="reader">Loading…</div>
+    <div id="reader"onmousedown="HideAll();"
+        onmouseup="HideAll();"
+        oncontextmenu="ShowMenu('SelectStart',event);return false;">Loading…</div>
     <div style="float:left">
         <b>Visible actions progress:</b>
         <div>Position xpath: /<span id="CurPos">-</span></div>
@@ -40,46 +42,72 @@
         <div>Progress: <span id="IdleProgressSpan">-</span>%</div>
         <div>Last Alert: <span id="IdleAlertSpan">-</span></div>
      </div>
-    <img width="200" height="200" alt="" style="position:absolute;top:0;left:0;width:100%; height:100%" src="z.gif"
-        onmousedown="HideMenu();"
-        onmouseup="HideMenu();"
-        oncontextmenu="ShowMenu('SelectStart',event);return false;"/>
     <div style="float:left; margin-left: 2em;">
         <input type="button" value="&lt;&lt; Page back" onclick="Pagebackward()"/>&#160;&#160;&#160;
         <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="GoToPercent()"/>
         &#160;&#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="PageForward()"/>
     </div>
 
-    <table border="1" cellspacing="0" class="contextmenu" id="SelectStart">
+    <table border="1"  class="contextmenu" id="SelectStart">
         <tr>
-            <td onclick="InitNote(0,0)">Закладка на этот абзац</td>
+            <td onclick="InitNote('bookmark')">Поставить закладку</td>
         </tr>
         <tr>
-            <td onclick="InitNote(1,0)">Закладка на это слово</td>
-        </tr>
-        <tr>
-            <td onclick="InitNote(0,1)">Начать выделение цитаты со слова</td>
-        </tr>
-        <tr>
-            <td onclick="InitNote(1,1)">Начать выделение цитаты с абзаца</td>
+            <td onclick="InitNote('note')">Начать выделение цитаты</td>
         </tr>
         <tr>
             <td onclick="CancelNote()">Отмена</td>
         </tr>
     </table>
 
-    <table border="1" cellpadding="5" cellspacing="0" class="contextmenu" id="SelectEnd">
+    <table border="1" class="contextmenu" id="SelectEnd">
         <tr>
-            <td onclick="FinishNote(0);">Закончить выделение цитаты на абзаце</td>
-        </tr>
-        <tr>
-            <td onclick="FinishNote(1);">Закончить выделение цитаны на слове</td>
+            <td onclick="FinishNote(0);">Закончить выделение цитаты</td>
         </tr>
         <tr>
             <td onclick="PageForward();HideMenu()">Перелистнуть страницу вперед</td>
         </tr>
         <tr>
             <td onclick="CancelNote()">Отмена</td>
+        </tr>
+    </table>
+    <table border="0" class="notedialog" id="notedialog">
+        <tr>
+            <td colspan="2"><b>Редактирование закладки/заметки</b></td>
+        </tr>
+        <tr>
+            <td>Название</td>
+            <td><input type="text" name="notetitle" id="notetitle" style="width: 100%"/></td>
+        </tr>
+        <tr>
+            <td>Описание</td>
+            <td><textarea rows="6" cols="30" name="notedescr" id="notedescr"></textarea></td>
+        </tr>
+        <tr>
+            <td>Тип заметки</td>
+            <td>
+                <select name="notetype" id="notetype">
+                    <option value="1">Закладка</option>
+                    <option value="3">Заметка</option>
+                    <option value="5">Цитата</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>&#160;</td>
+            <td><label><input type="checkbox" name="wholepara" id="wholepara" checked="checked"/> Выбирать абзацы целиком</label></td>
+        </tr>
+        <tr>
+            <td>From XPath</td>
+            <td id="FromXPath">-</td>
+        </tr>
+        <tr>
+            <td>To XPath</td>
+            <td id="ToXPath">-</td>
+        </tr>
+        <tr>
+            <td>&#160;</td>
+            <td style="text-align:right;"><input type="button" value="Готово" />&#160;<input type="button" value="Отмена" onclick="HideAll()"/></td>
         </tr>
     </table>
 </body>

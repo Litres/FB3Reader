@@ -13,8 +13,7 @@ window.onload = function () {
     var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
     var DataProvider = new FB3DataProvider.AJAXDataProvider();
     var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
-    var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
-    BookmarksProcessor.Load(ArtID);
+    var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor();
     AFB3PPCache = new FB3PPCache.PPCache();
     AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
     AFB3Reader.NColumns = 3;
@@ -26,11 +25,25 @@ window.onload = function () {
     ShowPosition();
 };
 
-function InitNote(ExactWord, InitOnly, NoteType) {
-    if (InitOnly) {
+//Тык
+//	Если тык на закладку
+//		ищем элемент и блок - элемент
+//		Открываем диалог с точкой
+//	Если тык на заметку
+//		ищем элемент и блок - элемент
+//		запоминаем найденное
+//		ждем тыка "конец заметки
+//	Если тык "конец заметки"
+//		ищем элемент и блок - элемент
+//		Открываем диалог с диапазоном
+var MarkupProgress = {};
+
+function InitNote(NoteType) {
+    if (NoteType == 'note') {
         MarkupProgress.state = 'selectstart';
     } else {
         MarkupProgress.state = undefined;
+        ShowDialog(true);
     }
     HideMenu();
 }
@@ -41,17 +54,16 @@ function CancelNote() {
 }
 
 var MenuShown;
-var MarkupProgress = {};
 function ShowMenu(control, e) {
+    HideDialog();
     if (MarkupProgress.state == 'selectstart') {
         MenuShown = 'SelectEnd';
     } else {
         MenuShown = 'SelectStart';
     }
-    MarkupProgress.x = e.clientX + window.pageXOffset;
-    MarkupProgress.y = e.clientY + window.pageYOffset;
-    var posx = e.clientX + window.pageXOffset + 3 + 'px';
-    var posy = e.clientY + window.pageYOffset + 3 + 'px';
+    MarkupProgress.start = { x: e.clientX + window.pageXOffset, y: e.clientY + window.pageYOffset };
+    var posx = MarkupProgress.start.x + 3 + 'px';
+    var posy = MarkupProgress.start.y + 3 + 'px';
     document.getElementById(MenuShown).style.position = 'absolute';
     document.getElementById(MenuShown).style.display = 'inline';
     document.getElementById(MenuShown).style.left = posx;
@@ -62,6 +74,19 @@ function HideMenu() {
         document.getElementById(MenuShown).style.display = 'none';
         MenuShown = undefined;
     }
+}
+
+function HideAll() {
+    HideMenu();
+    HideDialog();
+}
+
+function ShowDialog(Bookmark) {
+    document.getElementById('notedialog').style.display = 'block';
+}
+
+function HideDialog() {
+    document.getElementById('notedialog').style.display = 'none';
 }
 
 function ShowPosition() {

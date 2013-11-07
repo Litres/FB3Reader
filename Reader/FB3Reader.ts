@@ -81,7 +81,9 @@ module FB3Reader {
 
 		public Init(): void {
 			this.PrepareCanvas();
-			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.LoadDone(1) } );
+			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.LoadDone(1) });
+			this.Bookmarks.FB3DOM = this.FB3DOM;
+			this.Bookmarks.Reader = this;
 			this.Bookmarks.Load(this.ArtID, () => { this.LoadDone(2) } );
 		}
 
@@ -90,7 +92,7 @@ module FB3Reader {
 			var ReadPos: IPosition;
 			if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
 				if (this.Bookmarks && this.Bookmarks.CurPos) {
-					ReadPos = this.Bookmarks.CurPos.Fragment.From.slice(0);
+					ReadPos = this.Bookmarks.CurPos.Range.From.slice(0);
 				} else {
 					ReadPos = this.CurStartPos.slice(0);
 				}
@@ -381,6 +383,27 @@ module FB3Reader {
 				return undefined;
 			}
 			return 100 * this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+		}
+
+		public ElementAtXY(X: number, Y: number): IPosition {
+			var Node = <HTMLElement> this.Site.elementFromPoint(X, Y);
+
+			if (!Node) {
+				return undefined; // Do not know how would this happen, just in case
+			}
+
+			while (!Node.id && Node.parentElement) {
+				Node = Node.parentElement;
+			}
+
+			if (!Node.id.match(/n(_\d+)+/)) {
+				return undefined; // This is some wrong element with wrong ID, must be an error
+			}
+
+			var Addr: IPosition = <IPosition> <any> Node.id.split('_');
+			Addr.shift();
+			Addr.shift();
+			return Addr;
 		}
 
 

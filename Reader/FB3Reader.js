@@ -61,6 +61,8 @@ var FB3Reader;
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
                 _this.LoadDone(1);
             });
+            this.Bookmarks.FB3DOM = this.FB3DOM;
+            this.Bookmarks.Reader = this;
             this.Bookmarks.Load(this.ArtID, function () {
                 _this.LoadDone(2);
             });
@@ -71,7 +73,7 @@ var FB3Reader;
             var ReadPos;
             if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
                 if (this.Bookmarks && this.Bookmarks.CurPos) {
-                    ReadPos = this.Bookmarks.CurPos.Fragment.From.slice(0);
+                    ReadPos = this.Bookmarks.CurPos.Range.From.slice(0);
                 } else {
                     ReadPos = this.CurStartPos.slice(0);
                 }
@@ -367,6 +369,27 @@ var FB3Reader;
                 return undefined;
             }
             return 100 * this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+        };
+
+        Reader.prototype.ElementAtXY = function (X, Y) {
+            var Node = this.Site.elementFromPoint(X, Y);
+
+            if (!Node) {
+                return undefined;
+            }
+
+            while (!Node.id && Node.parentElement) {
+                Node = Node.parentElement;
+            }
+
+            if (!Node.id.match(/n(_\d+)+/)) {
+                return undefined;
+            }
+
+            var Addr = Node.id.split('_');
+            Addr.shift();
+            Addr.shift();
+            return Addr;
         };
 
         Reader.prototype.IdleGo = function (PageData) {

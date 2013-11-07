@@ -47,6 +47,7 @@ var FB3DOM;
         }
         return PageContainer;
     })();
+    FB3DOM.PageContainer = PageContainer;
 
     var DOM = (function (_super) {
         __extends(DOM, _super);

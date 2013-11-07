@@ -102,6 +102,11 @@ div.FB2readerPage div.FBReaderContentDiv {
 #FB3ReaderHostDiv {
     background-color: #000070;
     color:yellow;
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
 
 div.FB2readerPage a.footnote_attached {
@@ -179,12 +184,20 @@ div.SmallImgZoom1 {
     filter: alpha(opacity=40); /* For IE8 and earlier */
 }
 
-table.contextmenu {
+table.contextmenu, table.notedialog {
     border: 1px solid #808080;
     border-collapse: collapse;
     cursor: default;
     background-color: silver;
     display:none;
+}
+table.contextmenu td, table.notedialog td {
+    padding:5px;
+}
+table.notedialog {
+    position: absolute;
+    left: 20px;
+    top: 20px;
 }
 
 table.contextmenu tr :hover {

@@ -17,6 +17,9 @@ module FB3ReaderSite {
 		getElementById(elementId: string): HTMLElement {
 			return document.getElementById(elementId);
 		}
+		elementFromPoint(x: number, y: number): Element {
+			return document.elementFromPoint(x,y);
+		}
 
 	}
 	export class ExampleProgressor implements ILoadProgress {

@@ -21,6 +21,8 @@ module FB3DOM {
 	export class FB3Text implements IFB3Block {
 		public Chars: number;
 		public XPID: string;
+		public Data: IJSONBlock;
+		public Childs: IFB3Block[];
 		constructor(private text: string, public Parent: IFB3Block, public ID: number, public IsFootnote?: boolean) {
 			this.Chars = text.length;
 //			this.text = this.text.replace('\u00AD', '&shy;')
@@ -35,6 +37,10 @@ module FB3DOM {
 				OutStr = OutStr.substr(Range.From[0]);
 			}
 
+			if (!HyphOn) {
+				OutStr = OutStr.replace(/\u00AD/,'');
+			}
+
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
 			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">'+OutStr+'</span>');  // todo - HyphOn must work, must just replace shy with ''
@@ -44,19 +50,45 @@ module FB3DOM {
 			return this.Parent.ArtID2URL(Chunk);
 		}
 
-		//public GetXPID(): string {
-		//	
-		//	var ID: string = "";
-		//	var ParID: string;
-		//	if (this.Parent) {
-		//		ParID = this.Parent.GetXPID();
-		//	}
-		//	if (ParID != '') {
-		//		ID = ParID + '_';
-		//	}
-		//	
-		//	return ID + this.ID;
-		//}
+		public GetXPath(Position: FB3Reader.IPosition): FB3Bookmarks.IXpath {
+
+			die('broken');
+			if (Position.length) {
+				var ChildID = Position[0];
+				if (this.Childs && this.Childs[ChildID] && this.Childs[ChildID].Data.xp) {
+					Position.shift();
+					return this.Childs[ChildID].GetXPath(Position);
+				}
+			}
+			var XPath = '';
+			if (this.Data && this.Data.xp) {
+				XPath = '/' + this.Data.xp.join('/');
+			} else {
+				return '';
+			}
+
+			if (ChildID) {
+
+			}
+			if (this.Data && this.Data.xp) {
+				return '/' + this.Data.xp.join('/');
+			}
+
+			var XPath = this.Parent.GetXPath();
+			var PreceedingSt = '';
+			var PageData = new PageContainer();
+
+			if (this.ID > 0) {
+				this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
+				if (PageData.Body.length) {
+					var Body = PageData.Body.join('');
+					Body = Body.replace(/<[^>]+>/, '');
+					XPath += '.' + Body.length.toFixed(0);
+				}
+			}
+			return XPath;
+		}
+
 	}
 
 
@@ -65,7 +97,7 @@ module FB3DOM {
 		public TagName: string;
 		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer):void {
 			if (this.IsFootnote) {
 				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
 			} else {
@@ -156,9 +188,9 @@ module FB3DOM {
 			if (Range.To[0] < this.Childs.length - 1) {
 				ElementClasses.push('cut_bot')
 			}
-			if (this.Data.xp && this.Data.xp.length) {
-				ElementClasses.push('xp_' + this.Data.xp.join('_'))
-			}
+			//if (this.Data.xp && this.Data.xp.length) {
+			//	ElementClasses.push('xp_' + this.Data.xp.join('_'))
+			//}
 
 			if (this.IsFootnote) {
 				ElementClasses.push('footnote')

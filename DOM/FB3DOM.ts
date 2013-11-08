@@ -120,6 +120,18 @@ module FB3DOM {
 			return this.DataProvider.ArtID2URL(this.ArtID, Chunk.toString());
 		}
 
+		public GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block {
+			var ResponcibleNode: IFB3Block = this;
+			while (Position.length) {
+				ResponcibleNode = ResponcibleNode.Childs[Position.shift()];
+			}
+			return ResponcibleNode;
+		}
+
+		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXpath {
+			return this.GetElementByAddr(Position).GetXPath();
+		}
+
 
 		private OnChunkLoaded(Data: Array<IJSONBlock>, CustomData?: any):void {
 			

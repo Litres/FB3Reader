@@ -119,6 +119,18 @@ var FB3DOM;
             return this.DataProvider.ArtID2URL(this.ArtID, Chunk.toString());
         };
 
+        DOM.prototype.GetElementByAddr = function (Position) {
+            var ResponcibleNode = this;
+            while (Position.length) {
+                ResponcibleNode = ResponcibleNode.Childs[Position.shift()];
+            }
+            return ResponcibleNode;
+        };
+
+        DOM.prototype.GetXPathFromPos = function (Position) {
+            return this.GetElementByAddr(Position).GetXPath();
+        };
+
         DOM.prototype.OnChunkLoaded = function (Data, CustomData) {
             var LoadedChunk = CustomData.ChunkN;
             var Shift = this.DataChunks[LoadedChunk].s;

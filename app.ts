@@ -7,6 +7,7 @@
 
 var AFB3Reader: FB3Reader.IFBReader;
 var AFB3PPCache: FB3PPCache.IFB3PPCache;
+var BookmarksProcessor: FB3Bookmarks.IBookmarks;
 
 window.onload = () => {
 	var ArtID = '120421';
@@ -14,7 +15,7 @@ window.onload = () => {
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
 	var DataProvider = new FB3DataProvider.AJAXDataProvider();
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
-	var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor();
+	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor();
 	AFB3PPCache = new FB3PPCache.PPCache();
 	AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
 	AFB3Reader.NColumns = 3;
@@ -44,7 +45,10 @@ function InitNote(NoteType: string) {
 		MarkupProgress.state = 'selectstart';
 	} else {
 		MarkupProgress.state = undefined;
-		ShowDialog(true);
+		var Bookmark = new FB3Bookmarks.Bookmark(BookmarksProcessor);
+		Bookmark.InitFromXY(true, MarkupProgress.start.x, MarkupProgress.start.y);
+		Bookmark.Group = 1;
+		ShowDialog(Bookmark);
 	}
 	HideMenu();
 }
@@ -82,7 +86,16 @@ function HideAll() {
 	HideDialog();
 }
 
-function ShowDialog(Bookmark: boolean) {
+var DialogBookmark: FB3Bookmarks.IBookmark;
+function ShowDialog(Bookmark: FB3Bookmarks.IBookmark) {
+	DialogBookmark = Bookmark;
+	document.getElementById('FromXPath').innerHTML = <string> DialogBookmark.XStart;
+	document.getElementById('ToXPath').innerHTML = <string> DialogBookmark.XEnd;
+	(<HTMLInputElement> document.getElementById('notetitle')).value = DialogBookmark.Title;
+	(<HTMLInputElement> document.getElementById('notedescr')).value = DialogBookmark.RawText;
+	(<HTMLSelectElement> document.getElementById('notetype')).value = DialogBookmark.Group.toString();
+	document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
+	document.getElementById('sellwhole').style.display = Bookmark.ID?'none':'block';
 	document.getElementById('notedialog').style.display = 'block';
 }
 

@@ -24,6 +24,7 @@ var FB3DOM;
         nobr: 'span',
         image: 'img'
     };
+    FB3DOM.BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
 
     var FB3Text = (function () {
         function FB3Text(text, Parent, ID, IsFootnote) {
@@ -58,40 +59,32 @@ var FB3DOM;
             return this.Parent.ArtID2URL(Chunk);
         };
 
-        FB3Text.prototype.GetXPath = function (Position) {
-            if (Position.length) {
-                var ChildID = Position[0];
-                if (this.Childs && this.Childs[ChildID] && this.Childs[ChildID].Data.xp) {
-                    Position.shift();
-                    return this.Childs[ChildID].GetXPath(Position);
-                }
-            }
-            var XPath = '';
-            if (this.Data && this.Data.xp) {
-                XPath = '/' + this.Data.xp.join('/');
-            } else {
-                return '';
-            }
-
-            if (ChildID) {
-            }
+        FB3Text.prototype.GetXPath = function () {
             if (this.Data && this.Data.xp) {
                 return '/' + this.Data.xp.join('/');
-            }
-
-            var XPath = this.Parent.GetXPath();
-            var PreceedingSt = '';
-            var PageData = new FB3DOM.PageContainer();
-
-            if (this.ID > 0) {
-                this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
-                if (PageData.Body.length) {
-                    var Body = PageData.Body.join('');
-                    Body = Body.replace(/<[^>]+>/, '');
-                    XPath += '.' + Body.length.toFixed(0);
+            } else {
+                if (this.Parent.Data && !this.Parent.Data.xp) {
+                    // Our parent is as pure as we are - let him handle this
+                    // fixme - this is not going precice, should calc char N better, but for now it will do
+                    return this.Parent.GetXPath();
                 }
+
+                // AL right, our parent has a nice and native xpath, and we have to add a char N to it
+                var XPath = this.Parent.GetXPath();
+
+                if (this.ID > 0) {
+                    // If our ID is not 0 we are in the middle of the string - we point exactly
+                    var PageData = new FB3DOM.PageContainer();
+                    this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
+                    if (PageData.Body.length) {
+                        var Body = PageData.Body.join('').replace(/<[^>]+>|\u00AD/gi, '');
+                        if (Body.length) {
+                            XPath += '.' + Body.length.toFixed(0);
+                        }
+                    }
+                }
+                return XPath;
             }
-            return XPath;
         };
         return FB3Text;
     })();

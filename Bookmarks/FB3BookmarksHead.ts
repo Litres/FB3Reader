@@ -17,6 +17,9 @@ module FB3Bookmarks {
 		Title: string;
 		Note: InnerFB2;
 		Extract: InnerFB2;
+		RawText: string;
+		InitFromXY(X: number, Y: number): void;
+		RoundMeUp(): IBookmark; // clones itself and expand range to capture block-level elements
 	}
 
 	export interface IBookmarks {

@@ -17,6 +17,7 @@ module FB3DOM {
 		nobr: 'span',
 		image: 'img',
 	};
+	export var BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
 
 	export class FB3Text implements IFB3Block {
 		public Chars: number;
@@ -25,7 +26,7 @@ module FB3DOM {
 		public Childs: IFB3Block[];
 		constructor(private text: string, public Parent: IFB3Block, public ID: number, public IsFootnote?: boolean) {
 			this.Chars = text.length;
-//			this.text = this.text.replace('\u00AD', '&shy;')
+			//			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 		}
 		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
@@ -38,57 +39,67 @@ module FB3DOM {
 			}
 
 			if (!HyphOn) {
-				OutStr = OutStr.replace(/\u00AD/,'');
+				OutStr = OutStr.replace(/\u00AD/, '');
 			}
 
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
-			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">'+OutStr+'</span>');  // todo - HyphOn must work, must just replace shy with ''
+			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">' + OutStr + '</span>');  // todo - HyphOn must work, must just replace shy with ''
 		}
 
 		public ArtID2URL(Chunk?: string): string {
 			return this.Parent.ArtID2URL(Chunk);
 		}
 
-		public GetXPath(Position: FB3Reader.IPosition): FB3Bookmarks.IXpath {
+		public GetXPath(): FB3Bookmarks.IXpath {
 
-			die('broken');
-			if (Position.length) {
-				var ChildID = Position[0];
-				if (this.Childs && this.Childs[ChildID] && this.Childs[ChildID].Data.xp) {
-					Position.shift();
-					return this.Childs[ChildID].GetXPath(Position);
-				}
-			}
-			var XPath = '';
-			if (this.Data && this.Data.xp) {
-				XPath = '/' + this.Data.xp.join('/');
-			} else {
-				return '';
-			}
+			//die('broken');
+			//if (Position.length) {
+			//	var ChildID = Position[0];
+			//	if (this.Childs && this.Childs[ChildID] && this.Childs[ChildID].Data.xp) {
+			//		Position.shift();
+			//		return this.Childs[ChildID].GetXPath(Position);
+			//	}
+			//}
+			//var XPath = '';
+			//if (this.Data && this.Data.xp) {
+			//	XPath = '/' + this.Data.xp.join('/');
+			//} else {
+			//	return '';
+			//}
 
-			if (ChildID) {
+			//if (ChildID) {
 
-			}
+			//}
+			// If we have our own xpath - we need no more over this
 			if (this.Data && this.Data.xp) {
 				return '/' + this.Data.xp.join('/');
-			}
-
-			var XPath = this.Parent.GetXPath();
-			var PreceedingSt = '';
-			var PageData = new PageContainer();
-
-			if (this.ID > 0) {
-				this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
-				if (PageData.Body.length) {
-					var Body = PageData.Body.join('');
-					Body = Body.replace(/<[^>]+>/, '');
-					XPath += '.' + Body.length.toFixed(0);
+			} else {
+				// If we have no our own xpath - we propagate request to the parent who has it
+				if (this.Parent.Data && !this.Parent.Data.xp) {
+					// Our parent is as pure as we are - let him handle this
+					// fixme - this is not going precice, should calc char N better, but for now it will do
+					return this.Parent.GetXPath();
 				}
-			}
-			return XPath;
-		}
 
+				// AL right, our parent has a nice and native xpath, and we have to add a char N to it
+				var XPath = this.Parent.GetXPath();
+
+				if (this.ID > 0) {
+					// If our ID is not 0 we are in the middle of the string - we point exactly
+					var PageData = new PageContainer();
+					this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
+					if (PageData.Body.length) {
+						var Body = PageData.Body.join('').replace(/<[^>]+>|\u00AD/gi, '');
+						if (Body.length) {
+							XPath += '.' + Body.length.toFixed(0);
+						}
+					}
+				}
+				return XPath;
+			}
+
+		}
 	}
 
 

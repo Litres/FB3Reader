@@ -48,8 +48,9 @@ module FB3DOM {
 		// Returns partial HTML for this node
 		ArtID2URL(Chunk?: string): string;
 		Data: IJSONBlock;
+		Childs: IFB3Block[];
 		GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer);
-		GetXPath(Position: FB3Reader.IPosition): FB3Bookmarks.IXpath;
+		GetXPath(): FB3Bookmarks.IXpath;
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -71,6 +72,8 @@ module FB3DOM {
 			ViewPortW: number,
 			ViewPortH: number,
 			Callback: IDOMTextReadyCallback): void;
+		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
+		GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXpath;
 	}
 
 }

@@ -1,4 +1,4 @@
-/// <reference path="Site/FB3ReaderSite.ts" />
+﻿/// <reference path="Site/FB3ReaderSite.ts" />
 /// <reference path="Reader/FB3Reader.ts" />
 /// <reference path="DOM/FB3DOM.ts" />
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
@@ -6,6 +6,7 @@
 /// <reference path="PagesPositionsCache/PPCache.ts" />
 var AFB3Reader;
 var AFB3PPCache;
+var BookmarksProcessor;
 
 window.onload = function () {
     var ArtID = '120421';
@@ -13,7 +14,7 @@ window.onload = function () {
     var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
     var DataProvider = new FB3DataProvider.AJAXDataProvider();
     var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
-    var BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor();
+    BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor();
     AFB3PPCache = new FB3PPCache.PPCache();
     AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
     AFB3Reader.NColumns = 3;
@@ -43,7 +44,10 @@ function InitNote(NoteType) {
         MarkupProgress.state = 'selectstart';
     } else {
         MarkupProgress.state = undefined;
-        ShowDialog(true);
+        var Bookmark = new FB3Bookmarks.Bookmark(BookmarksProcessor);
+        Bookmark.InitFromXY(true, MarkupProgress.start.x, MarkupProgress.start.y);
+        Bookmark.Group = 1;
+        ShowDialog(Bookmark);
     }
     HideMenu();
 }
@@ -81,7 +85,16 @@ function HideAll() {
     HideDialog();
 }
 
+var DialogBookmark;
 function ShowDialog(Bookmark) {
+    DialogBookmark = Bookmark;
+    document.getElementById('FromXPath').innerHTML = DialogBookmark.XStart;
+    document.getElementById('ToXPath').innerHTML = DialogBookmark.XEnd;
+    (document.getElementById('notetitle')).value = DialogBookmark.Title;
+    (document.getElementById('notedescr')).value = DialogBookmark.RawText;
+    (document.getElementById('notetype')).value = DialogBookmark.Group.toString();
+    document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
+    document.getElementById('sellwhole').style.display = Bookmark.ID ? 'none' : 'block';
     document.getElementById('notedialog').style.display = 'block';
 }
 

@@ -24,10 +24,12 @@ module FB3DOM {
 		public XPID: string;
 		public Data: IJSONBlock;
 		public Childs: IFB3Block[];
+		public Bookmarks: FB3Bookmarks.IBookmarks[];
 		constructor(private text: string, public Parent: IFB3Block, public ID: number, public IsFootnote?: boolean) {
 			this.Chars = text.length;
 			//			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
+			this.Bookmarks = Parent.Bookmarks;
 		}
 		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
 			var OutStr = this.text;

@@ -23,7 +23,7 @@
     <h1>FB3Reader basic example…</h1>
     <div id="reader"onmousedown="HideAll();"
         onmouseup="HideAll();"
-        oncontextmenu="ShowMenu('SelectStart',event);return false;">Loading…</div>
+        oncontextmenu="ShowMenu(event);return false;">Loading…</div>
     <div style="float:left">
         <b>Visible actions progress:</b>
         <div>Position xpath: /<span id="CurPos">-</span></div>
@@ -62,7 +62,7 @@
 
     <table border="1" class="contextmenu" id="SelectEnd">
         <tr>
-            <td onclick="FinishNote(0);">Закончить выделение цитаты</td>
+            <td onclick="FinishNote();">Закончить выделение цитаты</td>
         </tr>
         <tr>
             <td onclick="PageForward();HideMenu()">Перелистнуть страницу вперед</td>
@@ -95,7 +95,7 @@
         </tr>
         <tr>
             <td>&#160;</td>
-            <td><label id="sellwhole"><input type="checkbox" name="wholepara" id="wholepara" checked="checked"/> Выбирать абзацы целиком</label></td>
+            <td><label id="sellwhole"><input type="checkbox" name="wholepara" id="wholepara" onclick="RoundNoteUp()" onchange="RoundNoteUp()"/> Выбирать абзацы целиком</label></td>
         </tr>
         <tr>
             <td>From XPath</td>
@@ -107,7 +107,7 @@
         </tr>
         <tr>
             <td>&#160;</td>
-            <td style="text-align:right;"><input type="button" value="Готово" />&#160;<input type="button" value="Отмена" onclick="HideAll()"/></td>
+            <td style="text-align:right;"><input type="button" value="Готово" />&#160;<input type="button" value="Отмена" onclick="CancelAll()"/></td>
         </tr>
     </table>
 </body>

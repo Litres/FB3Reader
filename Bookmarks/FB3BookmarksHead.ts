@@ -18,8 +18,9 @@ module FB3Bookmarks {
 		Note: InnerFB2;
 		Extract: InnerFB2;
 		RawText: string;
-		InitFromXY(X: number, Y: number): void;
-		RoundMeUp(): IBookmark; // clones itself and expand range to capture block-level elements
+		InitFromXY(X: number, Y: number): boolean;
+		ExtendToXY(X: number, Y: number): boolean;
+		RoundClone(): IBookmark; // clones itself and expand range to capture block-level elements
 	}
 
 	export interface IBookmarks {
@@ -30,6 +31,7 @@ module FB3Bookmarks {
 		CurPos: IBookmark;
 		Load(ArtID: string, Callback?: IBookmarksReadyCallback);
 		Store(): void;
+		AmISelected(XPath: IXpath): IBookmark;
 	}
 
 }

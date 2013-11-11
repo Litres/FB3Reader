@@ -36,6 +36,7 @@ var FB3DOM;
 
             //			this.text = this.text.replace('\u00AD', '&shy;')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
+            this.Bookmarks = Parent.Bookmarks;
         }
         FB3Text.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
             var OutStr = this.text;

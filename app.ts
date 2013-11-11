@@ -15,7 +15,7 @@ window.onload = () => {
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
 	var DataProvider = new FB3DataProvider.AJAXDataProvider();
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
-	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor();
+	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
 	AFB3PPCache = new FB3PPCache.PPCache();
 	AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
 	AFB3Reader.NColumns = 3;
@@ -37,48 +37,71 @@ window.onload = () => {
 //	Если тык "конец заметки"
 //		ищем элемент и блок - элемент
 //		Открываем диалог с диапазоном
-
-var MarkupProgress: any = {};
-
+var MarkupProgress: string;
+var NativeNote: FB3Bookmarks.IBookmark;
+var RoundedNote: FB3Bookmarks.IBookmark;
 function InitNote(NoteType: string) {
 	if (NoteType == 'note') {
-		MarkupProgress.state = 'selectstart';
+		MarkupProgress = 'selectstart';
 	} else {
-		MarkupProgress.state = undefined;
-		var Bookmark = new FB3Bookmarks.Bookmark(BookmarksProcessor);
-		Bookmark.InitFromXY(true, MarkupProgress.start.x, MarkupProgress.start.y);
-		Bookmark.Group = 1;
-		ShowDialog(Bookmark);
+		RoundedNote = undefined;
+		NativeNote.Group = 1;
+		ShowDialog(NativeNote);
 	}
 	HideMenu();
 }
 
+function FinishNote():void {
+	HideMenu();
+	NativeNote.Group = 3;
+	ShowDialog(NativeNote);
+}
+
 function CancelNote() {
-	MarkupProgress.state = undefined;
+	MarkupProgress = undefined;
+	NativeNote = undefined;
 	HideMenu();
 }
 
 var MenuShown: string;
-function ShowMenu(control: string, e: MouseEvent) {
+function ShowMenu(e: MouseEvent) {
 	HideDialog();
-	if (MarkupProgress.state == 'selectstart') {
+	if (!NativeNote) {
+		NativeNote = new FB3Bookmarks.Bookmark(BookmarksProcessor);
+	}
+	var X = e.clientX + window.pageXOffset;
+	var Y = e.clientY + window.pageYOffset;
+	if (MarkupProgress == 'selectstart') {
 		MenuShown = 'SelectEnd';
+		if (!NativeNote.ExtendToXY(X, Y)) {
+			return undefined;
+		}
 	} else {
 		MenuShown = 'SelectStart'; 
+		if (!NativeNote.InitFromXY(X, Y)) {
+			NativeNote = undefined;
+			return undefined;
+		}
 	}
-	MarkupProgress.start = { x: e.clientX + window.pageXOffset, y: e.clientY + window.pageYOffset };
-	var posx = MarkupProgress.start.x + 3 + 'px'; //Left Position of Mouse Pointer
-	var posy = MarkupProgress.start.y + 3 + 'px'; //Top Position of Mouse Pointer
+
+	var posx = X + 3 + 'px'; //Left Position of Mouse Pointer
+	var posy = Y + 3 + 'px'; //Top Position of Mouse Pointer
 	document.getElementById(MenuShown).style.position = 'absolute';
 	document.getElementById(MenuShown).style.display = 'inline';
 	document.getElementById(MenuShown).style.left = posx;
 	document.getElementById(MenuShown).style.top = posy;
+	return true;
 }
 function HideMenu() {
 	if (MenuShown) {
 		document.getElementById(MenuShown).style.display = 'none';
 		MenuShown = undefined;
 	}
+}
+
+function CancelAll() {
+	CancelNote();
+	HideDialog();
 }
 
 function HideAll() {
@@ -97,6 +120,17 @@ function ShowDialog(Bookmark: FB3Bookmarks.IBookmark) {
 	document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
 	document.getElementById('sellwhole').style.display = Bookmark.ID?'none':'block';
 	document.getElementById('notedialog').style.display = 'block';
+}
+
+function RoundNoteUp() {
+	if ((<HTMLInputElement> document.getElementById('wholepara')).checked) {
+		if (!RoundedNote) {
+			RoundedNote = DialogBookmark.RoundClone();
+		}
+		ShowDialog(RoundedNote);
+	} else {
+		ShowDialog(NativeNote);
+	}
 }
 
 function HideDialog() {

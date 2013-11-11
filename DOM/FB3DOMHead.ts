@@ -49,6 +49,7 @@ module FB3DOM {
 		ArtID2URL(Chunk?: string): string;
 		Data: IJSONBlock;
 		Childs: IFB3Block[];
+		Bookmarks: FB3Bookmarks.IBookmarks[];
 		GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer);
 		GetXPath(): FB3Bookmarks.IXpath;
 	}

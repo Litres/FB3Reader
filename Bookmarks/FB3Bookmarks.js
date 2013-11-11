@@ -2,8 +2,10 @@
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
     var LitResBookmarksProcessor = (function () {
-        function LitResBookmarksProcessor() {
+        function LitResBookmarksProcessor(FB3DOM) {
+            this.FB3DOM = FB3DOM;
             this.Ready = false;
+            this.FB3DOM.Bookmarks.push(this);
         }
         LitResBookmarksProcessor.prototype.Load = function (ArtID, Callback) {
             this.Ready = true;
@@ -21,20 +23,43 @@ var FB3Bookmarks;
         }
         Bookmark.prototype.InitFromXY = function (X, Y) {
             var BaseFrom = this.Owner.Reader.ElementAtXY(X, Y);
-            this.Range.From = BaseFrom.slice(0);
-            if (RoundToBlock) {
-                // We search for first block-level parent if required
-                this.RoundToBlockLVLUp(this.Range.From);
-            }
-            if (X1 != undefined && Y1 != undefined) {
-                this.Range.To = this.Owner.Reader.ElementAtXY(X1, Y1);
-            } else {
+            if (BaseFrom) {
+                this.Range.From = BaseFrom.slice(0);
                 this.Range.To = BaseFrom;
+                this.GetDataFromText();
+                return true;
+            } else {
+                return undefined;
             }
-            if (RoundToBlock) {
-                // We search for first block-level parent if required
-                this.RoundToBlockLVLDn(this.Range.To);
+        };
+
+        Bookmark.prototype.ExtendToXY = function (X, Y) {
+            var BaseTo = this.Owner.Reader.ElementAtXY(X, Y);
+            if (BaseTo) {
+                this.Range.To = BaseTo;
+                this.GetDataFromText();
+                return true;
+            } else {
+                return undefined;
             }
+        };
+
+        Bookmark.prototype.RoundClone = function () {
+            var Clone = new Bookmark(this.Owner);
+
+            Clone.Range = FB3Reader.RangeClone(this.Range);
+
+            this.RoundToBlockLVLUp(Clone.Range.From);
+            this.RoundToBlockLVLDn(Clone.Range.To);
+
+            Clone.GetDataFromText();
+            Clone.Group = this.Group;
+            Clone.Class = this.Class;
+
+            return Clone;
+        };
+
+        Bookmark.prototype.GetDataFromText = function () {
             var PageData = new FB3DOM.PageContainer();
             this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, FB3Reader.RangeClone(this.Range), '', 100, 100, PageData);
 

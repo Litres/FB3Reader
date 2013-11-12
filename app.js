@@ -26,20 +26,10 @@ window.onload = function () {
     ShowPosition();
 };
 
-//Тык
-//	Если тык на закладку
-//		ищем элемент и блок - элемент
-//		Открываем диалог с точкой
-//	Если тык на заметку
-//		ищем элемент и блок - элемент
-//		запоминаем найденное
-//		ждем тыка "конец заметки
-//	Если тык "конец заметки"
-//		ищем элемент и блок - элемент
-//		Открываем диалог с диапазоном
 var MarkupProgress;
 var NativeNote;
 var RoundedNote;
+
 function InitNote(NoteType) {
     if (NoteType == 'note') {
         MarkupProgress = 'selectstart';
@@ -99,7 +89,7 @@ function HideMenu() {
     }
 }
 
-function CancelAll() {
+function FinishAll() {
     CancelNote();
     HideDialog();
 }
@@ -112,8 +102,8 @@ function HideAll() {
 var DialogBookmark;
 function ShowDialog(Bookmark) {
     DialogBookmark = Bookmark;
-    document.getElementById('FromXPath').innerHTML = DialogBookmark.XStart;
-    document.getElementById('ToXPath').innerHTML = DialogBookmark.XEnd;
+    document.getElementById('FromXPath').innerHTML = '/' + DialogBookmark.XStart.join('/');
+    document.getElementById('ToXPath').innerHTML = '/' + DialogBookmark.XEnd.join('/');
     (document.getElementById('notetitle')).value = DialogBookmark.Title;
     (document.getElementById('notedescr')).value = DialogBookmark.RawText;
     (document.getElementById('notetype')).value = DialogBookmark.Group.toString();
@@ -135,6 +125,12 @@ function RoundNoteUp() {
 
 function HideDialog() {
     document.getElementById('notedialog').style.display = 'none';
+}
+
+function ApplyBookmark() {
+    BookmarksProcessor.AddBookmark(DialogBookmark);
+    FinishAll();
+    AFB3Reader.Redraw();
 }
 
 function ShowPosition() {

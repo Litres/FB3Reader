@@ -35,6 +35,7 @@ var FB3Reader;
             NotesHeight: Range.NotesHeight
         };
     }
+    FB3Reader.PRIClone = PRIClone;
 
     var Reader = (function () {
         function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, PagesPositionsCache) {
@@ -467,6 +468,13 @@ var FB3Reader;
 
         Reader.prototype.IdleOff = function () {
             this.IsIdle = false;
+        };
+
+        Reader.prototype.Redraw = function () {
+            for (var I = 0; I < this.Pages.length; I++) {
+                this.Pages[I].Ready = false;
+            }
+            this.GoTO(this.CurStartPos.slice(0));
         };
         return Reader;
     })();

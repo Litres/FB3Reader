@@ -6,19 +6,30 @@ var FB3Bookmarks;
             this.FB3DOM = FB3DOM;
             this.Ready = false;
             this.FB3DOM.Bookmarks.push(this);
+            this.ClassPrefix = 'my_';
+            this.Bookmarks = new Array();
         }
+        LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
+            this.Bookmarks.push(Bookmark);
+        };
+
+        // fake methods below - todo to implement them
         LitResBookmarksProcessor.prototype.Load = function (ArtID, Callback) {
             this.Ready = true;
         };
         LitResBookmarksProcessor.prototype.Store = function () {
         };
+        LitResBookmarksProcessor.prototype.DropBookmark = function (Bookmark) {
+        };
         return LitResBookmarksProcessor;
     })();
     FB3Bookmarks.LitResBookmarksProcessor = LitResBookmarksProcessor;
+
     var Bookmark = (function () {
         function Bookmark(Owner) {
             this.Owner = Owner;
             this.Group = 0;
+            this.Class = 'default';
             this.Range = { From: undefined, To: undefined };
         }
         Bookmark.prototype.InitFromXY = function (X, Y) {
@@ -57,6 +68,10 @@ var FB3Bookmarks;
             Clone.Class = this.Class;
 
             return Clone;
+        };
+
+        Bookmark.prototype.ClassName = function () {
+            return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class;
         };
 
         Bookmark.prototype.GetDataFromText = function () {

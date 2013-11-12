@@ -208,4 +208,14 @@ table.contextmenu td {
     padding: 5px 7px;
 }
 
+.my_selec_3_default {
+    background-color:black;
+    color: white;
+}
+
+.my_selec_1_default {
+    background-color:red;
+    color: white;
+}
+
 /* debug */

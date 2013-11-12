@@ -1,25 +1,40 @@
 /// <reference path="FB3BookmarksHead.ts" />
 
 module FB3Bookmarks {
+
+
+
 	export class LitResBookmarksProcessor implements IBookmarks {
 		public Ready: boolean;
 		public Reader: FB3Reader.IFBReader;
 		public Bookmarks: IBookmark[];
 		public CurPos: IBookmark;
+		public ClassPrefix: string;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM) {
 			this.Ready = false;
 			this.FB3DOM.Bookmarks.push(this);
+			this.ClassPrefix = 'my_';
+			this.Bookmarks = new Array();
 		}
-		Load(ArtID: string, Callback?: IBookmarksReadyCallback) {
+
+		public AddBookmark(Bookmark: IBookmark): void {
+			this.Bookmarks.push(Bookmark);
+		}
+
+
+		// fake methods below - todo to implement them
+		public Load(ArtID: string, Callback?: IBookmarksReadyCallback) {
 			this.Ready = true; //fake
 		}
-		Store(): void { } // fake
+		public Store(): void { } // fake
+		public DropBookmark(Bookmark: IBookmark): void { } // fake
 	}
+
 	export class Bookmark implements IBookmark {
 		public ID: string;
 		public Range: FB3DOM.IRange;
-		public XStart: IXpath;
-		public XEnd: IXpath;
+		public XStart: IXPath;
+		public XEnd: IXPath;
 		public Group: number;
 		public Class: string;
 		public Title: string;
@@ -28,6 +43,7 @@ module FB3Bookmarks {
 		public RawText: string;
 		constructor(private Owner: IBookmarks) {
 			this.Group = 0;
+			this.Class = 'default';
 			this.Range = {From: undefined, To: undefined};
 		}
 
@@ -67,6 +83,10 @@ module FB3Bookmarks {
 			Clone.Class = this.Class;
 
 			return Clone;
+		}
+
+		public ClassName(): string {
+			return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class;
 		}
 
 		private GetDataFromText() {

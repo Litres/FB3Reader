@@ -43,5 +43,6 @@ module FB3Reader {
 		IdleOff(): void;
 		CurPosPercent(): number;
 		ElementAtXY(X: number, Y: number): IPosition;
+		Redraw(): void;
 	}
 }

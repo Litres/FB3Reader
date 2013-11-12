@@ -294,6 +294,12 @@ var FB3ReaderPage;
             }
         };
 
+        //public Redraw() {
+        //	if (!this.Ready || !this.RenderInstr) {
+        //		return
+        //	}
+        //	this.DrawInit([FB3Reader.PRIClone(this.RenderInstr)]);
+        //}
         ReaderPage.prototype.Reset = function () {
             clearTimeout(this.RenderMoreTimeout);
 

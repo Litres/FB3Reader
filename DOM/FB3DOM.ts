@@ -14,6 +14,7 @@ module FB3DOM {
 			}
 			if (!this.WaitedBlocks.length) {
 				var PageData = new PageContainer();
+				var AllBookmarks = new Array();
 				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
 				this.OnDone(PageData);
 				return true;
@@ -61,6 +62,8 @@ module FB3DOM {
 			this.ActiveRequests = [];
 			this.Ready = false;
 			this.XPID = '';
+			this.XPath = new Array();
+			this.Bookmarks = new Array();
 		}
 
 		public GetCloseTag(Range: IRange): string {
@@ -128,8 +131,16 @@ module FB3DOM {
 			return ResponcibleNode;
 		}
 
-		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXpath {
-			return this.GetElementByAddr(Position).GetXPath();
+		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath {
+			return this.GetElementByAddr(Position).XPath;
+		}
+
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
+			var FullBookmarksList: FB3Bookmarks.IBookmark[] = new Array;
+			for (var I = 0; I < this.Bookmarks.length; I++) {
+				FullBookmarksList = FullBookmarksList.concat(this.Bookmarks[I].Bookmarks);
+			}
+			super.GetHTML(HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, FullBookmarksList);
 		}
 
 

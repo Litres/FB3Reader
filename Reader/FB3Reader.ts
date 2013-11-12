@@ -27,7 +27,7 @@ module FB3Reader {
 		}
 	}
 
-	function PRIClone(Range: IPageRenderInstruction): IPageRenderInstruction {
+	export function PRIClone(Range: IPageRenderInstruction): IPageRenderInstruction {
 		return {
 			Range: RangeClone(Range.Range),
 			CacheAs: Range.CacheAs,
@@ -488,6 +488,13 @@ module FB3Reader {
 
 		public IdleOff(): void {
 			this.IsIdle = false;
+		}
+
+		public Redraw(): void {
+			for (var I = 0; I < this.Pages.length; I++) {
+				this.Pages[I].Ready = false;
+			}
+			this.GoTO(this.CurStartPos.slice(0));
 		}
 	}
 

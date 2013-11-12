@@ -19,19 +19,27 @@ module FB3DOM {
 	};
 	export var BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
 
+	// Each DOM-node holds xpath-adress of self as an array
+	// Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited
+
 	export class FB3Text implements IFB3Block {
 		public Chars: number;
 		public XPID: string;
 		public Data: IJSONBlock;
 		public Childs: IFB3Block[];
 		public Bookmarks: FB3Bookmarks.IBookmarks[];
+		public XPath: number[];
 		constructor(private text: string, public Parent: IFB3Block, public ID: number, public IsFootnote?: boolean) {
-			this.Chars = text.length;
+			this.Chars = this.text.replace('\u00AD', '&shy;').length;
 			//			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
-			this.Bookmarks = Parent.Bookmarks;
+			if (Parent) {
+				this.XPath = Parent.XPath.slice(0);
+				this.XPath.push(Parent.Chars);
+				this.Bookmarks = Parent.Bookmarks;
+			}
 		}
-		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {
 			var OutStr = this.text;
 			if (Range.To[0]) {
 				OutStr = OutStr.substr(0, Range.To[0]);
@@ -46,75 +54,93 @@ module FB3DOM {
 
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
-			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">' + OutStr + '</span>');  // todo - HyphOn must work, must just replace shy with ''
+			var ClassNames = this.GetBookmarkClasses(Bookmarks);
+			if (ClassNames) {
+				ClassNames = ' class="' + ClassNames + '"';
+			}
+
+			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');  // todo - HyphOn must work, must just replace shy with ''
 		}
 
 		public ArtID2URL(Chunk?: string): string {
 			return this.Parent.ArtID2URL(Chunk);
 		}
 
-		public GetXPath(): FB3Bookmarks.IXpath {
+		// Filters Bookmarks the way it contains no items childs. Returns
+		// class names for current element CSS
+		public GetBookmarkClasses(Bookmarks: FB3Bookmarks.IBookmark[]): string {
+			var ThisNodeSelections: string[] = new Array();
 
-			//die('broken');
-			//if (Position.length) {
-			//	var ChildID = Position[0];
-			//	if (this.Childs && this.Childs[ChildID] && this.Childs[ChildID].Data.xp) {
-			//		Position.shift();
-			//		return this.Childs[ChildID].GetXPath(Position);
-			//	}
-			//}
-			//var XPath = '';
-			//if (this.Data && this.Data.xp) {
-			//	XPath = '/' + this.Data.xp.join('/');
-			//} else {
-			//	return '';
-			//}
-
-			//if (ChildID) {
-
-			//}
-			// If we have our own xpath - we need no more over this
-			if (this.Data && this.Data.xp) {
-				return '/' + this.Data.xp.join('/');
-			} else {
-				// If we have no our own xpath - we propagate request to the parent who has it
-				if (this.Parent.Data && !this.Parent.Data.xp) {
-					// Our parent is as pure as we are - let him handle this
-					// fixme - this is not going precice, should calc char N better, but for now it will do
-					return this.Parent.GetXPath();
-				}
-
-				// AL right, our parent has a nice and native xpath, and we have to add a char N to it
-				var XPath = this.Parent.GetXPath();
-
-				if (this.ID > 0) {
-					// If our ID is not 0 we are in the middle of the string - we point exactly
-					var PageData = new PageContainer();
-					this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
-					if (PageData.Body.length) {
-						var Body = PageData.Body.join('').replace(/<[^>]+>|\u00AD/gi, '');
-						if (Body.length) {
-							XPath += '.' + Body.length.toFixed(0);
-						}
+			var EffectiveXPath = this.XPath;
+			if (this.XPath[this.XPath.length - 1] == 0) {
+				this.XPath.pop();
+			}
+			BookmarkLoop:
+			for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
+				var StartMinLength = Math.min(Bookmarks[Bookmark].XStart.length, EffectiveXPath.length);
+				for (var I = 0; I < StartMinLength - 1; I++) {
+					if (Bookmarks[Bookmark].XStart[I] > EffectiveXPath[I]
+						|| Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) { // This was long before us
+						Bookmarks.splice(Bookmark, 1);
+						break BookmarkLoop;
 					}
 				}
-				return XPath;
-			}
 
+				var EndMinLength = Math.min(Bookmarks[Bookmark].XEnd.length, EffectiveXPath.length);
+				for (var I = StartMinLength; I < EndMinLength - 1; I++) {
+					if (Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) { // This was long before us
+						Bookmarks.splice(Bookmark, 1);
+						break BookmarkLoop;
+					}
+				}
+
+				// Ok. At least we know this bookmark affects this node. The next
+				// question is - will it affect is as a whole or will it only affect some childs
+				if (
+					(
+					Bookmarks[Bookmark].XStart[StartMinLength] == EffectiveXPath[StartMinLength] // Start point equal to our point
+						&&
+					Bookmarks[Bookmark].XStart.length == EffectiveXPath.length
+							||
+					Bookmarks[Bookmark].XStart.length < EffectiveXPath.length										// Or start point belongs to the parent
+							||
+					Bookmarks[Bookmark].XStart[StartMinLength] < EffectiveXPath[StartMinLength] // Or it belongs to some preceeding sibling
+					)
+					&&
+					(
+					Bookmarks[Bookmark].XEnd[EndMinLength] == EffectiveXPath[EndMinLength] // Start point equal to our point
+						&&
+					Bookmarks[Bookmark].XEnd.length == EffectiveXPath.length
+							||
+					Bookmarks[Bookmark].XEnd.length < EffectiveXPath.length
+							||
+					Bookmarks[Bookmark].XStart[StartMinLength] > EffectiveXPath[StartMinLength]
+					)
+				) { // So. This exact tag is marked as selection or is is FULLY inside wider selection 
+					ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
+					Bookmarks.splice(Bookmark, 1); // No need to bother childs if this tag is FULLY selected
+				} // otherwise we leave all this to kids - they can handle on their own
+			}
+			return ThisNodeSelections.join(' ');
 		}
 	}
 
 
 	export class FB3Tag extends FB3Text implements IFB3Block {
-		public Chars: number;
 		public TagName: string;
-		public Childs: IFB3Block[];
 
-		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer):void {
+		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]):void {
+
+			// keep in mind after GetBookmarkClasses Bookmarks is cleaned of al unneeded bookmarks
+			var ClassNames = '';
+			if (Bookmarks.length) {
+				ClassNames = this.GetBookmarkClasses(Bookmarks);
+			}
+
 			if (this.IsFootnote) {
-				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
+				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
 			} else {
-				PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
+				PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
 			}
 			var CloseTag = this.GetCloseTag(Range);
 			var From = Range.From.shift() || 0;
@@ -140,17 +166,21 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData);
+				this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
 			}
 			(this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
 		}
 
 		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean) {
 			super('', Parent, ID, IsFootnote);
-
 			if (Data === null) return;
 
 			this.TagName = Data.t;
+
+			if (Data.xp) {
+				this.XPath = this.Data.xp;
+			}
+
 			this.Childs = new Array();
 			var Base = 0;
 			if (Data.f) {
@@ -175,6 +205,9 @@ module FB3DOM {
 					this.Chars += Kid.Chars;
 				}
 			}
+			if (Data.xp) {
+				this.XPath.push(0);
+			}
 		}
 
 		public HTMLTagName(): string {
@@ -193,13 +226,17 @@ module FB3DOM {
 		public GetCloseTag(Range: IRange): string {
 			return '</' + this.HTMLTagName() + '>';
 		}
-		public GetInitTag(Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number): InnerHTML[] {
+		public GetInitTag(Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
 			var ElementClasses = new Array();
 			if (Range.From[0] > 0) {
-				ElementClasses.push('cut_top')
+				ElementClasses.push('cut_top');
 			}
 			if (Range.To[0] < this.Childs.length - 1) {
-				ElementClasses.push('cut_bot')
+				ElementClasses.push('cut_bot');
+			}
+
+			if (MoreClasses) {
+				ElementClasses.push(MoreClasses);
 			}
 			//if (this.Data.xp && this.Data.xp.length) {
 			//	ElementClasses.push('xp_' + this.Data.xp.join('_'))

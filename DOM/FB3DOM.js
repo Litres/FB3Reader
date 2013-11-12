@@ -28,6 +28,7 @@ var FB3DOM;
             }
             if (!this.WaitedBlocks.length) {
                 var PageData = new PageContainer();
+                var AllBookmarks = new Array();
                 var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
                 this.OnDone(PageData);
                 return true;
@@ -59,6 +60,8 @@ var FB3DOM;
             this.ActiveRequests = [];
             this.Ready = false;
             this.XPID = '';
+            this.XPath = new Array();
+            this.Bookmarks = new Array();
         }
         DOM.prototype.GetCloseTag = function (Range) {
             return '';
@@ -128,7 +131,15 @@ var FB3DOM;
         };
 
         DOM.prototype.GetXPathFromPos = function (Position) {
-            return this.GetElementByAddr(Position).GetXPath();
+            return this.GetElementByAddr(Position).XPath;
+        };
+
+        DOM.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
+            var FullBookmarksList = new Array();
+            for (var I = 0; I < this.Bookmarks.length; I++) {
+                FullBookmarksList = FullBookmarksList.concat(this.Bookmarks[I].Bookmarks);
+            }
+            _super.prototype.GetHTML.call(this, HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, FullBookmarksList);
         };
 
         DOM.prototype.OnChunkLoaded = function (Data, CustomData) {

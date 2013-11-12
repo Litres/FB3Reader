@@ -355,6 +355,13 @@ module FB3ReaderPage {
 			}
 		}
 
+		//public Redraw() {
+		//	if (!this.Ready || !this.RenderInstr) {
+		//		return
+		//	}
+		//	this.DrawInit([FB3Reader.PRIClone(this.RenderInstr)]);
+		//}
+
 		Reset() {
 			clearTimeout(this.RenderMoreTimeout);
 			//			console.log('Reset ' + this.ID);

@@ -50,8 +50,14 @@ module FB3DOM {
 		Data: IJSONBlock;
 		Childs: IFB3Block[];
 		Bookmarks: FB3Bookmarks.IBookmarks[];
-		GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer);
-		GetXPath(): FB3Bookmarks.IXpath;
+		XPath: FB3Bookmarks.IXPath;		// Source FB2 file adress - allows to work with store/load selections
+		GetHTML(HyphOn: boolean,
+			Range: IRange,
+			IDPrefix: string,
+			ViewPortW: number,
+			ViewPortH: number,
+			PageData: IPageContainer,
+			Bookmarks: FB3Bookmarks.IBookmark[]);
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -74,7 +80,13 @@ module FB3DOM {
 			ViewPortH: number,
 			Callback: IDOMTextReadyCallback): void;
 		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
-		GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXpath;
+		GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath;
+		GetHTML(HyphOn: boolean,
+			Range: IRange,
+			IDPrefix: string,
+			ViewPortW: number,
+			ViewPortH: number,
+			PageData: IPageContainer);
 	}
 
 }

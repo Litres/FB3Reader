@@ -25,21 +25,10 @@ window.onload = () => {
 	ShowPosition();
 };
 
-
-//Тык
-//	Если тык на закладку
-//		ищем элемент и блок - элемент
-//		Открываем диалог с точкой
-//	Если тык на заметку
-//		ищем элемент и блок - элемент
-//		запоминаем найденное
-//		ждем тыка "конец заметки
-//	Если тык "конец заметки"
-//		ищем элемент и блок - элемент
-//		Открываем диалог с диапазоном
 var MarkupProgress: string;
 var NativeNote: FB3Bookmarks.IBookmark;
 var RoundedNote: FB3Bookmarks.IBookmark;
+
 function InitNote(NoteType: string) {
 	if (NoteType == 'note') {
 		MarkupProgress = 'selectstart';
@@ -99,7 +88,7 @@ function HideMenu() {
 	}
 }
 
-function CancelAll() {
+function FinishAll() {
 	CancelNote();
 	HideDialog();
 }
@@ -112,8 +101,8 @@ function HideAll() {
 var DialogBookmark: FB3Bookmarks.IBookmark;
 function ShowDialog(Bookmark: FB3Bookmarks.IBookmark) {
 	DialogBookmark = Bookmark;
-	document.getElementById('FromXPath').innerHTML = <string> DialogBookmark.XStart;
-	document.getElementById('ToXPath').innerHTML = <string> DialogBookmark.XEnd;
+	document.getElementById('FromXPath').innerHTML = '/' + DialogBookmark.XStart.join('/');
+	document.getElementById('ToXPath').innerHTML = '/' + DialogBookmark.XEnd.join('/');
 	(<HTMLInputElement> document.getElementById('notetitle')).value = DialogBookmark.Title;
 	(<HTMLInputElement> document.getElementById('notedescr')).value = DialogBookmark.RawText;
 	(<HTMLSelectElement> document.getElementById('notetype')).value = DialogBookmark.Group.toString();
@@ -135,6 +124,12 @@ function RoundNoteUp() {
 
 function HideDialog() {
 	document.getElementById('notedialog').style.display = 'none';
+}
+
+function ApplyBookmark() {
+	BookmarksProcessor.AddBookmark(DialogBookmark);
+	FinishAll();
+	AFB3Reader.Redraw();
 }
 
 

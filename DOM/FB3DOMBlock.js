@@ -26,19 +26,25 @@ var FB3DOM;
     };
     FB3DOM.BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
 
+    // Each DOM-node holds xpath-adress of self as an array
+    // Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited
     var FB3Text = (function () {
         function FB3Text(text, Parent, ID, IsFootnote) {
             this.text = text;
             this.Parent = Parent;
             this.ID = ID;
             this.IsFootnote = IsFootnote;
-            this.Chars = text.length;
+            this.Chars = this.text.replace('\u00AD', '&shy;').length;
 
             //			this.text = this.text.replace('\u00AD', '&shy;')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
-            this.Bookmarks = Parent.Bookmarks;
+            if (Parent) {
+                this.XPath = Parent.XPath.slice(0);
+                this.XPath.push(Parent.Chars);
+                this.Bookmarks = Parent.Bookmarks;
+            }
         }
-        FB3Text.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
+        FB3Text.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
             var OutStr = this.text;
             if (Range.To[0]) {
                 OutStr = OutStr.substr(0, Range.To[0]);
@@ -53,39 +59,51 @@ var FB3DOM;
 
             var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
-            TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '">' + OutStr + '</span>');
+            var ClassNames = this.GetBookmarkClasses(Bookmarks);
+            if (ClassNames) {
+                ClassNames = ' class="' + ClassNames + '"';
+            }
+
+            TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
         };
 
         FB3Text.prototype.ArtID2URL = function (Chunk) {
             return this.Parent.ArtID2URL(Chunk);
         };
 
-        FB3Text.prototype.GetXPath = function () {
-            if (this.Data && this.Data.xp) {
-                return '/' + this.Data.xp.join('/');
-            } else {
-                if (this.Parent.Data && !this.Parent.Data.xp) {
-                    // Our parent is as pure as we are - let him handle this
-                    // fixme - this is not going precice, should calc char N better, but for now it will do
-                    return this.Parent.GetXPath();
-                }
+        // Filters Bookmarks the way it contains no items childs. Returns
+        // class names for current element CSS
+        FB3Text.prototype.GetBookmarkClasses = function (Bookmarks) {
+            var ThisNodeSelections = new Array();
 
-                // AL right, our parent has a nice and native xpath, and we have to add a char N to it
-                var XPath = this.Parent.GetXPath();
-
-                if (this.ID > 0) {
-                    // If our ID is not 0 we are in the middle of the string - we point exactly
-                    var PageData = new FB3DOM.PageContainer();
-                    this.Parent.GetHTML(false, { From: [0], To: [this.ID] }, '', 0, 0, PageData);
-                    if (PageData.Body.length) {
-                        var Body = PageData.Body.join('').replace(/<[^>]+>|\u00AD/gi, '');
-                        if (Body.length) {
-                            XPath += '.' + Body.length.toFixed(0);
-                        }
+            var EffectiveXPath = this.XPath;
+            if (this.XPath[this.XPath.length - 1] == 0) {
+                this.XPath.pop();
+            }
+            BookmarkLoop:
+            for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
+                var StartMinLength = Math.min(Bookmarks[Bookmark].XStart.length, EffectiveXPath.length);
+                for (var I = 0; I < StartMinLength - 1; I++) {
+                    if (Bookmarks[Bookmark].XStart[I] > EffectiveXPath[I] || Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) {
+                        Bookmarks.splice(Bookmark, 1);
+                        break BookmarkLoop;
                     }
                 }
-                return XPath;
+
+                var EndMinLength = Math.min(Bookmarks[Bookmark].XEnd.length, EffectiveXPath.length);
+                for (var I = StartMinLength; I < EndMinLength - 1; I++) {
+                    if (Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) {
+                        Bookmarks.splice(Bookmark, 1);
+                        break BookmarkLoop;
+                    }
+                }
+
+                if ((Bookmarks[Bookmark].XStart[StartMinLength] == EffectiveXPath[StartMinLength] && Bookmarks[Bookmark].XStart.length == EffectiveXPath.length || Bookmarks[Bookmark].XStart.length < EffectiveXPath.length || Bookmarks[Bookmark].XStart[StartMinLength] < EffectiveXPath[StartMinLength]) && (Bookmarks[Bookmark].XEnd[EndMinLength] == EffectiveXPath[EndMinLength] && Bookmarks[Bookmark].XEnd.length == EffectiveXPath.length || Bookmarks[Bookmark].XEnd.length < EffectiveXPath.length || Bookmarks[Bookmark].XStart[StartMinLength] > EffectiveXPath[StartMinLength])) {
+                    ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
+                    Bookmarks.splice(Bookmark, 1);
+                }
             }
+            return ThisNodeSelections.join(' ');
         };
         return FB3Text;
     })();
@@ -96,11 +114,15 @@ var FB3DOM;
         function FB3Tag(Data, Parent, ID, IsFootnote) {
             _super.call(this, '', Parent, ID, IsFootnote);
             this.Data = Data;
-
             if (Data === null)
                 return;
 
             this.TagName = Data.t;
+
+            if (Data.xp) {
+                this.XPath = this.Data.xp;
+            }
+
             this.Childs = new Array();
             var Base = 0;
             if (Data.f) {
@@ -125,12 +147,21 @@ var FB3DOM;
                     this.Chars += Kid.Chars;
                 }
             }
+            if (Data.xp) {
+                this.XPath.push(0);
+            }
         }
-        FB3Tag.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
+        FB3Tag.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
+            // keep in mind after GetBookmarkClasses Bookmarks is cleaned of al unneeded bookmarks
+            var ClassNames = '';
+            if (Bookmarks.length) {
+                ClassNames = this.GetBookmarkClasses(Bookmarks);
+            }
+
             if (this.IsFootnote) {
-                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
+                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
             } else {
-                PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH));
+                PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
             }
             var CloseTag = this.GetCloseTag(Range);
             var From = Range.From.shift() || 0;
@@ -156,7 +187,7 @@ var FB3DOM;
                 if (I == To) {
                     KidRange.To = Range.To;
                 }
-                this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData);
+                this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
             }
             (this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
         };
@@ -177,13 +208,17 @@ var FB3DOM;
         FB3Tag.prototype.GetCloseTag = function (Range) {
             return '</' + this.HTMLTagName() + '>';
         };
-        FB3Tag.prototype.GetInitTag = function (Range, IDPrefix, ViewPortW, ViewPortH) {
+        FB3Tag.prototype.GetInitTag = function (Range, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var ElementClasses = new Array();
             if (Range.From[0] > 0) {
                 ElementClasses.push('cut_top');
             }
             if (Range.To[0] < this.Childs.length - 1) {
                 ElementClasses.push('cut_bot');
+            }
+
+            if (MoreClasses) {
+                ElementClasses.push(MoreClasses);
             }
 
             if (this.IsFootnote) {

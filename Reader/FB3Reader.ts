@@ -4,11 +4,15 @@
 module FB3Reader {
 //	interface IDumbCallback { () }
 
-	function PosCompare(Pos1: IPosition, Pos2: IPosition): number { // 0 on equal, 1 if Pos1 is PAST Pos2, -1 othervise
+	// 0 on equal
+	// 1 if 1 past 2 on child level like [0,1,2] is past [0,1]
+	// 10 if Pos1 is PAST Pos2 on subling level like [0,1,2] is past [0,2,1]
+	// -1 and -10 are the cases where Pos2 is below Pos1 respectively
+	export function PosCompare(Pos1: number[], Pos2: number[]): number {
 		var Result = 0; // Positions are equal
 		for (var I = 0; I < Math.min(Pos1.length, Pos2.length); I++) {
 			if (Pos1[I] != Pos2[I]) {
-				Result = Pos1[I]*1 > Pos2[I]*1 ? 1 : -1;
+				Result = Pos1[I]*1 > Pos2[I]*1 ? 10 : -10;
 				break;
 			}
 		}

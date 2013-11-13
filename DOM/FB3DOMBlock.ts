@@ -66,60 +66,40 @@ module FB3DOM {
 			return this.Parent.ArtID2URL(Chunk);
 		}
 
+		public RealXPath(): FB3Bookmarks.IXPath {
+			return this.XPath.slice(0);
+		}
+
 		// Filters Bookmarks the way it contains no items childs. Returns
 		// class names for current element CSS
 		public GetBookmarkClasses(Bookmarks: FB3Bookmarks.IBookmark[]): string {
+			if (!Bookmarks.length) { return ''}
+
 			var ThisNodeSelections: string[] = new Array();
 
-			var EffectiveXPath = this.XPath;
-			if (this.XPath[this.XPath.length - 1] == 0) {
-				this.XPath.pop();
-			}
-			BookmarkLoop:
+			var EffectiveXPath = this.RealXPath();
+
 			for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
-				var StartMinLength = Math.min(Bookmarks[Bookmark].XStart.length, EffectiveXPath.length);
-				for (var I = 0; I < StartMinLength - 1; I++) {
-					if (Bookmarks[Bookmark].XStart[I] > EffectiveXPath[I]
-						|| Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) { // This was long before us
-						Bookmarks.splice(Bookmark, 1);
-						break BookmarkLoop;
-					}
+
+				var HowIsStart = FB3Reader.PosCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
+				var HowisEnd = FB3Reader.PosCompare(Bookmarks[Bookmark].XEnd, EffectiveXPath);
+
+				// Start point as far beoung or end point is much before - no use for us or our children
+				if (HowIsStart == 10 || HowisEnd == -10) {
+					Bookmarks.splice(Bookmark, 1);
+					continue;
 				}
 
-				var EndMinLength = Math.min(Bookmarks[Bookmark].XEnd.length, EffectiveXPath.length);
-				for (var I = StartMinLength; I < EndMinLength - 1; I++) {
-					if (Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) { // This was long before us
-						Bookmarks.splice(Bookmark, 1);
-						break BookmarkLoop;
-					}
+				// We are not fully in deal, but some of our kids will be surely affected, so we leave
+				// record in Bookmarks for them
+				if (HowIsStart == 1 || HowisEnd == 1) {
+					continue;
 				}
 
-				// Ok. At least we know this bookmark affects this node. The next
-				// question is - will it affect is as a whole or will it only affect some childs
-				if (
-					(
-					Bookmarks[Bookmark].XStart[StartMinLength] == EffectiveXPath[StartMinLength] // Start point equal to our point
-						&&
-					Bookmarks[Bookmark].XStart.length == EffectiveXPath.length
-							||
-					Bookmarks[Bookmark].XStart.length < EffectiveXPath.length										// Or start point belongs to the parent
-							||
-					Bookmarks[Bookmark].XStart[StartMinLength] < EffectiveXPath[StartMinLength] // Or it belongs to some preceeding sibling
-					)
-					&&
-					(
-					Bookmarks[Bookmark].XEnd[EndMinLength] == EffectiveXPath[EndMinLength] // Start point equal to our point
-						&&
-					Bookmarks[Bookmark].XEnd.length == EffectiveXPath.length
-							||
-					Bookmarks[Bookmark].XEnd.length < EffectiveXPath.length
-							||
-					Bookmarks[Bookmark].XStart[StartMinLength] > EffectiveXPath[StartMinLength]
-					)
-				) { // So. This exact tag is marked as selection or is is FULLY inside wider selection 
-					ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
-					Bookmarks.splice(Bookmark, 1); // No need to bother childs if this tag is FULLY selected
-				} // otherwise we leave all this to kids - they can handle on their own
+				// Our tag is directly targeted or is fully within of the selection
+				// In both cases we mark it as a whole and leave our kids alone
+				ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
+				Bookmarks.splice(Bookmark, 1); // No need to bother childs if this tag is FULLY selected
 			}
 			return ThisNodeSelections.join(' ');
 		}
@@ -221,6 +201,12 @@ module FB3DOM {
 			} else {
 				return this.TagName;
 			}
+		}
+
+		public RealXPath(): FB3Bookmarks.IXPath {
+			var RXP = this.XPath.slice(0);
+			RXP.pop();
+			return RXP;
 		}
 
 		public GetCloseTag(Range: IRange): string {

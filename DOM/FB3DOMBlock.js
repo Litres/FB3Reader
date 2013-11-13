@@ -71,37 +71,38 @@ var FB3DOM;
             return this.Parent.ArtID2URL(Chunk);
         };
 
+        FB3Text.prototype.RealXPath = function () {
+            return this.XPath.slice(0);
+        };
+
         // Filters Bookmarks the way it contains no items childs. Returns
         // class names for current element CSS
         FB3Text.prototype.GetBookmarkClasses = function (Bookmarks) {
+            if (!Bookmarks.length) {
+                return '';
+            }
+
             var ThisNodeSelections = new Array();
 
-            var EffectiveXPath = this.XPath;
-            if (this.XPath[this.XPath.length - 1] == 0) {
-                this.XPath.pop();
-            }
-            BookmarkLoop:
+            var EffectiveXPath = this.RealXPath();
+
             for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
-                var StartMinLength = Math.min(Bookmarks[Bookmark].XStart.length, EffectiveXPath.length);
-                for (var I = 0; I < StartMinLength - 1; I++) {
-                    if (Bookmarks[Bookmark].XStart[I] > EffectiveXPath[I] || Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) {
-                        Bookmarks.splice(Bookmark, 1);
-                        break BookmarkLoop;
-                    }
-                }
+                var HowIsStart = FB3Reader.PosCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
+                var HowisEnd = FB3Reader.PosCompare(Bookmarks[Bookmark].XEnd, EffectiveXPath);
 
-                var EndMinLength = Math.min(Bookmarks[Bookmark].XEnd.length, EffectiveXPath.length);
-                for (var I = StartMinLength; I < EndMinLength - 1; I++) {
-                    if (Bookmarks[Bookmark].XEnd[I] < EffectiveXPath[I]) {
-                        Bookmarks.splice(Bookmark, 1);
-                        break BookmarkLoop;
-                    }
-                }
-
-                if ((Bookmarks[Bookmark].XStart[StartMinLength] == EffectiveXPath[StartMinLength] && Bookmarks[Bookmark].XStart.length == EffectiveXPath.length || Bookmarks[Bookmark].XStart.length < EffectiveXPath.length || Bookmarks[Bookmark].XStart[StartMinLength] < EffectiveXPath[StartMinLength]) && (Bookmarks[Bookmark].XEnd[EndMinLength] == EffectiveXPath[EndMinLength] && Bookmarks[Bookmark].XEnd.length == EffectiveXPath.length || Bookmarks[Bookmark].XEnd.length < EffectiveXPath.length || Bookmarks[Bookmark].XStart[StartMinLength] > EffectiveXPath[StartMinLength])) {
-                    ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
+                if (HowIsStart == 10 || HowisEnd == -10) {
                     Bookmarks.splice(Bookmark, 1);
+                    continue;
                 }
+
+                if (HowIsStart == 1 || HowisEnd == 1) {
+                    continue;
+                }
+
+                // Our tag is directly targeted or is fully within of the selection
+                // In both cases we mark it as a whole and leave our kids alone
+                ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
+                Bookmarks.splice(Bookmark, 1);
             }
             return ThisNodeSelections.join(' ');
         };
@@ -203,6 +204,12 @@ var FB3DOM;
             } else {
                 return this.TagName;
             }
+        };
+
+        FB3Tag.prototype.RealXPath = function () {
+            var RXP = this.XPath.slice(0);
+            RXP.pop();
+            return RXP;
         };
 
         FB3Tag.prototype.GetCloseTag = function (Range) {

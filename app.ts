@@ -109,6 +109,7 @@ function ShowDialog(Bookmark: FB3Bookmarks.IBookmark) {
 	document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
 	document.getElementById('sellwhole').style.display = Bookmark.ID?'none':'block';
 	document.getElementById('notedialog').style.display = 'block';
+	(<HTMLInputElement> document.getElementById('wholepara')).checked = false;
 }
 
 function RoundNoteUp() {

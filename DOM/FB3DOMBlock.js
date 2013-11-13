@@ -29,7 +29,7 @@ var FB3DOM;
     // Each DOM-node holds xpath-adress of self as an array
     // Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited
     var FB3Text = (function () {
-        function FB3Text(text, Parent, ID, IsFootnote) {
+        function FB3Text(text, Parent, ID, NodeN, Chars, IsFootnote) {
             this.text = text;
             this.Parent = Parent;
             this.ID = ID;
@@ -40,7 +40,8 @@ var FB3DOM;
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
             if (Parent) {
                 this.XPath = Parent.XPath.slice(0);
-                this.XPath.push(Parent.Chars);
+                this.XPath.push(NodeN);
+                this.XPath.push(Chars);
                 this.Bookmarks = Parent.Bookmarks;
             }
         }
@@ -113,7 +114,7 @@ var FB3DOM;
     var FB3Tag = (function (_super) {
         __extends(FB3Tag, _super);
         function FB3Tag(Data, Parent, ID, IsFootnote) {
-            _super.call(this, '', Parent, ID, IsFootnote);
+            _super.call(this, '', Parent, ID, 1, 0, IsFootnote);
             this.Data = Data;
             if (Data === null)
                 return;
@@ -133,6 +134,8 @@ var FB3DOM;
                 this.Chars += NKid.Chars;
             }
             if (Data.c) {
+                var NodeN = 1;
+                var Chars = 0;
                 for (var I = 0; I < Data.c.length; I++) {
                     var Itm = Data.c[I];
                     var Kid;
@@ -140,9 +143,12 @@ var FB3DOM;
                         if (Data.f) {
                             Itm = Itm.replace(/[\[\]\{\}\(\)]+/g, '');
                         }
-                        Kid = new FB3Text(Itm, this, I + Base, IsFootnote);
+                        Kid = new FB3Text(Itm, this, I + Base, NodeN, Chars, IsFootnote);
+                        Chars += Kid.Chars;
                     } else {
                         Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);
+                        NodeN += 2;
+                        Chars = 0;
                     }
                     this.Childs.push(Kid);
                     this.Chars += Kid.Chars;

@@ -110,6 +110,7 @@ function ShowDialog(Bookmark) {
     document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
     document.getElementById('sellwhole').style.display = Bookmark.ID ? 'none' : 'block';
     document.getElementById('notedialog').style.display = 'block';
+    (document.getElementById('wholepara')).checked = false;
 }
 
 function RoundNoteUp() {

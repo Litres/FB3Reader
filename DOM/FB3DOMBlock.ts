@@ -29,13 +29,19 @@ module FB3DOM {
 		public Childs: IFB3Block[];
 		public Bookmarks: FB3Bookmarks.IBookmarks[];
 		public XPath: number[];
-		constructor(private text: string, public Parent: IFB3Block, public ID: number, public IsFootnote?: boolean) {
+		constructor(private text: string,
+			public Parent: IFB3Block,
+			public ID: number,
+			NodeN: number,
+			Chars: number,
+			public IsFootnote: boolean) {
 			this.Chars = this.text.replace('\u00AD', '&shy;').length;
 			//			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 			if (Parent) {
 				this.XPath = Parent.XPath.slice(0);
-				this.XPath.push(Parent.Chars);
+				this.XPath.push(NodeN);
+				this.XPath.push(Chars);
 				this.Bookmarks = Parent.Bookmarks;
 			}
 		}
@@ -152,7 +158,7 @@ module FB3DOM {
 		}
 
 		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean) {
-			super('', Parent, ID, IsFootnote);
+			super('', Parent, ID, 1, 0, IsFootnote);
 			if (Data === null) return;
 
 			this.TagName = Data.t;
@@ -170,6 +176,8 @@ module FB3DOM {
 				this.Chars += NKid.Chars;
 			}
 			if (Data.c) { // some tags. like <br/>, have no contents
+				var NodeN = 1; // For text nodes in the mixed content we need it's invisible-node number
+				var Chars = 0;
 				for (var I = 0; I < Data.c.length; I++) {
 					var Itm = Data.c[I];
 					var Kid: IFB3Block;
@@ -177,9 +185,12 @@ module FB3DOM {
 						if (Data.f) {
 							Itm = Itm.replace(/[\[\]\{\}\(\)]+/g, '');
 						}
-						Kid = new FB3Text(Itm, this, I + Base, IsFootnote);
+						Kid = new FB3Text(Itm, this, I + Base, NodeN, Chars, IsFootnote);
+						Chars += Kid.Chars;
 					} else {
 						Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);
+						NodeN += 2;
+						Chars = 0;
 					}
 					this.Childs.push(Kid);
 					this.Chars += Kid.Chars;

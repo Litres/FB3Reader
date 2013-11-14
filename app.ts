@@ -100,6 +100,12 @@ function FinishAll() {
 	HideDialog();
 }
 
+function DestroyBookmark() {
+	DialogBookmark.Detach();
+	FinishAll();
+	AFB3Reader.Redraw();
+}
+
 function HideAll() {
 	HideMenu();
 	HideDialog();
@@ -108,6 +114,8 @@ function HideAll() {
 var DialogBookmark: FB3Bookmarks.IBookmark;
 function ShowDialog(Bookmark: FB3Bookmarks.IBookmark) {
 	DialogBookmark = Bookmark;
+	BookmarksProcessor.AddBookmark(DialogBookmark);
+	AFB3Reader.Redraw();
 	document.getElementById('FromXPath').innerHTML = '/' + DialogBookmark.XStart.join('/');
 	document.getElementById('ToXPath').innerHTML = '/' + DialogBookmark.XEnd.join('/');
 	(<HTMLInputElement> document.getElementById('notetitle')).value = DialogBookmark.Title;
@@ -119,6 +127,7 @@ function ShowDialog(Bookmark: FB3Bookmarks.IBookmark) {
 }
 
 function RoundNoteUp() {
+	DialogBookmark.Detach();
 	if ((<HTMLInputElement> document.getElementById('wholepara')).checked) {
 		if (!RoundedNote) {
 			RoundedNote = DialogBookmark.RoundClone(true);
@@ -127,6 +136,7 @@ function RoundNoteUp() {
 	} else {
 		ShowDialog(NativeNote);
 	}
+	AFB3Reader.Redraw();
 }
 
 function HideDialog() {
@@ -134,13 +144,6 @@ function HideDialog() {
 	(<HTMLInputElement> document.getElementById('wholepara')).checked = false;
 	(<HTMLInputElement> document.getElementById('wholepara')).disabled = false;
 }
-
-function ApplyBookmark() {
-	BookmarksProcessor.AddBookmark(DialogBookmark);
-	FinishAll();
-	AFB3Reader.Redraw();
-}
-
 
 function ShowPosition() {
 	document.getElementById('CurPos').innerHTML = AFB3Reader.CurStartPos.join('/');

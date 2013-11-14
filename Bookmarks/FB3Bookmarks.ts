@@ -20,6 +20,14 @@ module FB3Bookmarks {
 		public AddBookmark(Bookmark: IBookmark): void {
 			this.Bookmarks.push(Bookmark);
 		}
+		public DropBookmark(Bookmark: IBookmark): void {
+			for (var I = 0; I < this.Bookmarks.length; I++) {
+				if (this.Bookmarks[I] == Bookmark) {
+					this.Bookmarks.splice(I, 1);
+					return;
+				}
+			}
+		}
 
 
 		// fake methods below - todo to implement them
@@ -27,7 +35,6 @@ module FB3Bookmarks {
 			this.Ready = true; //fake
 		}
 		public Store(): void { } // fake
-		public DropBookmark(Bookmark: IBookmark): void { } // fake
 	}
 
 	export class Bookmark implements IBookmark {
@@ -90,6 +97,11 @@ module FB3Bookmarks {
 			return Clone;
 		}
 
+		public Detach() {
+			this.Owner.DropBookmark(this);
+			// this.Owner.Store();
+		}
+
 		private RoundToWordLVLDn(Adress: FB3Reader.IPosition) {
 			var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
 			var PosInBlock = Adress[Adress.length - 1];
@@ -128,6 +140,9 @@ module FB3Bookmarks {
 		private RoundToBlockLVLDn(Adress: FB3Reader.IPosition) {
 			this.RoundToBlockLVLUp(Adress);
 			var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
+			if (Block.TagName && Block.TagName.match(FB3DOM.BlockLVLRegexp)) {
+				return;
+			}
 			if (Block.Parent.Childs.length > Block.ID + 1) {
 				Adress[Adress.length - 1]++;
 			} else {

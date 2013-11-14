@@ -12,14 +12,20 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
             this.Bookmarks.push(Bookmark);
         };
+        LitResBookmarksProcessor.prototype.DropBookmark = function (Bookmark) {
+            for (var I = 0; I < this.Bookmarks.length; I++) {
+                if (this.Bookmarks[I] == Bookmark) {
+                    this.Bookmarks.splice(I, 1);
+                    return;
+                }
+            }
+        };
 
         // fake methods below - todo to implement them
         LitResBookmarksProcessor.prototype.Load = function (ArtID, Callback) {
             this.Ready = true;
         };
         LitResBookmarksProcessor.prototype.Store = function () {
-        };
-        LitResBookmarksProcessor.prototype.DropBookmark = function (Bookmark) {
         };
         return LitResBookmarksProcessor;
     })();
@@ -75,6 +81,11 @@ var FB3Bookmarks;
             return Clone;
         };
 
+        Bookmark.prototype.Detach = function () {
+            this.Owner.DropBookmark(this);
+            // this.Owner.Store();
+        };
+
         Bookmark.prototype.RoundToWordLVLDn = function (Adress) {
             var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
             var PosInBlock = Adress[Adress.length - 1];
@@ -113,6 +124,9 @@ var FB3Bookmarks;
         Bookmark.prototype.RoundToBlockLVLDn = function (Adress) {
             this.RoundToBlockLVLUp(Adress);
             var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
+            if (Block.TagName && Block.TagName.match(FB3DOM.BlockLVLRegexp)) {
+                return;
+            }
             if (Block.Parent.Childs.length > Block.ID + 1) {
                 Adress[Adress.length - 1]++;
             } else {

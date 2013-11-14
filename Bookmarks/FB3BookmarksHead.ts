@@ -21,7 +21,8 @@ module FB3Bookmarks {
 		ClassName(): string;		// css class name for selections of this type
 		InitFromXY(X: number, Y: number): boolean;
 		ExtendToXY(X: number, Y: number): boolean;
-		RoundClone(ToBlock:boolean): IBookmark;// clones itself and expand range to capture block-level elements
+		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
+		Detach():void; // removes itself from the parent.
 	}
 
 	export interface IBookmarks {

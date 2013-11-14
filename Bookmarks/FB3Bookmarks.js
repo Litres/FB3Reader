@@ -55,19 +55,69 @@ var FB3Bookmarks;
             }
         };
 
-        Bookmark.prototype.RoundClone = function () {
+        Bookmark.prototype.RoundClone = function (ToBlock) {
             var Clone = new Bookmark(this.Owner);
 
             Clone.Range = FB3Reader.RangeClone(this.Range);
 
-            this.RoundToBlockLVLUp(Clone.Range.From);
-            this.RoundToBlockLVLDn(Clone.Range.To);
+            if (ToBlock) {
+                this.RoundToBlockLVLUp(Clone.Range.From);
+                this.RoundToBlockLVLDn(Clone.Range.To);
+            } else {
+                this.RoundToWordLVLUp(Clone.Range.From);
+                this.RoundToWordLVLDn(Clone.Range.To);
+            }
 
             Clone.GetDataFromText();
             Clone.Group = this.Group;
             Clone.Class = this.Class;
 
             return Clone;
+        };
+
+        Bookmark.prototype.RoundToWordLVLDn = function (Adress) {
+            var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
+            var PosInBlock = Adress[Adress.length - 1];
+            while (Block.Parent && (!Block.TagName || !Block.TagName.match(FB3DOM.BlockLVLRegexp))) {
+                Block = Block.Parent;
+                PosInBlock = Adress[Adress.length - 1];
+                Adress.pop();
+            }
+            while (PosInBlock < Block.Childs.length && !Block.Childs[PosInBlock].Childs && !Block.Childs[PosInBlock].text.match(/\s$/)) {
+                PosInBlock++;
+            }
+            Adress.push(PosInBlock);
+        };
+        Bookmark.prototype.RoundToWordLVLUp = function (Adress) {
+            var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
+            var PosInBlock = Adress[Adress.length - 1];
+            while (Block.Parent && (!Block.TagName || !Block.TagName.match(FB3DOM.BlockLVLRegexp))) {
+                Block = Block.Parent;
+                PosInBlock = Adress[Adress.length - 1];
+                Adress.pop();
+            }
+            PosInBlock++;
+            while (PosInBlock >= 0 && !Block.Childs[PosInBlock - 1].Childs && !Block.Childs[PosInBlock - 1].text.match(/\s$/)) {
+                PosInBlock--;
+            }
+            Adress.push(PosInBlock);
+        };
+
+        Bookmark.prototype.RoundToBlockLVLUp = function (Adress) {
+            var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
+            while (Block.Parent && (!Block.TagName || !Block.TagName.match(FB3DOM.BlockLVLRegexp))) {
+                Block = Block.Parent;
+                Adress.pop();
+            }
+        };
+        Bookmark.prototype.RoundToBlockLVLDn = function (Adress) {
+            this.RoundToBlockLVLUp(Adress);
+            var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
+            if (Block.Parent.Childs.length > Block.ID + 1) {
+                Adress[Adress.length - 1]++;
+            } else {
+                Adress.push(Block.Childs.length);
+            }
         };
 
         Bookmark.prototype.ClassName = function () {
@@ -94,23 +144,6 @@ var FB3Bookmarks;
             // todo - should fill this.Extract with something equal|close to raw fb2 fragment
             this.XStart = this.Owner.FB3DOM.GetXPathFromPos(this.Range.From.slice(0));
             this.XEnd = this.Owner.FB3DOM.GetXPathFromPos(this.Range.To.slice(0));
-        };
-
-        Bookmark.prototype.RoundToBlockLVLUp = function (Adress) {
-            var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
-            while (Block.Parent && (!Block.TagName || !Block.TagName.match(FB3DOM.BlockLVLRegexp))) {
-                Block = Block.Parent;
-                Adress.pop();
-            }
-        };
-        Bookmark.prototype.RoundToBlockLVLDn = function (Adress) {
-            this.RoundToBlockLVLUp(Adress);
-            var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
-            if (Block.Parent.Childs.length > Block.ID + 1) {
-                Adress[Adress.length - 1]++;
-            } else {
-                Adress.push(Block.Childs.length);
-            }
         };
 
         Bookmark.prototype.Raw2FB2 = function (RawText) {

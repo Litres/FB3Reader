@@ -35,7 +35,7 @@ function InitNote(NoteType) {
         MarkupProgress = 'selectstart';
     } else {
         RoundedNote = undefined;
-        NativeNote = NativeNote.RoundClone();
+        NativeNote = NativeNote.RoundClone(true);
         NativeNote.Group = 1;
         (document.getElementById('wholepara')).disabled = true;
         (document.getElementById('wholepara')).checked = true;
@@ -68,12 +68,16 @@ function ShowMenu(e) {
         MenuShown = 'SelectEnd';
         if (!NativeNote.ExtendToXY(X, Y)) {
             return undefined;
+        } else {
+            NativeNote = NativeNote.RoundClone(false);
         }
     } else {
         MenuShown = 'SelectStart';
         if (!NativeNote.InitFromXY(X, Y)) {
             NativeNote = undefined;
             return undefined;
+        } else {
+            NativeNote = NativeNote.RoundClone(false);
         }
     }
 
@@ -118,7 +122,7 @@ function ShowDialog(Bookmark) {
 function RoundNoteUp() {
     if ((document.getElementById('wholepara')).checked) {
         if (!RoundedNote) {
-            RoundedNote = DialogBookmark.RoundClone();
+            RoundedNote = DialogBookmark.RoundClone(true);
         }
         ShowDialog(RoundedNote);
     } else {

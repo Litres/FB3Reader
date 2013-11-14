@@ -50,6 +50,7 @@ module FB3DOM {
 		Data: IJSONBlock;
 		Childs: IFB3Block[];
 		Bookmarks: FB3Bookmarks.IBookmarks[];
+		text: string				// empty for tags, filled for text nodes
 		XPath: FB3Bookmarks.IXPath;		// Source FB2 file adress - allows to work with store/load selections
 		GetHTML(HyphOn: boolean,
 			Range: IRange,

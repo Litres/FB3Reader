@@ -29,7 +29,7 @@ module FB3DOM {
 		public Childs: IFB3Block[];
 		public Bookmarks: FB3Bookmarks.IBookmarks[];
 		public XPath: number[];
-		constructor(private text: string,
+		constructor(public text: string,
 			public Parent: IFB3Block,
 			public ID: number,
 			NodeN: number,

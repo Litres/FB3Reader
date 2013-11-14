@@ -72,10 +72,6 @@ module FB3DOM {
 			return this.Parent.ArtID2URL(Chunk);
 		}
 
-		public RealXPath(): FB3Bookmarks.IXPath {
-			return this.XPath.slice(0);
-		}
-
 		// Filters Bookmarks the way it contains no items childs. Returns
 		// class names for current element CSS
 		public GetBookmarkClasses(Bookmarks: FB3Bookmarks.IBookmark[]): string {
@@ -83,7 +79,7 @@ module FB3DOM {
 
 			var ThisNodeSelections: string[] = new Array();
 
-			var EffectiveXPath = this.RealXPath();
+			var EffectiveXPath = this.XPath.slice(0);
 
 			for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
 
@@ -196,9 +192,6 @@ module FB3DOM {
 					this.Chars += Kid.Chars;
 				}
 			}
-			if (Data.xp) {
-				this.XPath.push(0);
-			}
 		}
 
 		public HTMLTagName(): string {
@@ -212,12 +205,6 @@ module FB3DOM {
 			} else {
 				return this.TagName;
 			}
-		}
-
-		public RealXPath(): FB3Bookmarks.IXPath {
-			var RXP = this.XPath.slice(0);
-			RXP.pop();
-			return RXP;
 		}
 
 		public GetCloseTag(Range: IRange): string {

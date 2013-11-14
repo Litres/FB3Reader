@@ -72,10 +72,6 @@ var FB3DOM;
             return this.Parent.ArtID2URL(Chunk);
         };
 
-        FB3Text.prototype.RealXPath = function () {
-            return this.XPath.slice(0);
-        };
-
         // Filters Bookmarks the way it contains no items childs. Returns
         // class names for current element CSS
         FB3Text.prototype.GetBookmarkClasses = function (Bookmarks) {
@@ -85,7 +81,7 @@ var FB3DOM;
 
             var ThisNodeSelections = new Array();
 
-            var EffectiveXPath = this.RealXPath();
+            var EffectiveXPath = this.XPath.slice(0);
 
             for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
                 var HowIsStart = FB3Reader.PosCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
@@ -154,9 +150,6 @@ var FB3DOM;
                     this.Chars += Kid.Chars;
                 }
             }
-            if (Data.xp) {
-                this.XPath.push(0);
-            }
         }
         FB3Tag.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
             // keep in mind after GetBookmarkClasses Bookmarks is cleaned of al unneeded bookmarks
@@ -210,12 +203,6 @@ var FB3DOM;
             } else {
                 return this.TagName;
             }
-        };
-
-        FB3Tag.prototype.RealXPath = function () {
-            var RXP = this.XPath.slice(0);
-            RXP.pop();
-            return RXP;
         };
 
         FB3Tag.prototype.GetCloseTag = function (Range) {

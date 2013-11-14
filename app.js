@@ -35,7 +35,10 @@ function InitNote(NoteType) {
         MarkupProgress = 'selectstart';
     } else {
         RoundedNote = undefined;
+        NativeNote = NativeNote.RoundClone();
         NativeNote.Group = 1;
+        (document.getElementById('wholepara')).disabled = true;
+        (document.getElementById('wholepara')).checked = true;
         ShowDialog(NativeNote);
     }
     HideMenu();
@@ -110,7 +113,6 @@ function ShowDialog(Bookmark) {
     document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
     document.getElementById('sellwhole').style.display = Bookmark.ID ? 'none' : 'block';
     document.getElementById('notedialog').style.display = 'block';
-    (document.getElementById('wholepara')).checked = false;
 }
 
 function RoundNoteUp() {
@@ -126,6 +128,8 @@ function RoundNoteUp() {
 
 function HideDialog() {
     document.getElementById('notedialog').style.display = 'none';
+    (document.getElementById('wholepara')).checked = false;
+    (document.getElementById('wholepara')).disabled = false;
 }
 
 function ApplyBookmark() {

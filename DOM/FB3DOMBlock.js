@@ -45,7 +45,7 @@ var FB3DOM;
                 this.Bookmarks = Parent.Bookmarks;
             }
         }
-        FB3Text.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
+        FB3Text.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
             var OutStr = this.text;
             if (Range.To[0]) {
                 OutStr = OutStr.substr(0, Range.To[0]);
@@ -151,11 +151,16 @@ var FB3DOM;
                 }
             }
         }
-        FB3Tag.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
-            // keep in mind after GetBookmarkClasses Bookmarks is cleaned of al unneeded bookmarks
+        FB3Tag.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
+            // keep in mind after GetBookmarkClasses Bookmarks is cleaned of all unneeded bookmarks
             var ClassNames = '';
             if (Bookmarks.length) {
                 ClassNames = this.GetBookmarkClasses(Bookmarks);
+            }
+
+            if (BookStyleNotes && this.IsFootnote) {
+                // If we are not using book-like footnotes, no need to prefill text for them - they are invisible untill clicked
+                // we should do something about it
             }
 
             if (this.IsFootnote) {
@@ -187,7 +192,7 @@ var FB3DOM;
                 if (I == To) {
                     KidRange.To = Range.To;
                 }
-                this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
+                this.Childs[I].GetHTML(HyphOn, BookStyleNotes, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
             }
             (this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
         };

@@ -9,10 +9,11 @@ var __extends = this.__extends || function (d, b) {
 var FB3DOM;
 (function (FB3DOM) {
     var AsyncLoadConsumer = (function () {
-        function AsyncLoadConsumer(FB3DOM, WaitedBlocks, HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, OnDone) {
+        function AsyncLoadConsumer(FB3DOM, WaitedBlocks, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, OnDone) {
             this.FB3DOM = FB3DOM;
             this.WaitedBlocks = WaitedBlocks;
             this.HyphOn = HyphOn;
+            this.BookStyleNotes = BookStyleNotes;
             this.Range = Range;
             this.IDPrefix = IDPrefix;
             this.ViewPortW = ViewPortW;
@@ -29,7 +30,7 @@ var FB3DOM;
             if (!this.WaitedBlocks.length) {
                 var PageData = new PageContainer();
                 var AllBookmarks = new Array();
-                var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
+                var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
                 this.OnDone(PageData);
                 return true;
             } else {
@@ -94,15 +95,15 @@ var FB3DOM;
             }, this.Progressor);
             this.Progressor.HourglassOff(this);
         };
-        DOM.prototype.GetHTMLAsync = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, Callback) {
+        DOM.prototype.GetHTMLAsync = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback) {
             var _this = this;
             var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
             if (MissingChunks.length == 0) {
                 var PageData = new PageContainer();
-                this.GetHTML(HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
+                this.GetHTML(HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
                 Callback(PageData);
             } else {
-                this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, Callback));
+                this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback));
                 for (var I = 0; I < MissingChunks.length; I++) {
                     if (!this.DataChunks[MissingChunks[I]].loaded) {
                         var AjRequest = this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]), function (Data, CustomData) {
@@ -134,12 +135,12 @@ var FB3DOM;
             return this.GetElementByAddr(Position).XPath;
         };
 
-        DOM.prototype.GetHTML = function (HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
+        DOM.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
             var FullBookmarksList = new Array();
             for (var I = 0; I < this.Bookmarks.length; I++) {
                 FullBookmarksList = FullBookmarksList.concat(this.Bookmarks[I].Bookmarks);
             }
-            _super.prototype.GetHTML.call(this, HyphOn, Range, IDPrefix, ViewPortW, ViewPortH, PageData, FullBookmarksList);
+            _super.prototype.GetHTML.call(this, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, FullBookmarksList);
         };
 
         DOM.prototype.OnChunkLoaded = function (Data, CustomData) {

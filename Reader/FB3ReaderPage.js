@@ -155,7 +155,7 @@ var FB3ReaderPage;
                 Range = this.DefaultRangeApply(this.RenderInstr);
             }
 
-            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, FB3Reader.RangeClone(Range), this.ID + '_', this.ViewPortW, this.ViewPortH, function (PageData) {
+            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, this.FBReader.BookStyleNotes, FB3Reader.RangeClone(Range), this.ID + '_', this.ViewPortW, this.ViewPortH, function (PageData) {
                 return _this.DrawEnd(PageData);
             });
         };

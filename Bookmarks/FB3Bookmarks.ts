@@ -156,7 +156,7 @@ module FB3Bookmarks {
 
 		private GetDataFromText() {
 			var PageData = new FB3DOM.PageContainer();
-			this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, FB3Reader.RangeClone(this.Range), '', 100, 100, PageData);
+			this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, FB3Reader.RangeClone(this.Range), '', 100, 100, PageData);
 			// We first remove unknown characters
 			var InnerHTML = PageData.Body.join('').replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
 			// Then we extract plain text

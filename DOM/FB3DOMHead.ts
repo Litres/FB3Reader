@@ -53,6 +53,7 @@ module FB3DOM {
 		text: string				// empty for tags, filled for text nodes
 		XPath: FB3Bookmarks.IXPath;		// Source FB2 file adress - allows to work with store/load selections
 		GetHTML(HyphOn: boolean,
+			BookStyleNotes: boolean,
 			Range: IRange,
 			IDPrefix: string,
 			ViewPortW: number,
@@ -75,6 +76,7 @@ module FB3DOM {
 			ArtID: string,
 			OnDone: IIFB3DOMReadyFunc);
 		GetHTMLAsync(HyphOn: boolean,
+			BookStyleNotes:boolean,
 			Range: IRange,
 			IDPrefix: string,
 			ViewPortW: number,
@@ -83,6 +85,7 @@ module FB3DOM {
 		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
 		GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath;
 		GetHTML(HyphOn: boolean,
+			BookStyleNotes: boolean,
 			Range: IRange,
 			IDPrefix: string,
 			ViewPortW: number,

@@ -45,7 +45,7 @@ module FB3DOM {
 				this.Bookmarks = Parent.Bookmarks;
 			}
 		}
-		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {
+		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {
 			var OutStr = this.text;
 			if (Range.To[0]) {
 				OutStr = OutStr.substr(0, Range.To[0]);
@@ -111,12 +111,17 @@ module FB3DOM {
 	export class FB3Tag extends FB3Text implements IFB3Block {
 		public TagName: string;
 
-		public GetHTML(HyphOn: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]):void {
+		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]):void {
 
-			// keep in mind after GetBookmarkClasses Bookmarks is cleaned of al unneeded bookmarks
+			// keep in mind after GetBookmarkClasses Bookmarks is cleaned of all unneeded bookmarks
 			var ClassNames = '';
 			if (Bookmarks.length) {
 				ClassNames = this.GetBookmarkClasses(Bookmarks);
+			}
+
+			if (BookStyleNotes && this.IsFootnote) {
+				// If we are not using book-like footnotes, no need to prefill text for them - they are invisible untill clicked
+				// we should do something about it
 			}
 
 			if (this.IsFootnote) {
@@ -148,7 +153,7 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				this.Childs[I].GetHTML(HyphOn, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
+				this.Childs[I].GetHTML(HyphOn, BookStyleNotes, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
 			}
 			(this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
 		}

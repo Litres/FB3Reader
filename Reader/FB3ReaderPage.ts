@@ -212,6 +212,7 @@ module FB3ReaderPage {
 			}
 
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON,
+				this.FBReader.BookStyleNotes,
 				FB3Reader.RangeClone(Range),
 				this.ID + '_',
 				this.ViewPortW,

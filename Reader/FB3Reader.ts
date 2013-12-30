@@ -77,6 +77,7 @@ module FB3Reader {
 			this.NColumns = 2;
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
+			this.BookStyleNotes = true;
 //				this.CurStartPos = [495,0];
 			this.CurStartPos = [0];
 
@@ -443,6 +444,7 @@ module FB3Reader {
 						Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
 						this.FB3DOM.GetHTMLAsync(this.HyphON,
+							this.BookStyleNotes,
 							RangeClone(Range),
 							this.BackgroundRenderFrame.ID + '_',
 							this.BackgroundRenderFrame.ViewPortW,

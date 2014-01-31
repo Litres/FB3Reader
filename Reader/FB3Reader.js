@@ -56,10 +56,10 @@ var FB3Reader;
             this.CacheForward = 6;
             this.CacheBackward = 2;
             this.BookStyleNotes = true;
+            this.BookStyleNotesTemporaryOff = false;
+            this.CurStartPos = [25, 181];
 
-            //				this.CurStartPos = [495,0];
-            this.CurStartPos = [0];
-
+            //			this.CurStartPos = [0];
             this.IdleOff();
         }
         Reader.prototype.Init = function () {

@@ -125,9 +125,9 @@ module FB3DOM {
 			}
 
 			if (this.IsFootnote) {
-				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
+				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, ClassNames));
 			} else {
-				PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
+				PageData.Body = PageData.Body.concat(this.GetInitTag(Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, ClassNames));
 			}
 			var CloseTag = this.GetCloseTag(Range);
 			var From = Range.From.shift() || 0;
@@ -200,7 +200,9 @@ module FB3DOM {
 		}
 
 		public HTMLTagName(): string {
-			if (TagMapper[this.TagName]) {
+			if (this.Data.f) {
+				return 'a';
+			} else if (TagMapper[this.TagName]) {
 				return TagMapper[this.TagName];
 			} else if (this.TagName == 'title' && this.Data.xp) {
 				var lvl = this.Data.xp.length - 1;
@@ -215,7 +217,7 @@ module FB3DOM {
 		public GetCloseTag(Range: IRange): string {
 			return '</' + this.HTMLTagName() + '>';
 		}
-		public GetInitTag(Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
 			var ElementClasses = new Array();
 			if (Range.From[0] > 0) {
 				ElementClasses.push('cut_top');
@@ -235,6 +237,9 @@ module FB3DOM {
 				ElementClasses.push('footnote')
 			} else if (this.Data.f) {
 				ElementClasses.push('footnote_attached')
+				if (!BookStyleNotes) {
+					ElementClasses.push('footnote_clickable')
+				}
 			}
 
 			if (TagMapper[this.TagName]) {
@@ -278,7 +283,9 @@ module FB3DOM {
 			//			if (this.Data.i) {}
 			if (this.IsFootnote) {
 				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
-			} else {
+			} else if (this.Data.f && !BookStyleNotes) {
+				Out.push(' onclick="alert(1)" href="#">');
+			}  else {
 				Out.push(' id="n_' + IDPrefix + this.XPID + '">');
 			}
 			return Out;

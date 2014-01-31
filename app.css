@@ -226,4 +226,15 @@ p.my_selec_1_default {
     background-color: #004d93;
 }
 
+.footnote_clickable {
+   text-decoration: underline;
+    color: white;
+    display: inline-block;
+}
+.footnote_clickable span {
+    color: white;
+    margin: 0 5px;
+    display: inline-block;
+}
+
 /* debug */

@@ -3,10 +3,13 @@ var FB3ReaderSite;
 (function (FB3ReaderSite) {
     var ExampleSite = (function () {
         function ExampleSite(Canvas) {
+            var _this = this;
             this.Canvas = Canvas;
             this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
             this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
-            this.Alert = this.Progressor.Alert;
+            this.Alert = function (Message) {
+                return _this.Progressor.Alert(Message);
+            };
             this.Key = 'Times:16';
         }
         ExampleSite.prototype.getElementById = function (elementId) {

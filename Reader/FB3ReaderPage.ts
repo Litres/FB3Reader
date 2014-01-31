@@ -13,10 +13,10 @@ module FB3ReaderPage {
 	}
 	interface IFallOut {
 		FallOut: FB3Reader.IPosition; // Agress of the first element to not fit the page
-		Height: number;			// Height of the page we've examined
-		NotesHeight: number;
-		FalloutElementN: number;
-		EndReached: boolean;
+		Height: number;								// Height of the page we've examined
+		NotesHeight: number;					// Height for the notes block
+		FalloutElementN: number;			// Last root element to fully fit the page - skipped during future lookup
+		EndReached: boolean;					// False if there were not enough text to fill the page
 	}
 
 	function HardcoreParseInt(Input: string): number {
@@ -243,13 +243,44 @@ module FB3ReaderPage {
 				return;
 			}
 			this.Element.Node.innerHTML = PageData.Body.join('');
-			if (PageData.FootNotes.length) {
+			if (PageData.FootNotes.length && this.FBReader.BookStyleNotes) {
 				this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
 				this.NotesElement.Node.style.display = 'block';
 			}
 			//			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
 				var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom, 0);
+
+				if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
+					// It's too bad baby: text does not fit the page, not even a char
+					// Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
+					if (this.FBReader.BookStyleNotes && PageData.FootNotes.length) {
+						this.FBReader.BookStyleNotes = false;
+						this.FBReader.BookStyleNotesTemporaryOff = true;
+						this.RenderInstr.Range = null;
+						this.NotesElement.Node.innerHTML = '';
+						this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+						return;
+					} else {
+						// That's it - no way to recover. We die now, later we will make some fix here
+						this.FBReader.Site.Alert('We can not fit the text into the page!');
+						this.RenderInstr.Start = [this.RenderInstr.Start[0] + 1];
+						this.RenderInstr.Range = null;
+						if (this.FBReader.BookStyleNotesTemporaryOff) {
+							this.FBReader.BookStyleNotes = true;
+							this.FBReader.BookStyleNotesTemporaryOff = false;
+						}
+						this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+						return;
+					}
+				}
+
+				var PageCorrupt = false;
+				if (this.FBReader.BookStyleNotesTemporaryOff) {
+					this.FBReader.BookStyleNotes = true;
+					this.FBReader.BookStyleNotesTemporaryOff = false;
+					PageCorrupt = true;
+				}
 
 				// We can have not enough content to fill the page. Sometimes we will refill it,
 				// but sometimes (doc end or we only 
@@ -297,7 +328,7 @@ module FB3ReaderPage {
 				// content to create next page(s) with EXACTLY the required html - this will
 				// speed up the render
 				var LastChild = <HTMLElement> this.Element.Node.children[this.Element.Node.children.length - 1];
-				if (FallOut.EndReached && LastChild) {
+				if (FallOut.EndReached && LastChild && !PageCorrupt) {
 					var CollectedHeight = FallOut.Height;
 					var CollectedNotesHeight = FallOut.NotesHeight;
 					var PrevTo: Array;
@@ -414,7 +445,7 @@ module FB3ReaderPage {
 					ChildBot++;
 				}
 
-				if (!NoMoreFootnotesHere) {
+				if (!NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {
 					// Footnotes kind of expand element height - NoMoreFootnotesHere is for making things faster
 					if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
 						var NoteElement = this.Site.getElementById('f' + Child.id);

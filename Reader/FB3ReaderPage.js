@@ -183,13 +183,42 @@ var FB3ReaderPage;
                 return;
             }
             this.Element.Node.innerHTML = PageData.Body.join('');
-            if (PageData.FootNotes.length) {
+            if (PageData.FootNotes.length && this.FBReader.BookStyleNotes) {
                 this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
                 this.NotesElement.Node.style.display = 'block';
             }
 
             if (!this.RenderInstr.Range) {
                 var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom, 0);
+
+                if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
+                    if (this.FBReader.BookStyleNotes && PageData.FootNotes.length) {
+                        this.FBReader.BookStyleNotes = false;
+                        this.FBReader.BookStyleNotesTemporaryOff = true;
+                        this.RenderInstr.Range = null;
+                        this.NotesElement.Node.innerHTML = '';
+                        this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+                        return;
+                    } else {
+                        // That's it - no way to recover. We die now, later we will make some fix here
+                        this.FBReader.Site.Alert('We can not fit the text into the page!');
+                        this.RenderInstr.Start = [this.RenderInstr.Start[0] + 1];
+                        this.RenderInstr.Range = null;
+                        if (this.FBReader.BookStyleNotesTemporaryOff) {
+                            this.FBReader.BookStyleNotes = true;
+                            this.FBReader.BookStyleNotesTemporaryOff = false;
+                        }
+                        this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+                        return;
+                    }
+                }
+
+                var PageCorrupt = false;
+                if (this.FBReader.BookStyleNotesTemporaryOff) {
+                    this.FBReader.BookStyleNotes = true;
+                    this.FBReader.BookStyleNotesTemporaryOff = false;
+                    PageCorrupt = true;
+                }
 
                 if (!FallOut.EndReached) {
                     if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
@@ -235,7 +264,7 @@ var FB3ReaderPage;
                 // content to create next page(s) with EXACTLY the required html - this will
                 // speed up the render
                 var LastChild = this.Element.Node.children[this.Element.Node.children.length - 1];
-                if (FallOut.EndReached && LastChild) {
+                if (FallOut.EndReached && LastChild && !PageCorrupt) {
                     var CollectedHeight = FallOut.Height;
                     var CollectedNotesHeight = FallOut.NotesHeight;
                     var PrevTo;
@@ -351,7 +380,7 @@ var FB3ReaderPage;
                     ChildBot++;
                 }
 
-                if (!NoMoreFootnotesHere) {
+                if (!NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {
                     if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
                         var NoteElement = this.Site.getElementById('f' + Child.id);
                         if (NoteElement) {

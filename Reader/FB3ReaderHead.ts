@@ -18,6 +18,7 @@ module FB3Reader {
 		ArtID: string;
 		HyphON: boolean;
 		BookStyleNotes: boolean;
+		BookStyleNotesTemporaryOff: boolean;
 		NColumns: number;
 		EnableBackgroundPreRender: boolean; // Should we scan the document?
 		TextPercent: number;	  // Percantage of the shown text - progress

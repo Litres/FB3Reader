@@ -164,9 +164,9 @@ var FB3DOM;
             }
 
             if (this.IsFootnote) {
-                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
+                PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, ClassNames));
             } else {
-                PageData.Body = PageData.Body.concat(this.GetInitTag(Range, IDPrefix, ViewPortW, ViewPortH, ClassNames));
+                PageData.Body = PageData.Body.concat(this.GetInitTag(Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, ClassNames));
             }
             var CloseTag = this.GetCloseTag(Range);
             var From = Range.From.shift() || 0;
@@ -198,7 +198,9 @@ var FB3DOM;
         };
 
         FB3Tag.prototype.HTMLTagName = function () {
-            if (FB3DOM.TagMapper[this.TagName]) {
+            if (this.Data.f) {
+                return 'a';
+            } else if (FB3DOM.TagMapper[this.TagName]) {
                 return FB3DOM.TagMapper[this.TagName];
             } else if (this.TagName == 'title' && this.Data.xp) {
                 var lvl = this.Data.xp.length - 1;
@@ -213,7 +215,7 @@ var FB3DOM;
         FB3Tag.prototype.GetCloseTag = function (Range) {
             return '</' + this.HTMLTagName() + '>';
         };
-        FB3Tag.prototype.GetInitTag = function (Range, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
+        FB3Tag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var ElementClasses = new Array();
             if (Range.From[0] > 0) {
                 ElementClasses.push('cut_top');
@@ -230,6 +232,9 @@ var FB3DOM;
                 ElementClasses.push('footnote');
             } else if (this.Data.f) {
                 ElementClasses.push('footnote_attached');
+                if (!BookStyleNotes) {
+                    ElementClasses.push('footnote_clickable');
+                }
             }
 
             if (FB3DOM.TagMapper[this.TagName]) {
@@ -269,6 +274,8 @@ var FB3DOM;
 
             if (this.IsFootnote) {
                 Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
+            } else if (this.Data.f && !BookStyleNotes) {
+                Out.push(' onclick="alert(1)" href="#">');
             } else {
                 Out.push(' id="n_' + IDPrefix + this.XPID + '">');
             }

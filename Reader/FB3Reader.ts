@@ -50,6 +50,7 @@ module FB3Reader {
 		public CacheBackward: number;
 		public CurStartPos: IPosition;
 		public CurStartPage: number;
+		public BookStyleNotesTemporaryOff: boolean;
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: FB3ReaderPage.ReaderPage[];
@@ -78,8 +79,9 @@ module FB3Reader {
 			this.CacheForward = 6;
 			this.CacheBackward = 2;
 			this.BookStyleNotes = true;
-//				this.CurStartPos = [495,0];
-			this.CurStartPos = [0];
+			this.BookStyleNotesTemporaryOff = false;
+			this.CurStartPos = [25,181];
+//			this.CurStartPos = [0];
 
 			this.IdleOff();
 		}

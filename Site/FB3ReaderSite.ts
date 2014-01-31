@@ -11,7 +11,7 @@ module FB3ReaderSite {
 		constructor(public Canvas: HTMLElement) {
 			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
 			this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
-			this.Alert = this.Progressor.Alert;
+			this.Alert = (Message: string) => this.Progressor.Alert(Message);
 			this.Key = 'Times:16';
 		}
 		getElementById(elementId: string): HTMLElement {

@@ -44,6 +44,8 @@ module FB3Reader {
 		IdleOff(): void;
 		CurPosPercent(): number;
 		ElementAtXY(X: number, Y: number): IPosition;
-		Redraw(): void;
+		Reset(): void;      // Reopens reader on the current position. Call this after you have
+												// changed CSS, resized canvas or some other distructive things
+		Redraw(): void;     // Lignt&fast version of page refresh - only updates bookmarks
 	}
 }

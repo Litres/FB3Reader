@@ -282,7 +282,6 @@ module FB3Reader {
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
 
-			// this.Site.Canvas.addEventListener('resize', () => this.RefreshCanvas()); // not working for sime reason, hm
 
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].BindToHTMLDoc(this.Site);
@@ -303,11 +302,7 @@ module FB3Reader {
 				// This was a real resise
 				if (this.CanvasW != this.Site.Canvas.clientWidth ||
 					this.CanvasH != this.Site.Canvas.clientHeight) {
-					for (var I = 0; I < this.Pages.length; I++) {
-						this.Pages[I].Reset();
-					}
-					this.PrepareCanvas();
-					this.GoTO(this.CurStartPos.slice(0));
+					this.Reset();
 					this.OnResizeTimeout = undefined;
 				}
 			} , 200)
@@ -502,6 +497,14 @@ module FB3Reader {
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].Ready = false;
 			}
+			this.GoTO(this.CurStartPos.slice(0));
+		}
+
+		public Reset(): void {
+			for (var I = 0; I < this.Pages.length; I++) {
+				this.Pages[I].Reset();
+			}
+			this.PrepareCanvas();
 			this.GoTO(this.CurStartPos.slice(0));
 		}
 	}

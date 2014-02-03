@@ -281,11 +281,7 @@ var FB3Reader;
             }
             this.OnResizeTimeout = setTimeout(function () {
                 if (_this.CanvasW != _this.Site.Canvas.clientWidth || _this.CanvasH != _this.Site.Canvas.clientHeight) {
-                    for (var I = 0; I < _this.Pages.length; I++) {
-                        _this.Pages[I].Reset();
-                    }
-                    _this.PrepareCanvas();
-                    _this.GoTO(_this.CurStartPos.slice(0));
+                    _this.Reset();
                     _this.OnResizeTimeout = undefined;
                 }
             }, 200);
@@ -480,6 +476,14 @@ var FB3Reader;
             for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].Ready = false;
             }
+            this.GoTO(this.CurStartPos.slice(0));
+        };
+
+        Reader.prototype.Reset = function () {
+            for (var I = 0; I < this.Pages.length; I++) {
+                this.Pages[I].Reset();
+            }
+            this.PrepareCanvas();
             this.GoTO(this.CurStartPos.slice(0));
         };
         return Reader;

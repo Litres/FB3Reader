@@ -468,6 +468,7 @@ module FB3Reader {
 			this.PagesPositionsCache.Save(this.BackgroundRenderFrame.ViewPortW + ':' +
 				this.CanvasW + ':' +
 				this.CanvasH + ':' +
+				this.BookStyleNotes + ':' +
 				this.Site.Key);
 		}
 
@@ -475,6 +476,7 @@ module FB3Reader {
 			this.PagesPositionsCache.Load(this.BackgroundRenderFrame.ViewPortW + ':' +
 				this.CanvasW + ':' +
 				this.CanvasH + ':' +
+				this.BookStyleNotes + ':' +
 				this.Site.Key);
 		}
 		public IdleOn(): void {

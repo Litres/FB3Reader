@@ -446,11 +446,11 @@ var FB3Reader;
         };
 
         Reader.prototype.SaveCache = function () {
-            this.PagesPositionsCache.Save(this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.Site.Key);
+            this.PagesPositionsCache.Save(this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key);
         };
 
         Reader.prototype.LoadCache = function () {
-            this.PagesPositionsCache.Load(this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.Site.Key);
+            this.PagesPositionsCache.Load(this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key);
         };
         Reader.prototype.IdleOn = function () {
             var _this = this;

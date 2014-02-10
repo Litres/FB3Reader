@@ -46,7 +46,6 @@ module FB3DOM {
 	}
 
 	export class DOM extends FB3Tag implements IFB3DOM {
-		private LoadDequests: Array;
 		private HyphOn: boolean;
 		private ActiveRequests: AsyncLoadConsumer[];
 		public TOC: ITOC[];
@@ -117,11 +116,11 @@ module FB3DOM {
 		}
 
 		public ChunkUrl(N: number): string {
-			return this.ArtID2URL(N);
+			return this.ArtID2URL(N.toString());
 		}
 
-		public ArtID2URL(Chunk?: number): string {
-			return this.DataProvider.ArtID2URL(this.ArtID, Chunk.toString());
+		public ArtID2URL(Chunk?: string): string {
+			return this.DataProvider.ArtID2URL(this.ArtID, Chunk);
 		}
 
 		public GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block {

@@ -116,11 +116,11 @@ var FB3DOM;
         };
 
         DOM.prototype.ChunkUrl = function (N) {
-            return this.ArtID2URL(N);
+            return this.ArtID2URL(N.toString());
         };
 
         DOM.prototype.ArtID2URL = function (Chunk) {
-            return this.DataProvider.ArtID2URL(this.ArtID, Chunk.toString());
+            return this.DataProvider.ArtID2URL(this.ArtID, Chunk);
         };
 
         DOM.prototype.GetElementByAddr = function (Position) {

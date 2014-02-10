@@ -87,7 +87,7 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
 .FBReaderContentDiv div, .FBReaderContentDiv p,
 .FBReaderContentDiv h3, .FBReaderContentDiv h4,
 .FBReaderContentDiv h5, .FBReaderContentDiv h6 {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Arial', sans-serif;
 }
 #reader {
     height:80%;

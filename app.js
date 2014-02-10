@@ -18,7 +18,7 @@ window.onload = function () {
     AFB3PPCache = new FB3PPCache.PPCache();
     AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
     AFB3Reader.NColumns = 3;
-    AFB3Reader.HyphON = true;
+    AFB3Reader.HyphON = !(/Android 2\./i.test(navigator.userAgent));
     AFB3Reader.Init();
     window.addEventListener('resize', function () {
         return AFB3Reader.AfterCanvasResize();

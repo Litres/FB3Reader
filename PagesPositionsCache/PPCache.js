@@ -22,6 +22,8 @@ var FB3PPCache;
         };
 
         PPCache.prototype.Save = function (Key) {
+            return;
+
             if (typeof (Storage) !== "undefined" && localStorage && JSON) {
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
@@ -47,6 +49,7 @@ var FB3PPCache;
         };
 
         PPCache.prototype.Load = function (Key) {
+            return;
             if (typeof (Storage) !== "undefined" && localStorage && JSON) {
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();

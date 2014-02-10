@@ -35,8 +35,9 @@ module FB3PPCache {
 		}
 
 		public Save(Key: string): void {
+			return;
 			// We are going to save no more than 50 cache entries
-			// We reuse slots on fill based on access time
+			// We reuse slots on write request based on access time
 
 			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
 				// localStorage support required
@@ -66,6 +67,7 @@ module FB3PPCache {
 		}
 
 		public Load(Key: string): void {
+			return;
 			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
 				if (!this.CacheMarkupsList) {
 					this.LoadOrFillEmptyData();

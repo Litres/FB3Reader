@@ -1,11 +1,7 @@
 #!/usr/bin/perl
-
-BEGIN{
-  push(@INC, 'C:/Work/FictionHub','/data4/www/WWWHub','/data4/www/WWWHub/bin');
-};
-
-use XPortal::Hyphenate;
-use XPortal::Settings;
+use strict;
+use XPortal::Hyphenate; # HyphString used, may remove and replace with something
+use XPortal::Settings;  # TMPPath used, you can use your path and remove this
 
 use strict;
 use XML::LibXSLT;
@@ -20,14 +16,16 @@ my $PartLimit = 10000;
 
 my $XML = $ARGV[0];
 my $XSL = $ARGV[1];
-my $Out = $ARGV[2];
+my $MetaXSL = $ARGV[2];
+my $Out = $ARGV[3];
 
 #my $XML = 'C:/Work/FictionHub/tmp/Vyigotskiyi_vyi_L._Psihologiya_Iskusstva.fb2';
 #my $XSL = 'C:/Work/FictionHub/xsl/convert/FB2_2_json.xsl';
+#my $MetaXSL = 'C:/Work/FictionHub/xsl/convert/FB2_2_json_meta.xsl';
 #my $Out = 'C:\Work\FictionHub\cgi\static\out.html';
 
 unless ($Out){
-	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <out>\n";
+	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <meta-stylesheet.xsl> <out>\n";
 	exit(0);
 }
 
@@ -35,7 +33,7 @@ my %DocumentImages;
 
 my %HyphCache;
 sub SplitString{
-	my $Esc=shift || return undef;
+	my $Esc=shift || return;
 	my $NeedHyph = shift() .' ';
 	$NeedHyph *= 1;
 	my $SRC = $Esc = EscString($Esc);
@@ -44,6 +42,7 @@ sub SplitString{
 	}
 	$Esc =~ s/\s+/ ','/g;
 	$Esc =~ s/('|^) ','/$1 /g;
+	$Esc =~ s/'',|,''|','$//g;
 	if ($NeedHyph){
 		$HyphCache{$SRC} = $Esc;
 		$Esc =~ s/\x{AD}/','\x{AD}/g;	# Full version
@@ -53,7 +52,7 @@ sub SplitString{
 }
 
 sub EscString{
-	my $Esc=shift || return undef;
+	my $Esc=shift || return;
 	$Esc = Encode::decode_utf8($Esc." "); # Hack to get live string from LibXML
 	$Esc =~ s/(['\\])/\\$1/g;
 	$Esc =~ s/\r?\n\r?/ /g;
@@ -110,11 +109,17 @@ my $parser = XML::LibXML->new();
 my $source = $parser->parse_file($XML);
 
 my $style_doc = $parser->parse_file($XSL);
-my $stylesheet = $xslt->parse_stylesheet($style_doc);
+my $BodyStylesheet = $xslt->parse_stylesheet($style_doc);
 
-my $results = $stylesheet->transform($source);
+$style_doc = $parser->parse_file($MetaXSL);
+my $MetaStylesheet = $xslt->parse_stylesheet($style_doc);
 
-my $JSonSTR = $stylesheet->output_string($results);
+my $BodyResults = $BodyStylesheet->transform($source);
+my $MetaResults = $MetaStylesheet->transform($source);
+
+my $JSonSTR = $BodyStylesheet->output_string($BodyResults);
+my $JSonMeta = $MetaStylesheet->output_string($MetaResults);
+
 my @JSonArr = split /[\r\n]+/,$JSonSTR;
 
 my $BlockN = 0;
@@ -157,7 +162,7 @@ if (@DataToWrite){
 }
 
 open $OutFile, ">:utf8","$Out.toc.js";
-print $OutFile "{Body: [";
+print $OutFile "{$JSonMeta,\nBody: [";
 my $Max = @{$RootTOC->{c}} - 1;
 for (my $i=0;$i<=$Max;$i++) {
 	print $OutFile DumpTOC($RootTOC->{c}->[$i]);

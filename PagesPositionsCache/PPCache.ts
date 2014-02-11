@@ -1,7 +1,7 @@
 /// <reference path="PPCacheHead.ts" />
 
 module FB3PPCache {
-
+	var SkipCache = false; // For debug purposes
 	interface IPageRenderInstructionsCacheEntry {
 		Time: Date;
 		Key: string;
@@ -35,7 +35,9 @@ module FB3PPCache {
 		}
 
 		public Save(Key: string): void {
-			return;
+			if (SkipCache) {
+				return;
+			}
 			// We are going to save no more than 50 cache entries
 			// We reuse slots on write request based on access time
 
@@ -67,7 +69,9 @@ module FB3PPCache {
 		}
 
 		public Load(Key: string): void {
-			return;
+			if (SkipCache) {
+				return;
+			}
 			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
 				if (!this.CacheMarkupsList) {
 					this.LoadOrFillEmptyData();

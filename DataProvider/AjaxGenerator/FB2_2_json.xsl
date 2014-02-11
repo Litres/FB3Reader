@@ -35,7 +35,8 @@
 		/>',w:<xsl:value-of select="fb2js:GetImgW(substring-after(@xlink:href,'#'))"/>,h:<xsl:value-of select="fb2js:GetImgH(substring-after(@xlink:href,'#'))"/></xsl:if></xsl:template>
 	<xsl:template match="*">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
 	<xsl:template match="&blocklvl;" mode="footnote">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
-	<xsl:template match="fb:section" mode="footnote">{t:'footnote',xp:[<xsl:call-template name="reverse_id"/>],c:[<xsl:apply-templates mode="footnote"/>]}</xsl:template>
+	<xsl:template match="fb:section" mode="footnote">{t:'footnote',xp:[<xsl:call-template name="reverse_id"
+		/>],c:[<xsl:apply-templates mode="footnote"/>]}</xsl:template>
 
 	<xsl:template match="&blocklvl;">{chars:<xsl:value-of select="string-length(.)"/>,<xsl:call-template name="tag2js"/>},<xsl:text >&#010;</xsl:text></xsl:template>
 	
@@ -89,6 +90,6 @@
         <xsl:call-template name="reverse_id">
           <xsl:with-param name="node" select=".."/>
         </xsl:call-template>,</xsl:if>
-    </xsl:for-each><xsl:value-of select="count($node/preceding-sibling::*)+1"/>
+    </xsl:for-each><xsl:value-of select="count($node/preceding-sibling::*|$node/preceding-sibling::text())+1"/>
 	</xsl:template>
 </xsl:stylesheet>

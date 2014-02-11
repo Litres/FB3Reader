@@ -507,7 +507,7 @@ module FB3ReaderPage {
 					LastOffsetParent = OffsetParent;
 					Element = Child;
 					ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
-					if (!PrevPageBreaker && ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected) {
+					if (!PrevPageBreaker && ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected && LastLineBreakerParent) {
 						// So, it looks like we do not fit because of the footnote, not the falling out text itself.
 						// Let's force page break on the previous line end - kind of time machine
 						I = LastLineBreakerPos;
@@ -535,6 +535,9 @@ module FB3ReaderPage {
 
 			Addr.shift();
 			Addr.shift();
+			while (Addr[Addr.length - 1] == 0) {
+				Addr.pop();
+			}
 			return {
 				FallOut: Addr,
 				Height: GoodHeight,

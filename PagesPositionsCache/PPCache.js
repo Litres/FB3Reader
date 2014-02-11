@@ -1,6 +1,8 @@
 /// <reference path="PPCacheHead.ts" />
 var FB3PPCache;
 (function (FB3PPCache) {
+    var SkipCache = false;
+
     var PPCache = (function () {
         function PPCache() {
             this.Reset();
@@ -22,7 +24,9 @@ var FB3PPCache;
         };
 
         PPCache.prototype.Save = function (Key) {
-            return;
+            if (SkipCache) {
+                return;
+            }
 
             if (typeof (Storage) !== "undefined" && localStorage && JSON) {
                 if (!this.CacheMarkupsList) {
@@ -49,7 +53,9 @@ var FB3PPCache;
         };
 
         PPCache.prototype.Load = function (Key) {
-            return;
+            if (SkipCache) {
+                return;
+            }
             if (typeof (Storage) !== "undefined" && localStorage && JSON) {
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();

@@ -57,6 +57,7 @@ var FB3Reader;
             this.CacheBackward = 2;
             this.BookStyleNotes = true;
             this.BookStyleNotesTemporaryOff = false;
+            this.LastSavePercent = 0;
             this.CurStartPos = [1085, 224];
 
             //			this.CurStartPos = [0];
@@ -237,7 +238,7 @@ var FB3Reader;
 
         Reader.prototype.StoreCachedPage = function (Range) {
             this.PagesPositionsCache.Set(Range.CacheAs, PRIClone(Range));
-            this.SaveCache();
+            // 			this.SaveCache(); // slow - removed for now.
         };
 
         Reader.prototype.SearchForText = function (Text) {
@@ -271,6 +272,7 @@ var FB3Reader;
             this.BackgroundRenderFrame.PagesToRender = new Array(100);
             this.CanvasW = this.Site.Canvas.clientWidth;
             this.CanvasH = this.Site.Canvas.clientHeight;
+            this.LastSavePercent = 0;
             this.LoadCache();
         };
 
@@ -401,8 +403,9 @@ var FB3Reader;
                 switch (this.IdleAction) {
                     case 'load_page':
                         var PageToPrerender = this.FirstUncashedPage();
+                        var NewPos = PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100;
                         if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
-                            //							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
+                            // Caching done - we save results and stop idle processing
                             this.PagesPositionsCache.LastPage(this.PagesPositionsCache.Length() - 1);
                             this.IdleOff();
                             this.Site.IdleThreadProgressor.Progress(this, 100);
@@ -412,8 +415,12 @@ var FB3Reader;
                             return;
                         } else {
                             this.PagesPositionsCache.LastPage(0);
-                            this.SaveCache();
-                            this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
+                            if (NewPos - this.LastSavePercent > 5) {
+                                // We only save pages position cache once per 5% because it is SLOW like hell
+                                this.SaveCache();
+                                this.LastSavePercent = NewPos;
+                            }
+                            this.Site.IdleThreadProgressor.Progress(this, NewPos);
                         }
                         this.IdleAction = 'wait';
 
@@ -434,7 +441,6 @@ var FB3Reader;
                         break;
                     case 'fill_page':
                         this.PagesPositionsCache.LastPage(0);
-                        this.SaveCache();
                         if (PageData) {
                             this.BackgroundRenderFrame.DrawEnd(PageData);
                         }

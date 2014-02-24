@@ -48,6 +48,8 @@ var FB3PPCache;
                     Cache: this.PagesPositionsCache,
                     LastPage: this.LastPageN
                 });
+
+                // Keep in mind - next line is really, really slow
                 localStorage['FB3Reader1.0'] = JSON.stringify(this.CacheMarkupsList);
             }
         };

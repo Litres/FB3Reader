@@ -6,7 +6,7 @@ Open source (LGPL) JavaScript-based eBook reader engine written on [TypeScript](
 Why javascript, it is slow!
 ---------
 The overall idea is to create a simplest possible wrapper for the system-native web-browser. In the
-hope of browser perfectioning, we delegate to the browser 90% or more of critical work and hope that overall
+hope of browser perfectioning, we delegate to the browser 90% or more of the critical work and hope that overall
 performance of the engine will be nice even if JS will not perform perfectly.
 
 

@@ -189,7 +189,7 @@ var FB3ReaderPage;
             }
 
             if (!this.RenderInstr.Range) {
-                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom, 0);
+                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginBottom, 0);
 
                 if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
                     if (this.FBReader.BookStyleNotes && PageData.FootNotes.length) {
@@ -202,7 +202,7 @@ var FB3ReaderPage;
                     } else {
                         // That's it - no way to recover. We die now, later we will make some fix here
                         this.FBReader.Site.Alert('We can not fit the text into the page!');
-                        this.RenderInstr.Start = [this.RenderInstr.Start[0] + 1];
+                        this.RenderInstr.Start = [this.RenderInstr.Start[0] * 1 + 1];
                         this.RenderInstr.Range = null;
                         if (this.FBReader.BookStyleNotesTemporaryOff) {
                             this.FBReader.BookStyleNotes = true;
@@ -369,6 +369,10 @@ var FB3ReaderPage;
             while (I < ChildsCount) {
                 var FootnotesAddon = 0;
                 var Child = Element.children[I];
+                if (Child.style.position.match(/absolute/i)) {
+                    I++;
+                    continue;
+                }
                 PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && PageBreakBefore(Child);
                 var SH = Child.scrollHeight;
                 var OH = Child.offsetHeight;
@@ -384,14 +388,14 @@ var FB3ReaderPage;
                     if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
                         var NoteElement = this.Site.getElementById('f' + Child.id);
                         if (NoteElement) {
-                            FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight;
+                            FootnotesAddon = NoteElement.offsetTop + NoteElement.offsetHeight;
                         }
                     } else {
                         var FootNotes = Child.getElementsByTagName('a');
                         for (var J = FootNotes.length - 1; J >= 0; J--) {
                             if (FootNotes[J].className.match(/\bfootnote_attached\b/)) {
                                 var NoteElement = this.Site.getElementById('f' + FootNotes[J].id);
-                                FootnotesAddon = NoteElement.offsetTop + NoteElement.scrollHeight;
+                                FootnotesAddon = NoteElement.offsetTop + NoteElement.offsetHeight;
                                 break;
                             }
                         }
@@ -477,6 +481,10 @@ var FB3ReaderPage;
             while (Addr[Addr.length - 1] == 0) {
                 Addr.pop();
             }
+
+            //for (var I = 0; I < Addr.length; I++) {
+            //	Addr[I] = Addr[I] * 1; // Remove string corruption
+            //}
             return {
                 FallOut: Addr,
                 Height: GoodHeight,

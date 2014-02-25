@@ -282,7 +282,7 @@ module FB3DOM {
 
 			//			if (this.Data.i) {}
 			if (this.IsFootnote) {
-				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
+				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '" style="max-height: ' + (ViewPortH * 0.75).toFixed(0)+'px">');
 			} else if (this.Data.f && !BookStyleNotes) {
 				Out.push(' onclick="alert(1)" href="#">');
 			}  else {

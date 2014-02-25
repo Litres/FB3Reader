@@ -39,7 +39,7 @@ var FB3PPCache;
                         this.CacheMarkupsList.splice(I, 1);
                     }
                 }
-                if (this.CacheMarkupsList.length >= 50) {
+                if (this.CacheMarkupsList.length >= 15) {
                     this.CacheMarkupsList.shift();
                 }
                 this.CacheMarkupsList.push({

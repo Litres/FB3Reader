@@ -58,7 +58,9 @@ var FB3Reader;
             this.BookStyleNotes = true;
             this.BookStyleNotesTemporaryOff = false;
             this.LastSavePercent = 0;
-            this.CurStartPos = [1085, 224];
+
+            //			this.CurStartPos = [1085,224];
+            this.CurStartPos = [497];
 
             //			this.CurStartPos = [0];
             this.IdleOff();

@@ -45,6 +45,7 @@ module FB3ReaderPage {
 		BTreeModeOn: boolean;
 		BTreeLastOK: number;
 		BTreeLastFail: number;
+		HasFootnotes: boolean;
 	}
 
 	function HardcoreParseInt(Input: string): number {
@@ -274,120 +275,16 @@ module FB3ReaderPage {
 				return;
 			}
 			this.Element.Node.innerHTML = PageData.Body.join('');
-			if (PageData.FootNotes.length && this.FBReader.BookStyleNotes) {
+			var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
+			if (HasFootnotes) {
 				this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
 				this.NotesElement.Node.style.display = 'block';
 			}
 			//			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
-				this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0);
+				this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes);
 				var FallOut = this.FallOut();
-
-				if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
-					// It's too bad baby: text does not fit the page, not even a char
-					// Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
-					if (this.FBReader.BookStyleNotes && PageData.FootNotes.length) {
-						this.FBReader.BookStyleNotes = false;
-						this.FBReader.BookStyleNotesTemporaryOff = true;
-						this.RenderInstr.Range = null;
-						this.NotesElement.Node.innerHTML = '';
-						this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-						return;
-					} else {
-						// That's it - no way to recover. We die now, later we will make some fix here
-						this.FBReader.Site.Alert('We can not fit the text into the page!');
-						this.RenderInstr.Start = [this.RenderInstr.Start[0]*1 + 1]; // * 1 removes string problem
-						this.RenderInstr.Range = null;
-						if (this.FBReader.BookStyleNotesTemporaryOff) {
-							this.FBReader.BookStyleNotes = true;
-							this.FBReader.BookStyleNotesTemporaryOff = false;
-						}
-						this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-						return;
-					}
-				}
-
-				var PageCorrupt = false;
-				if (this.FBReader.BookStyleNotesTemporaryOff) {
-					this.FBReader.BookStyleNotes = true;
-					this.FBReader.BookStyleNotesTemporaryOff = false;
-					PageCorrupt = true;
-				}
-
-				// We can have not enough content to fill the page. Sometimes we will refill it,
-				// but sometimes (doc end or we only 
-				if (!FallOut.EndReached) {
-					if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
-						// Ups, our page is incomplete - have to retry filling it. Take more data now
-						//var BasePrerender = this.PrerenderBlocks;
-						this.PrerenderBlocks += 2;
-						this.RenderInstr.Range = null;
-						this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-						//this.PrerenderBlocks = BasePrerender;
-						return;
-					} else if (this.Next) { // Unless this is prerender frrame, otherwase no need to bother
-						var NP = this;
-						for (var I = 0; I < this.PagesToRender.length; I++) {
-							NP = NP.Next;
-							NP.CleanPage();
-							NP.Ready = false;
-							NP.RenderInstr.Range = { From: [-1], To: [-1] };
-						}
-					}
-					this.PagesToRender = [];
-					this.RenderInstr.Range = {
-						From: this.RenderInstr.Start.splice(0),
-						To: FallOut.FallOut
-					};
-					this.RenderInstr.Range.To[0]++;
-				} else {
-					this.RenderInstr.Range = {
-						From: this.RenderInstr.Start.splice(0),
-						To: FallOut.FallOut
-					};
-				}
-				this.RenderInstr.Height = FallOut.Height;
-				this.RenderInstr.NotesHeight = FallOut.NotesHeight;
-
-
-				this.PageN = this.RenderInstr.CacheAs;
-				if (this.PageN !== undefined) {
-					this.FBReader.StoreCachedPage(this.RenderInstr);
-				}
-
-				// Ok, we have rendered the page nice. Now we can check, wether we have created
-				// a page long enough to fit the NEXT page. If so, we are going to estimate it's
-				// content to create next page(s) with EXACTLY the required html - this will
-				// speed up the render
-				var LastChild = <HTMLElement> this.Element.Node.children[this.Element.Node.children.length - 1];
-				if (FallOut.EndReached && LastChild && !PageCorrupt) {
-					var CollectedHeight = FallOut.Height;
-					var CollectedNotesHeight = FallOut.NotesHeight;
-					var PrevTo: number[];
-					for (var I = 0; I < this.PagesToRender.length; I++) {
-						var TestHeight = CollectedHeight + this.Element.Height
-							- this.Element.MarginTop - this.Element.MarginBottom;
-						if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-							this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, FallOut.FalloutElementN);
-							FallOut = this.FallOut();
-							if (FallOut.EndReached) {
-								var NextPageRange = <any> {};
-								NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
-								PrevTo = FallOut.FallOut.slice(0);
-								NextPageRange.To = FallOut.FallOut.slice(0);
-
-								this.PagesToRender[I].Height = FallOut.Height - CollectedHeight + this.Element.MarginTop;
-								this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
-								CollectedHeight = FallOut.Height;
-								CollectedNotesHeight += FallOut.NotesHeight;
-								this.PagesToRender[I].Range = NextPageRange;
-								if (this.PagesToRender[I].CacheAs !== undefined) {
-									this.FBReader.StoreCachedPage(this.PagesToRender[I]);
-								}
-							} else { break }
-						} else { break }
-					}
-				}
+				this.FalloutConsume(FallOut);
 			} else {
 				this.PageN = this.RenderInstr.CacheAs;
 			}
@@ -420,7 +317,113 @@ module FB3ReaderPage {
 			}
 		}
 
+		private FalloutConsume(FallOut: IFallOut) {
+			if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
+				// It's too bad baby: text does not fit the page, not even a char
+				// Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
+				if (this.FBReader.BookStyleNotes && this.FalloutState.HasFootnotes) {
+					this.FBReader.BookStyleNotes = false;
+					this.FBReader.BookStyleNotesTemporaryOff = true;
+					this.RenderInstr.Range = null;
+					this.NotesElement.Node.innerHTML = '';
+					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+					return;
+				} else {
+					// That's it - no way to recover. We die now, later we will make some fix here
+					this.FBReader.Site.Alert('We can not fit the text into the page!');
+					this.RenderInstr.Start = [this.RenderInstr.Start[0] * 1 + 1]; // * 1 removes string problem
+					this.RenderInstr.Range = null;
+					if (this.FBReader.BookStyleNotesTemporaryOff) {
+						this.FBReader.BookStyleNotes = true;
+						this.FBReader.BookStyleNotesTemporaryOff = false;
+					}
+					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+					return;
+				}
+			}
 
+			var PageCorrupt = false;
+			if (this.FBReader.BookStyleNotesTemporaryOff) {
+				this.FBReader.BookStyleNotes = true;
+				this.FBReader.BookStyleNotesTemporaryOff = false;
+				PageCorrupt = true;
+			}
+
+			// We can have not enough content to fill the page. Sometimes we will refill it,
+			// but sometimes (doc end or we only 
+			if (!FallOut.EndReached) {
+				if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
+					// Ups, our page is incomplete - have to retry filling it. Take more data now
+					//var BasePrerender = this.PrerenderBlocks;
+					this.PrerenderBlocks += 2;
+					this.RenderInstr.Range = null;
+					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+					//this.PrerenderBlocks = BasePrerender;
+					return;
+				} else if (this.Next) { // Unless this is prerender frrame, otherwase no need to bother
+					var NP = this;
+					for (var I = 0; I < this.PagesToRender.length; I++) {
+						NP = NP.Next;
+						NP.CleanPage();
+						NP.Ready = false;
+						NP.RenderInstr.Range = { From: [-1], To: [-1] };
+					}
+				}
+				this.PagesToRender = [];
+				this.RenderInstr.Range = {
+					From: this.RenderInstr.Start.splice(0),
+					To: FallOut.FallOut
+				};
+				this.RenderInstr.Range.To[0]++;
+			} else {
+				this.RenderInstr.Range = {
+					From: this.RenderInstr.Start.splice(0),
+					To: FallOut.FallOut
+				};
+			}
+			this.RenderInstr.Height = FallOut.Height;
+			this.RenderInstr.NotesHeight = FallOut.NotesHeight;
+
+
+			this.PageN = this.RenderInstr.CacheAs;
+			if (this.PageN !== undefined) {
+				this.FBReader.StoreCachedPage(this.RenderInstr);
+			}
+
+			// Ok, we have rendered the page nice. Now we can check, wether we have created
+			// a page long enough to fit the NEXT page. If so, we are going to estimate it's
+			// content to create next page(s) with EXACTLY the required html - this will
+			// speed up the render
+			var LastChild = <HTMLElement> this.Element.Node.children[this.Element.Node.children.length - 1];
+			if (FallOut.EndReached && LastChild && !PageCorrupt) {
+				var CollectedHeight = FallOut.Height;
+				var CollectedNotesHeight = FallOut.NotesHeight;
+				var PrevTo: number[];
+				for (var I = 0; I < this.PagesToRender.length; I++) {
+					var TestHeight = CollectedHeight + this.Element.Height
+						- this.Element.MarginTop - this.Element.MarginBottom;
+					if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
+						this.InitFalloutState(TestHeight, CollectedNotesHeight, this.FalloutState.HasFootnotes, FallOut.FalloutElementN);
+						FallOut = this.FallOut();
+						if (FallOut.EndReached) {
+							var NextPageRange = <any> {};
+							NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
+							PrevTo = FallOut.FallOut.slice(0);
+							NextPageRange.To = FallOut.FallOut.slice(0);
+
+							this.PagesToRender[I].Height = FallOut.Height - CollectedHeight + this.Element.MarginTop;
+							this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
+							CollectedHeight = FallOut.Height;
+							CollectedNotesHeight += FallOut.NotesHeight;
+							this.PagesToRender[I].Range = NextPageRange;
+							if (this.PagesToRender[I].CacheAs !== undefined) {
+								this.FBReader.StoreCachedPage(this.PagesToRender[I]);
+							}
+						} else { break }
+					} else { break }
+				}
+			}
+		}
 
 		public Reset() {
 			clearTimeout(this.RenderMoreTimeout);
@@ -439,7 +442,7 @@ module FB3ReaderPage {
 			}
 		}
 
-		private InitFalloutState(Limit: number, NotesShift: number, SkipUntill?: number): void {
+		private InitFalloutState(Limit: number, NotesShift: number, HasFootnotes: boolean,  SkipUntill?: number): void {
 			this.FalloutState.Limit = Limit;
 			this.FalloutState.NotesShift = NotesShift;
 			this.FalloutState.I = SkipUntill > 0 ? SkipUntill : 0;
@@ -465,6 +468,8 @@ module FB3ReaderPage {
 			this.FalloutState.BTreeModeOn = false;
 			this.FalloutState.BTreeLastOK = null;
 			this.FalloutState.BTreeLastFail = null;
+			this.FalloutState.HasFootnotes = HasFootnotes;
+
 		}
 
 		// Hand mage CSS3 tabs. I thouth it would take more than this
@@ -522,7 +527,7 @@ module FB3ReaderPage {
 					if (this.FalloutState.I == 0 &&
 						this.FalloutState.NoMoreFootnotesHere &&
 						this.FalloutState.ChildsCount > 7 &&
-						!this.FalloutState.BTreeModeOn) {
+						!this.FalloutState.BTreeModeOn && false) {
 						// In fact we could work with Footnotes as well, but it's a bit dedicated, perhaps return to it later on
 						this.FalloutState.BTreeModeOn = true;
 						this.FalloutState.BTreeLastFail = this.FalloutState.ChildsCount;

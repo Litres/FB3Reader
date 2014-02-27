@@ -2,6 +2,8 @@
 /// <reference path="FB3Reader.ts" />
 var FB3ReaderPage;
 (function (FB3ReaderPage) {
+    var BreakIterationEvery = 30;
+
     function HardcoreParseInt(Input) {
         Input.replace(/\D/g, '');
         if (Input == '')
@@ -47,6 +49,7 @@ var FB3ReaderPage;
             this.Ready = false;
             this.Pending = false;
             this.FalloutState = {};
+            this.QuickFallautState = {};
         }
         ReaderPage.prototype.Show = function () {
             if (!this.Visible) {
@@ -191,7 +194,6 @@ var FB3ReaderPage;
         };
 
         ReaderPage.prototype.DrawEnd = function (PageData) {
-            var _this = this;
             //			console.log('DrawEnd ' + this.ID);
             if (this.Reseted) {
                 this.Reseted = false;
@@ -207,13 +209,15 @@ var FB3ReaderPage;
             //			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
                 this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes);
-                var FallOut = this.FallOut();
-                this.FalloutConsume(FallOut);
+                this.FallOut();
             } else {
                 this.PageN = this.RenderInstr.CacheAs;
+                this.ApplyPageMetrics();
             }
+        };
 
-            //			this.ParentElement.style.height = (this.RenderInstr.Height + this.RenderInstr.NotesHeight + this.NotesElement.MarginTop) + 'px';
+        ReaderPage.prototype.ApplyPageMetrics = function () {
+            var _this = this;
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
             if (this.RenderInstr.NotesHeight) {
                 this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
@@ -234,13 +238,12 @@ var FB3ReaderPage;
                 }
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
-                }, 50);
+                }, 10);
             } else if (this.Next) {
                 this.FBReader.IdleOn();
             }
         };
-
-        ReaderPage.prototype.FalloutConsume = function (FallOut) {
+        ReaderPage.prototype.FalloutConsumeFirst = function (FallOut) {
             if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
                 // It's too bad baby: text does not fit the page, not even a char
                 // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
@@ -316,39 +319,47 @@ var FB3ReaderPage;
             // Ok, we have rendered the page nice. Now we can check, wether we have created
             // a page long enough to fit the NEXT page. If so, we are going to estimate it's
             // content to create next page(s) with EXACTLY the required html - this will
-            // speed up the render
+            // speed up the render a lot
             var LastChild = this.Element.Node.children[this.Element.Node.children.length - 1];
-            if (FallOut.EndReached && LastChild && !PageCorrupt) {
-                var CollectedHeight = FallOut.Height;
-                var CollectedNotesHeight = FallOut.NotesHeight;
-                var PrevTo;
-                for (var I = 0; I < this.PagesToRender.length; I++) {
-                    var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
-                    if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-                        this.InitFalloutState(TestHeight, CollectedNotesHeight, this.FalloutState.HasFootnotes, FallOut.FalloutElementN);
-                        FallOut = this.FallOut();
-                        if (FallOut.EndReached) {
-                            var NextPageRange = {};
-                            NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
-                            PrevTo = FallOut.FallOut.slice(0);
-                            NextPageRange.To = FallOut.FallOut.slice(0);
-
-                            this.PagesToRender[I].Height = FallOut.Height - CollectedHeight + this.Element.MarginTop;
-                            this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
-                            CollectedHeight = FallOut.Height;
-                            CollectedNotesHeight += FallOut.NotesHeight;
-                            this.PagesToRender[I].Range = NextPageRange;
-                            if (this.PagesToRender[I].CacheAs !== undefined) {
-                                this.FBReader.StoreCachedPage(this.PagesToRender[I]);
-                            }
-                        } else {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
+            if (LastChild && !PageCorrupt && FallOut.EndReached) {
+                var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
+                if (this.QuickFallautState.RealPageSize > TestHeight) {
+                    this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
+                    this.QuickFallautState.CollectedHeight = FallOut.Height;
+                    this.QuickFallautState.CollectedNotesHeight = FallOut.NotesHeight;
+                    this.QuickFallautState.QuickFallout = 0;
+                    this.FalloutState.QuickMode = true;
+                    this.FallOut();
+                    return;
                 }
             }
+            this.ApplyPageMetrics();
+        };
+        ReaderPage.prototype.FalloutConsumeNext = function (FallOut) {
+            if (FallOut.EndReached) {
+                var NextPageRange = {};
+                NextPageRange.From = (this.QuickFallautState.PrevTo ? this.QuickFallautState.PrevTo : this.RenderInstr.Range.To).slice(0);
+                this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
+                NextPageRange.To = FallOut.FallOut.slice(0);
+
+                this.PagesToRender[this.QuickFallautState.QuickFallout].Height = FallOut.Height - this.QuickFallautState.CollectedHeight + this.Element.MarginTop;
+                this.PagesToRender[this.QuickFallautState.QuickFallout].NotesHeight = FallOut.NotesHeight;
+                this.QuickFallautState.CollectedHeight = FallOut.Height;
+                this.QuickFallautState.CollectedNotesHeight += FallOut.NotesHeight;
+                this.PagesToRender[this.QuickFallautState.QuickFallout].Range = NextPageRange;
+                if (this.PagesToRender[this.QuickFallautState.QuickFallout].CacheAs !== undefined) {
+                    this.FBReader.StoreCachedPage(this.PagesToRender[this.QuickFallautState.QuickFallout]);
+                }
+                this.QuickFallautState.QuickFallout++;
+                var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
+                if (this.QuickFallautState.RealPageSize > TestHeight) {
+                    this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, FallOut.FalloutElementN);
+                    this.FallOut();
+                    return;
+                }
+            }
+
+            this.ApplyPageMetrics();
         };
 
         ReaderPage.prototype.Reset = function () {
@@ -395,11 +406,20 @@ var FB3ReaderPage;
             this.FalloutState.BTreeLastOK = null;
             this.FalloutState.BTreeLastFail = null;
             this.FalloutState.HasFootnotes = HasFootnotes;
+            this.FalloutState.QuickMode = false;
         };
 
         // Hand mage CSS3 tabs. I thouth it would take more than this
         ReaderPage.prototype.FallOut = function () {
+            var _this = this;
+            var IterationStartedAt = new Date().getTime();
             while (this.FalloutState.I < this.FalloutState.ChildsCount) {
+                if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery && false) {
+                    this.RenderMoreTimeout = setTimeout(function () {
+                        _this.FallOut();
+                    }, 5);
+                    return;
+                }
                 var FootnotesAddon = 0;
                 var Child = this.FalloutState.Element.children[this.FalloutState.I];
                 if (Child.style.position.match(/absolute/i)) {
@@ -555,13 +575,19 @@ var FB3ReaderPage;
             //for (var I = 0; I < Addr.length; I++) {
             //	Addr[I] = Addr[I] * 1; // Remove string corruption
             //}
-            return {
+            var Result = {
                 FallOut: Addr,
                 Height: this.FalloutState.GoodHeight,
                 NotesHeight: this.FalloutState.FootnotesAddonCollected ? this.FalloutState.FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
                 FalloutElementN: this.FalloutState.FalloutElementN,
                 EndReached: this.FalloutState.EndReached
             };
+
+            if (this.FalloutState.QuickMode) {
+                this.FalloutConsumeNext(Result);
+            } else {
+                this.FalloutConsumeFirst(Result);
+            }
         };
         ReaderPage.prototype.GuessNextElement = function () {
             // we are going to be greedy optimists with ceil :)

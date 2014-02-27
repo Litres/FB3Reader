@@ -83,7 +83,7 @@ module FB3Reader {
 			this.BookStyleNotesTemporaryOff = false;
 			this.LastSavePercent = 0;
 			//this.CurStartPos = [12,69];
-			this.CurStartPos = [0];
+			this.CurStartPos = [37];
 
 			this.IdleOff();
 		}
@@ -426,7 +426,7 @@ module FB3Reader {
 							this.Site.IdleThreadProgressor.HourglassOff(this);
 							var end = new Date().getTime();
 							var time = end - start;
-							alert('Execution time: ' + time);
+//							alert('Execution time: ' + time);
 							this.Site.Alert('Tome taken: ' + time);
 							clearInterval(this.IdleTimeoutID);
 							this.SaveCache();

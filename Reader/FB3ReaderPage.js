@@ -205,7 +205,8 @@ var FB3ReaderPage;
 
             //			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
-                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginBottom, 0);
+                this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0);
+                var FallOut = this.FallOut();
 
                 if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
                     // It's too bad baby: text does not fit the page, not even a char
@@ -291,7 +292,8 @@ var FB3ReaderPage;
                     for (var I = 0; I < this.PagesToRender.length; I++) {
                         var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
                         if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-                            FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
+                            this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, FallOut.FalloutElementN);
+                            FallOut = this.FallOut();
                             if (FallOut.EndReached) {
                                 var NextPageRange = {};
                                 NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
@@ -345,12 +347,6 @@ var FB3ReaderPage;
             }
         };
 
-        //public Redraw() {
-        //	if (!this.Ready || !this.RenderInstr) {
-        //		return
-        //	}
-        //	this.DrawInit([FB3Reader.PRIClone(this.RenderInstr)]);
-        //}
         ReaderPage.prototype.Reset = function () {
             clearTimeout(this.RenderMoreTimeout);
 
@@ -368,7 +364,10 @@ var FB3ReaderPage;
             }
         };
 
-        ReaderPage.prototype.InitFalloutState = function (SkipUntill) {
+        ReaderPage.prototype.InitFalloutState = function (Limit, NotesShift, SkipUntill) {
+            this.FalloutState.Limit = Limit;
+            this.FalloutState.NotesShift = NotesShift;
+            this.FalloutState.I = SkipUntill > 0 ? SkipUntill : 0;
             this.FalloutState.Element = this.Element.Node;
             this.FalloutState.GoodHeight = 0;
             this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
@@ -394,11 +393,7 @@ var FB3ReaderPage;
         };
 
         // Hand mage CSS3 tabs. I thouth it would take more than this
-        ReaderPage.prototype.FallOut = function (Limit, NotesShift, SkipUntill) {
-            this.InitFalloutState();
-
-            this.FalloutState.I = SkipUntill > 0 ? SkipUntill : 0;
-
+        ReaderPage.prototype.FallOut = function () {
             while (this.FalloutState.I < this.FalloutState.ChildsCount) {
                 var FootnotesAddon = 0;
                 var Child = this.FalloutState.Element.children[this.FalloutState.I];
@@ -436,11 +431,11 @@ var FB3ReaderPage;
                     }
                 }
                 if (FootnotesAddon) {
-                    FootnotesAddon += this.NotesElement.MarginTop - NotesShift;
+                    FootnotesAddon += this.NotesElement.MarginTop - this.FalloutState.NotesShift;
                 }
 
                 var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : this.FalloutState.FootnotesAddonCollected;
-                if ((ChildBot + FootnotesHeightNow < Limit) && !this.FalloutState.PrevPageBreaker || this.FalloutState.ForceFitBlock) {
+                if ((ChildBot + FootnotesHeightNow < this.FalloutState.Limit) && !this.FalloutState.PrevPageBreaker || this.FalloutState.ForceFitBlock) {
                     this.FalloutState.ForceDenyElementBreaking = false;
                     if (FootnotesAddon) {
                         this.FalloutState.FootnotesAddonCollected = FootnotesAddon;
@@ -525,7 +520,7 @@ var FB3ReaderPage;
                         this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
                         continue;
                     }
-                    Limit = Limit - ApplyShift;
+                    this.FalloutState.Limit = this.FalloutState.Limit - ApplyShift;
                     if (this.FalloutState.PrevPageBreaker)
                         break;
                     this.FalloutState.I = 0;

@@ -1,7 +1,7 @@
 /// <reference path="PPCacheHead.ts" />
 var FB3PPCache;
 (function (FB3PPCache) {
-    var SkipCache = false;
+    var SkipCache = true;
 
     var PPCache = (function () {
         function PPCache() {
@@ -28,7 +28,10 @@ var FB3PPCache;
                 return;
             }
 
+            // We are going to save no more than 50 cache entries
+            // We reuse slots on write request based on access time
             if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+                // localStorage support required
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
                 }
@@ -43,7 +46,7 @@ var FB3PPCache;
                     this.CacheMarkupsList.shift();
                 }
                 this.CacheMarkupsList.push({
-                    Time: new Date(),
+                    Time: new Date,
                     Key: Key,
                     Cache: this.PagesPositionsCache,
                     LastPage: this.LastPageN

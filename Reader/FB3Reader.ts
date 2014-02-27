@@ -82,9 +82,8 @@ module FB3Reader {
 			this.BookStyleNotes = true;
 			this.BookStyleNotesTemporaryOff = false;
 			this.LastSavePercent = 0;
-//			this.CurStartPos = [1085,224];
-				this.CurStartPos = [497];
-//			this.CurStartPos = [0];
+			//this.CurStartPos = [12,69];
+			this.CurStartPos = [0];
 
 			this.IdleOff();
 		}
@@ -425,13 +424,17 @@ module FB3Reader {
 							this.IdleOff();
 							this.Site.IdleThreadProgressor.Progress(this, 100);
 							this.Site.IdleThreadProgressor.HourglassOff(this);
+							var end = new Date().getTime();
+							var time = end - start;
+							alert('Execution time: ' + time);
+							this.Site.Alert('Tome taken: ' + time);
 							clearInterval(this.IdleTimeoutID);
 							this.SaveCache();
 							return;
 						} else {
 							this.PagesPositionsCache.LastPage(0);
-							if (NewPos - this.LastSavePercent > 5) {
-								// We only save pages position cache once per 5% because it is SLOW like hell
+							if (NewPos - this.LastSavePercent > 3) {
+								// We only save pages position cache once per 3% because it is SLOW like hell
 								this.SaveCache();
 								this.LastSavePercent = NewPos;
 							}

@@ -59,10 +59,9 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.LastSavePercent = 0;
 
-            //			this.CurStartPos = [1085,224];
-            this.CurStartPos = [497];
+            //this.CurStartPos = [12,69];
+            this.CurStartPos = [0];
 
-            //			this.CurStartPos = [0];
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -96,7 +95,7 @@ var FB3Reader;
             this.IdleOff();
 
             //			console.log('GoTO ' + NewPos);
-            this.CurStartPos = NewPos.slice(0);
+            this.CurStartPos = NewPos.slice(0); // NewPos is going to be destroyed, we need a hardcopy
             var GotoPage = this.GetCachedPage(NewPos);
             if (GotoPage != undefined) {
                 this.GoTOPage(GotoPage);
@@ -122,6 +121,7 @@ var FB3Reader;
             for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
                 var BasePage = I * this.NColumns;
 
+                // Page is rendered, that's just great - we first show what we have, then render the rest, if required
                 if (this.Pages[BasePage].Ready && this.Pages[BasePage].PageN == RealStartPage) {
                     this.PutBlockIntoView(BasePage);
                     WeeHaveFoundReadyPage = true;
@@ -143,10 +143,10 @@ var FB3Reader;
 
             this.CurStartPage = RealStartPage;
             if (WeeHaveFoundReadyPage && !FirstFrameToFill) {
-                this.IdleOn();
+                this.IdleOn(); // maybe we go to the same place several times? Anyway, quit!
                 return;
             } else if (!WeeHaveFoundReadyPage) {
-                FirstPageNToRender = RealStartPage;
+                FirstPageNToRender = RealStartPage; // just as if we would during the application start
                 FirstFrameToFill = this.Pages[0];
                 this.PutBlockIntoView(0);
             }
@@ -158,7 +158,7 @@ var FB3Reader;
             for (var I = FirstPageNToRender; I < RealStartPage + (this.CacheForward + 1) * this.NColumns; I++) {
                 if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < I) {
                     if (I < RealStartPage + this.NColumns) {
-                        PageWeThinkAbout.CleanPage();
+                        PageWeThinkAbout.CleanPage(); // We need some empty pages
                     } else {
                         break;
                     }
@@ -178,7 +178,7 @@ var FB3Reader;
                 PageWeThinkAbout = FirstFrameToFill.Next;
             }
             FirstFrameToFill.SetPending(NewInstr);
-            FirstFrameToFill.DrawInit(NewInstr);
+            FirstFrameToFill.DrawInit(NewInstr); // IdleOn will fire after the DrawInit chain ends
         };
 
         Reader.prototype.PutBlockIntoView = function (Page) {
@@ -203,7 +203,7 @@ var FB3Reader;
                 NewInstr[0].CacheAs = 0;
                 this.CurStartPage = 0;
             } else {
-                this.CurStartPage = undefined;
+                this.CurStartPage = undefined; // this means we are walking out of the ladder, right over the grass - this fact affects page turning greatly
             }
             for (var I = 1; I < (this.CacheForward + 1) * this.NColumns; I++) {
                 NewInstr.push({});
@@ -258,9 +258,9 @@ var FB3Reader;
                     InnerHTML += NewPage.GetInitHTML(I * this.NColumns + J + 1);
                 }
             }
-            this.Pages[this.Pages.length - 1].Next = this.Pages[0];
+            this.Pages[this.Pages.length - 1].Next = this.Pages[0]; // Cycled canvas reuse
 
-            this.BackgroundRenderFrame = new FB3ReaderPage.ReaderPage(0, this.FB3DOM, this, null);
+            this.BackgroundRenderFrame = new FB3ReaderPage.ReaderPage(0, this.FB3DOM, this, null); // Meet the background page borders detector!
             InnerHTML += this.BackgroundRenderFrame.GetInitHTML(0);
 
             InnerHTML += '</div>';
@@ -284,6 +284,7 @@ var FB3Reader;
                 clearTimeout(this.OnResizeTimeout);
             }
             this.OnResizeTimeout = setTimeout(function () {
+                // This was a real resise
                 if (_this.CanvasW != _this.Site.Canvas.clientWidth || _this.CanvasH != _this.Site.Canvas.clientHeight) {
                     _this.Reset();
                     _this.OnResizeTimeout = undefined;
@@ -353,7 +354,7 @@ var FB3Reader;
                 // we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
                 var GotoPage = this.GetCachedPage(this.CurStartPos);
                 if (GotoPage != undefined) {
-                    this.GoTOPage(GotoPage);
+                    this.GoTOPage(GotoPage); // If so - go to the ledder and never care of the rest
                 } else {
                     if (this.EnableBackgroundPreRender) {
                         this.MoveTimeoutID = setTimeout(function () {
@@ -412,13 +413,17 @@ var FB3Reader;
                             this.IdleOff();
                             this.Site.IdleThreadProgressor.Progress(this, 100);
                             this.Site.IdleThreadProgressor.HourglassOff(this);
+                            var end = new Date().getTime();
+                            var time = end - start;
+                            alert('Execution time: ' + time);
+                            this.Site.Alert('Tome taken: ' + time);
                             clearInterval(this.IdleTimeoutID);
                             this.SaveCache();
                             return;
                         } else {
                             this.PagesPositionsCache.LastPage(0);
-                            if (NewPos - this.LastSavePercent > 5) {
-                                // We only save pages position cache once per 5% because it is SLOW like hell
+                            if (NewPos - this.LastSavePercent > 3) {
+                                // We only save pages position cache once per 3% because it is SLOW like hell
                                 this.SaveCache();
                                 this.LastSavePercent = NewPos;
                             }

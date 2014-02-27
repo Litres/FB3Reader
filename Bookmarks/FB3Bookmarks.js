@@ -23,7 +23,7 @@ var FB3Bookmarks;
 
         // fake methods below - todo to implement them
         LitResBookmarksProcessor.prototype.Load = function (ArtID, Callback) {
-            this.Ready = true;
+            this.Ready = true; //fake
         };
         LitResBookmarksProcessor.prototype.Store = function () {
         };

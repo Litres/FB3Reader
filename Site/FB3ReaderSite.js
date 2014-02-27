@@ -33,7 +33,7 @@ var FB3ReaderSite;
             document.getElementById(this.AlertSpan).innerHTML = Message;
             //			window.alert(Message);
         };
-        ExampleProgressor.prototype.HourglassOn = function (Owner, Message) {
+        ExampleProgressor.prototype.HourglassOn = function (Owner, LockUI, Message) {
             this.Hourglasses[Owner.toString()] = 1;
             document.getElementById(this.MessSpan).innerHTML = Message;
             //			document.body.style.cursor = 'wait';

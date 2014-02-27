@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 var FB3DOM;
-(function (FB3DOM) {
+(function (_FB3DOM) {
     var AsyncLoadConsumer = (function () {
         function AsyncLoadConsumer(FB3DOM, WaitedBlocks, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, OnDone) {
             this.FB3DOM = FB3DOM;
@@ -49,7 +49,7 @@ var FB3DOM;
         }
         return PageContainer;
     })();
-    FB3DOM.PageContainer = PageContainer;
+    _FB3DOM.PageContainer = PageContainer;
 
     var DOM = (function (_super) {
         __extends(DOM, _super);
@@ -136,7 +136,7 @@ var FB3DOM;
         };
 
         DOM.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
-            var FullBookmarksList = new Array();
+            var FullBookmarksList = new Array;
             for (var I = 0; I < this.Bookmarks.length; I++) {
                 FullBookmarksList = FullBookmarksList.concat(this.Bookmarks[I].Bookmarks);
             }
@@ -147,7 +147,7 @@ var FB3DOM;
             var LoadedChunk = CustomData.ChunkN;
             var Shift = this.DataChunks[LoadedChunk].s;
             for (var I = 0; I < Data.length; I++) {
-                this.Childs[I + Shift] = new FB3DOM.FB3Tag(Data[I], this, I + Shift);
+                this.Childs[I + Shift] = new _FB3DOM.FB3Tag(Data[I], this, I + Shift);
             }
             this.DataChunks[LoadedChunk].loaded = 2;
 
@@ -171,7 +171,7 @@ var FB3DOM;
             return ChunksMissing;
         };
         return DOM;
-    })(FB3DOM.FB3Tag);
-    FB3DOM.DOM = DOM;
+    })(_FB3DOM.FB3Tag);
+    _FB3DOM.DOM = DOM;
 })(FB3DOM || (FB3DOM = {}));
 //# sourceMappingURL=FB3DOM.js.map

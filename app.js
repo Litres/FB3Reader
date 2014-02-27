@@ -7,6 +7,7 @@
 var AFB3Reader;
 var AFB3PPCache;
 var BookmarksProcessor;
+var start;
 
 window.onload = function () {
     var ArtID = '120421';
@@ -17,13 +18,14 @@ window.onload = function () {
     BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
     AFB3PPCache = new FB3PPCache.PPCache();
     AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
-    AFB3Reader.NColumns = 3;
-    AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent));
+    AFB3Reader.NColumns = 2;
+    AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
     AFB3Reader.Init();
     window.addEventListener('resize', function () {
         return AFB3Reader.AfterCanvasResize();
     });
     ShowPosition();
+    start = new Date().getTime();
 };
 
 var MarkupProgress;
@@ -37,8 +39,8 @@ function InitNote(NoteType) {
         RoundedNote = undefined;
         NativeNote = NativeNote.RoundClone(true);
         NativeNote.Group = 1;
-        (document.getElementById('wholepara')).disabled = true;
-        (document.getElementById('wholepara')).checked = true;
+        document.getElementById('wholepara').disabled = true;
+        document.getElementById('wholepara').checked = true;
         ShowDialog(NativeNote);
     }
     HideMenu();
@@ -119,9 +121,9 @@ function ShowDialog(Bookmark) {
     AFB3Reader.Redraw();
     document.getElementById('FromXPath').innerHTML = '/' + DialogBookmark.XStart.join('/');
     document.getElementById('ToXPath').innerHTML = '/' + DialogBookmark.XEnd.join('/');
-    (document.getElementById('notetitle')).value = DialogBookmark.Title;
-    (document.getElementById('notedescr')).value = DialogBookmark.RawText;
-    (document.getElementById('notetype')).value = DialogBookmark.Group.toString();
+    document.getElementById('notetitle').value = DialogBookmark.Title;
+    document.getElementById('notedescr').value = DialogBookmark.RawText;
+    document.getElementById('notetype').value = DialogBookmark.Group.toString();
     document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
     document.getElementById('sellwhole').style.display = Bookmark.ID ? 'none' : 'block';
     document.getElementById('notedialog').style.display = 'block';
@@ -129,7 +131,7 @@ function ShowDialog(Bookmark) {
 
 function RoundNoteUp() {
     DialogBookmark.Detach();
-    if ((document.getElementById('wholepara')).checked) {
+    if (document.getElementById('wholepara').checked) {
         if (!RoundedNote) {
             RoundedNote = DialogBookmark.RoundClone(true);
         }
@@ -142,8 +144,8 @@ function RoundNoteUp() {
 
 function HideDialog() {
     document.getElementById('notedialog').style.display = 'none';
-    (document.getElementById('wholepara')).checked = false;
-    (document.getElementById('wholepara')).disabled = false;
+    document.getElementById('wholepara').checked = false;
+    document.getElementById('wholepara').disabled = false;
 }
 
 function ShowPosition() {
@@ -162,7 +164,7 @@ function Pagebackward() {
 }
 
 function GoToPercent() {
-    AFB3Reader.GoToPercent(parseFloat((document.getElementById('gotopercent')).value));
+    AFB3Reader.GoToPercent(parseFloat(document.getElementById('gotopercent').value));
     ShowPosition();
 }
 //# sourceMappingURL=app.js.map

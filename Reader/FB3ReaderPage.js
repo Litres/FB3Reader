@@ -368,7 +368,7 @@ var FB3ReaderPage;
             }
         };
 
-        ReaderPage.prototype.InitFalloutState = function () {
+        ReaderPage.prototype.InitFalloutState = function (SkipUntill) {
             this.FalloutState.Element = this.Element.Node;
             this.FalloutState.GoodHeight = 0;
             this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
@@ -451,7 +451,17 @@ var FB3ReaderPage;
                         this.FalloutState.LastLineBreakerPos = this.FalloutState.I;
                         this.FalloutState.LastFullLinePosition = ChildBot;
                     }
-                    this.FalloutState.I++;
+                    this.FalloutState.BTreeLastOK = this.FalloutState.I;
+                    if (this.FalloutState.I == 0 && this.FalloutState.NoMoreFootnotesHere && this.FalloutState.ChildsCount > 7 && !this.FalloutState.BTreeModeOn) {
+                        // In fact we could work with Footnotes as well, but it's a bit dedicated, perhaps return to it later on
+                        this.FalloutState.BTreeModeOn = true;
+                        this.FalloutState.BTreeLastFail = this.FalloutState.ChildsCount;
+                    }
+                    if (this.FalloutState.BTreeModeOn) {
+                        this.FalloutState.I = this.GuessNextElement();
+                    } else {
+                        this.FalloutState.I++;
+                    }
 
                     if (this.FalloutState.I == this.FalloutState.ChildsCount && this.FalloutState.SplitHistory.length) {
                         // Well, we could not fit the whole element, but all it's childs fit perfectly. Hopefully
@@ -464,17 +474,23 @@ var FB3ReaderPage;
                         this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
                         this.FalloutState.ForceFitBlock = true;
                         this.FalloutState.PrevPageBreaker = false;
+                        this.FalloutState.BTreeModeOn = false;
                     } else {
                         this.FalloutState.ForceFitBlock = false;
                     }
                 } else {
+                    // If we are in BTree Mode we save nothing exept BTreeLastFail. Just pretend like this fail have never happend
+                    if (this.FalloutState.BTreeModeOn) {
+                        this.FalloutState.BTreeLastFail = this.FalloutState.I;
+                        this.FalloutState.I = this.GuessNextElement();
+                        continue;
+                    }
                     this.FalloutState.EndReached = true;
                     if (this.FalloutState.FalloutElementN == -1) {
                         this.FalloutState.FalloutElementN = this.FalloutState.I;
                     }
                     if (!FootnotesAddon) {
                         this.FalloutState.NoMoreFootnotesHere = true;
-                        this.FalloutState.BTreeModeOn = true;
                     }
                     var CurShift = Child.offsetTop;
                     if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
@@ -510,9 +526,9 @@ var FB3ReaderPage;
                         continue;
                     }
                     Limit = Limit - ApplyShift;
-                    this.FalloutState.I = 0;
                     if (this.FalloutState.PrevPageBreaker)
                         break;
+                    this.FalloutState.I = 0;
                 }
             }
 
@@ -546,6 +562,14 @@ var FB3ReaderPage;
                 FalloutElementN: this.FalloutState.FalloutElementN,
                 EndReached: this.FalloutState.EndReached
             };
+        };
+        ReaderPage.prototype.GuessNextElement = function () {
+            // we are going to be greedy optimists with ceil :)
+            var BTreePoint = Math.ceil(this.FalloutState.BTreeLastOK + (this.FalloutState.BTreeLastFail - this.FalloutState.BTreeLastOK) / 2);
+            if (BTreePoint - this.FalloutState.BTreeLastOK < 2) {
+                this.FalloutState.BTreeModeOn = false;
+            }
+            return BTreePoint;
         };
         return ReaderPage;
     })();

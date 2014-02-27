@@ -19,6 +19,32 @@ module FB3ReaderPage {
 		EndReached: boolean;					// False if there were not enough text to fill the page
 	}
 
+	interface IFalloutState {
+		Element: HTMLElement;
+		I: number;
+		GoodHeight: number;
+		ChildsCount: number;
+		ForceDenyElementBreaking: boolean;
+		LastOffsetParent: Element;
+		LastOffsetShift: number;
+		EndReached: boolean;
+		FootnotesAddonCollected: number;
+
+		// To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
+		LastLineBreakerParent: HTMLElement;
+		LastLineBreakerPos: number;
+		LastFullLinePosition: number;
+
+		PrevPageBreaker: boolean;
+		NoMoreFootnotesHere: boolean;
+		FalloutElementN: number;
+		SplitHistory: { I: number; Element: HTMLElement }[];
+		ForceFitBlock: boolean;
+		BTreeModeOn: boolean;
+		BTreeLastOK: number;
+		BTreeLastFail: number;
+	}
+
 	function HardcoreParseInt(Input: string): number {
 		Input.replace(/\D/g, '');
 		if (Input == '')
@@ -60,6 +86,8 @@ module FB3ReaderPage {
 		private Site: FB3ReaderSite.IFB3ReaderSite;
 		private Visible: boolean;
 		private Width: number;
+		private FalloutState: IFalloutState;
+
 		public ViewPortW: number;
 		public ViewPortH: number;
 		public RenderInstr: FB3Reader.IPageRenderInstruction;
@@ -80,9 +108,10 @@ module FB3ReaderPage {
 			if (Prev) {
 				Prev.Next = this;
 			}
-			this.PrerenderBlocks = 4;
+			this.PrerenderBlocks = 16;
 			this.Ready = false;
 			this.Pending = false;
+			this.FalloutState = <IFalloutState> {};
 		}
 
 		Show(): void {
@@ -411,36 +440,45 @@ module FB3ReaderPage {
 			}
 		}
 
-		private FallOut(Limit: number, NotesShift: number, SkipUntill?: number): IFallOut {
-			//		Hand mage CSS3 tabs. I thouth it would take more than this
-			var Element = <HTMLElement> this.Element.Node;
-			var I = SkipUntill > 0 ? SkipUntill : 0;
-			var GoodHeight = 0;
-			var ChildsCount = Element.children.length;
-			var ForceDenyElementBreaking = true;
-			var LastOffsetParent: Element;
-			var LastOffsetShift: number;
-			var EndReached = false;
-			var FootnotesAddonCollected = 0;
+		private InitFalloutState(): void {
+			this.FalloutState.Element = <HTMLElement> this.Element.Node;
+			this.FalloutState.GoodHeight = 0;
+			this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
+			this.FalloutState.ForceDenyElementBreaking = true;
+			this.FalloutState.LastOffsetParent = null;
+			this.FalloutState.LastOffsetShift = null;
+			this.FalloutState.EndReached = false;
+			this.FalloutState.FootnotesAddonCollected = 0;
 
 			// To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
-			var LastLineBreakerParent: HTMLElement;
-			var LastLineBreakerPos: number;
-			var LastFullLinePosition = 0;
+			this.FalloutState.LastLineBreakerParent = null;
+			this.FalloutState.LastLineBreakerPos= null;
+			this.FalloutState.LastFullLinePosition = 0;
 
-			var PrevPageBreaker = false;
-			var NoMoreFootnotesHere = false;
-			var FalloutElementN = -1;
-			var SplitHistory: any[] = [];
-			var ForceFitBlock = false;
-			while (I < ChildsCount) {
+			this.FalloutState.PrevPageBreaker = false;
+			this.FalloutState.NoMoreFootnotesHere = false;
+			this.FalloutState.FalloutElementN = -1;
+			this.FalloutState.SplitHistory = [];
+			this.FalloutState.ForceFitBlock = false;
+			this.FalloutState.BTreeModeOn = false;
+			this.FalloutState.BTreeLastOK = null;
+			this.FalloutState.BTreeLastFail = null;
+		}
+
+		// Hand mage CSS3 tabs. I thouth it would take more than this
+		private FallOut(Limit: number, NotesShift: number, SkipUntill?: number): IFallOut {
+			this.InitFalloutState();
+
+			this.FalloutState.I = SkipUntill > 0 ? SkipUntill : 0;
+
+			while (this.FalloutState.I < this.FalloutState.ChildsCount) {
 				var FootnotesAddon = 0;
-				var Child = <HTMLElement> Element.children[I];
+				var Child = <HTMLElement> this.FalloutState.Element.children[this.FalloutState.I];
 				if (Child.style.position.match(/absolute/i)) {
-					I++;
+					this.FalloutState.I++;
 					continue;
 				}
-				PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && PageBreakBefore(Child);
+				this.FalloutState.PrevPageBreaker = this.FalloutState.PrevPageBreaker || !this.FalloutState.ForceDenyElementBreaking && PageBreakBefore(Child);
 				var SH = Child.scrollHeight;
 				var OH = Child.offsetHeight;
 				var ChildBot = Child.offsetTop + Math.max(SH, OH);
@@ -451,7 +489,7 @@ module FB3ReaderPage {
 					ChildBot++;
 				}
 
-				if (!NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {
+				if (!this.FalloutState.NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {
 					// Footnotes kind of expand element height - NoMoreFootnotesHere is for making things faster
 					if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
 						var NoteElement = this.Site.getElementById('f' + Child.id);
@@ -473,38 +511,39 @@ module FB3ReaderPage {
 					FootnotesAddon += this.NotesElement.MarginTop - NotesShift;
 				}
 
-				var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : FootnotesAddonCollected;
-				if ((ChildBot + FootnotesHeightNow < Limit) && !PrevPageBreaker || ForceFitBlock) { // Page is still not filled
-					ForceDenyElementBreaking = false;
-					if (FootnotesAddon) { FootnotesAddonCollected = FootnotesAddon };
-					if (Math.abs(LastFullLinePosition - ChildBot) > 1) { // +1 because of the browser positioning rounding on the zoomed screen
-						LastLineBreakerParent = Element;
-						LastLineBreakerPos = I;
-						LastFullLinePosition = ChildBot;
+				var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : this.FalloutState.FootnotesAddonCollected;
+				if ((ChildBot + FootnotesHeightNow < Limit) && !this.FalloutState.PrevPageBreaker || this.FalloutState.ForceFitBlock) { // Page is still not filled
+					this.FalloutState.ForceDenyElementBreaking = false;
+					if (FootnotesAddon) { this.FalloutState.FootnotesAddonCollected = FootnotesAddon };
+					if (Math.abs(this.FalloutState.LastFullLinePosition - ChildBot) > 1) { // +1 because of the browser positioning rounding on the zoomed screen
+						this.FalloutState.LastLineBreakerParent = this.FalloutState.Element;
+						this.FalloutState.LastLineBreakerPos = this.FalloutState.I;
+						this.FalloutState.LastFullLinePosition = ChildBot;
 					}
-					I++;
+					this.FalloutState.I++;
 
-					if (I == ChildsCount && SplitHistory.length) { // SplitHistory.length means we can break on fit the page
+					if (this.FalloutState.I == this.FalloutState.ChildsCount && this.FalloutState.SplitHistory.length) { // SplitHistory.length means we can break on fit the page
 						// Well, we could not fit the whole element, but all it's childs fit perfectly. Hopefully
 						// the reason is the bottom margin/padding. So we assume the whole element fits and leave those
 						// paddings hang below the visible page
-						var Fallback = SplitHistory.pop();
-						Element = Fallback.el;
-						I = Fallback.n;
-						NoMoreFootnotesHere = false;
-						ChildsCount = Element.children.length;
-						ForceFitBlock = true;
-						PrevPageBreaker = false;
+						var Fallback = this.FalloutState.SplitHistory.pop();
+						this.FalloutState.Element = Fallback.Element;
+						this.FalloutState.I = Fallback.I;
+						this.FalloutState.NoMoreFootnotesHere = false;
+						this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
+						this.FalloutState.ForceFitBlock = true;
+						this.FalloutState.PrevPageBreaker = false;
 					} else {
-						ForceFitBlock = false;
+						this.FalloutState.ForceFitBlock = false;
 					}
 				} else {
-					EndReached = true;
-					if (FalloutElementN == -1) {
-						FalloutElementN = I
+					this.FalloutState.EndReached = true;
+					if (this.FalloutState.FalloutElementN == -1) {
+						this.FalloutState.FalloutElementN = this.FalloutState.I
 					}
 					if (!FootnotesAddon) {
-						NoMoreFootnotesHere = true;
+						this.FalloutState.NoMoreFootnotesHere = true;
+						this.FalloutState.BTreeModeOn = true;
 					}
 					var CurShift: number = Child.offsetTop;
 					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
@@ -517,44 +556,44 @@ module FB3ReaderPage {
 					//}
 					var OffsetParent = Child.offsetParent;
 					var ApplyShift: number;
-					if (LastOffsetParent == OffsetParent) {
-						ApplyShift = CurShift - LastOffsetShift;
+					if (this.FalloutState.LastOffsetParent == OffsetParent) {
+						ApplyShift = CurShift - this.FalloutState.LastOffsetShift;
 					} else {
 						ApplyShift = CurShift;
 					}
-					LastOffsetShift = CurShift;
+					this.FalloutState.LastOffsetShift = CurShift;
 
-					GoodHeight += ApplyShift;
-					LastOffsetParent = OffsetParent;
-					SplitHistory.push({ n: I, el: Element});
-					Element = Child;
-					ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
-					if (!PrevPageBreaker && ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected && LastLineBreakerParent) {
+					this.FalloutState.GoodHeight += ApplyShift;
+					this.FalloutState.LastOffsetParent = OffsetParent;
+					this.FalloutState.SplitHistory.push({ I: this.FalloutState.I, Element: this.FalloutState.Element});
+					this.FalloutState.Element = Child;
+					this.FalloutState.ChildsCount = (!this.FalloutState.ForceDenyElementBreaking && IsNodeUnbreakable(this.FalloutState.Element)) ? 0 : this.FalloutState.Element.children.length;
+					if (!this.FalloutState.PrevPageBreaker && this.FalloutState.ChildsCount == 0 && FootnotesAddon > this.FalloutState.FootnotesAddonCollected && this.FalloutState.LastLineBreakerParent) {
 						// So, it looks like we do not fit because of the footnote, not the falling out text itself.
 						// Let's force page break on the previous line end - kind of time machine
-						I = LastLineBreakerPos;
-						Element = LastLineBreakerParent;
-						PrevPageBreaker = true;
-						ChildsCount = Element.children.length;
+						this.FalloutState.I = this.FalloutState.LastLineBreakerPos;
+						this.FalloutState.Element = this.FalloutState.LastLineBreakerParent;
+						this.FalloutState.PrevPageBreaker = true;
+						this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
 						continue;
 					}
 					Limit = Limit - ApplyShift;
-					I = 0;
-					if (PrevPageBreaker) break;
+					this.FalloutState.I = 0;
+					if (this.FalloutState.PrevPageBreaker) break;
 				}
 			}
 
 			var Addr: any[];
-			if (EndReached) {
-				if (Element != this.Element.Node) {
-					Addr = Element.id.split('_');
+			if (this.FalloutState.EndReached) {
+				if (this.FalloutState.Element != this.Element.Node) {
+					Addr = this.FalloutState.Element.id.split('_');
 				} else {
 					// Special case: we have exact match for the page with a little bottom margin hanging, still consider it OK
 					Addr = Child.id.split('_');
 				}
 			} else {
 				Addr = Child.id.split('_');
-				GoodHeight = this.Element.Node.scrollHeight;
+				this.FalloutState.GoodHeight = this.Element.Node.scrollHeight;
 			}
 
 			Addr.shift();
@@ -570,10 +609,10 @@ module FB3ReaderPage {
 
 			return {
 				FallOut: Addr,
-				Height: GoodHeight,
-				NotesHeight: FootnotesAddonCollected ? FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
-				FalloutElementN: FalloutElementN,
-				EndReached: EndReached
+				Height: this.FalloutState.GoodHeight,
+				NotesHeight: this.FalloutState.FootnotesAddonCollected ? this.FalloutState.FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
+				FalloutElementN: this.FalloutState.FalloutElementN,
+				EndReached: this.FalloutState.EndReached
 			};
 		}
 	}

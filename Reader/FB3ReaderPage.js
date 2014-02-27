@@ -43,10 +43,9 @@ var FB3ReaderPage;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 16;
+            this.PrerenderBlocks = 4;
             this.Ready = false;
             this.Pending = false;
-            this.FalloutState = {};
         }
         ReaderPage.prototype.Show = function () {
             if (!this.Visible) {
@@ -198,17 +197,122 @@ var FB3ReaderPage;
                 return;
             }
             this.Element.Node.innerHTML = PageData.Body.join('');
-            var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
-            if (HasFootnotes) {
+            if (PageData.FootNotes.length && this.FBReader.BookStyleNotes) {
                 this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
                 this.NotesElement.Node.style.display = 'block';
             }
 
             //			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
-                this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes);
-                var FallOut = this.FallOut();
-                this.FalloutConsume(FallOut);
+                var FallOut = this.FallOut(this.Element.Height - this.Element.MarginBottom, 0);
+
+                if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
+                    // It's too bad baby: text does not fit the page, not even a char
+                    // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
+                    if (this.FBReader.BookStyleNotes && PageData.FootNotes.length) {
+                        this.FBReader.BookStyleNotes = false;
+                        this.FBReader.BookStyleNotesTemporaryOff = true;
+                        this.RenderInstr.Range = null;
+                        this.NotesElement.Node.innerHTML = '';
+                        this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+                        return;
+                    } else {
+                        // That's it - no way to recover. We die now, later we will make some fix here
+                        this.FBReader.Site.Alert('We can not fit the text into the page!');
+                        this.RenderInstr.Start = [this.RenderInstr.Start[0] * 1 + 1]; // * 1 removes string problem
+                        this.RenderInstr.Range = null;
+                        if (this.FBReader.BookStyleNotesTemporaryOff) {
+                            this.FBReader.BookStyleNotes = true;
+                            this.FBReader.BookStyleNotesTemporaryOff = false;
+                        }
+                        this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+                        return;
+                    }
+                }
+
+                var PageCorrupt = false;
+                if (this.FBReader.BookStyleNotesTemporaryOff) {
+                    this.FBReader.BookStyleNotes = true;
+                    this.FBReader.BookStyleNotesTemporaryOff = false;
+                    PageCorrupt = true;
+                }
+
+                // We can have not enough content to fill the page. Sometimes we will refill it,
+                // but sometimes (doc end or we only
+                if (!FallOut.EndReached) {
+                    if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
+                        // Ups, our page is incomplete - have to retry filling it. Take more data now
+                        //var BasePrerender = this.PrerenderBlocks;
+                        this.PrerenderBlocks += 2;
+                        this.RenderInstr.Range = null;
+                        this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+
+                        //this.PrerenderBlocks = BasePrerender;
+                        return;
+                    } else if (this.Next) {
+                        var NP = this;
+                        for (var I = 0; I < this.PagesToRender.length; I++) {
+                            NP = NP.Next;
+                            NP.CleanPage();
+                            NP.Ready = false;
+                            NP.RenderInstr.Range = { From: [-1], To: [-1] };
+                        }
+                    }
+                    this.PagesToRender = [];
+                    this.RenderInstr.Range = {
+                        From: this.RenderInstr.Start.splice(0),
+                        To: FallOut.FallOut
+                    };
+                    this.RenderInstr.Range.To[0]++;
+                } else {
+                    this.RenderInstr.Range = {
+                        From: this.RenderInstr.Start.splice(0),
+                        To: FallOut.FallOut
+                    };
+                }
+                this.RenderInstr.Height = FallOut.Height;
+                this.RenderInstr.NotesHeight = FallOut.NotesHeight;
+
+                this.PageN = this.RenderInstr.CacheAs;
+                if (this.PageN !== undefined) {
+                    this.FBReader.StoreCachedPage(this.RenderInstr);
+                }
+
+                // Ok, we have rendered the page nice. Now we can check, wether we have created
+                // a page long enough to fit the NEXT page. If so, we are going to estimate it's
+                // content to create next page(s) with EXACTLY the required html - this will
+                // speed up the render
+                var LastChild = this.Element.Node.children[this.Element.Node.children.length - 1];
+                if (FallOut.EndReached && LastChild && !PageCorrupt) {
+                    var CollectedHeight = FallOut.Height;
+                    var CollectedNotesHeight = FallOut.NotesHeight;
+                    var PrevTo;
+                    for (var I = 0; I < this.PagesToRender.length; I++) {
+                        var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
+                        if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
+                            FallOut = this.FallOut(TestHeight, CollectedNotesHeight, FallOut.FalloutElementN);
+                            if (FallOut.EndReached) {
+                                var NextPageRange = {};
+                                NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
+                                PrevTo = FallOut.FallOut.slice(0);
+                                NextPageRange.To = FallOut.FallOut.slice(0);
+
+                                this.PagesToRender[I].Height = FallOut.Height - CollectedHeight + this.Element.MarginTop;
+                                this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
+                                CollectedHeight = FallOut.Height;
+                                CollectedNotesHeight += FallOut.NotesHeight;
+                                this.PagesToRender[I].Range = NextPageRange;
+                                if (this.PagesToRender[I].CacheAs !== undefined) {
+                                    this.FBReader.StoreCachedPage(this.PagesToRender[I]);
+                                }
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
             } else {
                 this.PageN = this.RenderInstr.CacheAs;
             }
@@ -240,117 +344,12 @@ var FB3ReaderPage;
             }
         };
 
-        ReaderPage.prototype.FalloutConsume = function (FallOut) {
-            if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
-                // It's too bad baby: text does not fit the page, not even a char
-                // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
-                if (this.FBReader.BookStyleNotes && this.FalloutState.HasFootnotes) {
-                    this.FBReader.BookStyleNotes = false;
-                    this.FBReader.BookStyleNotesTemporaryOff = true;
-                    this.RenderInstr.Range = null;
-                    this.NotesElement.Node.innerHTML = '';
-                    this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-                    return;
-                } else {
-                    // That's it - no way to recover. We die now, later we will make some fix here
-                    this.FBReader.Site.Alert('We can not fit the text into the page!');
-                    this.RenderInstr.Start = [this.RenderInstr.Start[0] * 1 + 1]; // * 1 removes string problem
-                    this.RenderInstr.Range = null;
-                    if (this.FBReader.BookStyleNotesTemporaryOff) {
-                        this.FBReader.BookStyleNotes = true;
-                        this.FBReader.BookStyleNotesTemporaryOff = false;
-                    }
-                    this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-                    return;
-                }
-            }
-
-            var PageCorrupt = false;
-            if (this.FBReader.BookStyleNotesTemporaryOff) {
-                this.FBReader.BookStyleNotes = true;
-                this.FBReader.BookStyleNotesTemporaryOff = false;
-                PageCorrupt = true;
-            }
-
-            // We can have not enough content to fill the page. Sometimes we will refill it,
-            // but sometimes (doc end or we only
-            if (!FallOut.EndReached) {
-                if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
-                    // Ups, our page is incomplete - have to retry filling it. Take more data now
-                    //var BasePrerender = this.PrerenderBlocks;
-                    this.PrerenderBlocks += 2;
-                    this.RenderInstr.Range = null;
-                    this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-
-                    //this.PrerenderBlocks = BasePrerender;
-                    return;
-                } else if (this.Next) {
-                    var NP = this;
-                    for (var I = 0; I < this.PagesToRender.length; I++) {
-                        NP = NP.Next;
-                        NP.CleanPage();
-                        NP.Ready = false;
-                        NP.RenderInstr.Range = { From: [-1], To: [-1] };
-                    }
-                }
-                this.PagesToRender = [];
-                this.RenderInstr.Range = {
-                    From: this.RenderInstr.Start.splice(0),
-                    To: FallOut.FallOut
-                };
-                this.RenderInstr.Range.To[0]++;
-            } else {
-                this.RenderInstr.Range = {
-                    From: this.RenderInstr.Start.splice(0),
-                    To: FallOut.FallOut
-                };
-            }
-            this.RenderInstr.Height = FallOut.Height;
-            this.RenderInstr.NotesHeight = FallOut.NotesHeight;
-
-            this.PageN = this.RenderInstr.CacheAs;
-            if (this.PageN !== undefined) {
-                this.FBReader.StoreCachedPage(this.RenderInstr);
-            }
-
-            // Ok, we have rendered the page nice. Now we can check, wether we have created
-            // a page long enough to fit the NEXT page. If so, we are going to estimate it's
-            // content to create next page(s) with EXACTLY the required html - this will
-            // speed up the render
-            var LastChild = this.Element.Node.children[this.Element.Node.children.length - 1];
-            if (FallOut.EndReached && LastChild && !PageCorrupt) {
-                var CollectedHeight = FallOut.Height;
-                var CollectedNotesHeight = FallOut.NotesHeight;
-                var PrevTo;
-                for (var I = 0; I < this.PagesToRender.length; I++) {
-                    var TestHeight = CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
-                    if (LastChild.offsetTop + LastChild.scrollHeight > TestHeight) {
-                        this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, this.FalloutState.HasFootnotes, FallOut.FalloutElementN);
-                        FallOut = this.FallOut();
-                        if (FallOut.EndReached) {
-                            var NextPageRange = {};
-                            NextPageRange.From = (PrevTo ? PrevTo : this.RenderInstr.Range.To).slice(0);
-                            PrevTo = FallOut.FallOut.slice(0);
-                            NextPageRange.To = FallOut.FallOut.slice(0);
-
-                            this.PagesToRender[I].Height = FallOut.Height - CollectedHeight + this.Element.MarginTop;
-                            this.PagesToRender[I].NotesHeight = FallOut.NotesHeight;
-                            CollectedHeight = FallOut.Height;
-                            CollectedNotesHeight += FallOut.NotesHeight;
-                            this.PagesToRender[I].Range = NextPageRange;
-                            if (this.PagesToRender[I].CacheAs !== undefined) {
-                                this.FBReader.StoreCachedPage(this.PagesToRender[I]);
-                            }
-                        } else {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-        };
-
+        //public Redraw() {
+        //	if (!this.Ready || !this.RenderInstr) {
+        //		return
+        //	}
+        //	this.DrawInit([FB3Reader.PRIClone(this.RenderInstr)]);
+        //}
         ReaderPage.prototype.Reset = function () {
             clearTimeout(this.RenderMoreTimeout);
 
@@ -368,45 +367,36 @@ var FB3ReaderPage;
             }
         };
 
-        ReaderPage.prototype.InitFalloutState = function (Limit, NotesShift, HasFootnotes, SkipUntill) {
-            this.FalloutState.Limit = Limit;
-            this.FalloutState.NotesShift = NotesShift;
-            this.FalloutState.I = SkipUntill > 0 ? SkipUntill : 0;
-            this.FalloutState.Element = this.Element.Node;
-            this.FalloutState.GoodHeight = 0;
-            this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
-            this.FalloutState.ForceDenyElementBreaking = true;
-            this.FalloutState.LastOffsetParent = null;
-            this.FalloutState.LastOffsetShift = null;
-            this.FalloutState.EndReached = false;
-            this.FalloutState.FootnotesAddonCollected = 0;
+        ReaderPage.prototype.FallOut = function (Limit, NotesShift, SkipUntill) {
+            //		Hand mage CSS3 tabs. I thouth it would take more than this
+            var Element = this.Element.Node;
+            var I = SkipUntill > 0 ? SkipUntill : 0;
+            var GoodHeight = 0;
+            var ChildsCount = Element.children.length;
+            var ForceDenyElementBreaking = true;
+            var LastOffsetParent;
+            var LastOffsetShift;
+            var EndReached = false;
+            var FootnotesAddonCollected = 0;
 
             // To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
-            this.FalloutState.LastLineBreakerParent = null;
-            this.FalloutState.LastLineBreakerPos = null;
-            this.FalloutState.LastFullLinePosition = 0;
+            var LastLineBreakerParent;
+            var LastLineBreakerPos;
+            var LastFullLinePosition = 0;
 
-            this.FalloutState.PrevPageBreaker = false;
-            this.FalloutState.NoMoreFootnotesHere = false;
-            this.FalloutState.FalloutElementN = -1;
-            this.FalloutState.SplitHistory = [];
-            this.FalloutState.ForceFitBlock = false;
-            this.FalloutState.BTreeModeOn = false;
-            this.FalloutState.BTreeLastOK = null;
-            this.FalloutState.BTreeLastFail = null;
-            this.FalloutState.HasFootnotes = HasFootnotes;
-        };
-
-        // Hand mage CSS3 tabs. I thouth it would take more than this
-        ReaderPage.prototype.FallOut = function () {
-            while (this.FalloutState.I < this.FalloutState.ChildsCount) {
+            var PrevPageBreaker = false;
+            var NoMoreFootnotesHere = false;
+            var FalloutElementN = -1;
+            var SplitHistory = [];
+            var ForceFitBlock = false;
+            while (I < ChildsCount) {
                 var FootnotesAddon = 0;
-                var Child = this.FalloutState.Element.children[this.FalloutState.I];
+                var Child = Element.children[I];
                 if (Child.style.position.match(/absolute/i)) {
-                    this.FalloutState.I++;
+                    I++;
                     continue;
                 }
-                this.FalloutState.PrevPageBreaker = this.FalloutState.PrevPageBreaker || !this.FalloutState.ForceDenyElementBreaking && PageBreakBefore(Child);
+                PrevPageBreaker = PrevPageBreaker || !ForceDenyElementBreaking && PageBreakBefore(Child);
                 var SH = Child.scrollHeight;
                 var OH = Child.offsetHeight;
                 var ChildBot = Child.offsetTop + Math.max(SH, OH);
@@ -417,7 +407,7 @@ var FB3ReaderPage;
                     ChildBot++;
                 }
 
-                if (!this.FalloutState.NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {
+                if (!NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {
                     // Footnotes kind of expand element height - NoMoreFootnotesHere is for making things faster
                     if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
                         var NoteElement = this.Site.getElementById('f' + Child.id);
@@ -436,61 +426,44 @@ var FB3ReaderPage;
                     }
                 }
                 if (FootnotesAddon) {
-                    FootnotesAddon += this.NotesElement.MarginTop - this.FalloutState.NotesShift;
+                    FootnotesAddon += this.NotesElement.MarginTop - NotesShift;
                 }
 
-                var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : this.FalloutState.FootnotesAddonCollected;
-                if ((ChildBot + FootnotesHeightNow < this.FalloutState.Limit) && !this.FalloutState.PrevPageBreaker || this.FalloutState.ForceFitBlock) {
-                    this.FalloutState.ForceDenyElementBreaking = false;
+                var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : FootnotesAddonCollected;
+                if ((ChildBot + FootnotesHeightNow < Limit) && !PrevPageBreaker || ForceFitBlock) {
+                    ForceDenyElementBreaking = false;
                     if (FootnotesAddon) {
-                        this.FalloutState.FootnotesAddonCollected = FootnotesAddon;
+                        FootnotesAddonCollected = FootnotesAddon;
                     }
                     ;
-                    if (Math.abs(this.FalloutState.LastFullLinePosition - ChildBot) > 1) {
-                        this.FalloutState.LastLineBreakerParent = this.FalloutState.Element;
-                        this.FalloutState.LastLineBreakerPos = this.FalloutState.I;
-                        this.FalloutState.LastFullLinePosition = ChildBot;
+                    if (Math.abs(LastFullLinePosition - ChildBot) > 1) {
+                        LastLineBreakerParent = Element;
+                        LastLineBreakerPos = I;
+                        LastFullLinePosition = ChildBot;
                     }
-                    this.FalloutState.BTreeLastOK = this.FalloutState.I;
-                    if (this.FalloutState.I == 0 && this.FalloutState.NoMoreFootnotesHere && this.FalloutState.ChildsCount > 7 && !this.FalloutState.BTreeModeOn && false) {
-                        // In fact we could work with Footnotes as well, but it's a bit dedicated, perhaps return to it later on
-                        this.FalloutState.BTreeModeOn = true;
-                        this.FalloutState.BTreeLastFail = this.FalloutState.ChildsCount;
-                    }
-                    if (this.FalloutState.BTreeModeOn) {
-                        this.FalloutState.I = this.GuessNextElement();
-                    } else {
-                        this.FalloutState.I++;
-                    }
+                    I++;
 
-                    if (this.FalloutState.I == this.FalloutState.ChildsCount && this.FalloutState.SplitHistory.length) {
+                    if (I == ChildsCount && SplitHistory.length) {
                         // Well, we could not fit the whole element, but all it's childs fit perfectly. Hopefully
                         // the reason is the bottom margin/padding. So we assume the whole element fits and leave those
                         // paddings hang below the visible page
-                        var Fallback = this.FalloutState.SplitHistory.pop();
-                        this.FalloutState.Element = Fallback.Element;
-                        this.FalloutState.I = Fallback.I;
-                        this.FalloutState.NoMoreFootnotesHere = false;
-                        this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
-                        this.FalloutState.ForceFitBlock = true;
-                        this.FalloutState.PrevPageBreaker = false;
-                        this.FalloutState.BTreeModeOn = false;
+                        var Fallback = SplitHistory.pop();
+                        Element = Fallback.el;
+                        I = Fallback.n;
+                        NoMoreFootnotesHere = false;
+                        ChildsCount = Element.children.length;
+                        ForceFitBlock = true;
+                        PrevPageBreaker = false;
                     } else {
-                        this.FalloutState.ForceFitBlock = false;
+                        ForceFitBlock = false;
                     }
                 } else {
-                    // If we are in BTree Mode we save nothing exept BTreeLastFail. Just pretend like this fail have never happend
-                    if (this.FalloutState.BTreeModeOn) {
-                        this.FalloutState.BTreeLastFail = this.FalloutState.I;
-                        this.FalloutState.I = this.GuessNextElement();
-                        continue;
-                    }
-                    this.FalloutState.EndReached = true;
-                    if (this.FalloutState.FalloutElementN == -1) {
-                        this.FalloutState.FalloutElementN = this.FalloutState.I;
+                    EndReached = true;
+                    if (FalloutElementN == -1) {
+                        FalloutElementN = I;
                     }
                     if (!FootnotesAddon) {
-                        this.FalloutState.NoMoreFootnotesHere = true;
+                        NoMoreFootnotesHere = true;
                     }
                     var CurShift = Child.offsetTop;
                     if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
@@ -504,45 +477,45 @@ var FB3ReaderPage;
                     //}
                     var OffsetParent = Child.offsetParent;
                     var ApplyShift;
-                    if (this.FalloutState.LastOffsetParent == OffsetParent) {
-                        ApplyShift = CurShift - this.FalloutState.LastOffsetShift;
+                    if (LastOffsetParent == OffsetParent) {
+                        ApplyShift = CurShift - LastOffsetShift;
                     } else {
                         ApplyShift = CurShift;
                     }
-                    this.FalloutState.LastOffsetShift = CurShift;
+                    LastOffsetShift = CurShift;
 
-                    this.FalloutState.GoodHeight += ApplyShift;
-                    this.FalloutState.LastOffsetParent = OffsetParent;
-                    this.FalloutState.SplitHistory.push({ I: this.FalloutState.I, Element: this.FalloutState.Element });
-                    this.FalloutState.Element = Child;
-                    this.FalloutState.ChildsCount = (!this.FalloutState.ForceDenyElementBreaking && IsNodeUnbreakable(this.FalloutState.Element)) ? 0 : this.FalloutState.Element.children.length;
-                    if (!this.FalloutState.PrevPageBreaker && this.FalloutState.ChildsCount == 0 && FootnotesAddon > this.FalloutState.FootnotesAddonCollected && this.FalloutState.LastLineBreakerParent) {
+                    GoodHeight += ApplyShift;
+                    LastOffsetParent = OffsetParent;
+                    SplitHistory.push({ n: I, el: Element });
+                    Element = Child;
+                    ChildsCount = (!ForceDenyElementBreaking && IsNodeUnbreakable(Element)) ? 0 : Element.children.length;
+                    if (!PrevPageBreaker && ChildsCount == 0 && FootnotesAddon > FootnotesAddonCollected && LastLineBreakerParent) {
                         // So, it looks like we do not fit because of the footnote, not the falling out text itself.
                         // Let's force page break on the previous line end - kind of time machine
-                        this.FalloutState.I = this.FalloutState.LastLineBreakerPos;
-                        this.FalloutState.Element = this.FalloutState.LastLineBreakerParent;
-                        this.FalloutState.PrevPageBreaker = true;
-                        this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
+                        I = LastLineBreakerPos;
+                        Element = LastLineBreakerParent;
+                        PrevPageBreaker = true;
+                        ChildsCount = Element.children.length;
                         continue;
                     }
-                    this.FalloutState.Limit = this.FalloutState.Limit - ApplyShift;
-                    if (this.FalloutState.PrevPageBreaker)
+                    Limit = Limit - ApplyShift;
+                    I = 0;
+                    if (PrevPageBreaker)
                         break;
-                    this.FalloutState.I = 0;
                 }
             }
 
             var Addr;
-            if (this.FalloutState.EndReached) {
-                if (this.FalloutState.Element != this.Element.Node) {
-                    Addr = this.FalloutState.Element.id.split('_');
+            if (EndReached) {
+                if (Element != this.Element.Node) {
+                    Addr = Element.id.split('_');
                 } else {
                     // Special case: we have exact match for the page with a little bottom margin hanging, still consider it OK
                     Addr = Child.id.split('_');
                 }
             } else {
                 Addr = Child.id.split('_');
-                this.FalloutState.GoodHeight = this.Element.Node.scrollHeight;
+                GoodHeight = this.Element.Node.scrollHeight;
             }
 
             Addr.shift();
@@ -557,19 +530,11 @@ var FB3ReaderPage;
             //}
             return {
                 FallOut: Addr,
-                Height: this.FalloutState.GoodHeight,
-                NotesHeight: this.FalloutState.FootnotesAddonCollected ? this.FalloutState.FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
-                FalloutElementN: this.FalloutState.FalloutElementN,
-                EndReached: this.FalloutState.EndReached
+                Height: GoodHeight,
+                NotesHeight: FootnotesAddonCollected ? FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
+                FalloutElementN: FalloutElementN,
+                EndReached: EndReached
             };
-        };
-        ReaderPage.prototype.GuessNextElement = function () {
-            // we are going to be greedy optimists with ceil :)
-            var BTreePoint = Math.ceil(this.FalloutState.BTreeLastOK + (this.FalloutState.BTreeLastFail - this.FalloutState.BTreeLastOK) / 2);
-            if (BTreePoint - this.FalloutState.BTreeLastOK < 2) {
-                this.FalloutState.BTreeModeOn = false;
-            }
-            return BTreePoint;
         };
         return ReaderPage;
     })();

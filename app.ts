@@ -11,6 +11,11 @@ var BookmarksProcessor: FB3Bookmarks.IBookmarks;
 var start: number;
 
 window.onload = () => {
+
+	document.getElementById('reader').addEventListener('touchstart', TapStart, false);
+	document.getElementById('reader').addEventListener('touchmove', TapMove, false);
+	document.getElementById('reader').addEventListener('touchend', TapEnd, false);
+
 	var ArtID = '120421';
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
@@ -30,6 +35,29 @@ window.onload = () => {
 var MarkupProgress: string;
 var NativeNote: FB3Bookmarks.IBookmark;
 var RoundedNote: FB3Bookmarks.IBookmark;
+
+var TouchMoving = false;
+var TouchData;
+function TapStart(e) {
+	e.preventDefault();
+	TouchMoving = false;
+	TouchData = e.touches[0];
+}
+function TapMove(e) {
+	e.preventDefault();
+	TouchMoving = true;
+}
+function TapEnd(e) {
+	e.preventDefault();
+	if (!TouchMoving) {
+		if (TouchData.pageX * 1 < screen.width * 0.4) {
+			Pagebackward();
+		} else if (TouchData.pageX * 1 > screen.width * 0.6) {
+			PageForward();
+		}
+		return false;
+	}
+}
 
 function InitNote(NoteType: string) {
 	if (NoteType == 'note') {

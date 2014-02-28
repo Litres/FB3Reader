@@ -408,16 +408,15 @@ module FB3ReaderPage {
 			// speed up the render a lot
 			var LastChild = <HTMLElement> this.Element.Node.children[this.Element.Node.children.length - 1];
 			if (LastChild && !PageCorrupt && FallOut.EndReached) {
+				this.QuickFallautState.CollectedHeight = FallOut.Height;
+				this.QuickFallautState.CollectedNotesHeight = FallOut.NotesHeight;
 				var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
 					- this.Element.MarginTop - this.Element.MarginBottom;
+				this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
 				if (this.QuickFallautState.RealPageSize > TestHeight) { // this is a peace of copy+paste, cant fix it now
-					this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
-					this.QuickFallautState.CollectedHeight = FallOut.Height;
-					this.QuickFallautState.CollectedNotesHeight = FallOut.NotesHeight;
 					this.QuickFallautState.QuickFallout = 0;
 					this.FalloutState.QuickMode = true;
-					this.FallOut();
-					return;
+					this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
 				}
 			}
 			this.ApplyPageMetrics();
@@ -443,8 +442,7 @@ module FB3ReaderPage {
 					- this.Element.MarginTop - this.Element.MarginBottom;
 				if (this.QuickFallautState.RealPageSize > TestHeight) {
 					this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, FallOut.FalloutElementN);
-					this.FallOut();
-					return;
+					this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
 				}
 			}
 

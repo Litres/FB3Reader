@@ -208,7 +208,7 @@ var FB3ReaderPage;
 
             //			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
-                this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes);
+                this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes, false);
                 this.FallOut();
             } else {
                 this.PageN = this.RenderInstr.CacheAs;
@@ -329,10 +329,11 @@ var FB3ReaderPage;
                 this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
                 if (this.QuickFallautState.RealPageSize > TestHeight) {
                     this.QuickFallautState.QuickFallout = 0;
-                    this.FalloutState.QuickMode = true;
+                    this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
                     this.RenderMoreTimeout = setTimeout(function () {
                         _this.FallOut();
                     }, 5);
+                    return;
                 }
             }
             this.ApplyPageMetrics();
@@ -354,12 +355,15 @@ var FB3ReaderPage;
                     this.FBReader.StoreCachedPage(this.PagesToRender[this.QuickFallautState.QuickFallout]);
                 }
                 this.QuickFallautState.QuickFallout++;
-                var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
-                if (this.QuickFallautState.RealPageSize > TestHeight) {
-                    this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, FallOut.FalloutElementN);
-                    this.RenderMoreTimeout = setTimeout(function () {
-                        _this.FallOut();
-                    }, 5);
+                if (this.QuickFallautState.QuickFallout < this.PagesToRender.length) {
+                    var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
+                    if (this.QuickFallautState.RealPageSize > TestHeight) {
+                        this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
+                        this.RenderMoreTimeout = setTimeout(function () {
+                            _this.FallOut();
+                        }, 5);
+                        return;
+                    }
                 }
             }
 
@@ -383,7 +387,7 @@ var FB3ReaderPage;
             }
         };
 
-        ReaderPage.prototype.InitFalloutState = function (Limit, NotesShift, HasFootnotes, SkipUntill) {
+        ReaderPage.prototype.InitFalloutState = function (Limit, NotesShift, HasFootnotes, QuickMode, SkipUntill) {
             this.FalloutState.Limit = Limit;
             this.FalloutState.NotesShift = NotesShift;
             this.FalloutState.I = SkipUntill > 0 ? SkipUntill : 0;
@@ -410,7 +414,7 @@ var FB3ReaderPage;
             this.FalloutState.BTreeLastOK = null;
             this.FalloutState.BTreeLastFail = null;
             this.FalloutState.HasFootnotes = HasFootnotes;
-            this.FalloutState.QuickMode = false;
+            this.FalloutState.QuickMode = QuickMode;
         };
 
         // Hand mage CSS3 tabs. I thouth it would take more than this
@@ -418,7 +422,7 @@ var FB3ReaderPage;
             var _this = this;
             var IterationStartedAt = new Date().getTime();
             while (this.FalloutState.I < this.FalloutState.ChildsCount) {
-                if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery && false) {
+                if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
                     this.RenderMoreTimeout = setTimeout(function () {
                         _this.FallOut();
                     }, 5);

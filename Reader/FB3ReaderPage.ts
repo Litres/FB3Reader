@@ -294,7 +294,7 @@ module FB3ReaderPage {
 			}
 			//			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
-				this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes);
+				this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes, false);
 				this.FallOut();
 			} else {
 				this.PageN = this.RenderInstr.CacheAs;
@@ -415,8 +415,9 @@ module FB3ReaderPage {
 				this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
 				if (this.QuickFallautState.RealPageSize > TestHeight) { // this is a peace of copy+paste, cant fix it now
 					this.QuickFallautState.QuickFallout = 0;
-					this.FalloutState.QuickMode = true;
+					this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
 					this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+					return;// should be here to make ApplyPageMetrics work
 				}
 			}
 			this.ApplyPageMetrics();
@@ -438,11 +439,14 @@ module FB3ReaderPage {
 					this.FBReader.StoreCachedPage(this.PagesToRender[this.QuickFallautState.QuickFallout]);
 				}
 				this.QuickFallautState.QuickFallout++;
-				var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
-					- this.Element.MarginTop - this.Element.MarginBottom;
-				if (this.QuickFallautState.RealPageSize > TestHeight) {
-					this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, FallOut.FalloutElementN);
-					this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+				if (this.QuickFallautState.QuickFallout < this.PagesToRender.length) {
+					var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
+						- this.Element.MarginTop - this.Element.MarginBottom;
+					if (this.QuickFallautState.RealPageSize > TestHeight) {
+						this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
+						this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+						return; // should be here to make ApplyPageMetrics work
+					}
 				}
 			}
 
@@ -467,7 +471,7 @@ module FB3ReaderPage {
 			}
 		}
 
-		private InitFalloutState(Limit: number, NotesShift: number, HasFootnotes: boolean, SkipUntill?: number): void {
+		private InitFalloutState(Limit: number, NotesShift: number, HasFootnotes: boolean, QuickMode:boolean, SkipUntill?: number): void {
 			this.FalloutState.Limit = Limit;
 			this.FalloutState.NotesShift = NotesShift;
 			this.FalloutState.I = SkipUntill > 0 ? SkipUntill : 0;
@@ -494,14 +498,14 @@ module FB3ReaderPage {
 			this.FalloutState.BTreeLastOK = null;
 			this.FalloutState.BTreeLastFail = null;
 			this.FalloutState.HasFootnotes = HasFootnotes;
-			this.FalloutState.QuickMode = false;
+			this.FalloutState.QuickMode = QuickMode;
 		}
 
 		// Hand mage CSS3 tabs. I thouth it would take more than this
 		private FallOut() {
 			var IterationStartedAt = new Date().getTime();
 			while (this.FalloutState.I < this.FalloutState.ChildsCount) {
-				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery && false) {
+				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
 					this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
 					return;
 				}

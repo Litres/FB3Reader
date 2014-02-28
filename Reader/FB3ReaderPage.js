@@ -2,7 +2,9 @@
 /// <reference path="FB3Reader.ts" />
 var FB3ReaderPage;
 (function (FB3ReaderPage) {
-    var BreakIterationEvery = 30;
+    var BreakIterationEvery = 0;
+
+    var FallCalls = 0;
 
     function HardcoreParseInt(Input) {
         Input.replace(/\D/g, '');
@@ -126,7 +128,7 @@ var FB3ReaderPage;
 
         ReaderPage.prototype.DrawInit = function (PagesToRender) {
             var _this = this;
-            //			console.log('DrawInit '+this.ID);
+            console.log(this.ID, 'DrawInit');
             if (PagesToRender.length == 0)
                 return;
             if (this.Reseted) {
@@ -135,6 +137,7 @@ var FB3ReaderPage;
             }
             this.Ready = false;
             this.Pending = true;
+            this.FBReader.IdleOff();
 
             this.RenderInstr = PagesToRender.shift();
             this.PagesToRender = PagesToRender;
@@ -194,7 +197,7 @@ var FB3ReaderPage;
         };
 
         ReaderPage.prototype.DrawEnd = function (PageData) {
-            //			console.log('DrawEnd ' + this.ID);
+            console.log(this.ID, 'DrawEnd');
             if (this.Reseted) {
                 this.Reseted = false;
                 return;
@@ -213,6 +216,9 @@ var FB3ReaderPage;
             } else {
                 this.PageN = this.RenderInstr.CacheAs;
                 this.ApplyPageMetrics();
+                if (!this.PagesToRender.length) {
+                    this.FBReader.IdleOn();
+                }
             }
         };
 
@@ -236,15 +242,19 @@ var FB3ReaderPage;
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
                     this.PagesToRender[0].Start = this.RenderInstr.Range.To;
                 }
+
+                //console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
-                }, 10);
-            } else if (this.Next) {
-                this.FBReader.IdleOn();
+                }, 100);
+            } else if (!this.Next) {
+                //console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
+                //				this.FBReader.IdleOn();
             }
         };
         ReaderPage.prototype.FalloutConsumeFirst = function (FallOut) {
             var _this = this;
+            console.log(this.ID, FallCalls, 'FalloutConsumeFirst');
             if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
                 // It's too bad baby: text does not fit the page, not even a char
                 // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
@@ -254,6 +264,8 @@ var FB3ReaderPage;
                     this.RenderInstr.Range = null;
                     this.NotesElement.Node.innerHTML = '';
                     this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+
+                    //					this.FBReader.IdleOff();
                     return;
                 } else {
                     // That's it - no way to recover. We die now, later we will make some fix here
@@ -327,19 +339,28 @@ var FB3ReaderPage;
                 this.QuickFallautState.CollectedNotesHeight = FallOut.NotesHeight;
                 var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
                 this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
-                if (this.QuickFallautState.RealPageSize > TestHeight) {
+                if (this.QuickFallautState.RealPageSize > TestHeight && this.PagesToRender.length) {
                     this.QuickFallautState.QuickFallout = 0;
                     this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
-                    this.RenderMoreTimeout = setTimeout(function () {
+
+                    //					this.FallOut();
+                    FallCalls++;
+                    console.log(this.ID, FallCalls, 'FalloutConsumeSecondInit');
+                    this.RenderBreakerTimeout = setTimeout(function () {
+                        _this.RenderBreakerTimeout = 0;
+                        console.log(_this.ID, FallCalls, 'FalloutConsumeSecondInitFire');
                         _this.FallOut();
                     }, 5);
                     return;
                 }
             }
             this.ApplyPageMetrics();
+            if (!this.PagesToRender.length || !this.Next) {
+                this.FBReader.IdleOn();
+            }
         };
         ReaderPage.prototype.FalloutConsumeNext = function (FallOut) {
-            var _this = this;
+            //console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
             if (FallOut.EndReached) {
                 var NextPageRange = {};
                 NextPageRange.From = (this.QuickFallautState.PrevTo ? this.QuickFallautState.PrevTo : this.RenderInstr.Range.To).slice(0);
@@ -359,12 +380,21 @@ var FB3ReaderPage;
                     var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
                     if (this.QuickFallautState.RealPageSize > TestHeight) {
                         this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
-                        this.RenderMoreTimeout = setTimeout(function () {
-                            _this.FallOut();
-                        }, 5);
+                        this.FallOut();
+
+                        //						this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
                         return;
+                    } else {
+                        //console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');
                     }
+                } else {
+                    if (!this.PagesToRender.length) {
+                        this.FBReader.IdleOn();
+                    }
+                    //console.log(this.ID, this.QuickFallautState.QuickFallout, 'Page cache empty');
                 }
+            } else {
+                //		console.log(this.ID, this.QuickFallautState.QuickFallout, 'Not enough text');
             }
 
             this.ApplyPageMetrics();
@@ -419,15 +449,14 @@ var FB3ReaderPage;
 
         // Hand mage CSS3 tabs. I thouth it would take more than this
         ReaderPage.prototype.FallOut = function () {
-            var _this = this;
+            //console.log(this.ID, this.QuickFallautState.QuickFallout, 'Fallout');
             var IterationStartedAt = new Date().getTime();
             while (this.FalloutState.I < this.FalloutState.ChildsCount) {
-                if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
-                    this.RenderMoreTimeout = setTimeout(function () {
-                        _this.FallOut();
-                    }, 5);
-                    return;
-                }
+                //if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
+                //	this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+                //	console.log(this.ID, this.QuickFallautState.QuickFallout, 'Jump-Jump');
+                //	return;
+                //}
                 var FootnotesAddon = 0;
                 var Child = this.FalloutState.Element.children[this.FalloutState.I];
                 if (Child.style.position.match(/absolute/i)) {
@@ -592,8 +621,10 @@ var FB3ReaderPage;
             };
 
             if (this.FalloutState.QuickMode) {
+                //console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoNext');
                 this.FalloutConsumeNext(Result);
             } else {
+                //console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoFirst');
                 this.FalloutConsumeFirst(Result);
             }
         };

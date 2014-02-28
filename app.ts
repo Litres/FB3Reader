@@ -39,12 +39,12 @@ var RoundedNote: FB3Bookmarks.IBookmark;
 var TouchMoving = false;
 var TouchData;
 function TapStart(e) {
-	e.preventDefault();
+//	e.preventDefault();
 	TouchMoving = false;
 	TouchData = e.touches[0];
 }
 function TapMove(e) {
-	e.preventDefault();
+//	e.preventDefault();
 	TouchMoving = true;
 }
 function TapEnd(e) {

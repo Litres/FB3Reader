@@ -60,7 +60,7 @@ var FB3Reader;
             this.LastSavePercent = 0;
 
             //this.CurStartPos = [12,69];
-            this.CurStartPos = [37];
+            this.CurStartPos = [116];
 
             this.IdleOff();
         }

@@ -2,7 +2,10 @@
 /// <reference path="FB3Reader.ts" />
 
 module FB3ReaderPage {
-	var BreakIterationEvery = 30; // every ## miliseconds script will process user input
+	var BreakIterationEvery = 0; // every ## miliseconds script will process user input
+
+	var FallCalls = 0; // debug
+
 	interface ElementDesc {
 		Node: HTMLDivElement;
 		Width: number;
@@ -101,6 +104,7 @@ module FB3ReaderPage {
 		private Width: number;
 		private FalloutState: IFalloutState;
 		private QuickFallautState: IQuickFallautState;
+		private RenderBreakerTimeout: number;
 
 		public ViewPortW: number;
 		public ViewPortH: number;
@@ -211,7 +215,7 @@ module FB3ReaderPage {
 		}
 
 		DrawInit(PagesToRender: FB3Reader.IPageRenderInstruction[]): void {
-			//			console.log('DrawInit '+this.ID);
+			console.log(this.ID, 'DrawInit');
 			if (PagesToRender.length == 0) return;
 			if (this.Reseted) {
 				this.Reseted = false;
@@ -219,6 +223,7 @@ module FB3ReaderPage {
 			}
 			this.Ready = false;
 			this.Pending = true;
+			this.FBReader.IdleOff();
 
 			this.RenderInstr = PagesToRender.shift();
 			this.PagesToRender = PagesToRender;
@@ -281,7 +286,7 @@ module FB3ReaderPage {
 		}
 
 		DrawEnd(PageData: FB3DOM.IPageContainer) {
-			//			console.log('DrawEnd ' + this.ID);
+			console.log(this.ID, 'DrawEnd');
 			if (this.Reseted) {
 				this.Reseted = false;
 				return;
@@ -299,6 +304,9 @@ module FB3ReaderPage {
 			} else {
 				this.PageN = this.RenderInstr.CacheAs;
 				this.ApplyPageMetrics();
+				if (!this.PagesToRender.length) {
+					this.FBReader.IdleOn();
+				}
 			}
 		}
 
@@ -324,12 +332,15 @@ module FB3ReaderPage {
 				if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
 					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
 				}
-				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 10)
-			} else if (this.Next) {
-				this.FBReader.IdleOn();
+				//console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
+				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 100)
+			} else if (!this.Next) {
+				//console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
+//				this.FBReader.IdleOn();
 			}
 		}
 		private FalloutConsumeFirst(FallOut: IFallOut) {
+			console.log(this.ID, FallCalls, 'FalloutConsumeFirst');
 			if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
 				// It's too bad baby: text does not fit the page, not even a char
 				// Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
@@ -339,6 +350,7 @@ module FB3ReaderPage {
 					this.RenderInstr.Range = null;
 					this.NotesElement.Node.innerHTML = '';
 					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+//					this.FBReader.IdleOff();
 					return;
 				} else {
 					// That's it - no way to recover. We die now, later we will make some fix here
@@ -413,17 +425,28 @@ module FB3ReaderPage {
 				var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
 					- this.Element.MarginTop - this.Element.MarginBottom;
 				this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
-				if (this.QuickFallautState.RealPageSize > TestHeight) { // this is a peace of copy+paste, cant fix it now
+				if (this.QuickFallautState.RealPageSize > TestHeight && this.PagesToRender.length) { // this is a peace of copy+paste, cant fix it now
 					this.QuickFallautState.QuickFallout = 0;
 					this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
-					this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+					//					this.FallOut();
+					FallCalls++;
+					console.log(this.ID, FallCalls, 'FalloutConsumeSecondInit');
+					this.RenderBreakerTimeout = setTimeout(() => {
+						this.RenderBreakerTimeout = 0;
+						console.log(this.ID, FallCalls, 'FalloutConsumeSecondInitFire');
+						this.FallOut()
+					}, 5);
 					return;// should be here to make ApplyPageMetrics work
 				}
 			}
 			this.ApplyPageMetrics();
+			if (!this.PagesToRender.length || !this.Next) {
+				this.FBReader.IdleOn();
+			}
 		}
 		private FalloutConsumeNext(FallOut: IFallOut) {
 
+			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
 			if (FallOut.EndReached) {
 				var NextPageRange = <FB3DOM.IRange> {};
 				NextPageRange.From = (this.QuickFallautState.PrevTo ? this.QuickFallautState.PrevTo : this.RenderInstr.Range.To).slice(0);
@@ -444,10 +467,21 @@ module FB3ReaderPage {
 						- this.Element.MarginTop - this.Element.MarginBottom;
 					if (this.QuickFallautState.RealPageSize > TestHeight) {
 						this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
-						this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+						this.FallOut();
+						//						this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
 						return; // should be here to make ApplyPageMetrics work
+					} else {
+						//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');
 					}
+
+				} else {
+					if (!this.PagesToRender.length) {
+						this.FBReader.IdleOn();
+					}
+					//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Page cache empty');
 				}
+			} else {
+		//		console.log(this.ID, this.QuickFallautState.QuickFallout, 'Not enough text');
 			}
 
 			this.ApplyPageMetrics();
@@ -503,12 +537,14 @@ module FB3ReaderPage {
 
 		// Hand mage CSS3 tabs. I thouth it would take more than this
 		private FallOut() {
+			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Fallout');
 			var IterationStartedAt = new Date().getTime();
 			while (this.FalloutState.I < this.FalloutState.ChildsCount) {
-				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
-					this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
-					return;
-				}
+				//if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
+				//	this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+				//	console.log(this.ID, this.QuickFallautState.QuickFallout, 'Jump-Jump');
+				//	return;
+				//}
 				var FootnotesAddon = 0;
 				var Child = <HTMLElement> this.FalloutState.Element.children[this.FalloutState.I];
 				if (Child.style.position.match(/absolute/i)) {
@@ -673,8 +709,10 @@ module FB3ReaderPage {
 			};
 
 			if (this.FalloutState.QuickMode) {
+					//console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoNext');
 				this.FalloutConsumeNext(Result);
 			} else {
+					//console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoFirst');
 				this.FalloutConsumeFirst(Result);
 			}
 		}

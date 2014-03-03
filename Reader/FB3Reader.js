@@ -57,11 +57,11 @@ var FB3Reader;
             this.CacheBackward = 2;
             this.BookStyleNotes = true;
             this.BookStyleNotesTemporaryOff = false;
+            this.DoubleCheckHeight = /MSIE/.test(navigator.userAgent) ? false : true;
             this.LastSavePercent = 0;
+            this.CurStartPos = [38, 53];
 
-            //this.CurStartPos = [12,69];
-            this.CurStartPos = [116];
-
+            //			this.CurStartPos = [116];
             this.IdleOff();
         }
         Reader.prototype.Init = function () {
@@ -231,7 +231,8 @@ var FB3Reader;
 
         Reader.prototype.GetCachedPage = function (NewPos) {
             for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
-                if (PosCompare(this.PagesPositionsCache.Get(I).Range.To, NewPos) > 0) {
+                var Pos = this.PagesPositionsCache.Get(I).Range;
+                if (PosCompare(Pos.To, NewPos) > 0) {
                     return I;
                 }
             }
@@ -402,7 +403,7 @@ var FB3Reader;
 
         Reader.prototype.IdleGo = function (PageData) {
             var _this = this;
-            if (this.IsIdle) {
+            if (this.IsIdle && !this.BackgroundRenderFrame.ThreadsRunning) {
                 switch (this.IdleAction) {
                     case 'load_page':
                         var PageToPrerender = this.FirstUncashedPage();
@@ -448,13 +449,11 @@ var FB3Reader;
                         });
                         break;
                     case 'fill_page':
-                        if (!this.BackgroundRenderFrame.ThreadsRunning) {
-                            this.PagesPositionsCache.LastPage(0);
-                            if (PageData) {
-                                this.BackgroundRenderFrame.DrawEnd(PageData);
-                            }
-                            this.IdleAction = 'load_page';
+                        this.PagesPositionsCache.LastPage(0);
+                        if (PageData) {
+                            this.BackgroundRenderFrame.DrawEnd(PageData);
                         }
+                        this.IdleAction = 'load_page';
                         break;
                     default:
                 }

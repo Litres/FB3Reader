@@ -51,6 +51,7 @@ module FB3Reader {
 		public CurStartPos: IPosition;
 		public CurStartPage: number;
 		public BookStyleNotesTemporaryOff: boolean;
+		public DoubleCheckHeight: boolean;
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: FB3ReaderPage.ReaderPage[];
@@ -81,9 +82,10 @@ module FB3Reader {
 			this.CacheBackward = 2;
 			this.BookStyleNotes = true;
 			this.BookStyleNotesTemporaryOff = false;
+			this.DoubleCheckHeight = /MSIE/.test(navigator.userAgent) ? false:true;
 			this.LastSavePercent = 0;
-			//this.CurStartPos = [12,69];
-			this.CurStartPos = [116];
+			this.CurStartPos = [38,53];
+//			this.CurStartPos = [116];
 
 			this.IdleOff();
 		}
@@ -250,7 +252,8 @@ module FB3Reader {
 
 		public GetCachedPage(NewPos: IPosition): number {
 			for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
-				if (PosCompare(this.PagesPositionsCache.Get(I).Range.To, NewPos) > 0) {
+				var Pos = this.PagesPositionsCache.Get(I).Range;
+				if (PosCompare(Pos.To, NewPos) > 0) {
 					return I;
 				}
 			}
@@ -413,7 +416,7 @@ module FB3Reader {
 
 
 		private IdleGo(PageData?: FB3DOM.IPageContainer): void {
-			if (this.IsIdle) {
+			if (this.IsIdle && !this.BackgroundRenderFrame.ThreadsRunning) {
 				switch (this.IdleAction) {
 					case 'load_page':
 						var PageToPrerender = this.FirstUncashedPage();
@@ -464,13 +467,11 @@ module FB3Reader {
 							});
 						break;
 					case 'fill_page':
-						if (!this.BackgroundRenderFrame.ThreadsRunning) {
-							this.PagesPositionsCache.LastPage(0);
-							if (PageData) {
-									this.BackgroundRenderFrame.DrawEnd(PageData)
-							}
-							this.IdleAction = 'load_page';
+						this.PagesPositionsCache.LastPage(0);
+						if (PageData) {
+								this.BackgroundRenderFrame.DrawEnd(PageData)
 						}
+						this.IdleAction = 'load_page';
 						break;
 					default:
 				}

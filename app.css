@@ -51,7 +51,8 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
 }
 div.FB2readerPage div.footnote {
     max-height: 500px; /* this will be overriden by inline style by engine, no reason to interfere */
-    overflow-y: auto;
+    /*overflow-y: auto;*/
+    overflow:hidden;
 }
 
 .FB2readerPage img.tag_image {
@@ -91,7 +92,7 @@ div.FB2readerPage div.footnote {
     font-family: 'Arial', sans-serif;
 }
 #reader {
-    height:300px;
+    height:250px;
     width:100%;
 }
 

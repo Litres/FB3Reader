@@ -2,7 +2,7 @@
 /// <reference path="FB3Reader.ts" />
 
 module FB3ReaderPage {
-	var BreakIterationEvery = 30; // every ## miliseconds script will process user input
+	var BreakIterationEvery = 60; // every ## miliseconds script will process user input
 
 	var FallCalls = 0; // debug
 
@@ -298,6 +298,7 @@ module FB3ReaderPage {
 			if (HasFootnotes) {
 				this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
 				this.NotesElement.Node.style.display = 'block';
+				for ( тут надо перебрать все сноски и кто слишком длинный - обрезать
 			}
 			//			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
 			if (!this.RenderInstr.Range) {
@@ -454,47 +455,50 @@ module FB3ReaderPage {
 			if (FallOut.EndReached) {
 				var NextPageRange = <FB3DOM.IRange> {};
 				NextPageRange.From = (this.QuickFallautState.PrevTo ? this.QuickFallautState.PrevTo : this.RenderInstr.Range.To).slice(0);
-				this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
-				NextPageRange.To = FallOut.FallOut.slice(0);
 
-				this.PagesToRender[this.QuickFallautState.QuickFallout].Height = FallOut.Height - this.QuickFallautState.CollectedHeight + this.Element.MarginTop;
-				this.PagesToRender[this.QuickFallautState.QuickFallout].NotesHeight = FallOut.NotesHeight;
-				this.QuickFallautState.CollectedHeight = FallOut.Height;
-				this.QuickFallautState.CollectedNotesHeight += FallOut.NotesHeight;
-				this.PagesToRender[this.QuickFallautState.QuickFallout].Range = NextPageRange;
-				if (this.PagesToRender[this.QuickFallautState.QuickFallout].CacheAs !== undefined) {
-					this.FBReader.StoreCachedPage(this.PagesToRender[this.QuickFallautState.QuickFallout]);
-				}
-				this.QuickFallautState.QuickFallout++;
-				if (this.QuickFallautState.QuickFallout < this.PagesToRender.length) {
-					var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
-						- this.Element.MarginTop - this.Element.MarginBottom;
-					if (this.QuickFallautState.RealPageSize > TestHeight) {
-						this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
-						//this.FallOut();
-						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
-						this.ThreadsRunning++;
-						this.RenderMoreTimeout = setTimeout(() => {
-							this.ThreadsRunning--;
-							//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
-							this.FallOut();
-						}, 5);
-						return; // should be here to make ApplyPageMetrics work
+				// We check if we had any progress at all. If not - we rely on FalloutConsumeFirst to handle this and just abort this page scan
+				if (FB3Reader.PosCompare(FallOut.FallOut, NextPageRange.From) != 0) {
+					this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
+					NextPageRange.To = FallOut.FallOut.slice(0);
+
+
+					this.PagesToRender[this.QuickFallautState.QuickFallout].Height = FallOut.Height - this.QuickFallautState.CollectedHeight + this.Element.MarginTop;
+					this.PagesToRender[this.QuickFallautState.QuickFallout].NotesHeight = FallOut.NotesHeight;
+					this.QuickFallautState.CollectedHeight = FallOut.Height;
+					this.QuickFallautState.CollectedNotesHeight += FallOut.NotesHeight;
+					this.PagesToRender[this.QuickFallautState.QuickFallout].Range = NextPageRange;
+					if (this.PagesToRender[this.QuickFallautState.QuickFallout].CacheAs !== undefined) {
+						this.FBReader.StoreCachedPage(this.PagesToRender[this.QuickFallautState.QuickFallout]);
+					}
+					if (this.QuickFallautState.QuickFallout < this.PagesToRender.length - 1) {
+						this.QuickFallautState.QuickFallout++;
+						var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
+							- this.Element.MarginTop - this.Element.MarginBottom;
+						if (this.QuickFallautState.RealPageSize > TestHeight) {
+							this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
+							//this.FallOut();
+							//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
+							this.ThreadsRunning++;
+							this.RenderMoreTimeout = setTimeout(() => {
+								this.ThreadsRunning--;
+								//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
+								this.FallOut();
+							}, 5);
+							return; // should be here to make ApplyPageMetrics work
+						} else {
+							//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');
+						}
+
 					} else {
-						//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');
+						if (!this.PagesToRender.length) {
+							this.FBReader.IdleOn();
+						}
 					}
-
-				} else {
-					if (!this.PagesToRender.length) {
-						this.FBReader.IdleOn();
-					}
-					//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Page cache empty');
 				}
-			} else {
-		//		console.log(this.ID, this.QuickFallautState.QuickFallout, 'Not enough text');
 			}
-
-			this.ApplyPageMetrics();
+			if (this.Next) {
+				this.ApplyPageMetrics();
+			}
 		}
 
 
@@ -552,12 +556,13 @@ module FB3ReaderPage {
 			while (this.FalloutState.I < this.FalloutState.ChildsCount) {
 				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
 					//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
+					BreakIterationEvery = 0;
 					this.ThreadsRunning++;
 					this.RenderMoreTimeout = setTimeout(() => {
 						this.ThreadsRunning--;
 						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
 						this.FallOut();
-					}, 10);
+					}, 500);
 					return;
 				}
 				var FootnotesAddon = 0;
@@ -568,13 +573,17 @@ module FB3ReaderPage {
 				}
 				this.FalloutState.PrevPageBreaker = this.FalloutState.PrevPageBreaker || !this.FalloutState.ForceDenyElementBreaking && PageBreakBefore(Child);
 				var SH = Child.scrollHeight;
-				var OH = Child.offsetHeight;
-				var ChildBot = Child.offsetTop + Math.max(SH, OH);
-
-				if (SH != OH) {
-					// While calculating browser's widths&heights you can find that 1+1=3. We "round" it up
-					// if things look suspisiously
-					ChildBot++;
+				var ChildBot: number;
+				if (this.FBReader.DoubleCheckHeight) {
+					var OH = Child.offsetHeight;
+					ChildBot = Child.offsetTop + Math.max(SH, OH);
+					if (SH != OH) {
+						// While calculating browser's widths&heights you can find that 1+1=3. We "round" it up
+						// if things look suspisiously
+						ChildBot++;
+					}
+				} else {
+					ChildBot = Child.offsetTop + SH;
 				}
 
 				if (!this.FalloutState.NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {

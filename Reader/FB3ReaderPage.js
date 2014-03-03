@@ -52,6 +52,7 @@ var FB3ReaderPage;
             this.Pending = false;
             this.FalloutState = {};
             this.QuickFallautState = {};
+            this.ThreadsRunning = 0;
         }
         ReaderPage.prototype.Show = function () {
             if (!this.Visible) {
@@ -128,7 +129,7 @@ var FB3ReaderPage;
 
         ReaderPage.prototype.DrawInit = function (PagesToRender) {
             var _this = this;
-            console.log(this.ID, 'DrawInit');
+            //			console.log(this.ID, 'DrawInit');
             if (PagesToRender.length == 0)
                 return;
             if (this.Reseted) {
@@ -197,7 +198,7 @@ var FB3ReaderPage;
         };
 
         ReaderPage.prototype.DrawEnd = function (PageData) {
-            console.log(this.ID, 'DrawEnd');
+            //			console.log(this.ID, 'DrawEnd');
             if (this.Reseted) {
                 this.Reseted = false;
                 return;
@@ -246,7 +247,7 @@ var FB3ReaderPage;
                 //console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
-                }, 100);
+                }, 5);
             } else if (!this.Next) {
                 //console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
                 //				this.FBReader.IdleOn();
@@ -254,7 +255,7 @@ var FB3ReaderPage;
         };
         ReaderPage.prototype.FalloutConsumeFirst = function (FallOut) {
             var _this = this;
-            console.log(this.ID, FallCalls, 'FalloutConsumeFirst');
+            //			console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeFirst');
             if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
                 // It's too bad baby: text does not fit the page, not even a char
                 // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
@@ -345,10 +346,14 @@ var FB3ReaderPage;
 
                     //					this.FallOut();
                     FallCalls++;
-                    console.log(this.ID, FallCalls, 'FalloutConsumeSecondInit');
+
+                    //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
+                    this.ThreadsRunning++;
                     this.RenderBreakerTimeout = setTimeout(function () {
+                        _this.ThreadsRunning--;
+
+                        //						console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
                         _this.RenderBreakerTimeout = 0;
-                        console.log(_this.ID, FallCalls, 'FalloutConsumeSecondInitFire');
                         _this.FallOut();
                     }, 5);
                     return;
@@ -360,6 +365,7 @@ var FB3ReaderPage;
             }
         };
         ReaderPage.prototype.FalloutConsumeNext = function (FallOut) {
+            var _this = this;
             //console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
             if (FallOut.EndReached) {
                 var NextPageRange = {};
@@ -380,9 +386,16 @@ var FB3ReaderPage;
                     var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
                     if (this.QuickFallautState.RealPageSize > TestHeight) {
                         this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
-                        this.FallOut();
 
-                        //						this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
+                        //this.FallOut();
+                        //						console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
+                        this.ThreadsRunning++;
+                        this.RenderMoreTimeout = setTimeout(function () {
+                            _this.ThreadsRunning--;
+
+                            //							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
+                            _this.FallOut();
+                        }, 5);
                         return;
                     } else {
                         //console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');

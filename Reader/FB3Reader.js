@@ -448,11 +448,13 @@ var FB3Reader;
                         });
                         break;
                     case 'fill_page':
-                        this.PagesPositionsCache.LastPage(0);
-                        if (PageData) {
-                            this.BackgroundRenderFrame.DrawEnd(PageData);
+                        if (!this.BackgroundRenderFrame.ThreadsRunning) {
+                            this.PagesPositionsCache.LastPage(0);
+                            if (PageData) {
+                                this.BackgroundRenderFrame.DrawEnd(PageData);
+                            }
+                            this.IdleAction = 'load_page';
                         }
-                        this.IdleAction = 'load_page';
                         break;
                     default:
                 }

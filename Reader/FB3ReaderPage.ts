@@ -2,7 +2,7 @@
 /// <reference path="FB3Reader.ts" />
 
 module FB3ReaderPage {
-	var BreakIterationEvery = 0; // every ## miliseconds script will process user input
+	var BreakIterationEvery = 30; // every ## miliseconds script will process user input
 
 	var FallCalls = 0; // debug
 
@@ -217,7 +217,7 @@ module FB3ReaderPage {
 		}
 
 		DrawInit(PagesToRender: FB3Reader.IPageRenderInstruction[]): void {
-//			console.log(this.ID, 'DrawInit');
+			//console.log(this.ID, 'DrawInit');
 			if (PagesToRender.length == 0) return;
 			if (this.Reseted) {
 				this.Reseted = false;
@@ -288,7 +288,7 @@ module FB3ReaderPage {
 		}
 
 		DrawEnd(PageData: FB3DOM.IPageContainer) {
-//			console.log(this.ID, 'DrawEnd');
+			//console.log(this.ID, 'DrawEnd');
 			if (this.Reseted) {
 				this.Reseted = false;
 				return;
@@ -334,7 +334,7 @@ module FB3ReaderPage {
 				if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
 					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
 				}
-				//console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
+//				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
 				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 5)
 			} else if (!this.Next) {
 				//console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
@@ -342,7 +342,7 @@ module FB3ReaderPage {
 			}
 		}
 		private FalloutConsumeFirst(FallOut: IFallOut) {
-//			console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeFirst');
+			//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeFirst');
 			if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
 				// It's too bad baby: text does not fit the page, not even a char
 				// Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
@@ -432,11 +432,11 @@ module FB3ReaderPage {
 					this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
 					//					this.FallOut();
 					FallCalls++;
-//					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
+					//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
 					this.ThreadsRunning++;
 					this.RenderBreakerTimeout = setTimeout(() => {
 						this.ThreadsRunning--;
-//						console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
+						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
 						this.RenderBreakerTimeout = 0;
 						this.FallOut();
 					}, 5);
@@ -472,11 +472,11 @@ module FB3ReaderPage {
 					if (this.QuickFallautState.RealPageSize > TestHeight) {
 						this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
 						//this.FallOut();
-//						console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
+						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
 						this.ThreadsRunning++;
 						this.RenderMoreTimeout = setTimeout(() => {
 							this.ThreadsRunning--;
-//							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
+							//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
 							this.FallOut();
 						}, 5);
 						return; // should be here to make ApplyPageMetrics work
@@ -550,11 +550,16 @@ module FB3ReaderPage {
 			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Fallout');
 			var IterationStartedAt = new Date().getTime();
 			while (this.FalloutState.I < this.FalloutState.ChildsCount) {
-				//if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
-				//	this.RenderMoreTimeout = setTimeout(() => { this.FallOut() }, 5);
-				//	console.log(this.ID, this.QuickFallautState.QuickFallout, 'Jump-Jump');
-				//	return;
-				//}
+				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
+					//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
+					this.ThreadsRunning++;
+					this.RenderMoreTimeout = setTimeout(() => {
+						this.ThreadsRunning--;
+						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
+						this.FallOut();
+					}, 10);
+					return;
+				}
 				var FootnotesAddon = 0;
 				var Child = <HTMLElement> this.FalloutState.Element.children[this.FalloutState.I];
 				if (Child.style.position.match(/absolute/i)) {

@@ -287,6 +287,12 @@ module FB3ReaderPage {
 			this.Pending = false;
 		}
 
+		PatchExtraLargeFootnote(Node: HTMLElement): void {
+			if (Node.scrollHeight > this.Element.Height * FB3DOM.MaxFootnoteHeight) {
+				Node.style.height = (this.Element.Height * FB3DOM.MaxFootnoteHeight).toFixed(0) + 'px';
+			}
+		}
+
 		DrawEnd(PageData: FB3DOM.IPageContainer) {
 			//console.log(this.ID, 'DrawEnd');
 			if (this.Reseted) {
@@ -300,10 +306,7 @@ module FB3ReaderPage {
 				this.NotesElement.Node.style.display = 'block';
 				var NotesNodes = this.NotesElement.Node.children.length
 				for (var I = 0; I < this.NotesElement.Node.children.length; I++) {
-					var Node = <HTMLElement> this.NotesElement.Node.children[I];
-					if (Node.scrollHeight > this.Element.Height * FB3DOM.MaxFootnoteHeight) {
-						Node.style.height = (this.Element.Height * FB3DOM.MaxFootnoteHeight).toFixed(0) + 'px';
-					}
+					this.PatchExtraLargeFootnote(<HTMLElement> this.NotesElement.Node.children[I]);
 				}
 			}
 			//			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
@@ -419,6 +422,10 @@ module FB3ReaderPage {
 					From: this.RenderInstr.Start.splice(0),
 					To: FallOut.FallOut
 				};
+				this.QuickFallautState.PrevTo = this.RenderInstr.Range.To.slice(0);
+				if (this.RenderInstr.Range.To.length == 1 && this.RenderInstr.Range.To[0]) {
+					this.RenderInstr.Range.To[0]--;
+				}
 			}
 			this.RenderInstr.Height = FallOut.Height;
 			this.RenderInstr.NotesHeight = FallOut.NotesHeight;
@@ -466,7 +473,7 @@ module FB3ReaderPage {
 			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
 			if (FallOut.EndReached) {
 				var NextPageRange = <FB3DOM.IRange> {};
-				NextPageRange.From = (this.QuickFallautState.PrevTo ? this.QuickFallautState.PrevTo : this.RenderInstr.Range.To).slice(0);
+				NextPageRange.From = this.QuickFallautState.PrevTo.slice(0);
 
 				// We check if we had any progress at all. If not - we rely on FalloutConsumeFirst to handle this and just abort this page scan
 				if (FB3Reader.PosCompare(FallOut.FallOut, NextPageRange.From) != 0) {
@@ -633,7 +640,7 @@ module FB3ReaderPage {
 					if (this.FalloutState.I == 0 &&
 						this.FalloutState.NoMoreFootnotesHere &&
 						this.FalloutState.ChildsCount > 7 &&
-						!this.FalloutState.BTreeModeOn && false) {
+						!this.FalloutState.BTreeModeOn) {
 						// In fact we could work with Footnotes as well, but it's a bit dedicated, perhaps return to it later on
 						this.FalloutState.BTreeModeOn = true;
 						this.FalloutState.BTreeLastFail = this.FalloutState.ChildsCount;
@@ -675,7 +682,8 @@ module FB3ReaderPage {
 						this.FalloutState.NoMoreFootnotesHere = true;
 					}
 					var CurShift: number = Child.offsetTop;
-					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
+//					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
+					if (Child.innerHTML.match(/^\u00AD/)) {
 						// the reason for this is that soft hyph on the last line makes the hanging element
 						// twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
 						CurShift += Math.floor(Math.max(SH, OH) / 2); 

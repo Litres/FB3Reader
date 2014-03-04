@@ -13,6 +13,7 @@ use MIME::Base64;
 
 my $FBURI='http://www.gribuser.ru/xml/fictionbook/2.0';
 my $PartLimit = 10000;
+my $Styles=qr/a|style|strong|emphasis|sub|sup|strikethrough|code/;
 
 my $XML = $ARGV[0];
 my $XSL = $ARGV[1];
@@ -69,6 +70,7 @@ if (-f $XML) {
 	close XML;
 
 	$XMLData =~ s/([\s>])([^\s<>]+)(<a\s+[^>]*?type="note"[^>]*?>[^<]{1,10}<\/a>[,\.\?"'“”«»‘’;:\)…\/]?)/$1.HypheNOBR($2,$3)/ges;
+	$XMLData =~ s/(\S)(<\/$Styles>)(\s+)/$1 $2/gi;
 
 	$TmpXML = $XPortal::Settings::TMPPath . "/". $$ . "_" . basename($XML) . ".xml";
 

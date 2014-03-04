@@ -178,7 +178,8 @@ for (my $i=0;$i<=$Max;$i++) {
 	my $ShortFN = $BlockMap[$i]->{fn};
 	$ShortFN =~ s/.*[\/\\]//;
 	$ShortFN =~ s/'/\\'/g;
-	print $OutFile "{s:",$BlockMap[$i]->{s},",e:".$BlockMap[$i]->{e}.",xp:".$BlockMap[$i]->{xp}.",url:'$ShortFN'}";
+	print $OutFile "{s:",$BlockMap[$i]->{s},",e:".$BlockMap[$i]->{e}.",xps:".
+		$BlockMap[$i]->{xps}.",xpe:".$BlockMap[$i]->{xpe}.",url:'$ShortFN'}";
 	if ($i != $Max){
 		print $OutFile ",\n";
 	}
@@ -191,7 +192,12 @@ unlink $TmpXML if $TmpXML;
 sub FlushFile{
 	return unless @DataToWrite;
 	$DataToWrite[0]=~ /\bxp:(\[\d+(,\d+)*\b])/;
-	push @BlockMap,{s=>$Start,e=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN),xp=>$1};
+	my $XPStart = $1;
+	$DataToWrite[$#DataToWrite]=~ /\bxp:(\[\d+(,\d+)*\b])/;
+	my $XPEnd = $1;
+	push @BlockMap,{s=>$Start,e=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN),
+									xps=>$XPStart,
+									xpe=>$XPEnd};
 	open OUTFILE, ">:utf8", $BlockMap[$FileN]->{fn};
 	$DataToWrite[$#DataToWrite] =~ s/\s*,\s*$//;
 	print  OUTFILE '['.join("\n",@DataToWrite).']';

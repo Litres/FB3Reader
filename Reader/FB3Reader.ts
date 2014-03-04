@@ -442,6 +442,7 @@ module FB3Reader {
 								this.LastSavePercent = NewPos;
 							}
 							this.Site.IdleThreadProgressor.Progress(this, NewPos);
+							this.Site.IdleThreadProgressor.Alert(this.PagesPositionsCache.Length().toFixed(0)+' pages ready');
 						}
 						this.IdleAction = 'wait';
 

@@ -68,7 +68,7 @@ if (-f $XML) {
 	my $XMLData = Encode::decode_utf8(join '', (<XML>));
 	close XML;
 
-	$XMLData =~ s/([\s>])([^\s<>]+)(<a\s+.*?type="note".*?>[^<]{1,10}<\/a>)/$1.HypheNOBR($2,$3)/ges;
+	$XMLData =~ s/([\s>])([^\s<>]+)(<a\s+[^>]*?type="note"[^>]*?>[^<]{1,10}<\/a>[,\.\?"'“”«»‘’;:\)…\/]?)/$1.HypheNOBR($2,$3)/ges;
 
 	$TmpXML = $XPortal::Settings::TMPPath . "/". $$ . "_" . basename($XML) . ".xml";
 

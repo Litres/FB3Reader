@@ -198,6 +198,7 @@ var FB3ReaderPage;
         };
 
         ReaderPage.prototype.DrawEnd = function (PageData) {
+            var _this = this;
             //console.log(this.ID, 'DrawEnd');
             if (this.Reseted) {
                 this.Reseted = false;
@@ -208,12 +209,26 @@ var FB3ReaderPage;
             if (HasFootnotes) {
                 this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
                 this.NotesElement.Node.style.display = 'block';
+                var NotesNodes = this.NotesElement.Node.children.length;
+                for (var I = 0; I < this.NotesElement.Node.children.length; I++) {
+                    var Node = this.NotesElement.Node.children[I];
+                    if (Node.scrollHeight > this.Element.Height * FB3DOM.MaxFootnoteHeight) {
+                        Node.style.height = (this.Element.Height * FB3DOM.MaxFootnoteHeight).toFixed(0) + 'px';
+                    }
+                }
             }
 
             //			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
                 this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes, false);
-                this.FallOut();
+                this.ThreadsRunning++;
+                this.RenderBreakerTimeout = setTimeout(function () {
+                    _this.ThreadsRunning--;
+
+                    //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
+                    _this.RenderBreakerTimeout = 0;
+                    _this.FallOut();
+                }, 5);
             } else {
                 this.PageN = this.RenderInstr.CacheAs;
                 this.ApplyPageMetrics();
@@ -578,14 +593,10 @@ var FB3ReaderPage;
                     }
                     var CurShift = Child.offsetTop;
                     if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
-                        CurShift += Math.floor(Math.max(SH, OH) / 2); // what is this, hm?
+                        // the reason for this is that soft hyph on the last line makes the hanging element
+                        // twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
+                        CurShift += Math.floor(Math.max(SH, OH) / 2);
                     }
-
-                    //	var NextChild = <HTMLElement> Element.children[I + 1];
-                    //if (NextChild && NextChild.innerHTML.match(/^\u00AD/)) {
-                    //	Child.innerHTML += '_';
-                    //}
-                    //}
                     var OffsetParent = Child.offsetParent;
                     var ApplyShift;
                     if (this.FalloutState.LastOffsetParent == OffsetParent) {

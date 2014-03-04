@@ -2,7 +2,8 @@
 /// <reference path="FB3Reader.ts" />
 
 module FB3ReaderPage {
-	var BreakIterationEvery = 60; // every ## miliseconds script will process user input
+	var BreakIterationEvery = 30; // every ## miliseconds script will process user input
+	var SemiSleepTimeout = 5;     // time for SetTimeout. You can rise it to let the browser mo time for garbage collection
 
 	var FallCalls = 0; // debug
 
@@ -318,7 +319,7 @@ module FB3ReaderPage {
 					//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
 					this.RenderBreakerTimeout = 0;
 					this.FallOut();
-				}, 5);
+				}, SemiSleepTimeout);
 			} else {
 				this.PageN = this.RenderInstr.CacheAs;
 				this.ApplyPageMetrics();
@@ -351,7 +352,7 @@ module FB3ReaderPage {
 					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
 				}
 //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
-				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, 5)
+				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, SemiSleepTimeout)
 			} else if (!this.Next) {
 				//console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
 //				this.FBReader.IdleOn();
@@ -459,7 +460,7 @@ module FB3ReaderPage {
 						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
 						this.RenderBreakerTimeout = 0;
 						this.FallOut();
-					}, 5);
+					}, SemiSleepTimeout);
 					return;// should be here to make ApplyPageMetrics work
 				}
 			}
@@ -502,7 +503,7 @@ module FB3ReaderPage {
 								this.ThreadsRunning--;
 								//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
 								this.FallOut();
-							}, 5);
+							}, SemiSleepTimeout);
 							return; // should be here to make ApplyPageMetrics work
 						} else {
 							//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');
@@ -575,13 +576,12 @@ module FB3ReaderPage {
 			while (this.FalloutState.I < this.FalloutState.ChildsCount) {
 				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
 					//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
-					BreakIterationEvery = 0;
 					this.ThreadsRunning++;
 					this.RenderMoreTimeout = setTimeout(() => {
 						this.ThreadsRunning--;
 						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
 						this.FallOut();
-					}, 500);
+					}, SemiSleepTimeout);
 					return;
 				}
 				var FootnotesAddon = 0;

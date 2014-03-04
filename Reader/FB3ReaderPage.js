@@ -2,7 +2,8 @@
 /// <reference path="FB3Reader.ts" />
 var FB3ReaderPage;
 (function (FB3ReaderPage) {
-    var BreakIterationEvery = 60;
+    var BreakIterationEvery = 30;
+    var SemiSleepTimeout = 5;
 
     var FallCalls = 0;
 
@@ -231,7 +232,7 @@ var FB3ReaderPage;
                     //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
                     _this.RenderBreakerTimeout = 0;
                     _this.FallOut();
-                }, 5);
+                }, SemiSleepTimeout);
             } else {
                 this.PageN = this.RenderInstr.CacheAs;
                 this.ApplyPageMetrics();
@@ -265,7 +266,7 @@ var FB3ReaderPage;
                 //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
-                }, 5);
+                }, SemiSleepTimeout);
             } else if (!this.Next) {
                 //console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
                 //				this.FBReader.IdleOn();
@@ -377,7 +378,7 @@ var FB3ReaderPage;
                         //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
                         _this.RenderBreakerTimeout = 0;
                         _this.FallOut();
-                    }, 5);
+                    }, SemiSleepTimeout);
                     return;
                 }
             }
@@ -420,7 +421,7 @@ var FB3ReaderPage;
 
                                 //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
                                 _this.FallOut();
-                            }, 5);
+                            }, SemiSleepTimeout);
                             return;
                         } else {
                             //console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');
@@ -492,14 +493,13 @@ var FB3ReaderPage;
             while (this.FalloutState.I < this.FalloutState.ChildsCount) {
                 if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
                     //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
-                    BreakIterationEvery = 0;
                     this.ThreadsRunning++;
                     this.RenderMoreTimeout = setTimeout(function () {
                         _this.ThreadsRunning--;
 
                         //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
                         _this.FallOut();
-                    }, 500);
+                    }, SemiSleepTimeout);
                     return;
                 }
                 var FootnotesAddon = 0;

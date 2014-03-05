@@ -59,7 +59,7 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.DoubleCheckHeight = /MSIE/.test(navigator.userAgent) ? false : true;
             this.LastSavePercent = 0;
-            this.CurStartPos = [38, 53];
+            this.CurStartPos = [1458];
 
             //			this.CurStartPos = [116];
             this.IdleOff();
@@ -300,6 +300,9 @@ var FB3Reader;
                     Start: this.PagesPositionsCache.Get(this.PagesPositionsCache.Length() - 1).Range.To.slice(0),
                     CacheAs: this.PagesPositionsCache.Length()
                 };
+                if (FirstUncached.Start.length == 1) {
+                    FirstUncached.Start[0]++; // See FB3ReaderPage.CropTo for why it's needed - it's inversion of CropTo
+                }
             } else {
                 FirstUncached = {
                     Start: [0],

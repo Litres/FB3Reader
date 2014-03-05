@@ -14,6 +14,7 @@ window.onload = function () {
     document.getElementById('reader').addEventListener('touchmove', TapMove, false);
     document.getElementById('reader').addEventListener('touchend', TapEnd, false);
 
+    //	var ArtID = '178297';
     var ArtID = '120421';
     var Canvas = document.getElementById('reader');
     var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);

@@ -61,6 +61,14 @@ module FB3ReaderPage {
 		CollectedNotesHeight: number
 		PrevTo: number[]
 	}
+	
+	// hanging para extermination - we need inline to hang for hyph to work, but no reason for block to hang
+	export function CropTo(Range: FB3DOM.IRange): void {
+		if (Range.To.length == 1 && Range.To[0]) {
+			Range.To[0]--;
+		}
+	}
+
 
 	function HardcoreParseInt(Input: string): number {
 		Input.replace(/\D/g, '');
@@ -395,7 +403,11 @@ module FB3ReaderPage {
 			// We can have not enough content to fill the page. Sometimes we will refill it,
 			// but sometimes (doc end or we only 
 			if (!FallOut.EndReached) {
-				if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]) {
+				if (
+						this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]
+						||
+						FallOut.FallOut.length == 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0]
+					) {
 					// Ups, our page is incomplete - have to retry filling it. Take more data now
 					//var BasePrerender = this.PrerenderBlocks;
 					this.PrerenderBlocks += 2;
@@ -424,9 +436,7 @@ module FB3ReaderPage {
 					To: FallOut.FallOut
 				};
 				this.QuickFallautState.PrevTo = this.RenderInstr.Range.To.slice(0);
-				if (this.RenderInstr.Range.To.length == 1 && this.RenderInstr.Range.To[0]) {
-					this.RenderInstr.Range.To[0]--;
-				}
+				CropTo(this.RenderInstr.Range);
 			}
 			this.RenderInstr.Height = FallOut.Height;
 			this.RenderInstr.NotesHeight = FallOut.NotesHeight;
@@ -481,6 +491,7 @@ module FB3ReaderPage {
 					this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
 					NextPageRange.To = FallOut.FallOut.slice(0);
 
+					CropTo(NextPageRange);
 
 					this.PagesToRender[this.QuickFallautState.QuickFallout].Height = FallOut.Height - this.QuickFallautState.CollectedHeight + this.Element.MarginTop;
 					this.PagesToRender[this.QuickFallautState.QuickFallout].NotesHeight = FallOut.NotesHeight;

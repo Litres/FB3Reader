@@ -28,18 +28,18 @@
 		<xsl:apply-templates select="fb:body"/>
 <!--	<![CDATA[var elapsed = new Date().getTime() - start;document.write(elapsed+'ms to load data');</script></body></html>]]>-->
 	</xsl:template>
-	
-	<xsl:template name="tag2js">t:'<xsl:value-of select="name(.)"/>',xp:[<xsl:call-template name="reverse_id"
-		/>]<xsl:if test="@id">,i:'<xsl:value-of select="@id"/>'</xsl:if><xsl:if test="@style and @style != ''">,nc:'<xsl:value-of
-		select="@style"/>'</xsl:if><xsl:if test="*|text()">,c:[<xsl:apply-templates/>]</xsl:if><xsl:if test="self::fb:image">,s:'<xsl:value-of select="fb2js:GetImgID(substring-after(@xlink:href,'#'))"
-		/>',w:<xsl:value-of select="fb2js:GetImgW(substring-after(@xlink:href,'#'))"/>,h:<xsl:value-of select="fb2js:GetImgH(substring-after(@xlink:href,'#'))"/></xsl:if></xsl:template>
+
+	<xsl:template name="tag2js">t:"<xsl:value-of select="name(.)"/>",xp:[<xsl:call-template name="reverse_id"
+		/>]<xsl:if test="@id">,i:"<xsl:value-of select="@id"/>"</xsl:if><xsl:if test="@style and @style != ''">,nc:"<xsl:value-of
+		select="@style"/>"</xsl:if><xsl:if test="*|text()">,c:[<xsl:apply-templates/>]</xsl:if><xsl:if test="self::fb:image">,s:"<xsl:value-of select="fb2js:GetImgID(substring-after(@xlink:href,'#'))"
+		/>",w:<xsl:value-of select="fb2js:GetImgW(substring-after(@xlink:href,'#'))"/>,h:<xsl:value-of select="fb2js:GetImgH(substring-after(@xlink:href,'#'))"/></xsl:if></xsl:template>
 	<xsl:template match="*">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
 	<xsl:template match="&blocklvl;" mode="footnote">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
-	<xsl:template match="fb:section" mode="footnote">{t:'footnote',xp:[<xsl:call-template name="reverse_id"
+	<xsl:template match="fb:section" mode="footnote">{t:"footnote",xp:[<xsl:call-template name="reverse_id"
 		/>],c:[<xsl:apply-templates mode="footnote"/>]}</xsl:template>
 
 	<xsl:template match="&blocklvl;">{chars:<xsl:value-of select="string-length(.)"/>,<xsl:call-template name="tag2js"/>},<xsl:text >&#010;</xsl:text></xsl:template>
-	
+
 	<xsl:template match="fb:section[parent::fb:body[@name='notes' and &blocklvl;]]
 	|
 	fb:section[ancestor-or-self::fb:body[@name='notes'] and not(ancestor-or-self::fb:section[parent::fb:body[@name='notes']]/preceding-sibling::fb:section)]"/>
@@ -64,9 +64,15 @@
 			<xsl:when test="key('note-link',$NoteID)/parent::fb:body or
 				not(key('note-link',$NoteID)/ancestor-or-self::fb:section[parent::fb:body]/preceding-sibling::fb:section)"
 					>f:<xsl:apply-templates select="key('note-link',$NoteID)" mode="footnote"/></xsl:when>
-				<xsl:otherwise>href:'<xsl:value-of select="substring-after(@xlink:href,'#')"/>'</xsl:otherwise>
+				<xsl:otherwise>href:"<xsl:value-of select="substring-after(@xlink:href,'#')"/>"</xsl:otherwise>
 		</xsl:choose>
 		<xsl:text>}</xsl:text>
+		<xsl:if test="position()!=last()">,</xsl:if>
+	</xsl:template>
+	<xsl:template match="fb:a[ not(@type) and substring(@xlink:href,1,1) = '#']">
+		<xsl:text>{</xsl:text>
+		<xsl:call-template name="tag2js"/>
+		<xsl:text>,hr:["</xsl:text><xsl:value-of select="@xlink:href"/><xsl:text>"]}</xsl:text>
 		<xsl:if test="position()!=last()">,</xsl:if>
 	</xsl:template>
 
@@ -77,12 +83,12 @@
 			<xsl:otherwise>1</xsl:otherwise>
 		</xsl:choose>
 	</xsl:variable>
-	<xsl:text>'</xsl:text>
+	<xsl:text>"</xsl:text>
 	<xsl:value-of select="fb2js:SplitString(.,$NeedHyph)" />
-	<xsl:text>'</xsl:text>
+	<xsl:text>"</xsl:text>
 	<xsl:if test="position()!=last()">,</xsl:if>
 </xsl:template>
-	
+
 	<xsl:template name="reverse_id">
     <xsl:param name="node" select="."/>
     <xsl:for-each select="$node">

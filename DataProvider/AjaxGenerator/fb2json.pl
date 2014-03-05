@@ -10,6 +10,8 @@ use utf8;
 use Encode;
 use Image::Size;
 use MIME::Base64;
+use JSON::Path;
+use JSON::PP;
 
 my $FBURI='http://www.gribuser.ru/xml/fictionbook/2.0';
 my $PartLimit = 10000;
@@ -31,6 +33,7 @@ unless ($Out){
 }
 
 my %DocumentImages;
+my $jsonC = JSON::PP->new->pretty->allow_barekey;
 
 my %HyphCache;
 sub SplitString{
@@ -41,13 +44,13 @@ sub SplitString{
 	if ($NeedHyph){
 		$Esc = $HyphCache{$SRC} || XPortal::Hyphenate::HyphString($Esc);
 	}
-	$Esc =~ s/\s+/ ','/g;
-	$Esc =~ s/('|^) ','/$1 /g;
-	$Esc =~ s/'',|,''|','$//g;
+	$Esc =~ s/\s+/ ","/g;
+	$Esc =~ s/("|^) ","/$1 /g;
+	$Esc =~ s/"",|,""|","$//g;
 	if ($NeedHyph){
 		$HyphCache{$SRC} = $Esc;
-		$Esc =~ s/\x{AD}/','\x{AD}/g;	# Full version
-#		$Esc =~ s/\x{AD}/','/g; 			# Compact version
+		$Esc =~ s/\x{AD}/","\x{AD}/g;	# Full version
+#		$Esc =~ s/\x{AD}/","/g; 			# Compact version
 	}
 	return $Esc;
 }
@@ -55,7 +58,7 @@ sub SplitString{
 sub EscString{
 	my $Esc=shift || return;
 	$Esc = Encode::decode_utf8($Esc." "); # Hack to get live string from LibXML
-	$Esc =~ s/(['\\])/\\$1/g;
+	$Esc =~ s/(["\\])/\\$1/g;
 	$Esc =~ s/\r?\n\r?/ /g;
 	$Esc =~ s/ $//;
 	return $Esc;
@@ -122,6 +125,9 @@ my $MetaResults = $MetaStylesheet->transform($source);
 my $JSonSTR = $BodyStylesheet->output_string($BodyResults);
 my $JSonMeta = $MetaStylesheet->output_string($MetaResults);
 
+#open(BODYOUT, ">:utf8", "$Out.body") or die "Cannot open file $Out.body : $!";
+#print BODYOUT $JSonSTR; close BODYOUT;
+
 my @JSonArr = split /[\r\n]+/,$JSonSTR;
 
 my $BlockN = 0;
@@ -134,9 +140,37 @@ my $TOC = $RootTOC;
 my @DataToWrite;
 my $Start = 0;
 
+my $jpath   = JSON::Path->new('$..i'); # like XMLPath: //i
+my %HrefHash; # (<id> => <json_path>,...)
 for my $Line (@JSonArr) {
 	if ($Line =~ s/\{chars:(\d+)\,/{/){
 		$PageStack += $1;
+
+		my $jsonstr = $Line;
+		$jsonstr =~ s/,\s*$//s;
+		my $jdata;
+		eval { $jdata = $jsonC->decode($jsonstr); };
+		if ($@) {
+			# хрень кака-то а не json
+			die "$jsonstr\n===============\n$@";
+		}
+		my @vals = $jpath->values($jdata);
+		my @paths = $jpath->paths($jdata);
+		if (@vals && @paths) {
+			for (my $j=0; $j<@vals; $j++){
+				if ($vals[$j] && $paths[$j]) {
+					my @nodes = ($BlockN);
+					while ($paths[$j] =~ /\[([^\]]+)\]/g){
+						push @nodes, $1;
+					}
+					pop @nodes; # ноду i нам не особо нужно, достаточно ее предка
+					#die "$jsonstr\n===============\n@vals : @paths : @nodes";
+					$HrefHash{ $vals[$j] } = join(',',grep {$_ ne 'c'} @nodes);
+				}
+			}
+		}
+		#die "$jsonstr\n===============\n".Data::Dumper::Dumper(\%HrefHash) if keys %HrefHash;
+
 		push @DataToWrite,$Line;
 		if ($PageStack >= $PartLimit){
 			FlushFile();
@@ -163,6 +197,8 @@ if (@DataToWrite){
 	FlushFile();;
 }
 
+PatchFiles();
+
 open $OutFile, ">:utf8","$Out.toc.js";
 print $OutFile "{$JSonMeta,\nBody: [";
 my $Max = @{$RootTOC->{c}} - 1;
@@ -177,9 +213,9 @@ $Max = @BlockMap - 1;
 for (my $i=0;$i<=$Max;$i++) {
 	my $ShortFN = $BlockMap[$i]->{fn};
 	$ShortFN =~ s/.*[\/\\]//;
-	$ShortFN =~ s/'/\\'/g;
+	$ShortFN =~ s/"/\\"/g;
 	print $OutFile "{s:",$BlockMap[$i]->{s},",e:".$BlockMap[$i]->{e}.",xps:".
-		$BlockMap[$i]->{xps}.",xpe:".$BlockMap[$i]->{xpe}.",url:'$ShortFN'}";
+		$BlockMap[$i]->{xps}.",xpe:".$BlockMap[$i]->{xpe}.qq{,url:"$ShortFN"}.'}';
 	if ($i != $Max){
 		print $OutFile ",\n";
 	}
@@ -189,6 +225,7 @@ close $OutFile;
 
 unlink $TmpXML if $TmpXML;
 
+my %NeedPatch;
 sub FlushFile{
 	return unless @DataToWrite;
 	$DataToWrite[0]=~ /\bxp:(\[\d+(,\d+)*\b])/;
@@ -198,20 +235,52 @@ sub FlushFile{
 	push @BlockMap,{s=>$Start,e=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN),
 									xps=>$XPStart,
 									xpe=>$XPEnd};
-	open OUTFILE, ">:utf8", $BlockMap[$FileN]->{fn};
-	$DataToWrite[$#DataToWrite] =~ s/\s*,\s*$//;
-	print  OUTFILE '['.join("\n",@DataToWrite).']';
-	close  OUTFILE;
+	my $outfile;
+	open($outfile, ">:utf8", $BlockMap[$FileN]->{fn}) || die "Cannot open file '$BlockMap[$FileN]->{fn}' : $!";
+	$DataToWrite[-1] =~ s/\s*,\s*$//;
+	my $datastr = '['.join("\n",@DataToWrite).']';
+	while ($datastr =~ /hr:\s*\[\s*"#([^"]+)"\s*\]/sg){
+		my $id = $1;
+		unless ($id){
+			# непонятная ссылка, пропустим
+		} elsif (exists($HrefHash{$id})) {
+			$datastr =~ s/(hr:\s*\[)\s*"#$id"\s*(\])/$1$HrefHash{$id}$2/gos;
+			#warn "[OK] $id => ".$HrefHash{$id};
+		} else {
+			$NeedPatch{$FileN} ||= {f => $outfile, hr => {}};
+			$NeedPatch{$FileN}->{hr}->{$id}++;
+		}
+	}
+	if (exists($NeedPatch{$FileN})){
+		$NeedPatch{$FileN}->{d} = $datastr;
+	} else {
+		print  $outfile $datastr;
+		close  $outfile;
+	}
 	@DataToWrite=();
 	$Start = $BlockN + 1;
 }
 
+sub PatchFiles{
+	for my $file (values %NeedPatch){
+		for my $id (keys %{ $file->{hr} }){
+			if (exists($HrefHash{$id})) {
+				$file->{d} =~ s/(hr:\s*\[)\s*"#$id"\s*(\])/$1$HrefHash{$id}$2/gos;
+				#warn "[OK] $id => ".$HrefHash{$id};
+			} else {
+				die "[ERR] broken link '#$id'";
+			}
+		}
+		print {$file->{f}} $file->{d};
+		close $file->{d};
+	}
+}
 
 sub DumpTOC{
 	my $Node = shift;
 	my @Out = ('{s:'.$Node->{s}.',e:'.$Node->{e});
 	if ($Node->{t}){
-		push @Out,",t:'".$Node->{t}."'";
+		push @Out,',t:"'.$Node->{t}.'"';
 	}
 	if ($Node->{c}){
 		push @Out,',c:[';

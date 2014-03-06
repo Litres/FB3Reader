@@ -55,10 +55,6 @@ module FB3DOM {
 				OutStr = OutStr.substr(Range.From[0]);
 			}
 
-			if (!HyphOn) {
-				OutStr = OutStr.replace(/\u00AD/, '');
-			}
-
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
 			var ClassNames = this.GetBookmarkClasses(Bookmarks);
@@ -66,7 +62,11 @@ module FB3DOM {
 				ClassNames = ' class="' + ClassNames + '"';
 			}
 
-			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');  // todo - HyphOn must work, must just replace shy with ''
+			if (!HyphOn && OutStr.match(/^\u00AD/)) {
+				TargetStream[TargetStream.length - 1] = TargetStream[TargetStream.length - 1].replace('</span>', OutStr.replace(/\u00AD/, '') + '</span>');
+			} else {
+				TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
+			}
 		}
 
 		public ArtID2URL(Chunk?: string): string {

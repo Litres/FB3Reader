@@ -46,15 +46,18 @@
 
 	<xsl:template match="fb:section|fb:body">
 		<xsl:text>&gt;&gt;&gt;</xsl:text>
-		<xsl:for-each select="fb:title">
-			<xsl:for-each select="fb:p">
-				<xsl:value-of select="fb2js:Escape(.)"/><xsl:if test="position()!=last()"><xsl:text> </xsl:text></xsl:if>
+		<xsl:if test="@name != 'notes'">
+			<xsl:for-each select="fb:title">
+				<xsl:for-each select="fb:p">
+					<xsl:value-of select="fb2js:Escape(.)"/><xsl:if test="position()!=last()"><xsl:text> </xsl:text></xsl:if>
+				</xsl:for-each>
 			</xsl:for-each>
-		</xsl:for-each>
+		</xsl:if>
 		<xsl:text>&#10;</xsl:text>
 	<xsl:apply-templates select="*"/>
 	<xsl:text>&lt;&lt;&lt;&#10;</xsl:text>
 	</xsl:template>
+	<xsl:template match="fb:title[parent::fb:body[@name='notes']]"/>
 	<xsl:template match="fb:a[@type = 'note']">
 		<xsl:variable name="NoteID"><xsl:value-of select="substring-after(@xlink:href,'#')"/></xsl:variable>
 		<xsl:text>{</xsl:text>

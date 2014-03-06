@@ -321,9 +321,6 @@ var FB3ReaderPage;
             // We can have not enough content to fill the page. Sometimes we will refill it,
             // but sometimes (doc end or we only
             if (!FallOut.EndReached) {
-                //var EndRiched = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]
-                //	||
-                //	FallOut.FallOut.length != 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0];
                 var EndRiched = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e < FallOut.FallOut[0] || FallOut.FallOut.length == 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0];
                 if (!EndRiched) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
@@ -341,7 +338,6 @@ var FB3ReaderPage;
                         NP.CleanPage();
                         NP.Ready = false;
                         NP.RenderInstr = { Range: { From: [-1], To: [-1] } };
-                        //						NP.RenderInstr.Range = { From: [-1], To: [-1] };
                     }
                 }
                 this.PagesToRender = [];
@@ -349,7 +345,6 @@ var FB3ReaderPage;
                     From: this.RenderInstr.Start.splice(0),
                     To: FallOut.FallOut
                 };
-                //				this.RenderInstr.Range.To[0]++;
             } else {
                 this.RenderInstr.Range = {
                     From: this.RenderInstr.Start.splice(0),

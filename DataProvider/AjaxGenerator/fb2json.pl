@@ -16,6 +16,7 @@ use JSON::PP;
 my $FBURI='http://www.gribuser.ru/xml/fictionbook/2.0';
 my $PartLimit = 10000;
 my $Styles=qr/a|style|strong|emphasis|sub|sup|strikethrough|code/;
+my $LineBreakChars = qr/[\-\/]/;
 
 my $XML = $ARGV[0];
 my $XSL = $ARGV[1];
@@ -45,6 +46,7 @@ sub SplitString{
 		$Esc = $HyphCache{$SRC} || XPortal::Hyphenate::HyphString($Esc);
 	}
 	$Esc =~ s/\s+/ ","/g;
+	$Esc =~ s/($LineBreakChars+)(?!")/$1","/g;
 	$Esc =~ s/("|^) ","/$1 /g;
 	$Esc =~ s/"",|,""|","$//g;
 	if ($NeedHyph){

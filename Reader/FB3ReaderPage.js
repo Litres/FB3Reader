@@ -234,10 +234,12 @@ var FB3ReaderPage;
             if (!this.RenderInstr.Range) {
                 this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes, false);
                 this.ThreadsRunning++;
+
+                //				console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
                 this.RenderBreakerTimeout = setTimeout(function () {
                     _this.ThreadsRunning--;
 
-                    //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
+                    //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
                     _this.RenderBreakerTimeout = 0;
                     _this.FallOut();
                 }, SemiSleepTimeout);
@@ -319,7 +321,11 @@ var FB3ReaderPage;
             // We can have not enough content to fill the page. Sometimes we will refill it,
             // but sometimes (doc end or we only
             if (!FallOut.EndReached) {
-                if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0] || FallOut.FallOut.length == 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0]) {
+                //var EndRiched = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e > FallOut.FallOut[0]
+                //	||
+                //	FallOut.FallOut.length != 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0];
+                var EndRiched = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e < FallOut.FallOut[0] || FallOut.FallOut.length == 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0];
+                if (!EndRiched) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
                     //var BasePrerender = this.PrerenderBlocks;
                     this.PrerenderBlocks += 2;
@@ -334,7 +340,8 @@ var FB3ReaderPage;
                         NP = NP.Next;
                         NP.CleanPage();
                         NP.Ready = false;
-                        NP.RenderInstr.Range = { From: [-1], To: [-1] };
+                        NP.RenderInstr = { Range: { From: [-1], To: [-1] } };
+                        //						NP.RenderInstr.Range = { From: [-1], To: [-1] };
                     }
                 }
                 this.PagesToRender = [];
@@ -342,7 +349,7 @@ var FB3ReaderPage;
                     From: this.RenderInstr.Start.splice(0),
                     To: FallOut.FallOut
                 };
-                this.RenderInstr.Range.To[0]++;
+                //				this.RenderInstr.Range.To[0]++;
             } else {
                 this.RenderInstr.Range = {
                     From: this.RenderInstr.Start.splice(0),
@@ -376,12 +383,12 @@ var FB3ReaderPage;
                     //					this.FallOut();
                     FallCalls++;
 
-                    //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
+                    //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
                     this.ThreadsRunning++;
                     this.RenderBreakerTimeout = setTimeout(function () {
                         _this.ThreadsRunning--;
 
-                        //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
+                        //						console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
                         _this.RenderBreakerTimeout = 0;
                         _this.FallOut();
                     }, SemiSleepTimeout);
@@ -422,12 +429,12 @@ var FB3ReaderPage;
                             this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
 
                             //this.FallOut();
-                            //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
+                            //							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
                             this.ThreadsRunning++;
                             this.RenderMoreTimeout = setTimeout(function () {
                                 _this.ThreadsRunning--;
 
-                                //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
+                                //								console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
                                 _this.FallOut();
                             }, SemiSleepTimeout);
                             return;
@@ -448,6 +455,7 @@ var FB3ReaderPage;
 
         ReaderPage.prototype.Reset = function () {
             clearTimeout(this.RenderMoreTimeout);
+            clearTimeout(this.RenderBreakerTimeout);
 
             //			console.log('Reset ' + this.ID);
             this.PagesToRender = null;

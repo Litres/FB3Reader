@@ -51,7 +51,7 @@ module FB3Reader {
 		public CurStartPos: IPosition;
 		public CurStartPage: number;
 		public BookStyleNotesTemporaryOff: boolean;
-		public DoubleCheckHeight: boolean;
+		public IsIE: boolean;
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: FB3ReaderPage.ReaderPage[];
@@ -82,10 +82,9 @@ module FB3Reader {
 			this.CacheBackward = 2;
 			this.BookStyleNotes = true;
 			this.BookStyleNotesTemporaryOff = false;
-			this.DoubleCheckHeight = /MSIE/.test(navigator.userAgent) ? false:true;
+			this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
 			this.LastSavePercent = 0;
-			this.CurStartPos = [1458];
-//			this.CurStartPos = [116];
+			this.CurStartPos = [1];
 
 			this.IdleOff();
 		}
@@ -321,9 +320,7 @@ module FB3Reader {
 					Start: this.PagesPositionsCache.Get(this.PagesPositionsCache.Length() - 1).Range.To.slice(0),
 					CacheAs: this.PagesPositionsCache.Length()
 				}
-				if (FirstUncached.Start.length == 1) {
-					FirstUncached.Start[0]++; // See FB3ReaderPage.CropTo for why it's needed - it's inversion of CropTo
-				}
+				FB3ReaderPage.To2From(FirstUncached.Start);
 			} else {
 				FirstUncached = {
 					Start: [0],

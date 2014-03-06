@@ -3,7 +3,7 @@
 
 module FB3ReaderPage {
 	var BreakIterationEvery = 30; // every ## miliseconds script will process user input
-	var SemiSleepTimeout = 5;     // time for SetTimeout. You can rise it to let the browser mo time for garbage collection
+	var SemiSleepTimeout = 100;     // time for SetTimeout. You can rise it to let the browser mo time for garbage collection
 
 	var FallCalls = 0; // debug
 
@@ -63,9 +63,14 @@ module FB3ReaderPage {
 	}
 	
 	// hanging para extermination - we need inline to hang for hyph to work, but no reason for block to hang
-	export function CropTo(Range: FB3DOM.IRange): void {
-		if (Range.To.length == 1 && Range.To[0]) {
-			Range.To[0]--;
+	export function CropTo(To: FB3Reader.IPosition): void {
+		if (To.length == 1) {
+			To[0]--;
+		}
+	}
+	export function To2From(From: FB3Reader.IPosition): void {
+		if (From.length == 1) {
+			From[0]++;
 		}
 	}
 
@@ -358,7 +363,8 @@ module FB3ReaderPage {
 			if (this.PagesToRender && this.PagesToRender.length && this.Next) {
 				// we fire setTimeout to let the browser draw the page before we render the next
 				if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
-					this.PagesToRender[0].Start = this.RenderInstr.Range.To;
+					this.PagesToRender[0].Start = this.RenderInstr.Range.To.splice(0);
+					To2From(this.PagesToRender[0].Start);
 				}
 //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
 				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, SemiSleepTimeout)
@@ -435,7 +441,7 @@ module FB3ReaderPage {
 					To: FallOut.FallOut
 				};
 				this.QuickFallautState.PrevTo = this.RenderInstr.Range.To.slice(0);
-				CropTo(this.RenderInstr.Range);
+				CropTo(this.RenderInstr.Range.To);
 			}
 			this.RenderInstr.Height = FallOut.Height;
 			this.RenderInstr.NotesHeight = FallOut.NotesHeight;
@@ -451,7 +457,7 @@ module FB3ReaderPage {
 			// content to create next page(s) with EXACTLY the required html - this will
 			// speed up the render a lot
 			var LastChild = <HTMLElement> this.Element.Node.children[this.Element.Node.children.length - 1];
-			if (LastChild && !PageCorrupt && FallOut.EndReached) {
+			if (LastChild && !PageCorrupt && FallOut.EndReached) { // fixme - should have a better fix for IE
 				this.QuickFallautState.CollectedHeight = FallOut.Height;
 				this.QuickFallautState.CollectedNotesHeight = FallOut.NotesHeight;
 				var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
@@ -490,7 +496,7 @@ module FB3ReaderPage {
 					this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
 					NextPageRange.To = FallOut.FallOut.slice(0);
 
-					CropTo(NextPageRange);
+					CropTo(NextPageRange.To);
 
 					this.PagesToRender[this.QuickFallautState.QuickFallout].Height = FallOut.Height - this.QuickFallautState.CollectedHeight + this.Element.MarginTop;
 					this.PagesToRender[this.QuickFallautState.QuickFallout].NotesHeight = FallOut.NotesHeight;
@@ -604,8 +610,11 @@ module FB3ReaderPage {
 				this.FalloutState.PrevPageBreaker = this.FalloutState.PrevPageBreaker || !this.FalloutState.ForceDenyElementBreaking && PageBreakBefore(Child);
 				var SH = Child.scrollHeight;
 				var ChildBot: number;
-				if (this.FBReader.DoubleCheckHeight) {
-					var OH = Child.offsetHeight;
+				var OH = 0;
+				// IE has both offsetHeight && scrollHeight always equal plus
+				// it gets offset * and scroll * values SLOW, sy why waste time?
+				if (!this.FBReader.IsIE) {
+					OH = Child.offsetHeight;
 					ChildBot = Child.offsetTop + Math.max(SH, OH);
 					if (SH != OH) {
 						// While calculating browser's widths&heights you can find that 1+1=3. We "round" it up
@@ -694,7 +703,7 @@ module FB3ReaderPage {
 					}
 					var CurShift: number = Child.offsetTop;
 //					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
-					if (Child.innerHTML.match(/^\u00AD/)) {
+					if (Child.innerHTML.match(/^(\u00AD|&shy;)/)) {
 						// the reason for this is that soft hyph on the last line makes the hanging element
 						// twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
 						CurShift += Math.floor(Math.max(SH, OH) / 2); 

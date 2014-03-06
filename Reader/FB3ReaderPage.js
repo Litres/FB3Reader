@@ -3,17 +3,23 @@
 var FB3ReaderPage;
 (function (FB3ReaderPage) {
     var BreakIterationEvery = 30;
-    var SemiSleepTimeout = 5;
+    var SemiSleepTimeout = 100;
 
     var FallCalls = 0;
 
     // hanging para extermination - we need inline to hang for hyph to work, but no reason for block to hang
-    function CropTo(Range) {
-        if (Range.To.length == 1 && Range.To[0]) {
-            Range.To[0]--;
+    function CropTo(To) {
+        if (To.length == 1) {
+            To[0]--;
         }
     }
     FB3ReaderPage.CropTo = CropTo;
+    function To2From(From) {
+        if (From.length == 1) {
+            From[0]++;
+        }
+    }
+    FB3ReaderPage.To2From = To2From;
 
     function HardcoreParseInt(Input) {
         Input.replace(/\D/g, '');
@@ -270,7 +276,8 @@ var FB3ReaderPage;
             if (this.PagesToRender && this.PagesToRender.length && this.Next) {
                 // we fire setTimeout to let the browser draw the page before we render the next
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
-                    this.PagesToRender[0].Start = this.RenderInstr.Range.To;
+                    this.PagesToRender[0].Start = this.RenderInstr.Range.To.splice(0);
+                    To2From(this.PagesToRender[0].Start);
                 }
 
                 //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
@@ -351,7 +358,7 @@ var FB3ReaderPage;
                     To: FallOut.FallOut
                 };
                 this.QuickFallautState.PrevTo = this.RenderInstr.Range.To.slice(0);
-                CropTo(this.RenderInstr.Range);
+                CropTo(this.RenderInstr.Range.To);
             }
             this.RenderInstr.Height = FallOut.Height;
             this.RenderInstr.NotesHeight = FallOut.NotesHeight;
@@ -407,7 +414,7 @@ var FB3ReaderPage;
                     this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
                     NextPageRange.To = FallOut.FallOut.slice(0);
 
-                    CropTo(NextPageRange);
+                    CropTo(NextPageRange.To);
 
                     this.PagesToRender[this.QuickFallautState.QuickFallout].Height = FallOut.Height - this.QuickFallautState.CollectedHeight + this.Element.MarginTop;
                     this.PagesToRender[this.QuickFallautState.QuickFallout].NotesHeight = FallOut.NotesHeight;
@@ -522,8 +529,12 @@ var FB3ReaderPage;
                 this.FalloutState.PrevPageBreaker = this.FalloutState.PrevPageBreaker || !this.FalloutState.ForceDenyElementBreaking && PageBreakBefore(Child);
                 var SH = Child.scrollHeight;
                 var ChildBot;
-                if (this.FBReader.DoubleCheckHeight) {
-                    var OH = Child.offsetHeight;
+                var OH = 0;
+
+                // IE has both offsetHeight && scrollHeight always equal plus
+                // it gets offset * and scroll * values SLOW, sy why waste time?
+                if (!this.FBReader.IsIE) {
+                    OH = Child.offsetHeight;
                     ChildBot = Child.offsetTop + Math.max(SH, OH);
                     if (SH != OH) {
                         // While calculating browser's widths&heights you can find that 1+1=3. We "round" it up
@@ -612,7 +623,7 @@ var FB3ReaderPage;
                     var CurShift = Child.offsetTop;
 
                     //					if (Child.innerHTML.match(/^(\u00AD|\s)/)) {
-                    if (Child.innerHTML.match(/^\u00AD/)) {
+                    if (Child.innerHTML.match(/^(\u00AD|&shy;)/)) {
                         // the reason for this is that soft hyph on the last line makes the hanging element
                         // twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
                         CurShift += Math.floor(Math.max(SH, OH) / 2);

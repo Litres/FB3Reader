@@ -239,8 +239,42 @@ module FB3Reader {
 		}
 
 
-		public TOC() {
-			return this.FB3DOM.TOC;
+		public TOC():FB3DOM.ITOC[] {
+			var PatchedTOC = this.CloneTOCNodes(this.FB3DOM.TOC);
+			this.PatchToc(PatchedTOC, this.CurStartPos, 0);
+			for (var I = 0; I < this.Bookmarks.Bookmarks.length; I++) {
+				this.PatchToc(PatchedTOC, this.Bookmarks.Bookmarks[I].Range.From, this.Bookmarks.Bookmarks[I].Group);
+			}
+			return PatchedTOC;
+		}
+
+		private CloneTOCNodes(TOC: FB3DOM.ITOC[]): FB3DOM.ITOC[]{
+			var NewTOC: FB3DOM.ITOC[] = new Array();
+			for (var I = 0; I < TOC.length; I++) {
+				for (var P in TOC[I]) {
+					if (P == 'c') { // contents ie childs
+						NewTOC[I].c = this.CloneTOCNodes(TOC[I].c);
+					} else {
+						NewTOC[I][P] = TOC[I][P];
+					}
+				}
+			}
+			return NewTOC;
+		}
+
+		private PatchToc(TOC: FB3DOM.ITOC[], Pos: IPosition, Group: number):void {
+			for (var I = 0; I < TOC.length; I++) {
+				if (PosCompare([TOC[I].s], Pos) <= 0) { // Pos below the start node in TOC
+					if (TOC[I].c) {
+						this.PatchToc(TOC[I].c, Pos, Group);
+					} else if (TOC[I].bookmarks['g' + Group]) {
+						TOC[I].bookmarks['g' + Group]++;
+					} else {
+						TOC[I].bookmarks['g' + Group] = 1;
+					}
+					return;
+				}
+			}
 		}
 
 		public ResetCache(): void {
@@ -494,6 +528,7 @@ module FB3Reader {
 				this.BookStyleNotes + ':' +
 				this.Site.Key);
 		}
+
 		public IdleOn(): void {
 			if (!this.EnableBackgroundPreRender) {
 				return; // We do not want to prerender pages.

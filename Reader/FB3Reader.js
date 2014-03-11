@@ -219,7 +219,41 @@ var FB3Reader;
         };
 
         Reader.prototype.TOC = function () {
-            return this.FB3DOM.TOC;
+            var PatchedTOC = this.CloneTOCNodes(this.FB3DOM.TOC);
+            this.PatchToc(PatchedTOC, this.CurStartPos, 0);
+            for (var I = 0; I < this.Bookmarks.Bookmarks.length; I++) {
+                this.PatchToc(PatchedTOC, this.Bookmarks.Bookmarks[I].Range.From, this.Bookmarks.Bookmarks[I].Group);
+            }
+            return PatchedTOC;
+        };
+
+        Reader.prototype.CloneTOCNodes = function (TOC) {
+            var NewTOC = new Array();
+            for (var I = 0; I < TOC.length; I++) {
+                for (var P in TOC[I]) {
+                    if (P == 'c') {
+                        NewTOC[I].c = this.CloneTOCNodes(TOC[I].c);
+                    } else {
+                        NewTOC[I][P] = TOC[I][P];
+                    }
+                }
+            }
+            return NewTOC;
+        };
+
+        Reader.prototype.PatchToc = function (TOC, Pos, Group) {
+            for (var I = 0; I < TOC.length; I++) {
+                if (PosCompare([TOC[I].s], Pos) <= 0) {
+                    if (TOC[I].c) {
+                        this.PatchToc(TOC[I].c, Pos, Group);
+                    } else if (TOC[I].bookmarks['g' + Group]) {
+                        TOC[I].bookmarks['g' + Group]++;
+                    } else {
+                        TOC[I].bookmarks['g' + Group] = 1;
+                    }
+                    return;
+                }
+            }
         };
 
         Reader.prototype.ResetCache = function () {
@@ -468,6 +502,7 @@ var FB3Reader;
         Reader.prototype.LoadCache = function () {
             this.PagesPositionsCache.Load(this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key);
         };
+
         Reader.prototype.IdleOn = function () {
             var _this = this;
             if (!this.EnableBackgroundPreRender) {

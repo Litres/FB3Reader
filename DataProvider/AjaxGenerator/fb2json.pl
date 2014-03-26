@@ -144,37 +144,47 @@ my $Start = 0;
 
 my $jpath   = JSON::Path->new('$..i'); # like XMLPath: //i
 my %HrefHash; # (<id> => <json_path>,...)
+my $NoCut=0;
 for my $Line (@JSonArr) {
 	if ($Line =~ s/\{chars:(\d+)\,/{/){
 		$PageStack += $1;
-
-		my $jsonstr = $Line;
-		$jsonstr =~ s/,\s*$//s;
-		my $jdata;
-		eval { $jdata = $jsonC->decode($jsonstr); };
-		if ($@) {
-			# хрень кака-то а не json
-			die "$jsonstr\n===============\n$@";
-		}
-		my @vals = $jpath->values($jdata);
-		my @paths = $jpath->paths($jdata);
-		if (@vals && @paths) {
-			for (my $j=0; $j<@vals; $j++){
-				if ($vals[$j] && $paths[$j]) {
-					my @nodes = ($BlockN);
-					while ($paths[$j] =~ /\[([^\]]+)\]/g){
-						push @nodes, $1;
+		if ($Line =~ /\{t:"(cite|annotation|epigraph)"/){
+			$NoCut = 1;
+		} else {
+			if ($Line =~ s/\{cite\]\}/]}/){
+				# Ugly hack, do not know how to do it right now
+				$DataToWrite[$#DataToWrite] =~ s/,$//;
+				$NoCut = 0;
+			} else {
+				my $jsonstr = $Line;
+				$jsonstr =~ s/,\s*$//s;
+				my $jdata;
+				eval { $jdata = $jsonC->decode($jsonstr); };
+				if ($@) {
+					# хрень кака-то а не json
+					die "$jsonstr\n===============\n$@";
+				}
+				my @vals = $jpath->values($jdata);
+				my @paths = $jpath->paths($jdata);
+				if (@vals && @paths) {
+					for (my $j=0; $j<@vals; $j++){
+						if ($vals[$j] && $paths[$j]) {
+							my @nodes = ($BlockN);
+							while ($paths[$j] =~ /\[([^\]]+)\]/g){
+								push @nodes, $1;
+							}
+							pop @nodes; # ноду i нам не особо нужно, достаточно ее предка
+							#die "$jsonstr\n===============\n@vals : @paths : @nodes";
+							$HrefHash{ $vals[$j] } = join(',',grep {$_ ne 'c'} @nodes);
+						}
 					}
-					pop @nodes; # ноду i нам не особо нужно, достаточно ее предка
-					#die "$jsonstr\n===============\n@vals : @paths : @nodes";
-					$HrefHash{ $vals[$j] } = join(',',grep {$_ ne 'c'} @nodes);
 				}
 			}
 		}
 		#die "$jsonstr\n===============\n".Data::Dumper::Dumper(\%HrefHash) if keys %HrefHash;
 
 		push @DataToWrite,$Line;
-		if ($PageStack >= $PartLimit){
+		if ($PageStack >= $PartLimit && !$NoCut){
 			FlushFile();
 			$PageStack -= $PartLimit;
 			$FileN++;

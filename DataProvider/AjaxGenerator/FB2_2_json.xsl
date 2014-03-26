@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE XSL [
 	<!ENTITY nohyph "ancestor-or-self::fb:cite|ancestor-or-self::fb:poem|ancestor-or-self::fb:subtitle|ancestor-or-self::fb:epigraph|ancestor-or-self::fb:title">
-	<!ENTITY blocklvl "fb:cite|fb:image[parent::fb:section]|fb:p[parent::fb:section]|fb:poem|fb:table|fb:subtitle|fb:epigraph|fb:title|fb:empty-line">
+	<!ENTITY blocklvl "fb:image[parent::fb:section]|fb:p[parent::fb:section]|fb:poem|fb:table|fb:subtitle|fb:title|fb:empty-line">
 ]>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink"
 	xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0"
@@ -43,6 +43,13 @@
 	<xsl:template match="fb:section[parent::fb:body[@name='notes' and &blocklvl;]]
 	|
 	fb:section[ancestor-or-self::fb:body[@name='notes'] and not(ancestor-or-self::fb:section[parent::fb:body[@name='notes']]/preceding-sibling::fb:section)]"/>
+
+	<!-- this is a hack for semi-block "cite" tag - ugly, but works for now -->
+	<xsl:template match="fb:cite|fb:epigraph|fb:annotation">
+		<xsl:text>{chars:0,t:"</xsl:text><xsl:value-of select="name(.)"/><xsl:text>",c:[&#10;</xsl:text>
+		<xsl:apply-templates select="*"/>
+		<xsl:text>&#10;{chars:0,cite]},&#10;</xsl:text>
+	</xsl:template>
 
 	<xsl:template match="fb:section|fb:body">
 		<xsl:text>&gt;&gt;&gt;</xsl:text>

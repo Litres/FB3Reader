@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE XSL [
 	<!ENTITY nohyph "ancestor-or-self::fb:cite|ancestor-or-self::fb:poem|ancestor-or-self::fb:subtitle|ancestor-or-self::fb:epigraph|ancestor-or-self::fb:title">
-	<!ENTITY blocklvl "fb:image[parent::fb:section]|fb:p[parent::fb:section]|fb:poem|fb:table|fb:subtitle|fb:title|fb:empty-line">
+	<!ENTITY blocklvl "fb:image[parent::fb:section or parent::fb:body]|fb:v|fb:p[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]|fb:table|fb:subtitle[parent::fb:section or parent::fb:cite or parent::fb:annotation]|fb:title|fb:empty-line[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]">
+	<!ENTITY semiblock "fb:cite|fb:epigraph|fb:annotation|fb:poem|fb:stanza">
 ]>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink"
 	xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0"
@@ -29,12 +30,16 @@
 <!--	<![CDATA[var elapsed = new Date().getTime() - start;document.write(elapsed+'ms to load data');</script></body></html>]]>-->
 	</xsl:template>
 
-	<xsl:template name="tag2js">t:"<xsl:value-of select="name(.)"/>",xp:[<xsl:call-template name="reverse_id"
+	<xsl:template name="tag2js"><xsl:param name="footnote"/>t:"<xsl:value-of select="name(.)"/>",xp:[<xsl:call-template name="reverse_id"
 		/>]<xsl:if test="@id">,i:"<xsl:value-of select="@id"/>"</xsl:if><xsl:if test="@style and @style != ''">,nc:"<xsl:value-of
-		select="@style"/>"</xsl:if><xsl:if test="*|text()">,c:[<xsl:apply-templates/>]</xsl:if><xsl:if test="self::fb:image">,s:"<xsl:value-of select="fb2js:GetImgID(substring-after(@xlink:href,'#'))"
+		select="@style"/>"</xsl:if><xsl:if test="*|text()">,c:[<xsl:choose>
+			<xsl:when test="$footnote &gt; 0"><xsl:apply-templates mode="footnote"/></xsl:when>
+			<xsl:otherwise><xsl:apply-templates/></xsl:otherwise>
+		</xsl:choose>]</xsl:if><xsl:if test="self::fb:image">,s:"<xsl:value-of select="fb2js:GetImgID(substring-after(@xlink:href,'#'))"
 		/>",w:<xsl:value-of select="fb2js:GetImgW(substring-after(@xlink:href,'#'))"/>,h:<xsl:value-of select="fb2js:GetImgH(substring-after(@xlink:href,'#'))"/></xsl:if></xsl:template>
 	<xsl:template match="*">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
-	<xsl:template match="&blocklvl;" mode="footnote">{<xsl:call-template name="tag2js"/>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
+	<xsl:template match="*" mode="footnote">{<xsl:call-template name="tag2js"><xsl:with-param name="footnote">1</xsl:with-param></xsl:call-template>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
+	<xsl:template match="&blocklvl;|&semiblock;" mode="footnote">{<xsl:call-template name="tag2js"><xsl:with-param name="footnote">1</xsl:with-param></xsl:call-template>}<xsl:if test="position()!=last()">,</xsl:if></xsl:template>
 	<xsl:template match="fb:section" mode="footnote">{t:"footnote",xp:[<xsl:call-template name="reverse_id"
 		/>],c:[<xsl:apply-templates mode="footnote"/>]}</xsl:template>
 
@@ -45,8 +50,8 @@
 	fb:section[ancestor-or-self::fb:body[@name='notes'] and not(ancestor-or-self::fb:section[parent::fb:body[@name='notes']]/preceding-sibling::fb:section)]"/>
 
 	<!-- this is a hack for semi-block "cite" tag - ugly, but works for now -->
-	<xsl:template match="fb:cite|fb:epigraph|fb:annotation">
-		<xsl:text>{chars:0,t:"</xsl:text><xsl:value-of select="name(.)"/><xsl:text>",c:[&#10;</xsl:text>
+	<xsl:template match="&semiblock;">
+		<xsl:text>{chars:0,type:"semiblock",t:"</xsl:text><xsl:value-of select="name(.)"/>"<xsl:if test="@id">,i:"<xsl:value-of select="@id"/>"</xsl:if><xsl:text>,c:[&#10;</xsl:text>
 		<xsl:apply-templates select="*"/>
 		<xsl:text>&#10;{chars:0,cite]},&#10;</xsl:text>
 	</xsl:template>
@@ -86,6 +91,7 @@
 		<xsl:if test="position()!=last()">,</xsl:if>
 	</xsl:template>
 
+<xsl:template match="text()" mode="footnote"><xsl:apply-templates select="."/><xsl:if test="position()!=last()">,</xsl:if></xsl:template>
 <xsl:template match="text()">
 	<xsl:variable name="NeedHyph">
 		<xsl:choose>

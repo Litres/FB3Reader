@@ -148,13 +148,16 @@ my $NoCut=0;
 for my $Line (@JSonArr) {
 	if ($Line =~ s/\{chars:(\d+)\,/{/){
 		$PageStack += $1;
-		if ($Line =~ /\{t:"(cite|annotation|epigraph)"/){
-			$NoCut = 1;
+		if ($Line =~ s/\{type:"semiblock",/{/){
+			$NoCut++;
+			if ($Line =~ /",i:"(\w+)"/){
+				$HrefHash{ $1 } = $BlockN;
+			}
 		} else {
 			if ($Line =~ s/\{cite\]\}/]}/){
 				# Ugly hack, do not know how to do it right now
 				$DataToWrite[$#DataToWrite] =~ s/,$//;
-				$NoCut = 0;
+				$NoCut--;
 			} else {
 				my $jsonstr = $Line;
 				$jsonstr =~ s/,\s*$//s;
@@ -265,9 +268,9 @@ sub FlushFile{
 	}
 	if (exists($NeedPatch{$FileN})){
 		$NeedPatch{$FileN}->{d} = $datastr;
+		$NeedPatch{$FileN}->{N} = $FileN;
 	} else {
-		print  $outfile $datastr;
-		close  $outfile;
+		WriteFinalJSONAnd($datastr,$outfile,$FileN);
 	}
 	@DataToWrite=();
 	$Start = $BlockN + 1;
@@ -283,9 +286,25 @@ sub PatchFiles{
 				die "[ERR] broken link '#$id'";
 			}
 		}
-		print {$file->{f}} $file->{d};
-		close $file->{d};
+		WriteFinalJSONAnd($file->{d},$file->{f},$file->{N});
 	}
+}
+
+sub WriteFinalJSONAnd {
+	my $JSON = shift;
+	my $File = shift;
+	my $FileID = shift;
+
+	# Validate final file as a JSON first
+	my $jdata;
+	eval { $jdata = $JSON };
+	if ($@) {
+		# хрень кака-то а не json
+		die "$FileID broken:\n$@";
+	}
+	print $File $JSON;
+
+	close $File;
 }
 
 sub DumpTOC{

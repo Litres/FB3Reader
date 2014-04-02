@@ -193,10 +193,13 @@ for my $Line (@JSonArr) {
 			$FileN++;
 		}
 		$BlockN++;
-	} elsif ($Line =~ />>>(.*)/){
+	} elsif ($Line =~ />>>( \[(\w+)\])?(.*)/){
 		my $NewNode = {s=>$BlockN, parent=>$TOC};
-		if ($1){
-			$NewNode->{t} = $1;
+		if ($2){
+			$HrefHash{ $2 } = $BlockN;
+		}
+		if ($3){
+			$NewNode->{t} = $2;
 		}
 		push @{$TOC->{c}},$NewNode;
 		$TOC = $NewNode;
@@ -259,7 +262,7 @@ sub FlushFile{
 		unless ($id){
 			# непонятная ссылка, пропустим
 		} elsif (exists($HrefHash{$id})) {
-			$datastr =~ s/(hr:\s*\[)\s*"#$id"\s*(\])/$1$HrefHash{$id}$2/gos;
+			$datastr =~ s/(hr:\s*\[)\s*"#$id"\s*(\])/$1$HrefHash{$id}$2/gs;
 			#warn "[OK] $id => ".$HrefHash{$id};
 		} else {
 			$NeedPatch{$FileN} ||= {f => $outfile, hr => {}};
@@ -280,7 +283,7 @@ sub PatchFiles{
 	for my $file (values %NeedPatch){
 		for my $id (keys %{ $file->{hr} }){
 			if (exists($HrefHash{$id})) {
-				$file->{d} =~ s/(hr:\s*\[)\s*"#$id"\s*(\])/$1$HrefHash{$id}$2/gos;
+				$file->{d} =~ s/(hr:\s*\[)\s*"#$id"\s*(\])/$1$HrefHash{$id}$2/gs;
 				#warn "[OK] $id => ".$HrefHash{$id};
 			} else {
 				die "[ERR] broken link '#$id'";

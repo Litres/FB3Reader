@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE XSL [
 	<!ENTITY nohyph "ancestor-or-self::fb:cite|ancestor-or-self::fb:poem|ancestor-or-self::fb:subtitle|ancestor-or-self::fb:epigraph|ancestor-or-self::fb:title">
-	<!ENTITY blocklvl "fb:image[parent::fb:section or parent::fb:body]|fb:v|fb:p[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]|fb:table|fb:subtitle[parent::fb:section or parent::fb:cite or parent::fb:annotation]|fb:title|fb:empty-line[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]">
+	<!ENTITY blocklvl "fb:image[parent::fb:section or parent::fb:body]|fb:v|fb:p[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]|fb:table|fb:subtitle[parent::fb:section or parent::fb:cite or parent::fb:stanza or parent::fb:annotation]|fb:title|fb:empty-line[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]">
 	<!ENTITY semiblock "fb:cite|fb:epigraph|fb:annotation|fb:poem|fb:stanza">
 ]>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -45,7 +45,7 @@
 
 	<xsl:template match="&blocklvl;">{chars:<xsl:value-of select="string-length(.)"/>,<xsl:call-template name="tag2js"/>},<xsl:text >&#010;</xsl:text></xsl:template>
 
-	<xsl:template match="fb:section[parent::fb:body[@name='notes' and &blocklvl;]]
+	<xsl:template match="fb:section[parent::fb:body[@name='notes'] and not(fb:section)]
 	|
 	fb:section[ancestor-or-self::fb:body[@name='notes'] and not(ancestor-or-self::fb:section[parent::fb:body[@name='notes']]/preceding-sibling::fb:section)]"/>
 
@@ -58,7 +58,8 @@
 
 	<xsl:template match="fb:section|fb:body">
 		<xsl:text>&gt;&gt;&gt;</xsl:text>
-		<xsl:if test="@name != 'notes'">
+		<xsl:if test="@id"> [<xsl:value-of select="@id"/>]</xsl:if>
+		<xsl:if test="not(@name = 'notes')">
 			<xsl:for-each select="fb:title">
 				<xsl:for-each select="fb:p">
 					<xsl:value-of select="fb2js:Escape(.)"/><xsl:if test="position()!=last()"><xsl:text> </xsl:text></xsl:if>

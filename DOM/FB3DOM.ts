@@ -105,7 +105,7 @@ module FB3DOM {
 				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback));
 				for (var I = 0; I < MissingChunks.length; I++) {
 					if (!this.DataChunks[MissingChunks[I]].loaded) {
-						var AjRequest = this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]),
+						this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]),
 							(Data: any, CustomData?: any) => this.OnChunkLoaded(Data, CustomData),
 							this.Progressor, { ChunkN: MissingChunks[I]});
 						this.DataChunks[MissingChunks[I]].loaded = 1;

@@ -123,6 +123,8 @@ var FB3DOM;
 
             if (Data.xp) {
                 this.XPath = this.Data.xp;
+            } else {
+                this.XPath = null;
             }
 
             this.Childs = new Array();

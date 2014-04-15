@@ -84,9 +84,13 @@ module FB3Reader {
 			this.BookStyleNotesTemporaryOff = false;
 			this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
 			this.LastSavePercent = 0;
-			this.CurStartPos = [1];
+			this.CurStartPos = [1458];
 
 			this.IdleOff();
+		}
+
+		public GoToExtXPath(XPath: FB3Bookmarks.IXPath): void {
+			alert("not ready");
 		}
 
 		public Init(): void {
@@ -366,7 +370,7 @@ module FB3Reader {
 		public PageForward() {
 			clearTimeout(this.MoveTimeoutID);
 			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
-				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) { // We know have many pages we have so we can check if the next one exists
+				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) { // We know how many pages we have so we can check if the next one exists
 					this.GoTOPage(this.CurStartPage + this.NColumns);
 				} else if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < this.CurStartPage + this.NColumns) {
 					return;
@@ -487,12 +491,11 @@ module FB3Reader {
 							this.BackgroundRenderFrame.PagesToRender[I] = { CacheAs: PageToPrerender.CacheAs + I + 1}
 						}
 
-						var Range: FB3DOM.IRange;
-						Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
+						this.BackgroundRenderFrame.WholeRangeToRender = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
 						this.FB3DOM.GetHTMLAsync(this.HyphON,
 							this.BookStyleNotes,
-							RangeClone(Range),
+							RangeClone(this.BackgroundRenderFrame.WholeRangeToRender),
 							this.BackgroundRenderFrame.ID + '_',
 							this.BackgroundRenderFrame.ViewPortW,
 							this.BackgroundRenderFrame.ViewPortH,

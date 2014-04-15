@@ -59,10 +59,14 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
             this.LastSavePercent = 0;
-            this.CurStartPos = [1];
+            this.CurStartPos = [1458];
 
             this.IdleOff();
         }
+        Reader.prototype.GoToExtXPath = function (XPath) {
+            alert("not ready");
+        };
+
         Reader.prototype.Init = function () {
             var _this = this;
             this.PrepareCanvas();
@@ -475,10 +479,9 @@ var FB3Reader;
                             this.BackgroundRenderFrame.PagesToRender[I] = { CacheAs: PageToPrerender.CacheAs + I + 1 };
                         }
 
-                        var Range;
-                        Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
+                        this.BackgroundRenderFrame.WholeRangeToRender = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
-                        this.FB3DOM.GetHTMLAsync(this.HyphON, this.BookStyleNotes, RangeClone(Range), this.BackgroundRenderFrame.ID + '_', this.BackgroundRenderFrame.ViewPortW, this.BackgroundRenderFrame.ViewPortH, function (PageData) {
+                        this.FB3DOM.GetHTMLAsync(this.HyphON, this.BookStyleNotes, RangeClone(this.BackgroundRenderFrame.WholeRangeToRender), this.BackgroundRenderFrame.ID + '_', this.BackgroundRenderFrame.ViewPortW, this.BackgroundRenderFrame.ViewPortH, function (PageData) {
                             _this.IdleAction = 'fill_page';
                             _this.IdleGo(PageData);
                         });

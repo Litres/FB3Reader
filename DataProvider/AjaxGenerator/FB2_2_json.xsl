@@ -51,8 +51,8 @@
 
 	<!-- this is a hack for semi-block "cite" tag - ugly, but works for now -->
 	<xsl:template match="&semiblock;">
-		<xsl:text>{chars:0,type:"semiblock",t:"</xsl:text><xsl:value-of select="name(.)"/>"<xsl:if test="@id">,i:"<xsl:value-of select="@id"/>"</xsl:if>xp:[<xsl:call-template name="reverse_id"
-		/>],<xsl:text>,c:[&#10;</xsl:text>
+		<xsl:text>{chars:0,type:"semiblock",t:"</xsl:text><xsl:value-of select="name(.)"/>"<xsl:if test="@id">,i:"<xsl:value-of select="@id"/>"</xsl:if>,xp:[<xsl:call-template name="reverse_id"
+		/>]<xsl:text>,c:[&#10;</xsl:text>
 		<xsl:apply-templates select="*"/>
 		<xsl:text>&#10;{chars:0,cite]},&#10;</xsl:text>
 	</xsl:template>

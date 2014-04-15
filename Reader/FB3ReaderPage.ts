@@ -119,6 +119,7 @@ module FB3ReaderPage {
 		private FalloutState: IFalloutState;
 		private QuickFallautState: IQuickFallautState;
 		private RenderBreakerTimeout: number;
+		public WholeRangeToRender: FB3DOM.IRange; // Range for currently rendered with FallOut page
 		public ThreadsRunning: number;
 
 		public ViewPortW: number;
@@ -244,9 +245,8 @@ module FB3ReaderPage {
 			this.RenderInstr = PagesToRender.shift();
 			this.PagesToRender = PagesToRender;
 
-			var Range: FB3DOM.IRange;
 			if (this.RenderInstr.Range) { // Exact fragment (must be a cache?)
-				Range = {
+				this.WholeRangeToRender = {
 					From: this.RenderInstr.Range.From.slice(0),
 					To: this.RenderInstr.Range.To.slice(0)
 				};
@@ -260,8 +260,8 @@ module FB3ReaderPage {
 				//  |d eeeee|<if page cut here - error>               |d  eee-| << this hyphen fits ok, next will not
 				//  |-ee    |<< this hyphen must be the               |eeee   | << this tail bring excess part down
 				//              6-th char, so "eeeee" would NOT fit
-				if (Range.To[Range.To.length - 1]) {
-					Range.To[Range.To.length - 1]++;
+				if (this.WholeRangeToRender.To[this.WholeRangeToRender.To.length - 1]) {
+					this.WholeRangeToRender.To[this.WholeRangeToRender.To.length - 1]++;
 				} else {
 					//while (Addr.length && Addr[Addr.length - 1] == 0) {
 					//	Addr.pop();
@@ -273,12 +273,12 @@ module FB3ReaderPage {
 					this.RenderInstr.Start = [0];
 				} // Start point defined
 
-				Range = this.DefaultRangeApply(this.RenderInstr);
+				this.WholeRangeToRender = this.DefaultRangeApply(this.RenderInstr);
 			}
 
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON,
 				this.FBReader.BookStyleNotes,
-				FB3Reader.RangeClone(Range),
+				FB3Reader.RangeClone(this.WholeRangeToRender),
 				this.ID + '_',
 				this.ViewPortW,
 				this.ViewPortH,
@@ -384,8 +384,12 @@ module FB3ReaderPage {
 					this.RenderInstr.Range = null;
 					this.NotesElement.Node.innerHTML = '';
 					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
-//					this.FBReader.IdleOff();
+					//					this.FBReader.IdleOff();
 					return;
+				} else if (FallOut.FallOut[0] == this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+					// EOF baby!
+					//this.FBReader.IdleOn();
+					//return;
 				} else {
 					// That's it - no way to recover. We die now, later we will make some fix here
 					this.FBReader.Site.Alert('We can not fit the text into the page!');
@@ -487,7 +491,7 @@ module FB3ReaderPage {
 		private FalloutConsumeNext(FallOut: IFallOut) {
 
 			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
-			if (FallOut.EndReached) {
+			if (FallOut.EndReached || FallOut.FallOut[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
 				var NextPageRange = <FB3DOM.IRange> {};
 				NextPageRange.From = this.QuickFallautState.PrevTo.slice(0);
 
@@ -506,11 +510,12 @@ module FB3ReaderPage {
 					if (this.PagesToRender[this.QuickFallautState.QuickFallout].CacheAs !== undefined) {
 						this.FBReader.StoreCachedPage(this.PagesToRender[this.QuickFallautState.QuickFallout]);
 					}
-					if (this.QuickFallautState.QuickFallout < this.PagesToRender.length - 1) {
+					if (FallOut.EndReached && this.QuickFallautState.QuickFallout < this.PagesToRender.length - 1) {
 						this.QuickFallautState.QuickFallout++;
 						var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
 							- this.Element.MarginTop - this.Element.MarginBottom;
-						if (this.QuickFallautState.RealPageSize > TestHeight) {
+						if (this.QuickFallautState.RealPageSize > TestHeight
+							|| this.WholeRangeToRender.To[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
 							this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
 							//this.FallOut();
 //							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
@@ -521,10 +526,7 @@ module FB3ReaderPage {
 								this.FallOut();
 							}, SemiSleepTimeout);
 							return; // should be here to make ApplyPageMetrics work
-						} else {
-							//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Short page');
 						}
-
 					} else {
 						if (!this.PagesToRender.length) {
 							this.FBReader.IdleOn();

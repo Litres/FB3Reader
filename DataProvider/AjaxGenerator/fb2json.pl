@@ -192,8 +192,8 @@ for my $Line (@JSonArr) {
 			$PageStack -= $PartLimit;
 			$FileN++;
 		}
-		$BlockN++;
-	} elsif ($Line =~ />>>( \[(\w+)\])?(.*)/){
+		$BlockN++ unless $NoCut;
+	} elsif ($Line =~ />>>( \[([\w-]+)\])?(.*)/){
 		my $NewNode = {s=>$BlockN, parent=>$TOC};
 		if ($2){
 			$HrefHash{ $2 } = $BlockN;

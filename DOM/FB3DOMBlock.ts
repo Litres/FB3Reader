@@ -39,7 +39,7 @@ module FB3DOM {
 			this.Chars = this.text.replace('\u00AD', '&shy;').length;
 			//			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
-			if (Parent) {
+			if (Parent && Parent.XPath) {
 				this.XPath = Parent.XPath.slice(0);
 				this.XPath.push(NodeN);
 				this.XPath.push(Chars);

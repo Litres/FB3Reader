@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE XSL [
 	<!ENTITY nohyph "ancestor-or-self::fb:cite|ancestor-or-self::fb:poem|ancestor-or-self::fb:subtitle|ancestor-or-self::fb:epigraph|ancestor-or-self::fb:title">
-	<!ENTITY blocklvl "fb:image[parent::fb:section or parent::fb:body]|fb:v|fb:p[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]|fb:table|fb:subtitle[parent::fb:section or parent::fb:cite or parent::fb:stanza or parent::fb:annotation]|fb:title|fb:empty-line[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]">
+	<!ENTITY blocklvl "fb:image[parent::fb:section or parent::fb:body]|fb:v|fb:p[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]|fb:table|fb:subtitle[parent::fb:section or parent::fb:cite or parent::fb:stanza or parent::fb:annotation]|fb:title|fb:empty-line[parent::fb:section or parent::fb:cite or parent::fb:epigraph or parent::fb:annotation]|fb:text-author">
 	<!ENTITY semiblock "fb:cite|fb:epigraph|fb:annotation|fb:poem|fb:stanza">
 ]>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink"

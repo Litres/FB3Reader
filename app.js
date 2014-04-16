@@ -36,6 +36,7 @@ window.onload = function () {
 var MarkupProgress;
 var NativeNote;
 var RoundedNote;
+var DialogShown;
 
 var TouchMoving = false;
 var TouchData;
@@ -60,34 +61,58 @@ function TapEnd(e) {
     }
 }
 
+function MouseMove(Evt) {
+    if (NativeNote && !MenuShown && NativeNote.Group == 3 && !DialogShown) {
+        var newNote = NativeNote.RoundClone(false);
+        if (!newNote.ExtendToXY(Evt.pageX, Evt.pageY)) {
+            return undefined;
+        } else {
+            NativeNote.Detach();
+            NativeNote = newNote;
+            BookmarksProcessor.AddBookmark(NativeNote);
+            AFB3Reader.Redraw();
+        }
+    }
+}
+
 function InitNote(NoteType) {
     if (NoteType == 'note') {
         MarkupProgress = 'selectstart';
+        NativeNote.Group = 3;
     } else {
         RoundedNote = undefined;
         NativeNote = NativeNote.RoundClone(true);
         NativeNote.Group = 1;
         document.getElementById('wholepara').disabled = true;
         document.getElementById('wholepara').checked = true;
+        BookmarksProcessor.AddBookmark(NativeNote);
+        AFB3Reader.Redraw();
         ShowDialog(NativeNote);
     }
     HideMenu();
 }
 
 function FinishNote() {
+    NativeNote.Detach();
     HideMenu();
     NativeNote.Group = 3;
     ShowDialog(NativeNote);
 }
 
-function CancelNote() {
+function CancelNote(NoDestroy) {
+    if (!NoDestroy) {
+        NativeNote.Detach();
+    }
     MarkupProgress = undefined;
     NativeNote = undefined;
     HideMenu();
+    AFB3Reader.Redraw();
 }
 
 var MenuShown;
 function ShowMenu(e) {
+    if (NativeNote)
+        NativeNote.Detach();
     HideDialog();
     if (!NativeNote) {
         NativeNote = new FB3Bookmarks.Bookmark(BookmarksProcessor);
@@ -127,11 +152,12 @@ function HideMenu() {
 }
 
 function FinishAll() {
-    CancelNote();
+    CancelNote(true);
     HideDialog();
 }
 
 function DestroyBookmark() {
+    NativeNote.Detach();
     DialogBookmark.Detach();
     FinishAll();
     AFB3Reader.Redraw();
@@ -146,7 +172,6 @@ var DialogBookmark;
 function ShowDialog(Bookmark) {
     DialogBookmark = Bookmark;
     BookmarksProcessor.AddBookmark(DialogBookmark);
-    AFB3Reader.Redraw();
     document.getElementById('FromXPath').innerHTML = '/' + DialogBookmark.XStart.join('/');
     document.getElementById('ToXPath').innerHTML = '/' + DialogBookmark.XEnd.join('/');
     document.getElementById('notetitle').value = DialogBookmark.Title;
@@ -155,6 +180,7 @@ function ShowDialog(Bookmark) {
     document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
     document.getElementById('sellwhole').style.display = Bookmark.ID ? 'none' : 'block';
     document.getElementById('notedialog').style.display = 'block';
+    DialogShown = true;
 }
 
 function RoundNoteUp() {
@@ -174,6 +200,7 @@ function HideDialog() {
     document.getElementById('notedialog').style.display = 'none';
     document.getElementById('wholepara').checked = false;
     document.getElementById('wholepara').disabled = false;
+    DialogShown = false;
 }
 
 function ShowPosition() {

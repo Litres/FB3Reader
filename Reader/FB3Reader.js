@@ -59,7 +59,7 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
             this.LastSavePercent = 0;
-            this.CurStartPos = [737];
+            this.CurStartPos = [2];
 
             this.IdleOff();
         }

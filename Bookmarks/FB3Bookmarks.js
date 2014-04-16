@@ -52,7 +52,7 @@ var FB3Bookmarks;
 
         Bookmark.prototype.ExtendToXY = function (X, Y) {
             var BaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-            if (BaseTo) {
+            if (BaseTo && BaseTo.length > 1) {
                 this.Range.To = BaseTo;
                 this.GetDataFromText();
                 return true;
@@ -94,7 +94,7 @@ var FB3Bookmarks;
                 PosInBlock = Adress[Adress.length - 1];
                 Adress.pop();
             }
-            while (PosInBlock < Block.Childs.length && !Block.Childs[PosInBlock].Childs && !Block.Childs[PosInBlock].text.match(/\s$/)) {
+            while (PosInBlock < Block.Childs.length - 1 && !Block.Childs[PosInBlock].Childs && !Block.Childs[PosInBlock].text.match(/\s$/)) {
                 PosInBlock++;
             }
             Adress.push(PosInBlock);
@@ -107,8 +107,10 @@ var FB3Bookmarks;
                 PosInBlock = Adress[Adress.length - 1];
                 Adress.pop();
             }
-            PosInBlock++;
-            while (PosInBlock >= 0 && !Block.Childs[PosInBlock - 1].Childs && !Block.Childs[PosInBlock - 1].text.match(/\s$/)) {
+            if (PosInBlock < Block.Childs.length - 2) {
+                PosInBlock++;
+            }
+            while (PosInBlock > 0 && !Block.Childs[PosInBlock - 1].Childs && !Block.Childs[PosInBlock - 1].text.match(/\s$/)) {
                 PosInBlock--;
             }
             Adress.push(PosInBlock);

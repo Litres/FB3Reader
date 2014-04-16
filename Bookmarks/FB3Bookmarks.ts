@@ -68,7 +68,7 @@ module FB3Bookmarks {
 
 		public ExtendToXY(X: number, Y: number): boolean {
 			var BaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-			if (BaseTo) {
+			if (BaseTo && BaseTo.length > 1) {
 				this.Range.To = BaseTo;
 				this.GetDataFromText();
 				return true;
@@ -110,7 +110,7 @@ module FB3Bookmarks {
 				PosInBlock = Adress[Adress.length - 1];
 				Adress.pop();
 			}
-			while (PosInBlock < Block.Childs.length && !Block.Childs[PosInBlock].Childs && !Block.Childs[PosInBlock].text.match(/\s$/)) {
+			while (PosInBlock < Block.Childs.length - 1 && !Block.Childs[PosInBlock].Childs && !Block.Childs[PosInBlock].text.match(/\s$/)) {
 				PosInBlock++;
 			}
 			Adress.push(PosInBlock);
@@ -123,8 +123,10 @@ module FB3Bookmarks {
 				PosInBlock = Adress[Adress.length - 1];
 				Adress.pop();
 			}
-			PosInBlock++;
-			while (PosInBlock >= 0 && !Block.Childs[PosInBlock-1].Childs && !Block.Childs[PosInBlock-1].text.match(/\s$/)) {
+			if (PosInBlock < Block.Childs.length - 2) {
+				PosInBlock++;
+			}
+			while (PosInBlock > 0 && !Block.Childs[PosInBlock-1].Childs && !Block.Childs[PosInBlock-1].text.match(/\s$/)) {
 				PosInBlock--;
 			}
 			Adress.push(PosInBlock);

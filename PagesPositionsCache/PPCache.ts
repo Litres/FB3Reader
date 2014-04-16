@@ -1,7 +1,7 @@
 /// <reference path="PPCacheHead.ts" />
 
 module FB3PPCache {
-	var SkipCache = true; // For debug purposes
+	var SkipCache = false; // For debug purposes
 	interface IPageRenderInstructionsCacheEntry {
 		Time: Date;
 		Key: string;

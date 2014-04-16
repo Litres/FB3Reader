@@ -132,7 +132,12 @@ var FB3DOM;
         };
 
         DOM.prototype.GetXPathFromPos = function (Position) {
-            return this.GetElementByAddr(Position).XPath;
+            var Element = this.GetElementByAddr(Position);
+            if (Element) {
+                return Element.XPath;
+            } else {
+                return undefined;
+            }
         };
 
         DOM.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {

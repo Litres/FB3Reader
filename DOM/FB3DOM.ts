@@ -132,7 +132,12 @@ module FB3DOM {
 		}
 
 		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath {
-			return this.GetElementByAddr(Position).XPath;
+			var Element = this.GetElementByAddr(Position);
+			if (Element) {
+				return Element.XPath;
+			} else {
+				return undefined;
+			}
 		}
 
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {

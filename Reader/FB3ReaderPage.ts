@@ -386,10 +386,6 @@ module FB3ReaderPage {
 					this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
 					//					this.FBReader.IdleOff();
 					return;
-				} else if (FallOut.FallOut[0] == this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
-					// EOF baby!
-					//this.FBReader.IdleOn();
-					//return;
 				} else {
 					// That's it - no way to recover. We die now, later we will make some fix here
 					this.FBReader.Site.Alert('We can not fit the text into the page!');
@@ -491,7 +487,8 @@ module FB3ReaderPage {
 		private FalloutConsumeNext(FallOut: IFallOut) {
 
 			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
-			if (FallOut.EndReached || FallOut.FallOut[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+			if (FallOut.EndReached
+				|| FallOut.FallOut[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e && !this.Next) {
 				var NextPageRange = <FB3DOM.IRange> {};
 				NextPageRange.From = this.QuickFallautState.PrevTo.slice(0);
 

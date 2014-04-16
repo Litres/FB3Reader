@@ -84,7 +84,7 @@ module FB3Reader {
 			this.BookStyleNotesTemporaryOff = false;
 			this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
 			this.LastSavePercent = 0;
-			this.CurStartPos = [1458];
+			this.CurStartPos = [737];
 
 			this.IdleOff();
 		}
@@ -290,7 +290,7 @@ module FB3Reader {
 		public GetCachedPage(NewPos: IPosition): number {
 			for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
 				var Pos = this.PagesPositionsCache.Get(I).Range;
-				if (PosCompare(Pos.To, NewPos) > 0) {
+				if (PosCompare(Pos.To, NewPos) >= 0) {
 					return I;
 				}
 			}
@@ -386,7 +386,8 @@ module FB3Reader {
 				if (!PageToView.Ready) {
 					if (PageToView.Pending) {
 						this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
-					} else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1) {
+					} else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1
+						|| this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
 						return; // EOF reached, the book is over
 					} else {
 						this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);

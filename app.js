@@ -23,7 +23,7 @@ window.onload = function () {
     BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
     AFB3PPCache = new FB3PPCache.PPCache();
     AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
-    AFB3Reader.NColumns = 2;
+    AFB3Reader.NColumns = 1;
     AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
     AFB3Reader.Init();
     window.addEventListener('resize', function () {

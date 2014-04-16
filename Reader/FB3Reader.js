@@ -59,7 +59,7 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
             this.LastSavePercent = 0;
-            this.CurStartPos = [1458];
+            this.CurStartPos = [737];
 
             this.IdleOff();
         }
@@ -269,7 +269,7 @@ var FB3Reader;
         Reader.prototype.GetCachedPage = function (NewPos) {
             for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
                 var Pos = this.PagesPositionsCache.Get(I).Range;
-                if (PosCompare(Pos.To, NewPos) > 0) {
+                if (PosCompare(Pos.To, NewPos) >= 0) {
                     return I;
                 }
             }
@@ -370,7 +370,7 @@ var FB3Reader;
                         this.MoveTimeoutID = setTimeout(function () {
                             _this.PageForward();
                         }, 50);
-                    } else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1) {
+                    } else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1 || this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
                         return;
                     } else {
                         this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);

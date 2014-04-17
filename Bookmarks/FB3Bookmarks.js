@@ -8,6 +8,7 @@ var FB3Bookmarks;
             this.FB3DOM.Bookmarks.push(this);
             this.ClassPrefix = 'my_';
             this.Bookmarks = new Array();
+            this.CurPos = new Bookmark(this);
         }
         LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
             this.Bookmarks.push(Bookmark);
@@ -23,9 +24,46 @@ var FB3Bookmarks;
 
         // fake methods below - todo to implement them
         LitResBookmarksProcessor.prototype.Load = function (ArtID, Callback) {
-            this.Ready = true; //fake
+            var _this = this;
+            this.LoadEndCallback = Callback;
+
+            // do some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
+            setTimeout(function () {
+                return _this.AfterTransferFromServerComplete();
+            }, 200); // for now we just fire it as it is
         };
+
+        LitResBookmarksProcessor.prototype.AfterTransferFromServerComplete = function (XML) {
+            this.ParseXML(XML);
+            this.LoadEndCallback(this);
+        };
+
+        LitResBookmarksProcessor.prototype.ParseXML = function (XML) {
+            // do some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
+        };
+
         LitResBookmarksProcessor.prototype.Store = function () {
+        };
+
+        LitResBookmarksProcessor.prototype.ApplyPosition = function () {
+            // If DOM.TOC not ready yet, we can't expand XPath for any way - we wait while Reader.LoadDone fire this
+            if (!this.FB3DOM.Ready) {
+                return;
+            }
+            this.Ready = true;
+            this.Reader.GoTO(this.CurPos.Range.From.slice(0));
+        };
+
+        LitResBookmarksProcessor.prototype.ReLoad = function (ArtID) {
+            var _this = this;
+            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
+            TemporaryNotes.Load(ArtID, function (Bookmarks) {
+                return _this.ReLoadComplete(Bookmarks);
+            });
+        };
+
+        LitResBookmarksProcessor.prototype.ReLoadComplete = function (TemporaryNotes) {
+            // merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
         };
         return LitResBookmarksProcessor;
     })();
@@ -34,9 +72,11 @@ var FB3Bookmarks;
     var Bookmark = (function () {
         function Bookmark(Owner) {
             this.Owner = Owner;
+            this.ID = this.MakeSelectionID();
             this.Group = 0;
             this.Class = 'default';
-            this.Range = { From: undefined, To: undefined };
+            this.Range = { From: [20], To: [0] };
+            this.XPathMappingReady = true;
         }
         Bookmark.prototype.InitFromXY = function (X, Y) {
             var BaseFrom = this.Owner.Reader.ElementAtXY(X, Y);
@@ -167,6 +207,81 @@ var FB3Bookmarks;
             RawText = RawText.replace(/\[(\/)?i[^>]*\]/, '<$1emphasis>');
             RawText = '<p>' + RawText.replace(/\n/, '</p><p>') + '</p>';
             return RawText;
+        };
+        Bookmark.prototype.MakeSelectionID = function () {
+            var MakeSelectionIDSub = function (chars, len) {
+                var text = '';
+                for (var i = 0; i < len; i++) {
+                    text += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return text;
+            };
+            var text = '', chars = 'ABCDEFabcdef0123456789';
+            text += MakeSelectionIDSub(chars, 8) + '-';
+            text += MakeSelectionIDSub(chars, 4) + '-';
+            text += MakeSelectionIDSub(chars, 4) + '-';
+            text += MakeSelectionIDSub(chars, 4) + '-';
+            text += MakeSelectionIDSub(chars, 12);
+            return text;
+        };
+
+        Bookmark.prototype.InitSyncXPathWithDOM = function () {
+            var _this = this;
+            this.XPathMappingReady = false;
+            this.RequiredChunks = this.ChunksRequired();
+            var ChunksToLoad = new Array();
+
+            for (var I = 0; I < this.RequiredChunks.length; I++) {
+                if (!this.Owner.FB3DOM.DataChunks[this.RequiredChunks[I]].loaded) {
+                    ChunksToLoad.push(this.RequiredChunks[I]);
+                }
+            }
+
+            // If there are missing chunks - we initiate loading for them
+            if (ChunksToLoad.length) {
+                this.Owner.FB3DOM.LoadChunks(ChunksToLoad, function () {
+                    return _this.DoSyncXPathWithDOM();
+                });
+            } else {
+                this.DoSyncXPathWithDOM();
+            }
+        };
+
+        Bookmark.prototype.DoSyncXPathWithDOM = function () {
+            var _this = this;
+            for (var I = 0; I < this.RequiredChunks.length; I++) {
+                if (this.Owner.FB3DOM.DataChunks[this.RequiredChunks[I]].loaded != 2) {
+                    // There is at least one chunk still being loaded - we will return later
+                    setTimeout(function () {
+                        return _this.DoSyncXPathWithDOM();
+                    }, 10);
+                    return;
+                }
+            }
+
+            // Ok, all chunks are here, now we need to map fb2 xpath to internal xpath
+            this.Range = {
+                From: this.Owner.FB3DOM.GetAddrByXPath(this.XStart),
+                To: this.Owner.FB3DOM.GetAddrByXPath(this.XEnd)
+            };
+        };
+
+        Bookmark.prototype.ChunksRequired = function () {
+            var Result = new Array();
+            Result[0] = this.XPChunk(this.XStart);
+            var EndChunk = this.XPChunk(this.XEnd);
+            if (EndChunk != Result[0]) {
+                Result.push(EndChunk);
+            }
+            return Result;
+        };
+
+        Bookmark.prototype.XPChunk = function (X) {
+            for (var I = 0; I < this.Owner.FB3DOM.DataChunks.length; I++) {
+                if (FB3Reader.PosCompare(X, this.Owner.FB3DOM.DataChunks[I].xps) <= 0) {
+                    return I;
+                }
+            }
         };
         return Bookmark;
     })();

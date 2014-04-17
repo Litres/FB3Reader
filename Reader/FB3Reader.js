@@ -59,7 +59,7 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
             this.LastSavePercent = 0;
-            this.CurStartPos = [2];
+            this.CurStartPos = [0];
 
             this.IdleOff();
         }
@@ -71,26 +71,13 @@ var FB3Reader;
             var _this = this;
             this.PrepareCanvas();
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
-                _this.LoadDone(1);
+                _this.Bookmarks.ApplyPosition();
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;
             this.Bookmarks.Load(this.ArtID, function () {
-                _this.LoadDone(2);
+                _this.Bookmarks.ApplyPosition();
             });
-        };
-
-        Reader.prototype.LoadDone = function (a) {
-            //			console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
-            var ReadPos;
-            if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-                if (this.Bookmarks && this.Bookmarks.CurPos) {
-                    ReadPos = this.Bookmarks.CurPos.Range.From.slice(0);
-                } else {
-                    ReadPos = this.CurStartPos.slice(0);
-                }
-                this.GoTO(ReadPos);
-            }
         };
 
         Reader.prototype.GoTO = function (NewPos) {

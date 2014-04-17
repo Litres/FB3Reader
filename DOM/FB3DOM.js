@@ -9,20 +9,34 @@ var __extends = this.__extends || function (d, b) {
 var FB3DOM;
 (function (_FB3DOM) {
     var AsyncLoadConsumer = (function () {
-        function AsyncLoadConsumer(FB3DOM, WaitedBlocks, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, OnDone) {
+        function AsyncLoadConsumer(FB3DOM, WaitedBlocks, OnGetDone, OnLoadDone, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH) {
+            var _this = this;
             this.FB3DOM = FB3DOM;
             this.WaitedBlocks = WaitedBlocks;
+            this.OnGetDone = OnGetDone;
+            this.OnLoadDone = OnLoadDone;
             this.HyphOn = HyphOn;
             this.BookStyleNotes = BookStyleNotes;
             this.Range = Range;
             this.IDPrefix = IDPrefix;
             this.ViewPortW = ViewPortW;
             this.ViewPortH = ViewPortH;
-            this.OnDone = OnDone;
+            for (var I = 0; I < this.WaitedBlocks.length; I++) {
+                if (!this.FB3DOM.DataChunks[this.WaitedBlocks[I]].loaded) {
+                    this.FB3DOM.DataProvider.Request(this.FB3DOM.ChunkUrl(this.WaitedBlocks[I]), function (Data, CustomData) {
+                        return _this.FB3DOM.OnChunkLoaded(Data, CustomData);
+                    }, this.FB3DOM.Progressor, { ChunkN: this.WaitedBlocks[I] });
+                    this.FB3DOM.DataChunks[this.WaitedBlocks[I]].loaded = 1;
+                }
+            }
         }
         AsyncLoadConsumer.prototype.BlockLoaded = function (N) {
             if (this.ImDone)
                 return false;
+            var I = this.WaitedBlocks.indexOf(N);
+            if (I != -1) {
+                this.WaitedBlocks.splice(I, 1);
+            }
             for (var I = 0; I < this.WaitedBlocks.length; I++) {
                 if (this.WaitedBlocks[I] == N)
                     this.WaitedBlocks.splice(I, 1);
@@ -31,7 +45,11 @@ var FB3DOM;
                 var PageData = new PageContainer();
                 var AllBookmarks = new Array();
                 var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
-                this.OnDone(PageData);
+                if (this.OnGetDone) {
+                    this.OnGetDone(PageData);
+                } else {
+                    this.OnLoadDone();
+                }
                 return true;
             } else {
                 return false;
@@ -96,23 +114,18 @@ var FB3DOM;
             this.Progressor.HourglassOff(this);
         };
         DOM.prototype.GetHTMLAsync = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback) {
-            var _this = this;
             var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
             if (MissingChunks.length == 0) {
                 var PageData = new PageContainer();
                 this.GetHTML(HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
                 Callback(PageData);
             } else {
-                this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback));
-                for (var I = 0; I < MissingChunks.length; I++) {
-                    if (!this.DataChunks[MissingChunks[I]].loaded) {
-                        this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]), function (Data, CustomData) {
-                            return _this.OnChunkLoaded(Data, CustomData);
-                        }, this.Progressor, { ChunkN: MissingChunks[I] });
-                        this.DataChunks[MissingChunks[I]].loaded = 1;
-                    }
-                }
+                this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, Callback, undefined, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH));
             }
+        };
+
+        DOM.prototype.LoadChunks = function (MissingChunks, Callback) {
+            this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, undefined, Callback));
         };
 
         DOM.prototype.ChunkUrl = function (N) {
@@ -129,6 +142,24 @@ var FB3DOM;
                 ResponcibleNode = ResponcibleNode.Childs[Position.shift()];
             }
             return ResponcibleNode;
+        };
+        DOM.prototype.GetAddrByXPath = function (XPath) {
+            var Node = this;
+            var I = 0;
+            while (I < Node.Childs.length) {
+                if (Node.Childs[I].XPath) {
+                    var PC = FB3Reader.PosCompare(XPath, Node.Childs[I].XPath);
+                    if (PC == 10 || PC == 0) {
+                        // This node is the exact xpath or the xpath points a bit above, be assume this is it
+                        return Node.Childs[I].Position();
+                    } else if (PC == 1) {
+                        Node = Node.Childs[I];
+                        I = 0;
+                        continue;
+                    }
+                }
+                I++;
+            }
         };
 
         DOM.prototype.GetXPathFromPos = function (Position) {

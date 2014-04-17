@@ -69,6 +69,16 @@ module FB3DOM {
 			}
 		}
 
+		public Position(): FB3Reader.IPosition {
+			var Node:IFB3Block = this;
+			var Result = new Array();
+			while (Node.Parent) {
+				Result.push(Node.ID);
+				Node = Node.Parent;
+			}
+			return Result;
+		}
+
 		public ArtID2URL(Chunk?: string): string {
 			return this.Parent.ArtID2URL(Chunk);
 		}

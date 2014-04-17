@@ -84,7 +84,6 @@ module FB3Reader {
 			this.BookStyleNotesTemporaryOff = false;
 			this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
 			this.LastSavePercent = 0;
-			this.CurStartPos = [2];
 
 			this.IdleOff();
 		}
@@ -95,25 +94,11 @@ module FB3Reader {
 
 		public Init(): void {
 			this.PrepareCanvas();
-			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.LoadDone(1) });
+			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.Bookmarks.ApplyPosition() });
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
-			this.Bookmarks.Load(this.ArtID, () => { this.LoadDone(2) } );
+			this.Bookmarks.Load(this.ArtID, () => { this.Bookmarks.ApplyPosition() } );
 		}
-
-		private LoadDone(a): void {
-//			console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
-			var ReadPos: IPosition;
-			if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-				if (this.Bookmarks && this.Bookmarks.CurPos) {
-					ReadPos = this.Bookmarks.CurPos.Range.From.slice(0);
-				} else {
-					ReadPos = this.CurStartPos.slice(0);
-				}
-				this.GoTO(ReadPos);
-			}
-		}
-
 
 		public GoTO(NewPos: IPosition) {
 			clearTimeout(this.MoveTimeoutID);

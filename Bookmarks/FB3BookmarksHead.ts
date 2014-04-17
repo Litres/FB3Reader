@@ -13,16 +13,17 @@ module FB3Bookmarks {
 		XStart: IXPath; // xpath for start point
 		XEnd: IXPath;		// xpath for end point
 		Group: number;
-		Class: string;
-		Title: string;
-		Note: InnerFB2;
+		Class?: string;
+		Title?: string;
+		Note?: InnerFB2;
 		Extract: InnerFB2;
 		RawText: string;
+		XPathMappingReady: boolean; // For server-loaded bookmarks, used to watch fb2xpath -> internal xpath mapping progress
 		ClassName(): string;		// css class name for selections of this type
 		InitFromXY(X: number, Y: number): boolean;
 		ExtendToXY(X: number, Y: number): boolean;
 		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
-		Detach():void; // removes itself from the parent.
+		Detach(): void; // removes itself from the parent.
 	}
 
 	export interface IBookmarks {
@@ -34,7 +35,9 @@ module FB3Bookmarks {
 		ClassPrefix: string;
 		AddBookmark(Bookmark: IBookmark): void;
 		DropBookmark(Bookmark: IBookmark): void;
-		Load(ArtID: string, Callback?: IBookmarksReadyCallback);
+		Load(ArtID: string, Callback?: IBookmarksReadyCallback);   // Loads bookmarks from the server
+		ReLoad(ArtID: string);	// Updates itself from the server (may get new current position)
+		ApplyPosition(): void;
 		Store(): void;
 	}
 

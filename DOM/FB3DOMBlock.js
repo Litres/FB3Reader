@@ -69,6 +69,16 @@ var FB3DOM;
             }
         };
 
+        FB3Text.prototype.Position = function () {
+            var Node = this;
+            var Result = new Array();
+            while (Node.Parent) {
+                Result.push(Node.ID);
+                Node = Node.Parent;
+            }
+            return Result;
+        };
+
         FB3Text.prototype.ArtID2URL = function (Chunk) {
             return this.Parent.ArtID2URL(Chunk);
         };

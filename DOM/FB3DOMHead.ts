@@ -12,6 +12,8 @@ module FB3DOM {
 		FootNotes: InnerHTML[];
 	}
 	export interface IDOMTextReadyCallback { (PageData: IPageContainer): void; }
+	export interface IChunkLoadedCallback { (): void }
+
 	export interface ITOC {				// Compact notation as we plan to transfer this over network, why create overload
 		t?: string;	// title
 		s: number;	// start root node N
@@ -49,6 +51,8 @@ module FB3DOM {
 		e: number;
 		url: string;
 		loaded: number; // 0 - not loaded, 1 - requested, 2 - loaded, available
+		xps: FB3Bookmarks.IXPath;  // native fb2 xpath for the chunk first element 
+		xpe: FB3Bookmarks.IXPath;  // same for the last one
 	}
 
 	export interface IFB3Block {
@@ -72,6 +76,7 @@ module FB3DOM {
 			ViewPortH: number,
 			PageData: IPageContainer,
 			Bookmarks: FB3Bookmarks.IBookmark[]);
+		Position(): FB3Reader.IPosition;
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -95,7 +100,11 @@ module FB3DOM {
 			ViewPortH: number,
 			Callback: IDOMTextReadyCallback): void;
 		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
+		GetAddrByXPath(XPath: FB3Bookmarks.IXPath): FB3Reader.IPosition;
 		GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath;
+		OnChunkLoaded(Data: IJSONBlock[], CustomData?: any): void;
+		ChunkUrl(N: number): string;
+		LoadChunks(MissingChunks: number[], Callback: IChunkLoadedCallback): void; // Sets the chunks to be loaded
 		GetHTML(HyphOn: boolean,
 			BookStyleNotes: boolean,
 			Range: IRange,

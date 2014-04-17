@@ -8,6 +8,10 @@ module FB3DOM {
 		private ImDone: boolean;
 		BlockLoaded(N: number): boolean {
 			if (this.ImDone) return false;
+			var I = this.WaitedBlocks.indexOf(N);
+			if (I != -1) {
+				this.WaitedBlocks.splice(I, 1);
+			}
 			for (var I = 0; I < this.WaitedBlocks.length; I++) {
 				if (this.WaitedBlocks[I] == N)
 					this.WaitedBlocks.splice(I,1);
@@ -16,7 +20,11 @@ module FB3DOM {
 				var PageData = new PageContainer();
 				var AllBookmarks = new Array();
 				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
-				this.OnDone(PageData);
+				if (this.OnGetDone) {
+					this.OnGetDone(PageData);
+				} else {
+					this.OnLoadDone();
+				}
 				return true;
 			} else {
 				return false;
@@ -24,13 +32,22 @@ module FB3DOM {
 		}
 		constructor(private FB3DOM: IFB3DOM,
 			private WaitedBlocks: number[],
-			private HyphOn: boolean,
-			private BookStyleNotes: boolean,
-			private Range: IRange,
-			private IDPrefix: string,
-			private ViewPortW: number,
-			private ViewPortH: number,
-			private OnDone: IDOMTextReadyCallback) {
+			private OnGetDone: IDOMTextReadyCallback,
+			private OnLoadDone: IChunkLoadedCallback,
+			private HyphOn?: boolean,
+			private BookStyleNotes?: boolean,
+			private Range?: IRange,
+			private IDPrefix?: string,
+			private ViewPortW?: number,
+			private ViewPortH?: number) {
+			for (var I = 0; I < this.WaitedBlocks.length; I++) {
+				if (!this.FB3DOM.DataChunks[this.WaitedBlocks[I]].loaded) {
+					this.FB3DOM.DataProvider.Request(this.FB3DOM.ChunkUrl(this.WaitedBlocks[I]),
+						(Data: any, CustomData?: any) => this.FB3DOM.OnChunkLoaded(Data, CustomData),
+						this.FB3DOM.Progressor, { ChunkN: this.WaitedBlocks[I] });
+					this.FB3DOM.DataChunks[this.WaitedBlocks[I]].loaded = 1;
+				}
+			}
 		}
 	}
 
@@ -102,17 +119,13 @@ module FB3DOM {
 				this.GetHTML(HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
 				Callback(PageData);
 			} else {
-				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback));
-				for (var I = 0; I < MissingChunks.length; I++) {
-					if (!this.DataChunks[MissingChunks[I]].loaded) {
-						this.DataProvider.Request(this.ChunkUrl(MissingChunks[I]),
-							(Data: any, CustomData?: any) => this.OnChunkLoaded(Data, CustomData),
-							this.Progressor, { ChunkN: MissingChunks[I]});
-						this.DataChunks[MissingChunks[I]].loaded = 1;
-					}
-				}
+				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, Callback, undefined, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH));
 			}
 			
+		}
+
+		public LoadChunks(MissingChunks: number[], Callback: IChunkLoadedCallback): void {
+			this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, undefined, Callback));
 		}
 
 		public ChunkUrl(N: number): string {
@@ -129,6 +142,24 @@ module FB3DOM {
 				ResponcibleNode = ResponcibleNode.Childs[Position.shift()];
 			}
 			return ResponcibleNode;
+		}
+		public GetAddrByXPath(XPath: FB3Bookmarks.IXPath): FB3Reader.IPosition {
+			var Node: IFB3Block = this;
+			var I = 0;
+			while (I < Node.Childs.length) {
+				if (Node.Childs[I].XPath){
+					var PC = FB3Reader.PosCompare(XPath, Node.Childs[I].XPath);
+					if (PC == 10 || PC == 0) {
+						// This node is the exact xpath or the xpath points a bit above, be assume this is it
+						return Node.Childs[I].Position();
+					} else if (PC == 1) {
+						Node = Node.Childs[I];
+						I = 0;
+						continue;
+					}
+				}
+				I++;
+			}
 		}
 
 		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath {
@@ -149,7 +180,7 @@ module FB3DOM {
 		}
 
 
-		private OnChunkLoaded(Data: Array<IJSONBlock>, CustomData?: any):void {
+		public OnChunkLoaded(Data: Array<IJSONBlock>, CustomData?: any):void {
 			
 			var LoadedChunk: number = CustomData.ChunkN;
 			var Shift = this.DataChunks[LoadedChunk].s;

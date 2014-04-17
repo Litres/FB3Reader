@@ -9,6 +9,7 @@ var FB3Bookmarks;
             this.ClassPrefix = 'my_';
             this.Bookmarks = new Array();
             this.CurPos = new Bookmark(this);
+            this.WaitForData = true;
         }
         LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
             this.Bookmarks.push(Bookmark);
@@ -22,24 +23,46 @@ var FB3Bookmarks;
             }
         };
 
-        // fake methods below - todo to implement them
         LitResBookmarksProcessor.prototype.Load = function (ArtID, Callback) {
             var _this = this;
             this.LoadEndCallback = Callback;
+            this.WaitForData = true;
 
-            // do some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
+            // todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
+            // for now we just fire it as it is, should fire after XML loaded
             setTimeout(function () {
                 return _this.AfterTransferFromServerComplete();
-            }, 200); // for now we just fire it as it is
+            }, 200);
         };
 
         LitResBookmarksProcessor.prototype.AfterTransferFromServerComplete = function (XML) {
+            var _this = this;
             this.ParseXML(XML);
-            this.LoadEndCallback(this);
+            this.WaitedToRemapBookmarks = 0;
+            for (var I = 0; I < this.Bookmarks.length; I++) {
+                if (!this.Bookmarks[I].XPathMappingReady) {
+                    this.Bookmarks[I].RemapWithDOM(function () {
+                        return _this.OnChildBookmarkSync();
+                    });
+                    this.WaitedToRemapBookmarks++;
+                }
+            }
+            if (!this.WaitedToRemapBookmarks) {
+                this.WaitForData = false;
+                this.LoadEndCallback(this);
+            }
+        };
+
+        LitResBookmarksProcessor.prototype.OnChildBookmarkSync = function () {
+            this.WaitedToRemapBookmarks--;
+            if (!this.WaitedToRemapBookmarks) {
+                this.WaitForData = false;
+                this.LoadEndCallback(this);
+            }
         };
 
         LitResBookmarksProcessor.prototype.ParseXML = function (XML) {
-            // do some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
+            // todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
         };
 
         LitResBookmarksProcessor.prototype.Store = function () {
@@ -47,7 +70,7 @@ var FB3Bookmarks;
 
         LitResBookmarksProcessor.prototype.ApplyPosition = function () {
             // If DOM.TOC not ready yet, we can't expand XPath for any way - we wait while Reader.LoadDone fire this
-            if (!this.FB3DOM.Ready) {
+            if (!this.FB3DOM.Ready || this.WaitForData) {
                 return;
             }
             this.Ready = true;
@@ -63,7 +86,10 @@ var FB3Bookmarks;
         };
 
         LitResBookmarksProcessor.prototype.ReLoadComplete = function (TemporaryNotes) {
-            // merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
+            // todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
+            // than check if new "current position" is newer, if so - goto it
+            // and finally
+            this.Reader.Redraw();
         };
         return LitResBookmarksProcessor;
     })();
@@ -225,6 +251,11 @@ var FB3Bookmarks;
             return text;
         };
 
+        Bookmark.prototype.RemapWithDOM = function (Callback) {
+            this.AfterRemapCallback = Callback;
+            this.InitSyncXPathWithDOM();
+        };
+
         Bookmark.prototype.InitSyncXPathWithDOM = function () {
             var _this = this;
             this.XPathMappingReady = false;
@@ -264,6 +295,11 @@ var FB3Bookmarks;
                 From: this.Owner.FB3DOM.GetAddrByXPath(this.XStart),
                 To: this.Owner.FB3DOM.GetAddrByXPath(this.XEnd)
             };
+            this.XPathMappingReady = true;
+            if (this.AfterRemapCallback) {
+                this.AfterRemapCallback();
+                this.AfterRemapCallback = undefined;
+            }
         };
 
         Bookmark.prototype.ChunksRequired = function () {

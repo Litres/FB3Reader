@@ -29,7 +29,7 @@ window.onload = () => {
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
 	AFB3Reader.Init();
 	window.addEventListener('resize', () => AFB3Reader.AfterCanvasResize());
-	ShowPosition();
+//	ShowPosition();
 	start = new Date().getTime();
 };
 

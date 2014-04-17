@@ -6,6 +6,7 @@ module FB3Bookmarks {
 	export interface InnerFB2 extends String {}
 
 	export interface IBookmarksReadyCallback { (Bookmarks: IBookmarks): void; }
+	export interface IBookmarkSyncCallback { (): void; }
 
 	export interface IBookmark {
 		ID: string;
@@ -24,6 +25,7 @@ module FB3Bookmarks {
 		ExtendToXY(X: number, Y: number): boolean;
 		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
 		Detach(): void; // removes itself from the parent.
+		RemapWithDOM(Callback: IBookmarkSyncCallback): void;
 	}
 
 	export interface IBookmarks {

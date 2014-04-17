@@ -88,10 +88,6 @@ module FB3Reader {
 			this.IdleOff();
 		}
 
-		public GoToExtXPath(XPath: FB3Bookmarks.IXPath): void {
-			alert("not ready");
-		}
-
 		public Init(): void {
 			this.PrepareCanvas();
 			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.Bookmarks.ApplyPosition() });

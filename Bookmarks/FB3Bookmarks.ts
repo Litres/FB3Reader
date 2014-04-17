@@ -12,12 +12,15 @@ module FB3Bookmarks {
 		public ClassPrefix: string;
 		private LoadEndCallback: IBookmarksReadyCallback;
 		private TemporaryNotes: IBookmarks;
+		private WaitedToRemapBookmarks: number;
+		private WaitForData: boolean;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM) {
 			this.Ready = false;
 			this.FB3DOM.Bookmarks.push(this);
 			this.ClassPrefix = 'my_';
 			this.Bookmarks = new Array();
 			this.CurPos = new Bookmark(this);
+			this.WaitForData = true;
 		}
 
 		public AddBookmark(Bookmark: IBookmark): void {
@@ -33,27 +36,46 @@ module FB3Bookmarks {
 		}
 
 
-		// fake methods below - todo to implement them
 		public Load(ArtID: string, Callback?: IBookmarksReadyCallback) {
 			this.LoadEndCallback = Callback;
-			// do some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
-			setTimeout(()=>this.AfterTransferFromServerComplete(),200); // for now we just fire it as it is
+			this.WaitForData = true;
+			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
+			// for now we just fire it as it is, should fire after XML loaded
+			setTimeout(()=>this.AfterTransferFromServerComplete(),200);
 		}
 
 		private AfterTransferFromServerComplete(XML?: any) {
 			this.ParseXML(XML);
-			this.LoadEndCallback(this);
+			this.WaitedToRemapBookmarks = 0;
+			for (var I = 0; I < this.Bookmarks.length; I++) {
+				if (!this.Bookmarks[I].XPathMappingReady) {
+					this.Bookmarks[I].RemapWithDOM(() => this.OnChildBookmarkSync());
+					this.WaitedToRemapBookmarks++;
+				}
+			}
+			if (!this.WaitedToRemapBookmarks) {
+				this.WaitForData = false;
+				this.LoadEndCallback(this);
+			}
+		}
+
+		private OnChildBookmarkSync() {
+			this.WaitedToRemapBookmarks--;
+			if (!this.WaitedToRemapBookmarks) {
+				this.WaitForData = false;
+				this.LoadEndCallback(this);
+			}
 		}
 
 		private ParseXML(XML: any) {
-			// do some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
+			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
 		}
 
 		public Store(): void { } // todo - fill it
 
 		public ApplyPosition(): void {
 			// If DOM.TOC not ready yet, we can't expand XPath for any way - we wait while Reader.LoadDone fire this
-			if (!this.FB3DOM.Ready) {
+			if (!this.FB3DOM.Ready || this.WaitForData) {
 				return;
 			}
 			this.Ready = true;
@@ -66,8 +88,10 @@ module FB3Bookmarks {
 		}
 
 		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
-			// merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
-
+			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
+			// than check if new "current position" is newer, if so - goto it
+			// and finally
+			this.Reader.Redraw();
 		}
 
 	}
@@ -85,6 +109,7 @@ module FB3Bookmarks {
 		public RawText: string;
 		public XPathMappingReady: boolean;
 		private RequiredChunks: number[];
+		private AfterRemapCallback: IBookmarkSyncCallback;
 		constructor(private Owner: IBookmarks) {
 			this.ID = this.MakeSelectionID();
 			this.Group = 0;
@@ -236,6 +261,11 @@ module FB3Bookmarks {
 			return text;
 		}
 
+		public RemapWithDOM(Callback: IBookmarkSyncCallback): void {
+			this.AfterRemapCallback = Callback;
+			this.InitSyncXPathWithDOM();
+		}
+
 		private InitSyncXPathWithDOM(): void {
 			this.XPathMappingReady = false;
 			this.RequiredChunks = this.ChunksRequired();
@@ -269,6 +299,11 @@ module FB3Bookmarks {
 				From: this.Owner.FB3DOM.GetAddrByXPath(this.XStart),
 				To: this.Owner.FB3DOM.GetAddrByXPath(this.XEnd)
 			};
+			this.XPathMappingReady = true;
+			if (this.AfterRemapCallback) {
+				this.AfterRemapCallback();
+				this.AfterRemapCallback = undefined;
+			}
 		}
 
 		private ChunksRequired(): number[]{

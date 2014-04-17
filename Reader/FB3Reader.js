@@ -59,14 +59,9 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
             this.LastSavePercent = 0;
-            this.CurStartPos = [0];
 
             this.IdleOff();
         }
-        Reader.prototype.GoToExtXPath = function (XPath) {
-            alert("not ready");
-        };
-
         Reader.prototype.Init = function () {
             var _this = this;
             this.PrepareCanvas();

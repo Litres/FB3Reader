@@ -31,7 +31,6 @@ module FB3Reader {
 
 		TOC(): FB3DOM.ITOC[];		// Table of contents (clone, with ITOC.bookmarks filled)
 		GoTO(NewPos: IPosition): void;
-		GoToExtXPath(XPath: FB3Bookmarks.IXPath): void;
 		//		GoTOPage(Page: number): void;
 		GoToOpenPosition(NewPos: IPosition): void;
 		ResetCache(): void;

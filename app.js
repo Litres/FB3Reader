@@ -29,7 +29,8 @@ window.onload = function () {
     window.addEventListener('resize', function () {
         return AFB3Reader.AfterCanvasResize();
     });
-    ShowPosition();
+
+    //	ShowPosition();
     start = new Date().getTime();
 };
 

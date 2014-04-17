@@ -24,6 +24,7 @@ module FB3Bookmarks {
 		}
 
 		public AddBookmark(Bookmark: IBookmark): void {
+			Bookmark.N = this.Bookmarks.length;
 			this.Bookmarks.push(Bookmark);
 		}
 		public DropBookmark(Bookmark: IBookmark): void {
@@ -108,6 +109,7 @@ module FB3Bookmarks {
 		public Extract: InnerFB2;
 		public RawText: string;
 		public XPathMappingReady: boolean;
+		public N: number;
 		private RequiredChunks: number[];
 		private AfterRemapCallback: IBookmarkSyncCallback;
 		constructor(private Owner: IBookmarks) {
@@ -116,6 +118,7 @@ module FB3Bookmarks {
 			this.Class = 'default';
 			this.Range = { From: [20], To: [0] };
 			this.XPathMappingReady = true;
+			this.N = -1;
 		}
 
 		public InitFromXY(X: number, Y: number): boolean {
@@ -217,7 +220,7 @@ module FB3Bookmarks {
 		}
 
 		public ClassName(): string {
-			return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class;
+			return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class + ' ' + this.Owner.ClassPrefix + 'selectid_' + this.N;
 		}
 
 		private GetDataFromText() {

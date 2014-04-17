@@ -10,6 +10,7 @@ module FB3Bookmarks {
 
 	export interface IBookmark {
 		ID: string;
+		N: number;			// Represents IBookmarks.Bookmarks[N] position
 		Range: FB3DOM.IRange;
 		XStart: IXPath; // xpath for start point
 		XEnd: IXPath;		// xpath for end point

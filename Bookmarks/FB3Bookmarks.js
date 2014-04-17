@@ -12,6 +12,7 @@ var FB3Bookmarks;
             this.WaitForData = true;
         }
         LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
+            Bookmark.N = this.Bookmarks.length;
             this.Bookmarks.push(Bookmark);
         };
         LitResBookmarksProcessor.prototype.DropBookmark = function (Bookmark) {
@@ -103,6 +104,7 @@ var FB3Bookmarks;
             this.Class = 'default';
             this.Range = { From: [20], To: [0] };
             this.XPathMappingReady = true;
+            this.N = -1;
         }
         Bookmark.prototype.InitFromXY = function (X, Y) {
             var BaseFrom = this.Owner.Reader.ElementAtXY(X, Y);
@@ -203,7 +205,7 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.ClassName = function () {
-            return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class;
+            return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class + ' ' + this.Owner.ClassPrefix + 'selectid_' + this.N;
         };
 
         Bookmark.prototype.GetDataFromText = function () {

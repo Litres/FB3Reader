@@ -21,7 +21,6 @@ module FB3Bookmarks {
     private SID: string;
     private Callback: any;
     private LockID: string;
-    private UUID: string;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string) {
 			this.Ready = false;
 			this.FB3DOM.Bookmarks.push(this);
@@ -34,7 +33,6 @@ module FB3Bookmarks {
       } else {
         this.XMLHttp = new XMLHttpRequest();
       }
-      this.UUID = '65830123-26b8-4b07-8098-c18229e5026e'; // TODO: fix, get from meta
       this.Host = 'http://www.litres.ru/';
       this.SID = LitresSID || 'ccf52f2b0abd26cb46dbe6296870d877'; // TODO: fix after test
 		}
@@ -52,12 +50,11 @@ module FB3Bookmarks {
 			}
 		}
 
-    public Load(Callback?: IBookmarksReadyCallback, SetLock?: boolean) {
+    public Load(Callback?: IBookmarksReadyCallback, SaveAuto?: boolean) {
       this.LoadEndCallback = Callback;
       this.WaitForData = true;
-      var URL = this.MakeLoadURL(SetLock);
+      var URL = this.MakeLoadURL(SaveAuto);
       this.XMLHTTPRequest(URL);
-      // '65830123-26b8-4b07-8098-c18229e5026e'
       // todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
       // for now we just fire it as it is, should fire after XML loaded
       // setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -99,7 +96,7 @@ module FB3Bookmarks {
 		}
 
 		public Store(): void { // TODO: fill it
-		  this.Load(() => this.StoreBookmarks(), true);
+      this.ReLoad(true);
     }
 
     private StoreBookmarks(): void {
@@ -117,21 +114,23 @@ module FB3Bookmarks {
 			this.Reader.GoTO(this.CurPos.Range.From.slice(0));
 		}
 
-		public ReLoad() {
+		public ReLoad(SaveAuto?: boolean) {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
-			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
+			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks), SaveAuto);
 		}
 
 		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
 			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
 			// than check if new "current position" is newer, if so - goto it
 			// and finally
+      // this.StoreBookmarks();
+      // or
 			this.Reader.Redraw();
 		}
 
-    private MakeLoadURL(SetLock: boolean): string {
+    private MakeLoadURL(SaveAuto: boolean): string {
       var URL = this.Host + 'pages/catalit_load_bookmarks/?art=' +
-        this.Reader.ArtID + (SetLock ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
+        this.Reader.ArtID + (SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
       return URL;
     }
 
@@ -143,28 +142,13 @@ module FB3Bookmarks {
     }
 
     private MakeStoreXML(): string {
-      var Extact: string;
       var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' +
         'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
       for (var j = 0; j < this.Bookmarks.length; j++) {
-        Extact = this.Bookmarks[j].Extract();
-        XML += '<Selection group="' + this.Bookmarks[j].Group + '" ' +
-          (this.Bookmarks[j].Class ? 'class="' + this.Bookmarks[j].Class + '" ' : '') +
-          (this.Bookmarks[j].Title ? 'title="' + this.Bookmarks[j].Title + '" ' : '') +
-          'id="' + this.Bookmarks[j].ID + '" ' +
-          'selection="fb2#xpointer(' + this.MakeSelection(this.Bookmarks[j]) + ')" ' +
-          'art-id="' + this.UUID + '" ' +
-          'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' +
-            Extact +
-        '</Selection>';
+        XML += this.Bookmarks[j].PublicXML();
       }
       XML += '</FictionBookMarkup>';
       return XML;
-    }
-
-    private MakeSelection(Bookmark: IBookmark): string {
-      if (Bookmark.XStart == Bookmark.XEnd) return 'point(/1/2/' + Bookmark.XStart + ')';
-      return 'point(/1/2/' + Bookmark.XStart + ')/range-to(point(/1/2/' + Bookmark.XEnd + '))';
     }
 
     private XMLHTTPRequest(URL: string): void {
@@ -410,10 +394,34 @@ module FB3Bookmarks {
 			}
 		}
 
-    public Extract(): string {
+    public PublicXML(): string {
+      return '<Selection group="' + this.Group + '" ' +
+        (this.Class ? 'class="' + this.Class + '" ' : '') +
+        (this.Title ? 'title="' + this.Title + '" ' : '') +
+        'id="' + this.ID + '" ' +
+        'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
+        'art-id="' + this.Owner.Reader.UUID + '" ' +
+        'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' +
+        this.Extract() +
+      '</Selection>';
+    }
+
+    private Extract(): string {
       // TODO: fill with code
       // '<Extract original-location="fb2#xpointer(/1/2/' + para + ')">' + this.Bookmarks[j].Extract() + '</Extract>';
       return '';
+    }
+
+    private MakeSelection(): string {
+      var Start: string = this.MakePointer(this.XStart);
+      if (FB3Reader.PosCompare(this.XStart, this.XEnd) == 0)
+        return 'point(/1/2/' + Start + ')';
+      return 'point(/1/2/' + Start + ')/range-to(point(/1/2/' + this.MakePointer(this.XEnd) + '))';
+    }
+
+    private MakePointer(X: IXPath): string {
+      var last = X.pop() + '';
+      return X.join('/') + ((/^\./).test(last) ? '' : '/') + last;
     }
 
 	}}

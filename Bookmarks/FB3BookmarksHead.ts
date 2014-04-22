@@ -18,7 +18,6 @@ module FB3Bookmarks {
 		Class?: string;
 		Title?: string;
 		Note?: InnerFB2;
-		Extract(): string;
 		RawText: string;
 		XPathMappingReady: boolean; // For server-loaded bookmarks, used to watch fb2xpath -> internal xpath mapping progress
 		ClassName(): string;		// css class name for selections of this type
@@ -27,6 +26,7 @@ module FB3Bookmarks {
 		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
 		Detach(): void; // removes itself from the parent.
 		RemapWithDOM(Callback: IBookmarkSyncCallback): void;
+    PublicXML(): string;
 	}
 
 	export interface IBookmarks {
@@ -38,7 +38,7 @@ module FB3Bookmarks {
 		ClassPrefix: string;
 		AddBookmark(Bookmark: IBookmark): void;
 		DropBookmark(Bookmark: IBookmark): void;
-		Load(Callback?: IBookmarksReadyCallback, SetLock?: boolean);   // Loads bookmarks from the server
+		Load(Callback?: IBookmarksReadyCallback, SaveAuto?: boolean);   // Loads bookmarks from the server
 		ReLoad();	// Updates itself from the server (may get new current position)
 		ApplyPosition(): void;
 		Store(): void;

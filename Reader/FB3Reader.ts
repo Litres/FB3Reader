@@ -68,7 +68,8 @@ module FB3Reader {
 		private CanvasH: number;
 		private LastSavePercent: number;
 
-		constructor(public ArtID: string,
+		constructor(public UUID: string,
+      public ArtID: string,
 			public EnableBackgroundPreRender: boolean,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM,

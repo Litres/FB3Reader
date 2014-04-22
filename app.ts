@@ -18,13 +18,14 @@ window.onload = () => {
 
 //	var ArtID = '178297';
 	var ArtID = '120421';
+	var UUID = '65830123-26b8-4b07-8098-c18229e5026e';
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
 	var DataProvider = new FB3DataProvider.AJAXDataProvider();
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
 	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
 	AFB3PPCache = new FB3PPCache.PPCache();
-	AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
+	AFB3Reader = new FB3Reader.Reader(UUID, ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
 	AFB3Reader.NColumns = 1;
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
 	AFB3Reader.Init();

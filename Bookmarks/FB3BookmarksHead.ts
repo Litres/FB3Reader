@@ -2,7 +2,7 @@
 
 module FB3Bookmarks {
 
-	export interface IXPath extends Array<number> { }
+	export interface IXPath extends Array<any> { }
 	export interface InnerFB2 extends String {}
 
 	export interface IBookmarksReadyCallback { (Bookmarks: IBookmarks): void; }

@@ -216,6 +216,7 @@ var FB3Reader;
         Reader.prototype.CloneTOCNodes = function (TOC) {
             var NewTOC = new Array();
             for (var I = 0; I < TOC.length; I++) {
+                NewTOC[I] = {};
                 for (var P in TOC[I]) {
                     if (P == 'c') {
                         NewTOC[I].c = this.CloneTOCNodes(TOC[I].c);

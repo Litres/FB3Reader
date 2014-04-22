@@ -29,6 +29,7 @@
         <input type="button" value="&lt;&lt; Page back" onclick="Pagebackward()"/>&#160;&#160;&#160;
         <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="GoToPercent()"/>
         &#160;&#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="PageForward()"/>
+        &#160;&#160;&#160;<input type="button" value="TOC" onclick="ShowTOC()"/>
     </div>
     <div style="float:left">
         <b>Visible actions progress:</b>
@@ -111,5 +112,8 @@
             <td style="text-align:right;"><input type="button" value="Готово" onclick="FinishAll()"/>&#160;<input type="button" value="Отмена" onclick="DestroyBookmark()"/></td>
         </tr>
     </table>
+    <div id="toc" style="display:none;position:absolute;top:50px;left:50px;background-color:silver; padding:0.5em;border:2px outset;">
+        Содержание:
+    </div>
 </body>
 </html>

@@ -236,6 +236,7 @@ module FB3Reader {
 		private CloneTOCNodes(TOC: FB3DOM.ITOC[]): FB3DOM.ITOC[]{
 			var NewTOC: FB3DOM.ITOC[] = new Array();
 			for (var I = 0; I < TOC.length; I++) {
+				NewTOC[I] = <FB3DOM.ITOC> {};
 				for (var P in TOC[I]) {
 					if (P == 'c') { // contents ie childs
 						NewTOC[I].c = this.CloneTOCNodes(TOC[I].c);

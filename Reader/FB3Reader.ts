@@ -93,7 +93,7 @@ module FB3Reader {
 			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.Bookmarks.ApplyPosition() });
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
-			this.Bookmarks.Load(this.ArtID, () => { this.Bookmarks.ApplyPosition() } );
+			this.Bookmarks.Load(() => { this.Bookmarks.ApplyPosition() } );
 		}
 
 		public GoTO(NewPos: IPosition) {

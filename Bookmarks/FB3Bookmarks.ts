@@ -1,8 +1,10 @@
 /// <reference path="FB3BookmarksHead.ts" />
+/// <reference path="../plugins/moment.d.ts" />
 
 module FB3Bookmarks {
 
-
+  interface iWindow extends Window { ActiveXObject: any; }
+  declare var window: iWindow;
 
 	export class LitResBookmarksProcessor implements IBookmarks {
 		public Ready: boolean;
@@ -14,13 +16,27 @@ module FB3Bookmarks {
 		private TemporaryNotes: IBookmarks;
 		private WaitedToRemapBookmarks: number;
 		private WaitForData: boolean;
-		constructor(public FB3DOM: FB3DOM.IFB3DOM) {
+    private XMLHttp: any;
+    private Host: string;
+    private SID: string;
+    private Callback: any;
+    private LockID: string;
+    private UUID: string;
+		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string) {
 			this.Ready = false;
 			this.FB3DOM.Bookmarks.push(this);
 			this.ClassPrefix = 'my_';
 			this.Bookmarks = new Array();
 			this.CurPos = new Bookmark(this);
 			this.WaitForData = true;
+      if (window.ActiveXObject) {
+        this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
+      } else {
+        this.XMLHttp = new XMLHttpRequest();
+      }
+      this.UUID = '65830123-26b8-4b07-8098-c18229e5026e'; // TODO: fix, get from meta
+      this.Host = 'http://www.litres.ru/';
+      this.SID = LitresSID || 'ccf52f2b0abd26cb46dbe6296870d877'; // TODO: fix after test
 		}
 
 		public AddBookmark(Bookmark: IBookmark): void {
@@ -36,14 +52,16 @@ module FB3Bookmarks {
 			}
 		}
 
-
-		public Load(ArtID: string, Callback?: IBookmarksReadyCallback) {
-			this.LoadEndCallback = Callback;
-			this.WaitForData = true;
-			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
-			// for now we just fire it as it is, should fire after XML loaded
-			setTimeout(()=>this.AfterTransferFromServerComplete(),200);
-		}
+    public Load(Callback?: IBookmarksReadyCallback, SetLock?: boolean) {
+      this.LoadEndCallback = Callback;
+      this.WaitForData = true;
+      var URL = this.MakeLoadURL(SetLock);
+      this.XMLHTTPRequest(URL);
+      // '65830123-26b8-4b07-8098-c18229e5026e'
+      // todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
+      // for now we just fire it as it is, should fire after XML loaded
+      // setTimeout(()=>this.AfterTransferFromServerComplete(),200);
+    }
 
 		private AfterTransferFromServerComplete(XML?: any) {
 			this.ParseXML(XML);
@@ -70,9 +88,25 @@ module FB3Bookmarks {
 
 		private ParseXML(XML: any) {
 			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
+      if (XML.querySelectorAll('Selection').length) {
+        console.log('we have selection, GoTO :D');
+        this.LockID = XML.getAttribute('lock-id');
+        // for Selection
+        // this.Bookmarks.push();
+      } else {
+        console.log('we dont have any positions on server');
+      }
 		}
 
-		public Store(): void { } // todo - fill it
+		public Store(): void { // TODO: fill it
+		  this.Load(() => this.StoreBookmarks(), true);
+    }
+
+    private StoreBookmarks(): void {
+      var XML = this.MakeStoreXML();
+      var URL = this.MakeStoreURL(XML);
+      this.XMLHTTPRequest(URL);
+    }
 
 		public ApplyPosition(): void {
 			// If DOM.TOC not ready yet, we can't expand XPath for any way - we wait while Reader.LoadDone fire this
@@ -83,9 +117,9 @@ module FB3Bookmarks {
 			this.Reader.GoTO(this.CurPos.Range.From.slice(0));
 		}
 
-		public ReLoad(ArtID: string) {
+		public ReLoad() {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
-			TemporaryNotes.Load(ArtID, (Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
+			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
 		}
 
 		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
@@ -95,6 +129,56 @@ module FB3Bookmarks {
 			this.Reader.Redraw();
 		}
 
+    private MakeLoadURL(SetLock: boolean): string {
+      var URL = this.Host + 'pages/catalit_load_bookmarks/?art=' +
+        this.Reader.ArtID + (SetLock ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
+      return URL;
+    }
+
+    private MakeStoreURL(XML: string): string {
+      var URL = this.Host + 'pages/catalit_store_bookmarks/?art' +
+        this.Reader.ArtID + '&data=' + encodeURIComponent(XML) +
+        '&lock_id=' + this.LockID + '&sid=' + this.SID + '&r=' + Math.random();
+      return URL;
+    }
+
+    private MakeStoreXML(): string {
+      var Extact: string;
+      var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' +
+        'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
+      for (var j = 0; j < this.Bookmarks.length; j++) {
+        Extact = this.Bookmarks[j].Extract();
+        XML += '<Selection group="' + this.Bookmarks[j].Group + '" ' +
+          (this.Bookmarks[j].Class ? 'class="' + this.Bookmarks[j].Class + '" ' : '') +
+          (this.Bookmarks[j].Title ? 'title="' + this.Bookmarks[j].Title + '" ' : '') +
+          'id="' + this.Bookmarks[j].ID + '" ' +
+          'selection="fb2#xpointer(' + this.MakeSelection(this.Bookmarks[j]) + ')" ' +
+          'art-id="' + this.UUID + '" ' +
+          'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' +
+            Extact +
+        '</Selection>';
+      }
+      XML += '</FictionBookMarkup>';
+      return XML;
+    }
+
+    private MakeSelection(Bookmark: IBookmark): string {
+      if (Bookmark.XStart == Bookmark.XEnd) return 'point(/1/2/' + Bookmark.XStart + ')';
+      return 'point(/1/2/' + Bookmark.XStart + ')/range-to(point(/1/2/' + Bookmark.XEnd + '))';
+    }
+
+    private XMLHTTPRequest(URL: string): void {
+      this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
+      this.XMLHttp.open('POST', URL, true);
+      this.XMLHttp.send(null);
+    }
+
+    private XMLHTTPResponse(): void {
+      if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
+        this.AfterTransferFromServerComplete(this.XMLHttp.responseXML);
+      }
+      // TODO: add error handler
+    }
 	}
 
 	export class Bookmark implements IBookmark {
@@ -106,7 +190,6 @@ module FB3Bookmarks {
 		public Class: string;
 		public Title: string;
 		public Note: InnerFB2;
-		public Extract: InnerFB2;
 		public RawText: string;
 		public XPathMappingReady: boolean;
 		public N: number;
@@ -326,5 +409,11 @@ module FB3Bookmarks {
 				}
 			}
 		}
+
+    public Extract(): string {
+      // TODO: fill with code
+      // '<Extract original-location="fb2#xpointer(/1/2/' + para + ')">' + this.Bookmarks[j].Extract() + '</Extract>';
+      return '';
+    }
 
 	}}

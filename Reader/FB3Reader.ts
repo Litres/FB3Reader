@@ -401,9 +401,28 @@ module FB3Reader {
 			}
 		}
 
-		public GoToPercent(Percent: number): void {
-			var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
-			this.GoTO([BlockN]);
+        /** 
+        * Navigates to the specific percentage taking into account current cache
+        * status, namely whether we already know total number of pages or not.
+        * If not, block-wise navigation will be used instead of a page-wise.
+        *
+        * @param Percent The target percentage to navigate to.
+        */
+        public GoToPercent(Percent: number): void {
+            if (this.IsFullyInCache()) {
+                var totalPages = this.PagesPositionsCache.Length();
+                var newPage = Math.round(totalPages * Percent / 100);
+                if (newPage < 0) {
+                    newPage = 0;
+                } else if (newPage >= totalPages) {                    
+                    newPage = totalPages - 1; // If there are 233 pages, then the last available one is 232.
+                }
+                this.GoTOPage(newPage);
+            }
+            else {
+                var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
+                this.GoTO([BlockN]);
+            }
 		}
 
 		public CurPosPercent(): number {
@@ -441,7 +460,7 @@ module FB3Reader {
 					case 'load_page':
 						var PageToPrerender = this.FirstUncashedPage();
 						var NewPos = PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100;
-						if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
+                        if (this.IsFullyInCache()) {
 							// Caching done - we save results and stop idle processing
 							this.PagesPositionsCache.LastPage(this.PagesPositionsCache.Length() - 1);
 							this.IdleOff();
@@ -497,6 +516,15 @@ module FB3Reader {
 				}
 			}
 		}
+
+        /** 
+        * Returns a value indicating whether book's content has 
+        * already been fully loaded into cache or not.
+        */
+        private IsFullyInCache(): boolean {
+            var pageToPrerender = this.FirstUncashedPage();
+            return this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= pageToPrerender.Start[0];
+        }
 
 		private SaveCache() {
 			this.PagesPositionsCache.Save(this.BackgroundRenderFrame.ViewPortW + ':' +

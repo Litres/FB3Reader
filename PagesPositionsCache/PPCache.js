@@ -28,7 +28,10 @@ var FB3PPCache;
                 return;
             }
 
+            // We are going to save no more than 50 cache entries
+            // We reuse slots on write request based on access time
             if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+                // localStorage support required
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
                 }
@@ -39,15 +42,17 @@ var FB3PPCache;
                         this.CacheMarkupsList.splice(I, 1);
                     }
                 }
-                if (this.CacheMarkupsList.length >= 50) {
+                if (this.CacheMarkupsList.length >= 15) {
                     this.CacheMarkupsList.shift();
                 }
                 this.CacheMarkupsList.push({
-                    Time: new Date(),
+                    Time: new Date,
                     Key: Key,
                     Cache: this.PagesPositionsCache,
                     LastPage: this.LastPageN
                 });
+
+                // Keep in mind - next line is really, really slow
                 localStorage['FB3Reader1.0'] = JSON.stringify(this.CacheMarkupsList);
             }
         };

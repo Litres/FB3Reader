@@ -26,10 +26,10 @@ module FB3Reader {
 		CurStartPage: number;		// Number of the first visible page (if any)
 
 		Init(): void;
-		CacheForward: number; // Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
-		CacheBackward: number; // Size of the backward cache (same structure)
+		CacheForward: number;		// Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
+		CacheBackward: number;	// Size of the backward cache (same structure)
 
-		TOC(): FB3DOM.ITOC[];
+		TOC(): FB3DOM.ITOC[];		// Table of contents (clone, with ITOC.bookmarks filled)
 		GoTO(NewPos: IPosition): void;
 		//		GoTOPage(Page: number): void;
 		GoToOpenPosition(NewPos: IPosition): void;

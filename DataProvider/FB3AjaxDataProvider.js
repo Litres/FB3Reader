@@ -55,6 +55,7 @@ var FB3DataProvider;
             this.Req.send(null);
         }
         AjaxLoader.prototype.onTransferComplete = function () {
+            //			try {
             if (this.Req.readyState != 4) {
                 this.Progressor.Tick(this);
             } else {
@@ -93,6 +94,7 @@ var FB3DataProvider;
             return ref;
         };
         AjaxLoader.prototype.parseJSON = function (data) {
+            // Borrowed bits from JQuery & http://json.org/json2.js
             if (data === undefined || data == '') {
                 return null;
             }

@@ -12,10 +12,24 @@ module FB3DOM {
 		FootNotes: InnerHTML[];
 	}
 	export interface IDOMTextReadyCallback { (PageData: IPageContainer): void; }
+	export interface IChunkLoadedCallback { (): void }
+
 	export interface ITOC {				// Compact notation as we plan to transfer this over network, why create overload
 		t?: string;	// title
 		s: number;	// start root node N
 		e: number;	// end root node (including, use [0,-1] Pointer to get last block)
+		bookmarks?: {	// Number of currently existing bookmarks, by type (see FB3Bookmarks.IBookmark.Group)
+			g0?: number; // number of bookmarks type 0, this is the current position. <=0
+			g1?: number; // 1 bookmark
+			g2?: number;	// 2 important bookmark
+			g3?: number;	// 3 note
+			g4?: number;	// 4 important note
+			g5?: number;	// 5 selection/highlight
+			g6?: number;	// 6 important selection/highlight
+			g7?: number;	// 7 custom type #1
+			g8?: number;	// 8 custom type #2
+			g9?: number;	// 9 other
+		};
 		c?: ITOC[];	// contents (subitems)
 	}
 	export interface IJSONBlock {	// Compact notation for the same reason
@@ -37,6 +51,8 @@ module FB3DOM {
 		e: number;
 		url: string;
 		loaded: number; // 0 - not loaded, 1 - requested, 2 - loaded, available
+		xps: FB3Bookmarks.IXPath;  // native fb2 xpath for the chunk first element 
+		xpe: FB3Bookmarks.IXPath;  // same for the last one
 	}
 
 	export interface IFB3Block {
@@ -60,6 +76,7 @@ module FB3DOM {
 			ViewPortH: number,
 			PageData: IPageContainer,
 			Bookmarks: FB3Bookmarks.IBookmark[]);
+		Position(): FB3Reader.IPosition;
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -83,7 +100,11 @@ module FB3DOM {
 			ViewPortH: number,
 			Callback: IDOMTextReadyCallback): void;
 		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
+		GetAddrByXPath(XPath: FB3Bookmarks.IXPath): FB3Reader.IPosition;
 		GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath;
+		OnChunkLoaded(Data: IJSONBlock[], CustomData?: any): void;
+		ChunkUrl(N: number): string;
+		LoadChunks(MissingChunks: number[], Callback: IChunkLoadedCallback): void; // Sets the chunks to be loaded
 		GetHTML(HyphOn: boolean,
 			BookStyleNotes: boolean,
 			Range: IRange,

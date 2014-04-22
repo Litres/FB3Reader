@@ -1,6 +1,7 @@
 ﻿/// <reference path="FB3DOMHead.ts" />
 
 module FB3DOM {
+	export var MaxFootnoteHeight = 0.75;
 	export var TagMapper = {
 		poem: 'div',
 		stanza: 'div',
@@ -38,7 +39,7 @@ module FB3DOM {
 			this.Chars = this.text.replace('\u00AD', '&shy;').length;
 			//			this.text = this.text.replace('\u00AD', '&shy;')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
-			if (Parent) {
+			if (Parent && Parent.XPath) {
 				this.XPath = Parent.XPath.slice(0);
 				this.XPath.push(NodeN);
 				this.XPath.push(Chars);
@@ -54,10 +55,6 @@ module FB3DOM {
 				OutStr = OutStr.substr(Range.From[0]);
 			}
 
-			if (!HyphOn) {
-				OutStr = OutStr.replace(/\u00AD/, '');
-			}
-
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
 			var ClassNames = this.GetBookmarkClasses(Bookmarks);
@@ -65,7 +62,21 @@ module FB3DOM {
 				ClassNames = ' class="' + ClassNames + '"';
 			}
 
-			TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');  // todo - HyphOn must work, must just replace shy with ''
+			if (!HyphOn && OutStr.match(/^\u00AD/)) {
+				TargetStream[TargetStream.length - 1] = TargetStream[TargetStream.length - 1].replace('</span>', OutStr.replace(/\u00AD/, '') + '</span>');
+			} else {
+				TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
+			}
+		}
+
+		public Position(): FB3Reader.IPosition {
+			var Node:IFB3Block = this;
+			var Result = new Array();
+			while (Node.Parent) {
+				Result.push(Node.ID);
+				Node = Node.Parent;
+			}
+			return Result;
 		}
 
 		public ArtID2URL(Chunk?: string): string {
@@ -166,6 +177,8 @@ module FB3DOM {
 
 			if (Data.xp) {
 				this.XPath = this.Data.xp;
+			} else {
+				this.XPath = null;
 			}
 
 			this.Childs = new Array();
@@ -283,6 +296,7 @@ module FB3DOM {
 			//			if (this.Data.i) {}
 			if (this.IsFootnote) {
 				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
+//				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '" style="max-height: ' + (ViewPortH * MaxFootnoteHeight).toFixed(0) + 'px">');
 			} else if (this.Data.f && !BookStyleNotes) {
 				Out.push(' onclick="alert(1)" href="#">');
 			}  else {

@@ -53,7 +53,7 @@ module FB3PPCache {
 						this.CacheMarkupsList.splice(I, 1);
 					}
 				}
-				if (this.CacheMarkupsList.length >= 50) {
+				if (this.CacheMarkupsList.length >= 15) {
 					this.CacheMarkupsList.shift();
 				}
 				this.CacheMarkupsList.push(
@@ -64,6 +64,7 @@ module FB3PPCache {
 							LastPage: this.LastPageN
 						}
 					);
+				// Keep in mind - next line is really, really slow
 				localStorage['FB3Reader1.0'] = JSON.stringify(this.CacheMarkupsList);
 			}//  else { no luck, no store - recreate from scratch } 
 		}

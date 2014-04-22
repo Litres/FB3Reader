@@ -10,14 +10,21 @@ module FB3Bookmarks {
 		public Bookmarks: IBookmark[];
 		public CurPos: IBookmark;
 		public ClassPrefix: string;
+		private LoadEndCallback: IBookmarksReadyCallback;
+		private TemporaryNotes: IBookmarks;
+		private WaitedToRemapBookmarks: number;
+		private WaitForData: boolean;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM) {
 			this.Ready = false;
 			this.FB3DOM.Bookmarks.push(this);
 			this.ClassPrefix = 'my_';
 			this.Bookmarks = new Array();
+			this.CurPos = new Bookmark(this);
+			this.WaitForData = true;
 		}
 
 		public AddBookmark(Bookmark: IBookmark): void {
+			Bookmark.N = this.Bookmarks.length;
 			this.Bookmarks.push(Bookmark);
 		}
 		public DropBookmark(Bookmark: IBookmark): void {
@@ -30,11 +37,64 @@ module FB3Bookmarks {
 		}
 
 
-		// fake methods below - todo to implement them
 		public Load(ArtID: string, Callback?: IBookmarksReadyCallback) {
-			this.Ready = true; //fake
+			this.LoadEndCallback = Callback;
+			this.WaitForData = true;
+			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
+			// for now we just fire it as it is, should fire after XML loaded
+			setTimeout(()=>this.AfterTransferFromServerComplete(),200);
 		}
-		public Store(): void { } // fake
+
+		private AfterTransferFromServerComplete(XML?: any) {
+			this.ParseXML(XML);
+			this.WaitedToRemapBookmarks = 0;
+			for (var I = 0; I < this.Bookmarks.length; I++) {
+				if (!this.Bookmarks[I].XPathMappingReady) {
+					this.Bookmarks[I].RemapWithDOM(() => this.OnChildBookmarkSync());
+					this.WaitedToRemapBookmarks++;
+				}
+			}
+			if (!this.WaitedToRemapBookmarks) {
+				this.WaitForData = false;
+				this.LoadEndCallback(this);
+			}
+		}
+
+		private OnChildBookmarkSync() {
+			this.WaitedToRemapBookmarks--;
+			if (!this.WaitedToRemapBookmarks) {
+				this.WaitForData = false;
+				this.LoadEndCallback(this);
+			}
+		}
+
+		private ParseXML(XML: any) {
+			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
+		}
+
+		public Store(): void { } // todo - fill it
+
+		public ApplyPosition(): void {
+			// If DOM.TOC not ready yet, we can't expand XPath for any way - we wait while Reader.LoadDone fire this
+			if (!this.FB3DOM.Ready || this.WaitForData) {
+				return;
+			}
+			this.Ready = true;
+			this.Reader.GoTO(this.CurPos.Range.From.slice(0));
+		}
+
+		public ReLoad(ArtID: string) {
+			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
+			TemporaryNotes.Load(ArtID, (Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
+		}
+
+		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
+			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
+			// than check if new "current position" is newer, if so - goto it
+			// and finally
+			this.Reader.Redraw();
+		}
+
 	}
 
 	export class Bookmark implements IBookmark {
@@ -48,10 +108,17 @@ module FB3Bookmarks {
 		public Note: InnerFB2;
 		public Extract: InnerFB2;
 		public RawText: string;
+		public XPathMappingReady: boolean;
+		public N: number;
+		private RequiredChunks: number[];
+		private AfterRemapCallback: IBookmarkSyncCallback;
 		constructor(private Owner: IBookmarks) {
+			this.ID = this.MakeSelectionID();
 			this.Group = 0;
 			this.Class = 'default';
-			this.Range = {From: undefined, To: undefined};
+			this.Range = { From: [20], To: [0] };
+			this.XPathMappingReady = true;
+			this.N = -1;
 		}
 
 		public InitFromXY(X: number, Y: number): boolean {
@@ -68,7 +135,7 @@ module FB3Bookmarks {
 
 		public ExtendToXY(X: number, Y: number): boolean {
 			var BaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-			if (BaseTo) {
+			if (BaseTo && BaseTo.length > 1) {
 				this.Range.To = BaseTo;
 				this.GetDataFromText();
 				return true;
@@ -110,7 +177,7 @@ module FB3Bookmarks {
 				PosInBlock = Adress[Adress.length - 1];
 				Adress.pop();
 			}
-			while (PosInBlock < Block.Childs.length && !Block.Childs[PosInBlock].Childs && !Block.Childs[PosInBlock].text.match(/\s$/)) {
+			while (PosInBlock < Block.Childs.length - 1 && !Block.Childs[PosInBlock].Childs && !Block.Childs[PosInBlock].text.match(/\s$/)) {
 				PosInBlock++;
 			}
 			Adress.push(PosInBlock);
@@ -123,8 +190,10 @@ module FB3Bookmarks {
 				PosInBlock = Adress[Adress.length - 1];
 				Adress.pop();
 			}
-			PosInBlock++;
-			while (PosInBlock >= 0 && !Block.Childs[PosInBlock-1].Childs && !Block.Childs[PosInBlock-1].text.match(/\s$/)) {
+			if (PosInBlock < Block.Childs.length - 2) {
+				PosInBlock++;
+			}
+			while (PosInBlock > 0 && !Block.Childs[PosInBlock-1].Childs && !Block.Childs[PosInBlock-1].text.match(/\s$/)) {
 				PosInBlock--;
 			}
 			Adress.push(PosInBlock);
@@ -151,7 +220,7 @@ module FB3Bookmarks {
 		}
 
 		public ClassName(): string {
-			return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class;
+			return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class + ' ' + this.Owner.ClassPrefix + 'selectid_' + this.N;
 		}
 
 		private GetDataFromText() {
@@ -179,4 +248,83 @@ module FB3Bookmarks {
 			RawText = '<p>' + RawText.replace(/\n/, '</p><p>') + '</p>';
 			return RawText;
 		}
+		private MakeSelectionID(): string {
+			var MakeSelectionIDSub = function (chars, len) {
+				var text = '';
+				for (var i = 0; i < len; i++) { text += chars.charAt(Math.floor(Math.random() * chars.length)); }
+				return text;
+			}
+      var text = '',
+				chars = 'ABCDEFabcdef0123456789';
+			text += MakeSelectionIDSub(chars, 8) + '-';
+			text += MakeSelectionIDSub(chars, 4) + '-';
+			text += MakeSelectionIDSub(chars, 4) + '-';
+			text += MakeSelectionIDSub(chars, 4) + '-';
+			text += MakeSelectionIDSub(chars, 12);
+			return text;
+		}
+
+		public RemapWithDOM(Callback: IBookmarkSyncCallback): void {
+			this.AfterRemapCallback = Callback;
+			this.InitSyncXPathWithDOM();
+		}
+
+		private InitSyncXPathWithDOM(): void {
+			this.XPathMappingReady = false;
+			this.RequiredChunks = this.ChunksRequired();
+			var ChunksToLoad = new Array();
+
+			// First we check, if some of required chunks are not set to be loaded yet
+			for (var I = 0; I < this.RequiredChunks.length; I++) {
+				if (!this.Owner.FB3DOM.DataChunks[this.RequiredChunks[I]].loaded) {
+					ChunksToLoad.push(this.RequiredChunks[I]);
+				}
+			}
+			// If there are missing chunks - we initiate loading for them
+			if (ChunksToLoad.length) {
+				this.Owner.FB3DOM.LoadChunks(ChunksToLoad, () => this.DoSyncXPathWithDOM());
+			} else {
+				this.DoSyncXPathWithDOM();
+			}
+		}
+
+		private DoSyncXPathWithDOM(): void {
+			for (var I = 0; I < this.RequiredChunks.length; I++) {
+				if (this.Owner.FB3DOM.DataChunks[this.RequiredChunks[I]].loaded != 2) {
+					// There is at least one chunk still being loaded - we will return later
+					setTimeout(() => this.DoSyncXPathWithDOM(), 10);
+					return;
+				}
+			}
+
+			// Ok, all chunks are here, now we need to map fb2 xpath to internal xpath
+			this.Range = {
+				From: this.Owner.FB3DOM.GetAddrByXPath(this.XStart),
+				To: this.Owner.FB3DOM.GetAddrByXPath(this.XEnd)
+			};
+			this.XPathMappingReady = true;
+			if (this.AfterRemapCallback) {
+				this.AfterRemapCallback();
+				this.AfterRemapCallback = undefined;
+			}
+		}
+
+		private ChunksRequired(): number[]{
+			var Result = new Array();
+			Result[0] = this.XPChunk(this.XStart);
+			var EndChunk = this.XPChunk(this.XEnd);
+			if (EndChunk != Result[0]) {
+				Result.push(EndChunk);
+			}
+			return Result;
+		}
+
+		private XPChunk(X: IXPath): number {
+			for (var I = 0; I < this.Owner.FB3DOM.DataChunks.length; I++) {
+				if (FB3Reader.PosCompare(X, this.Owner.FB3DOM.DataChunks[I].xps) <= 0) {
+					return I;
+				}
+			}
+		}
+
 	}}

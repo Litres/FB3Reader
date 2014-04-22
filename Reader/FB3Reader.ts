@@ -51,6 +51,7 @@ module FB3Reader {
 		public CurStartPos: IPosition;
 		public CurStartPage: number;
 		public BookStyleNotesTemporaryOff: boolean;
+		public IsIE: boolean;
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: FB3ReaderPage.ReaderPage[];
@@ -65,6 +66,7 @@ module FB3Reader {
 
 		private CanvasW: number;
 		private CanvasH: number;
+		private LastSavePercent: number;
 
 		constructor(public ArtID: string,
 			public EnableBackgroundPreRender: boolean,
@@ -80,33 +82,19 @@ module FB3Reader {
 			this.CacheBackward = 2;
 			this.BookStyleNotes = true;
 			this.BookStyleNotesTemporaryOff = false;
-			this.CurStartPos = [1085,224];
-//			this.CurStartPos = [0];
+			this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
+			this.LastSavePercent = 0;
 
 			this.IdleOff();
 		}
 
 		public Init(): void {
 			this.PrepareCanvas();
-			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.LoadDone(1) });
+			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.Bookmarks.ApplyPosition() });
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
-			this.Bookmarks.Load(this.ArtID, () => { this.LoadDone(2) } );
+			this.Bookmarks.Load(this.ArtID, () => { this.Bookmarks.ApplyPosition() } );
 		}
-
-		private LoadDone(a): void {
-//			console.log('LoadDone ' + a + '/' + this.FB3DOM.Ready + ':' + this.Bookmarks.Ready);
-			var ReadPos: IPosition;
-			if (this.FB3DOM.Ready && this.Bookmarks.Ready) {
-				if (this.Bookmarks && this.Bookmarks.CurPos) {
-					ReadPos = this.Bookmarks.CurPos.Range.From.slice(0);
-				} else {
-					ReadPos = this.CurStartPos.slice(0);
-				}
-				this.GoTO(ReadPos);
-			}
-		}
-
 
 		public GoTO(NewPos: IPosition) {
 			clearTimeout(this.MoveTimeoutID);
@@ -236,8 +224,42 @@ module FB3Reader {
 		}
 
 
-		public TOC() {
-			return this.FB3DOM.TOC;
+		public TOC():FB3DOM.ITOC[] {
+			var PatchedTOC = this.CloneTOCNodes(this.FB3DOM.TOC);
+			this.PatchToc(PatchedTOC, this.CurStartPos, 0);
+			for (var I = 0; I < this.Bookmarks.Bookmarks.length; I++) {
+				this.PatchToc(PatchedTOC, this.Bookmarks.Bookmarks[I].Range.From, this.Bookmarks.Bookmarks[I].Group);
+			}
+			return PatchedTOC;
+		}
+
+		private CloneTOCNodes(TOC: FB3DOM.ITOC[]): FB3DOM.ITOC[]{
+			var NewTOC: FB3DOM.ITOC[] = new Array();
+			for (var I = 0; I < TOC.length; I++) {
+				for (var P in TOC[I]) {
+					if (P == 'c') { // contents ie childs
+						NewTOC[I].c = this.CloneTOCNodes(TOC[I].c);
+					} else {
+						NewTOC[I][P] = TOC[I][P];
+					}
+				}
+			}
+			return NewTOC;
+		}
+
+		private PatchToc(TOC: FB3DOM.ITOC[], Pos: IPosition, Group: number):void {
+			for (var I = 0; I < TOC.length; I++) {
+				if (PosCompare([TOC[I].s], Pos) <= 0) { // Pos below the start node in TOC
+					if (TOC[I].c) {
+						this.PatchToc(TOC[I].c, Pos, Group);
+					} else if (TOC[I].bookmarks['g' + Group]) {
+						TOC[I].bookmarks['g' + Group]++;
+					} else {
+						TOC[I].bookmarks['g' + Group] = 1;
+					}
+					return;
+				}
+			}
 		}
 
 		public ResetCache(): void {
@@ -248,7 +270,8 @@ module FB3Reader {
 
 		public GetCachedPage(NewPos: IPosition): number {
 			for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
-				if (PosCompare(this.PagesPositionsCache.Get(I).Range.To, NewPos) > 0) {
+				var Pos = this.PagesPositionsCache.Get(I).Range;
+				if (PosCompare(Pos.To, NewPos) > 0) {
 					return I;
 				}
 			}
@@ -258,7 +281,7 @@ module FB3Reader {
 
 		public StoreCachedPage(Range: IPageRenderInstruction) {
 			this.PagesPositionsCache.Set(Range.CacheAs, PRIClone(Range));
-			this.SaveCache();
+// 			this.SaveCache(); // slow - removed for now.
 		}
 
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
@@ -291,6 +314,7 @@ module FB3Reader {
 			this.BackgroundRenderFrame.PagesToRender = new Array(100);
 			this.CanvasW = this.Site.Canvas.clientWidth;
 			this.CanvasH = this.Site.Canvas.clientHeight;
+			this.LastSavePercent = 0;
 			this.LoadCache();
 		}
 
@@ -315,6 +339,7 @@ module FB3Reader {
 					Start: this.PagesPositionsCache.Get(this.PagesPositionsCache.Length() - 1).Range.To.slice(0),
 					CacheAs: this.PagesPositionsCache.Length()
 				}
+				FB3ReaderPage.To2From(FirstUncached.Start);
 			} else {
 				FirstUncached = {
 					Start: [0],
@@ -326,7 +351,7 @@ module FB3Reader {
 		public PageForward() {
 			clearTimeout(this.MoveTimeoutID);
 			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
-				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) { // We know have many pages we have so we can check if the next one exists
+				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) { // We know how many pages we have so we can check if the next one exists
 					this.GoTOPage(this.CurStartPage + this.NColumns);
 				} else if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < this.CurStartPage + this.NColumns) {
 					return;
@@ -342,7 +367,8 @@ module FB3Reader {
 				if (!PageToView.Ready) {
 					if (PageToView.Pending) {
 						this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
-					} else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1) {
+					} else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1
+						|| this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
 						return; // EOF reached, the book is over
 					} else {
 						this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);
@@ -410,23 +436,33 @@ module FB3Reader {
 
 
 		private IdleGo(PageData?: FB3DOM.IPageContainer): void {
-			if (this.IsIdle) {
+			if (this.IsIdle && !this.BackgroundRenderFrame.ThreadsRunning) {
 				switch (this.IdleAction) {
 					case 'load_page':
 						var PageToPrerender = this.FirstUncashedPage();
+						var NewPos = PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100;
 						if (this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= PageToPrerender.Start[0]) {
-							//							alert('Cache done ' + this.PagesPositionsCache.length + ' items calced');
+							// Caching done - we save results and stop idle processing
 							this.PagesPositionsCache.LastPage(this.PagesPositionsCache.Length() - 1);
 							this.IdleOff();
 							this.Site.IdleThreadProgressor.Progress(this, 100);
 							this.Site.IdleThreadProgressor.HourglassOff(this);
+							var end = new Date().getTime();
+							var time = end - start;
+//							alert('Execution time: ' + time);
+							this.Site.Alert('Tome taken: ' + time);
 							clearInterval(this.IdleTimeoutID);
 							this.SaveCache();
 							return;
 						} else {
 							this.PagesPositionsCache.LastPage(0);
-							this.SaveCache();
-							this.Site.IdleThreadProgressor.Progress(this, PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100);
+							if (NewPos - this.LastSavePercent > 3) {
+								// We only save pages position cache once per 3% because it is SLOW like hell
+								this.SaveCache();
+								this.LastSavePercent = NewPos;
+							}
+							this.Site.IdleThreadProgressor.Progress(this, NewPos);
+							this.Site.IdleThreadProgressor.Alert(this.PagesPositionsCache.Length().toFixed(0)+' pages ready');
 						}
 						this.IdleAction = 'wait';
 
@@ -437,12 +473,11 @@ module FB3Reader {
 							this.BackgroundRenderFrame.PagesToRender[I] = { CacheAs: PageToPrerender.CacheAs + I + 1}
 						}
 
-						var Range: FB3DOM.IRange;
-						Range = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
+						this.BackgroundRenderFrame.WholeRangeToRender = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
 						this.FB3DOM.GetHTMLAsync(this.HyphON,
 							this.BookStyleNotes,
-							RangeClone(Range),
+							RangeClone(this.BackgroundRenderFrame.WholeRangeToRender),
 							this.BackgroundRenderFrame.ID + '_',
 							this.BackgroundRenderFrame.ViewPortW,
 							this.BackgroundRenderFrame.ViewPortH,
@@ -453,9 +488,8 @@ module FB3Reader {
 						break;
 					case 'fill_page':
 						this.PagesPositionsCache.LastPage(0);
-						this.SaveCache();
 						if (PageData) {
-							this.BackgroundRenderFrame.DrawEnd(PageData)
+								this.BackgroundRenderFrame.DrawEnd(PageData)
 						}
 						this.IdleAction = 'load_page';
 						break;
@@ -479,6 +513,7 @@ module FB3Reader {
 				this.BookStyleNotes + ':' +
 				this.Site.Key);
 		}
+
 		public IdleOn(): void {
 			if (!this.EnableBackgroundPreRender) {
 				return; // We do not want to prerender pages.

@@ -17,15 +17,6 @@ div.FB2readerPage {
     margin: 0;
 }
 
-.FBReaderNotesDiv {
-    padding: 0 10px  0;
-    margin-top: 10px;
-    margin-right: 3em;
-    margin-left: 10px;
-    overflow: hidden;
-    position: absolute;
-}
-
 
 .cut_top {
     padding-top:0;
@@ -58,6 +49,16 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
     background-color: lime;
     top: 5000px;
 }
+div.FB2readerPage div.footnote {
+    max-height: 500px; /* this will be overriden by inline style by engine, no reason to interfere */
+    overflow: auto;
+}
+
+.FB2readerPage img.tag_image {
+    position: relative;
+}
+
+
 /* engine-required CSS END */
 
 /* this are engine-independent CSS, do with it whatewer you see fit */
@@ -90,7 +91,7 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
     font-family: 'Arial', sans-serif;
 }
 #reader {
-    height:80%;
+    height:800px;
     width:100%;
 }
 
@@ -129,6 +130,16 @@ div.FB2readerPage div.footnote {
     font-size: 80%;
     clear:both;
 }
+
+.FBReaderNotesDiv {
+    padding: 0;
+    margin-top: 10px;
+    margin-right: 0.5em;
+    margin-left: 10px;
+    overflow: hidden;
+    position: absolute;
+}
+
 div.FB2readerPage p.footnote {
     text-align: left;
     font-size: 80%;
@@ -158,7 +169,7 @@ div.FB2readerPage p.footnote {
     vertical-align: super;
     margin:0;
     padding:0;
-    margin-left: -10px;
+    /*margin-left: -10px;*/
 }
 
 .FBReaderNotesDiv p.footnote {

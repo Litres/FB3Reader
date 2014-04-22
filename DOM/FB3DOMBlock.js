@@ -7,6 +7,7 @@ var __extends = this.__extends || function (d, b) {
 };
 var FB3DOM;
 (function (FB3DOM) {
+    FB3DOM.MaxFootnoteHeight = 0.75;
     FB3DOM.TagMapper = {
         poem: 'div',
         stanza: 'div',
@@ -38,7 +39,7 @@ var FB3DOM;
 
             //			this.text = this.text.replace('\u00AD', '&shy;')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
-            if (Parent) {
+            if (Parent && Parent.XPath) {
                 this.XPath = Parent.XPath.slice(0);
                 this.XPath.push(NodeN);
                 this.XPath.push(Chars);
@@ -54,10 +55,6 @@ var FB3DOM;
                 OutStr = OutStr.substr(Range.From[0]);
             }
 
-            if (!HyphOn) {
-                OutStr = OutStr.replace(/\u00AD/, '');
-            }
-
             var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
             var ClassNames = this.GetBookmarkClasses(Bookmarks);
@@ -65,7 +62,21 @@ var FB3DOM;
                 ClassNames = ' class="' + ClassNames + '"';
             }
 
-            TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
+            if (!HyphOn && OutStr.match(/^\u00AD/)) {
+                TargetStream[TargetStream.length - 1] = TargetStream[TargetStream.length - 1].replace('</span>', OutStr.replace(/\u00AD/, '') + '</span>');
+            } else {
+                TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
+            }
+        };
+
+        FB3Text.prototype.Position = function () {
+            var Node = this;
+            var Result = new Array();
+            while (Node.Parent) {
+                Result.push(Node.ID);
+                Node = Node.Parent;
+            }
+            return Result;
         };
 
         FB3Text.prototype.ArtID2URL = function (Chunk) {
@@ -87,11 +98,14 @@ var FB3DOM;
                 var HowIsStart = FB3Reader.PosCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
                 var HowisEnd = FB3Reader.PosCompare(Bookmarks[Bookmark].XEnd, EffectiveXPath);
 
+                // Start point as far beoung or end point is much before - no use for us or our children
                 if (HowIsStart == 10 || HowisEnd == -10) {
                     Bookmarks.splice(Bookmark, 1);
                     continue;
                 }
 
+                // We are not fully in deal, but some of our kids will be surely affected, so we leave
+                // record in Bookmarks for them
                 if (HowIsStart == 1 || HowisEnd == 1) {
                     continue;
                 }
@@ -99,7 +113,7 @@ var FB3DOM;
                 // Our tag is directly targeted or is fully within of the selection
                 // In both cases we mark it as a whole and leave our kids alone
                 ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
-                Bookmarks.splice(Bookmark, 1);
+                Bookmarks.splice(Bookmark, 1); // No need to bother childs if this tag is FULLY selected
             }
             return ThisNodeSelections.join(' ');
         };
@@ -119,6 +133,8 @@ var FB3DOM;
 
             if (Data.xp) {
                 this.XPath = this.Data.xp;
+            } else {
+                this.XPath = null;
             }
 
             this.Childs = new Array();
@@ -228,6 +244,9 @@ var FB3DOM;
                 ElementClasses.push(MoreClasses);
             }
 
+            //if (this.Data.xp && this.Data.xp.length) {
+            //	ElementClasses.push('xp_' + this.Data.xp.join('_'))
+            //}
             if (this.IsFootnote) {
                 ElementClasses.push('footnote');
             } else if (this.Data.f) {
@@ -251,14 +270,13 @@ var FB3DOM;
                 var H = this.Data.h;
                 var Path = this.ArtID2URL(this.Data.s);
 
+                // Image is loo large to fit the screen - forcibly zoom it out
                 if (W > ViewPortW || H > ViewPortH) {
                     var Aspect = Math.min((ViewPortW - 1) / W, (ViewPortH - 1) / H);
                     W = Math.floor(W * Aspect);
                     H = Math.floor(H * Aspect);
                     ElementClasses.push('zoomedout');
-                    Out = [
-                        '<div style="position:absolute;" class="SmallImgZoom1"><div style="position:relative;left:0.5em;top:0.5em;" class="SmallImgZoom2"><a href="javascript:ZoomImg(\'' + Path + '\',' + this.Data.w + ',' + this.Data.h + ');return false;" class="ZoomAnchor">◄ Zoom ►</a></div></div><' + this.HTMLTagName()
-                    ];
+                    Out = ['<div style="position:absolute;" class="SmallImgZoom1"><div style="position:relative;left:0.5em;top:0.5em;" class="SmallImgZoom2"><a href="javascript:ZoomImg(\'' + Path + '\',' + this.Data.w + ',' + this.Data.h + ');return false;" class="ZoomAnchor">◄ Zoom ►</a></div></div><' + this.HTMLTagName()];
                 } else {
                     Out = ['<' + this.HTMLTagName()];
                 }
@@ -272,8 +290,13 @@ var FB3DOM;
                 Out.push(' class="' + ElementClasses.join(' ') + '"');
             }
 
+            //if (this.data.css) {
+            //	out += ' style="' + this.data.css + '"';
+            //}
+            //			if (this.Data.i) {}
             if (this.IsFootnote) {
                 Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
+                //				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '" style="max-height: ' + (ViewPortH * MaxFootnoteHeight).toFixed(0) + 'px">');
             } else if (this.Data.f && !BookStyleNotes) {
                 Out.push(' onclick="alert(1)" href="#">');
             } else {

@@ -29,7 +29,7 @@ module FB3DOM {
 		public Data: IJSONBlock;
 		public Childs: IFB3Block[];
 		public Bookmarks: FB3Bookmarks.IBookmarks[];
-		public XPath: number[];
+		public XPath: any[];
 		constructor(public text: string,
 			public Parent: IFB3Block,
 			public ID: number,
@@ -42,7 +42,7 @@ module FB3DOM {
 			if (Parent && Parent.XPath) {
 				this.XPath = Parent.XPath.slice(0);
 				this.XPath.push(NodeN);
-				this.XPath.push(Chars);
+				this.XPath.push('.' + Chars);
 				this.Bookmarks = Parent.Bookmarks;
 			}
 		}

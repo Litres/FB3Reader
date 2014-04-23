@@ -42,7 +42,7 @@ var FB3DOM;
             if (Parent && Parent.XPath) {
                 this.XPath = Parent.XPath.slice(0);
                 this.XPath.push(NodeN);
-                this.XPath.push(Chars);
+                this.XPath.push('.' + Chars);
                 this.Bookmarks = Parent.Bookmarks;
             }
         }

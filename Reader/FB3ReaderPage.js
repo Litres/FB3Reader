@@ -291,7 +291,7 @@ var FB3ReaderPage;
         ReaderPage.prototype.FalloutConsumeFirst = function (FallOut) {
             var _this = this;
             //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeFirst');
-            if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0) {
+            if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0 && FallOut.FallOut[0] < this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                 // It's too bad baby: text does not fit the page, not even a char
                 // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
                 if (this.FBReader.BookStyleNotes && this.FalloutState.HasFootnotes) {

@@ -224,3 +224,20 @@ function GoToPercent() {
 	AFB3Reader.GoToPercent(parseFloat((<HTMLInputElement>document.getElementById('gotopercent')).value));
 	ShowPosition();
 }
+
+function ShowTOC() {
+	document.getElementById('TOC').innerHTML = Toc2Div(AFB3Reader.TOC());
+	document.getElementById('TOC').style.display = "block";
+
+}
+
+function Toc2Div(TOC: FB3DOM.ITOC): string {
+	var Out = '<div class="tocitm"><a href="AFB3Reader.GoToOpenPosition(['+TOC.s+'])">'
+		+ TOC.t + '</a>';
+	if (TOC.c) {
+		for (var I = 0; I < TOC.c.length; I++) {
+			Out += Toc2Div(TOC.c[I]);
+		}
+	}
+	return Out + '</div>';
+}

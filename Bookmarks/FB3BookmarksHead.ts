@@ -27,6 +27,7 @@ module FB3Bookmarks {
 		Detach(): void; // removes itself from the parent.
 		RemapWithDOM(Callback: IBookmarkSyncCallback): void;
     PublicXML(): string;
+    ParseXML(XML: any): IBookmark;
 	}
 
 	export interface IBookmarks {

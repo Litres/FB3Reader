@@ -85,13 +85,17 @@ module FB3Bookmarks {
 
 		private ParseXML(XML: any) {
 			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
-      if (XML.querySelectorAll('Selection').length) {
-        console.log('we have selection, GoTO :D');
+      var Rows = XML.querySelectorAll('Selection');
+      if (Rows.length) {
+        console.log('we have selection');
         this.LockID = XML.getAttribute('lock-id');
-        // for Selection
-        // this.Bookmarks.push();
+        for (var j = 0; j < Rows.length; j++) {
+          var Bookmark = new Bookmark(this);
+          Bookmark.ParseXML(Rows[j]);
+          this.Bookmarks.push(Bookmark);
+        }
       } else {
-        console.log('we dont have any positions on server');
+        console.log('we dont have any selections on server');
       }
 		}
 
@@ -406,6 +410,13 @@ module FB3Bookmarks {
       '</Selection>';
     }
 
+    public ParseXML(XML: any): IBookmark {
+      this.Class = XML.getAttribute('class');
+      this.Title = XML.getAttribute('title');
+      this.ID = XML.getAttribute('id');
+      return this;
+    }
+
     private Extract(): string {
       // TODO: fill with code
       // '<Extract original-location="fb2#xpointer(/1/2/' + para + ')">' + this.Bookmarks[j].Extract() + '</Extract>';
@@ -422,6 +433,16 @@ module FB3Bookmarks {
     private MakePointer(X: IXPath): string {
       var last = X.pop() + '';
       return X.join('/') + ((/^\./).test(last) ? '' : '/') + last;
+    }
+
+    private GetXPath(X: string) {
+      var p = X.match(/\/1\/2\/(.[^\)]*)/g);
+      this.XStart = p[0].replace('/1/2/', '').split('/');
+      if (p.length == 1) {
+        this.XEnd = this.XStart;
+      } else {
+        this.XEnd = p[1].replace('/1/2/', '').split('/');
+      }
     }
 
 	}}

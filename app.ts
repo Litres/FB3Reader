@@ -1,4 +1,4 @@
-/// <reference path="Site/FB3ReaderSite.ts" />
+﻿/// <reference path="Site/FB3ReaderSite.ts" />
 /// <reference path="Reader/FB3Reader.ts" />
 /// <reference path="DOM/FB3DOM.ts" />
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
@@ -226,18 +226,33 @@ function GoToPercent() {
 }
 
 function ShowTOC() {
-	document.getElementById('TOC').innerHTML = Toc2Div(AFB3Reader.TOC());
-	document.getElementById('TOC').style.display = "block";
-
+	document.getElementById('tocdiv').innerHTML = Toc2Div(AFB3Reader.TOC());
+	document.getElementById('tocdiv').style.display = "block";
 }
 
-function Toc2Div(TOC: FB3DOM.ITOC): string {
-	var Out = '<div class="tocitm"><a href="AFB3Reader.GoToOpenPosition(['+TOC.s+'])">'
-		+ TOC.t + '</a>';
-	if (TOC.c) {
-		for (var I = 0; I < TOC.c.length; I++) {
-			Out += Toc2Div(TOC.c[I]);
+function Toc2Div(TOCS: FB3DOM.ITOC[]): string {
+	var Out = '';
+	for (var J = 0; J < TOCS.length; J++) {
+		var TOC = TOCS[J];
+		Out += '<div class="tocitm">';
+		if (TOC.bookmarks && TOC.bookmarks.g0) {
+			Out += '►';
 		}
+		if (TOC.t) {
+			Out += '<a href = "javascript:GoToc(' + TOC.s + ')" > '
+				+ TOC.t + '</a>';
+		}
+		if (TOC.c) {
+			for (var I = 0; I < TOC.c.length; I++) {
+				Out += Toc2Div([TOC.c[I]]);
+			}
+		}
+		Out += '</div>';
 	}
-	return Out + '</div>';
+	return Out;
+}
+
+function GoToc(S: number): void {
+	AFB3Reader.GoToOpenPosition([S]);
+	document.getElementById('tocdiv').style.display = "none";
 }

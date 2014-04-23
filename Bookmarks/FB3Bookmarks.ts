@@ -187,7 +187,7 @@ module FB3Bookmarks {
 			this.ID = this.MakeSelectionID();
 			this.Group = 0;
 			this.Class = 'default';
-			this.Range = { From: [20], To: [0] };
+			this.Range = { From: [20], To: [20] };
 			this.XPathMappingReady = true;
 			this.N = -1;
 		}

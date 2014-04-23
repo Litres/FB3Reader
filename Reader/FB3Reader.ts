@@ -68,6 +68,11 @@ module FB3Reader {
 		private CanvasH: number;
 		private LastSavePercent: number;
 
+		private SetStartPos(NewPos: IPosition): void {
+			this.CurStartPos = NewPos.slice(0);
+			this.Bookmarks.CurPos.Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
+		}
+
 		constructor(public UUID: string,
       public ArtID: string,
 			public EnableBackgroundPreRender: boolean,
@@ -101,7 +106,7 @@ module FB3Reader {
 			clearTimeout(this.MoveTimeoutID);
 			this.IdleOff();
 //			console.log('GoTO ' + NewPos);
-			this.CurStartPos = NewPos.slice(0); // NewPos is going to be destroyed, we need a hardcopy
+			this.SetStartPos(NewPos); // NewPos is going to be destroyed, we need a hardcopy
 			var GotoPage = this.GetCachedPage(NewPos);
 			if (GotoPage != undefined) {
 				this.GoTOPage(GotoPage);
@@ -154,7 +159,7 @@ module FB3Reader {
 				FirstFrameToFill = this.Pages[0];
 				this.PutBlockIntoView(0);
 			}
-			this.CurStartPos = this.PagesPositionsCache.Get(Page).Range.From.slice(0);
+			this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
 
 			var CacheBroken = false;
 			var NewInstr: IPageRenderInstruction[] = new Array();
@@ -199,7 +204,7 @@ module FB3Reader {
 
 		public GoToOpenPosition(NewPos: IPosition): void {
 			clearTimeout(this.MoveTimeoutID);
-			this.CurStartPos = NewPos.slice(0);
+			this.SetStartPos(NewPos);
 
 			var NewInstr: IPageRenderInstruction[] = [{ Start: NewPos }];
 
@@ -251,13 +256,20 @@ module FB3Reader {
 
 		private PatchToc(TOC: FB3DOM.ITOC[], Pos: IPosition, Group: number):void {
 			for (var I = 0; I < TOC.length; I++) {
-				if (PosCompare([TOC[I].s], Pos) <= 0) { // Pos below the start node in TOC
-					if (TOC[I].c) {
-						this.PatchToc(TOC[I].c, Pos, Group);
-					} else if (TOC[I].bookmarks['g' + Group]) {
-						TOC[I].bookmarks['g' + Group]++;
+				var StartCmp = PosCompare([TOC[I].s], Pos);
+				if (StartCmp <= 0
+					&& PosCompare([TOC[I].e], Pos) >= 0) {	// Pos below the start node in TOC
+					if (StartCmp && TOC[I].c) {							// if the start is the exact match to position - no need to borrow
+						this.PatchToc(TOC[I].c, Pos, Group);	// otherwise we better let childs match the marker
 					} else {
-						TOC[I].bookmarks['g' + Group] = 1;
+						if (!TOC[I].bookmarks) {
+							TOC[I].bookmarks = {};
+						}
+						if (TOC[I].bookmarks['g' + Group]) {
+							TOC[I].bookmarks['g' + Group]++;
+						} else {
+							TOC[I].bookmarks['g' + Group] = 1;
+						}
 					}
 					return;
 				}
@@ -376,7 +388,7 @@ module FB3Reader {
 						this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);
 					}
 				} else {
-					this.CurStartPos = PageToView.RenderInstr.Range.From;
+					this.SetStartPos(PageToView.RenderInstr.Range.From);
 					this.PutBlockIntoView(PageToView.ID-1);
 				}
 			}

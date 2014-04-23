@@ -199,7 +199,7 @@ for my $Line (@JSonArr) {
 			$HrefHash{ $2 } = $BlockN;
 		}
 		if ($3){
-			$NewNode->{t} = $2;
+			$NewNode->{t} = $3;
 		}
 		push @{$TOC->{c}},$NewNode;
 		$TOC = $NewNode;

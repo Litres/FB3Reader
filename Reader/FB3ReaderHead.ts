@@ -23,7 +23,7 @@ module FB3Reader {
 		NColumns: number;
 		EnableBackgroundPreRender: boolean; // Should we scan the document?
 		TextPercent: number;	  // Percantage of the shown text - progress
-		CurStartPos: IPosition;	// Adress of the first visible block
+		CurStartPos: IPosition;	// Adress of the first visible block, READ ONLY!
 		CurStartPage: number;		// Number of the first visible page (if any)
 
 		Init(): void;

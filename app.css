@@ -248,4 +248,19 @@ p.my_selec_1_default {
     display: inline-block;
 }
 
+div.tocitm {
+    padding-left:0.3em;
+}
+#tocdiv {
+    height: 80%;
+    overflow-y: scroll;
+    display: none;
+    position: absolute;
+    top: 50px;
+    left: 0;
+    background-color: silver;
+    padding: 0.5em;
+    border: 2px outset;
+}
+
 /* debug */

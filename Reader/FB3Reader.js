@@ -43,7 +43,8 @@ var FB3Reader;
     FB3Reader.PRIClone = PRIClone;
 
     var Reader = (function () {
-        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, PagesPositionsCache) {
+        function Reader(UUID, ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, PagesPositionsCache) {
+            this.UUID = UUID;
             this.ArtID = ArtID;
             this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;
@@ -62,6 +63,11 @@ var FB3Reader;
 
             this.IdleOff();
         }
+        Reader.prototype.SetStartPos = function (NewPos) {
+            this.CurStartPos = NewPos.slice(0);
+            this.Bookmarks.CurPos.Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
+        };
+
         Reader.prototype.Init = function () {
             var _this = this;
             this.PrepareCanvas();
@@ -70,7 +76,7 @@ var FB3Reader;
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;
-            this.Bookmarks.Load(this.ArtID, function () {
+            this.Bookmarks.Load(function () {
                 _this.Bookmarks.ApplyPosition();
             });
         };
@@ -80,7 +86,7 @@ var FB3Reader;
             this.IdleOff();
 
             //			console.log('GoTO ' + NewPos);
-            this.CurStartPos = NewPos.slice(0); // NewPos is going to be destroyed, we need a hardcopy
+            this.SetStartPos(NewPos); // NewPos is going to be destroyed, we need a hardcopy
             var GotoPage = this.GetCachedPage(NewPos);
             if (GotoPage != undefined) {
                 this.GoTOPage(GotoPage);
@@ -135,7 +141,7 @@ var FB3Reader;
                 FirstFrameToFill = this.Pages[0];
                 this.PutBlockIntoView(0);
             }
-            this.CurStartPos = this.PagesPositionsCache.Get(Page).Range.From.slice(0);
+            this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
 
             var CacheBroken = false;
             var NewInstr = new Array();
@@ -179,7 +185,7 @@ var FB3Reader;
 
         Reader.prototype.GoToOpenPosition = function (NewPos) {
             clearTimeout(this.MoveTimeoutID);
-            this.CurStartPos = NewPos.slice(0);
+            this.SetStartPos(NewPos);
 
             var NewInstr = [{ Start: NewPos }];
 
@@ -230,13 +236,19 @@ var FB3Reader;
 
         Reader.prototype.PatchToc = function (TOC, Pos, Group) {
             for (var I = 0; I < TOC.length; I++) {
-                if (PosCompare([TOC[I].s], Pos) <= 0) {
-                    if (TOC[I].c) {
-                        this.PatchToc(TOC[I].c, Pos, Group);
-                    } else if (TOC[I].bookmarks['g' + Group]) {
-                        TOC[I].bookmarks['g' + Group]++;
+                var StartCmp = PosCompare([TOC[I].s], Pos);
+                if (StartCmp <= 0 && PosCompare([TOC[I].e], Pos) >= 0) {
+                    if (StartCmp && TOC[I].c) {
+                        this.PatchToc(TOC[I].c, Pos, Group); // otherwise we better let childs match the marker
                     } else {
-                        TOC[I].bookmarks['g' + Group] = 1;
+                        if (!TOC[I].bookmarks) {
+                            TOC[I].bookmarks = {};
+                        }
+                        if (TOC[I].bookmarks['g' + Group]) {
+                            TOC[I].bookmarks['g' + Group]++;
+                        } else {
+                            TOC[I].bookmarks['g' + Group] = 1;
+                        }
                     }
                     return;
                 }
@@ -359,7 +371,7 @@ var FB3Reader;
                         this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);
                     }
                 } else {
-                    this.CurStartPos = PageToView.RenderInstr.Range.From;
+                    this.SetStartPos(PageToView.RenderInstr.Range.From);
                     this.PutBlockIntoView(PageToView.ID - 1);
                 }
             }

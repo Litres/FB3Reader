@@ -11,7 +11,7 @@ module FB3Bookmarks {
 	export interface IBookmark {
 		ID: string;
 		N: number;			// Represents IBookmarks.Bookmarks[N] position
-		Date: number; // unix timestamp
+		DateTime: number; // unix timestamp
 		Range: FB3DOM.IRange;
 		XStart: IXPath; // xpath for start point
 		XEnd: IXPath;		// xpath for end point
@@ -27,8 +27,8 @@ module FB3Bookmarks {
 		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
 		Detach(): void; // removes itself from the parent.
 		RemapWithDOM(Callback: IBookmarkSyncCallback): void;
-    PublicXML(): string;
-    ParseXML(XML: any): void;
+		PublicXML(): string;
+		ParseXML(XML: any): void;
 	}
 
 	export interface IBookmarks {

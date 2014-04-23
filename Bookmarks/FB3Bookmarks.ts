@@ -122,7 +122,7 @@ module FB3Bookmarks {
 		public ReLoad(SaveAuto?: boolean) {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
 			TemporaryNotes.Load((Bookmarks: IBookmarks, SaveAuto?: boolean) =>
-        this.ReLoadComplete(Bookmarks, SaveAuto), SaveAuto);
+				this.ReLoadComplete(Bookmarks, SaveAuto), SaveAuto);
 		}
 		private ReLoadComplete(TemporaryNotes: IBookmarks, SaveAuto?: boolean): void {
 			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor

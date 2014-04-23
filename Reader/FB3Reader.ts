@@ -74,7 +74,7 @@ module FB3Reader {
 		}
 
 		constructor(public UUID: string,
-      public ArtID: string,
+			public ArtID: string,
 			public EnableBackgroundPreRender: boolean,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM,

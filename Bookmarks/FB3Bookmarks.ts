@@ -54,7 +54,7 @@ module FB3Bookmarks {
       this.LoadEndCallback = Callback;
       this.WaitForData = true;
       var URL = this.MakeLoadURL(SaveAuto);
-      this.XMLHTTPRequest(URL);
+      this.SendNotesRequest(URL);
       // todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
       // for now we just fire it as it is, should fire after XML loaded
       // setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -83,12 +83,12 @@ module FB3Bookmarks {
 			}
 		}
 
-		private ParseXML(XML: any) {
+		private ParseXML(XML: XMLDocument) {
 			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
       var Rows = XML.querySelectorAll('Selection');
       if (Rows.length) {
         console.log('we have selection');
-        this.LockID = XML.getAttribute('lock-id');
+        this.LockID = XML.documentElement.getAttribute('lock-id');
         for (var j = 0; j < Rows.length; j++) {
           var Bookmark = new Bookmark(this);
           Bookmark.ParseXML(Rows[j]);
@@ -106,7 +106,7 @@ module FB3Bookmarks {
     private StoreBookmarks(): void {
       var XML = this.MakeStoreXML();
       var URL = this.MakeStoreURL(XML);
-      this.XMLHTTPRequest(URL);
+      this.SendNotesRequest(URL);
     }
 
 		public ApplyPosition(): void {
@@ -122,7 +122,6 @@ module FB3Bookmarks {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
 			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks), SaveAuto);
 		}
-
 		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
 			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
 			// than check if new "current position" is newer, if so - goto it
@@ -137,7 +136,6 @@ module FB3Bookmarks {
         this.Reader.ArtID + (SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
       return URL;
     }
-
     private MakeStoreURL(XML: string): string {
       var URL = this.Host + 'pages/catalit_store_bookmarks/?art' +
         this.Reader.ArtID + '&data=' + encodeURIComponent(XML) +
@@ -155,12 +153,11 @@ module FB3Bookmarks {
       return XML;
     }
 
-    private XMLHTTPRequest(URL: string): void {
+    private SendNotesRequest(URL: string): void {
       this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
       this.XMLHttp.open('POST', URL, true);
       this.XMLHttp.send(null);
     }
-
     private XMLHTTPResponse(): void {
       if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
         this.AfterTransferFromServerComplete(this.XMLHttp.responseXML);
@@ -181,6 +178,7 @@ module FB3Bookmarks {
 		public RawText: string;
 		public XPathMappingReady: boolean;
 		public N: number;
+    public Date: number;
 		private RequiredChunks: number[];
 		private AfterRemapCallback: IBookmarkSyncCallback;
 		constructor(private Owner: IBookmarks) {
@@ -410,11 +408,19 @@ module FB3Bookmarks {
       '</Selection>';
     }
 
-    public ParseXML(XML: any): IBookmark {
+    public ParseXML(XML: HTMLElement): void {
+      this.Group = parseInt(XML.getAttribute('group'));
       this.Class = XML.getAttribute('class');
       this.Title = XML.getAttribute('title');
       this.ID = XML.getAttribute('id');
-      return this;
+      this.MakeXPath(XML.getAttribute('selection'));
+      this.Date = moment(XML.getAttribute('last-update'), "YYYY-MM-DDTHH:mm:ssZ").unix();
+      this.Note = XML.querySelector('Note').textContent;
+      // TODO: fill and check
+//      this.RawText = '';
+//      this.XPathMappingReady = true;
+//      this.N = 0;
+//      this.Range;
     }
 
     private Extract(): string {
@@ -435,7 +441,7 @@ module FB3Bookmarks {
       return X.join('/') + ((/^\./).test(last) ? '' : '/') + last;
     }
 
-    private GetXPath(X: string) {
+    private MakeXPath(X: string): void {
       var p = X.match(/\/1\/2\/(.[^\)]*)/g);
       this.XStart = p[0].replace('/1/2/', '').split('/');
       if (p.length == 1) {

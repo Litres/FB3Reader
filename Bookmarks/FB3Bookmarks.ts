@@ -42,6 +42,7 @@ module FB3Bookmarks {
 			this.Bookmarks.push(Bookmark);
 		}
 		public DropBookmark(Bookmark: IBookmark): void {
+      // TODO: patch N for all Bookmarks after this
 			for (var I = 0; I < this.Bookmarks.length; I++) {
 				if (this.Bookmarks[I] == Bookmark) {
 					this.Bookmarks.splice(I, 1);
@@ -92,7 +93,7 @@ module FB3Bookmarks {
         for (var j = 0; j < Rows.length; j++) {
           var Bookmark = new Bookmark(this);
           Bookmark.ParseXML(Rows[j]);
-          this.Bookmarks.push(Bookmark);
+          this.AddBookmark(Bookmark);
         }
       } else {
         console.log('we dont have any selections on server');
@@ -120,14 +121,36 @@ module FB3Bookmarks {
 
 		public ReLoad(SaveAuto?: boolean) {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
-			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks), SaveAuto);
+			TemporaryNotes.Load((Bookmarks: IBookmarks, SaveAuto?: boolean) =>
+        this.ReLoadComplete(Bookmarks, SaveAuto), SaveAuto);
 		}
-		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
+		private ReLoadComplete(TemporaryNotes: IBookmarks, SaveAuto?: boolean): void {
 			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
 			// than check if new "current position" is newer, if so - goto it
 			// and finally
-      // this.StoreBookmarks();
-      // or
+      if (this.Bookmarks.length) {
+        var Found;
+        for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
+          Found = 0;
+          for (var i = 0; i < this.Bookmarks.length; i++) {
+            if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID &&
+              this.Bookmarks[i].Date < TemporaryNotes.Bookmarks[j].Date) {
+                this.Bookmarks[i].Detach();
+                this.AddBookmark(TemporaryNotes.Bookmarks[j]);
+              Found = 1;
+              break;
+            }
+          }
+          if (!Found) {
+            this.AddBookmark(TemporaryNotes.Bookmarks[j]);
+          }
+        }
+      } else {
+        this.Bookmarks = TemporaryNotes.Bookmarks;
+      }
+      if (SaveAuto) {
+        this.StoreBookmarks();
+      }
 			this.Reader.Redraw();
 		}
 
@@ -188,6 +211,7 @@ module FB3Bookmarks {
 			this.Range = { From: [20], To: [0] };
 			this.XPathMappingReady = true;
 			this.N = -1;
+      this.Date = moment().unix();
 		}
 
 		public InitFromXY(X: number, Y: number): boolean {
@@ -419,7 +443,6 @@ module FB3Bookmarks {
       // TODO: fill and check
 //      this.RawText = '';
 //      this.XPathMappingReady = true;
-//      this.N = 0;
 //      this.Range;
     }
 
@@ -443,11 +466,14 @@ module FB3Bookmarks {
 
     private MakeXPath(X: string): void {
       var p = X.match(/\/1\/2\/(.[^\)]*)/g);
-      this.XStart = p[0].replace('/1/2/', '').split('/');
+      var MakeXPathSub = function (str) {
+        return str.replace('/1/2/', '').split('/');
+      }
+      this.XStart = MakeXPathSub(p[0]);
       if (p.length == 1) {
         this.XEnd = this.XStart;
       } else {
-        this.XEnd = p[1].replace('/1/2/', '').split('/');
+        this.XEnd = MakeXPathSub(p[1]);
       }
     }
 

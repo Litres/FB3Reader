@@ -16,6 +16,7 @@ module FB3Reader {
 		Site: FB3ReaderSite.IFB3ReaderSite;
 		Bookmarks: FB3Bookmarks.IBookmarks;
 		ArtID: string;
+		UUID: string;
 		HyphON: boolean;
 		BookStyleNotes: boolean;
 		BookStyleNotesTemporaryOff: boolean;

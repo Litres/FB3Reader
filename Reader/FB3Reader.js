@@ -559,6 +559,7 @@ var FB3Reader;
             for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].Reset();
             }
+            this.BackgroundRenderFrame.Reset();
             this.PrepareCanvas();
             this.GoTO(this.CurStartPos.slice(0));
         };

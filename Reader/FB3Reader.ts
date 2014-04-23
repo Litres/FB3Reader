@@ -99,7 +99,7 @@ module FB3Reader {
 			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.Bookmarks.ApplyPosition() });
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
-			this.Bookmarks.Load(() => { this.Bookmarks.ApplyPosition() } );
+            this.Bookmarks.Load(() => { this.Bookmarks.ApplyPosition() });
 		}
 
 		public GoTO(NewPos: IPosition) {
@@ -583,6 +583,7 @@ module FB3Reader {
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].Reset();
 			}
+			this.BackgroundRenderFrame.Reset();
 			this.PrepareCanvas();
 			this.GoTO(this.CurStartPos.slice(0));
 		}

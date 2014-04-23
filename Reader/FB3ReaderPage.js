@@ -1,4 +1,4 @@
-/// <reference path="FB3ReaderHead.ts" />
+﻿/// <reference path="FB3ReaderHead.ts" />
 /// <reference path="FB3Reader.ts" />
 var FB3ReaderPage;
 (function (FB3ReaderPage) {

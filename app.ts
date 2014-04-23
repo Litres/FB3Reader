@@ -253,6 +253,6 @@ function Toc2Div(TOCS: FB3DOM.ITOC[]): string {
 }
 
 function GoToc(S: number): void {
-	AFB3Reader.GoToOpenPosition([S]);
+	AFB3Reader.GoTO([S]);
 	document.getElementById('tocdiv').style.display = "none";
 }

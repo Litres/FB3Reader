@@ -1,4 +1,4 @@
-/// <reference path="Site/FB3ReaderSite.ts" />
+﻿/// <reference path="Site/FB3ReaderSite.ts" />
 /// <reference path="Reader/FB3Reader.ts" />
 /// <reference path="DOM/FB3DOM.ts" />
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
@@ -252,7 +252,7 @@ function Toc2Div(TOCS) {
 }
 
 function GoToc(S) {
-    AFB3Reader.GoToOpenPosition([S]);
+    AFB3Reader.GoTO([S]);
     document.getElementById('tocdiv').style.display = "none";
 }
 //# sourceMappingURL=app.js.map

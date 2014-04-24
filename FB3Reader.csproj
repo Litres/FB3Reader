@@ -25,8 +25,10 @@
     <TypeScriptCompile Include="DOM\FB3DOM.ts" />
     <TypeScriptCompile Include="DOM\FB3DOMBlock.ts" />
     <Content Include="DOM\FB3DOMHead.ts" />
+    <TypeScriptCompile Include="plugins\moment.d.ts" />
     <TypeScriptCompile Include="Reader\FB3Reader.ts" />
     <Content Include="FB3ReaderHeaders.ts" />
+    <Content Include="plugins\moment.min.js" />
     <Content Include="Reader\FB3ReaderHead.ts" />
     <TypeScriptCompile Include="Site\FB3ReaderSite.ts" />
     <TypeScriptCompile Include="PagesPositionsCache\PPCacheHead.ts" />
@@ -46,6 +48,15 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="web.config" />
+    <None Include="web.Debug.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+    <None Include="web.Release.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -59,17 +70,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>False</UseIIS>
-          <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>51510</DevelopmentServerPort>
-          <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:64598/</IISUrl>
-          <OverrideIISAppRootUrl>True</OverrideIISAppRootUrl>
-          <IISAppRootUrl>http://localhost:64598/</IISAppRootUrl>
-          <NTLMAuthentication>False</NTLMAuthentication>
-          <UseCustomServer>True</UseCustomServer>
-          <CustomServerUrl>http://ajaxxx/</CustomServerUrl>
-          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+          <SaveServerSettingsInUserFile>True</SaveServerSettingsInUserFile>
         </WebProjectProperties>
       </FlavorProperties>
     </VisualStudio>

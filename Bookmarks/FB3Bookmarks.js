@@ -1,4 +1,4 @@
-﻿/// <reference path="FB3BookmarksHead.ts" />
+/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {

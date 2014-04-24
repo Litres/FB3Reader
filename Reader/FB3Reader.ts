@@ -282,9 +282,10 @@ module FB3Reader {
 		}
 
 		public GetCachedPage(NewPos: IPosition): number {
-			for (var I = 0; I < this.PagesPositionsCache.Length(); I++) {
+			for (var I = this.PagesPositionsCache.Length() - 1; I >= 0; I--) {
 				var Pos = this.PagesPositionsCache.Get(I).Range;
-				if (PosCompare(Pos.To, NewPos) >= 0) {
+				if (PosCompare(Pos.To, NewPos) <= 0
+					&& PosCompare(Pos.From, NewPos) >= 0) {
 					return I;
 				}
 			}

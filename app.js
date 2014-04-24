@@ -86,7 +86,8 @@ function InitNote(NoteType) {
         NativeNote.Group = 1;
         document.getElementById('wholepara').disabled = true;
         document.getElementById('wholepara').checked = true;
-        BookmarksProcessor.AddBookmark(NativeNote);
+
+        //		BookmarksProcessor.AddBookmark(NativeNote);
         AFB3Reader.Redraw();
         ShowDialog(NativeNote);
     }
@@ -112,8 +113,9 @@ function CancelNote(NoDestroy) {
 
 var MenuShown;
 function ShowMenu(e) {
-    if (NativeNote)
+    if (NativeNote) {
         NativeNote.Detach();
+    }
     HideDialog();
     if (!NativeNote) {
         NativeNote = new FB3Bookmarks.Bookmark(BookmarksProcessor);
@@ -222,37 +224,6 @@ function Pagebackward() {
 function GoToPercent() {
     AFB3Reader.GoToPercent(parseFloat(document.getElementById('gotopercent').value));
     ShowPosition();
-}
-
-function ShowTOC() {
-    document.getElementById('tocdiv').innerHTML = Toc2Div(AFB3Reader.TOC());
-    document.getElementById('tocdiv').style.display = "block";
-}
-
-function Toc2Div(TOCS) {
-    var Out = '';
-    for (var J = 0; J < TOCS.length; J++) {
-        var TOC = TOCS[J];
-        Out += '<div class="tocitm">';
-        if (TOC.bookmarks && TOC.bookmarks.g0) {
-            Out += '►';
-        }
-        if (TOC.t) {
-            Out += '<a href = "javascript:GoToc(' + TOC.s + ')" > ' + TOC.t + '</a>';
-        }
-        if (TOC.c) {
-            for (var I = 0; I < TOC.c.length; I++) {
-                Out += Toc2Div([TOC.c[I]]);
-            }
-        }
-        Out += '</div>';
-    }
-    return Out;
-}
-
-function GoToc(S) {
-    AFB3Reader.GoTO([S]);
-    document.getElementById('tocdiv').style.display = "none";
 }
 
 function ShowTOC() {

@@ -201,6 +201,7 @@ module FB3Bookmarks {
 			for (var j = 0; j < this.Bookmarks.length; j++) {
 				XML += this.Bookmarks[j].PublicXML();
 			}
+			XML += this.CurPos.PublicXML();
 			XML += '</FictionBookMarkup>';
 			return XML;
 		}

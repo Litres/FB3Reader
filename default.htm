@@ -27,10 +27,11 @@
         onmouseup="HideAll();"
         oncontextmenu="ShowMenu(event);return false;">Loading…</div>
     <div>
-        <input type="button" value="&lt;&lt; Page back" onclick="Pagebackward()"/>&#160;&#160;&#160;
+        <input type="button" value="&lt;&lt; Page back" onclick="Pagebackward()"/>&#160;&#160;
         <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="GoToPercent()"/>
-        &#160;&#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="PageForward()"/>
-        &#160;&#160;&#160;<input type="button" value="TOC" onclick="ShowTOC()"/>
+        &#160;&#160;<input type="button" value="Page forward &gt;&gt;" onclick="PageForward()"/>
+        &#160;&#160;<input type="button" value="TOC" onclick="ShowTOC()" />
+        &#160;&#160;<input type="button" value="Bookmarks…" onclick="ManageBookmarks()" />
     </div>
     <div style="float:left">
         <b>Visible actions progress:</b>
@@ -114,7 +115,13 @@
         </tr>
     </table>
     <div id="tocdiv">
-        Содержание:
+        <div style="text-align:right"><a href="javascript:CloseBookmarksList()">[X]</a></div>
+        <div id="tocdivcontent">
+        </div>
+    </div>
+    <div id="bookmarksmandiv">
+        <div style="text-align:right"><a href="javascript:CloseBookmarksList()">[X]</a></div>
+        <div id="bookmarkslist"></div>
     </div>
 </body>
 </html>

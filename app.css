@@ -251,7 +251,7 @@ p.my_selec_1_default {
 div.tocitm {
     padding-left:0.3em;
 }
-#tocdiv {
+#tocdiv, #bookmarksmandiv {
     height: 80%;
     overflow-y: scroll;
     display: none;
@@ -261,6 +261,13 @@ div.tocitm {
     background-color: silver;
     padding: 0.5em;
     border: 2px outset;
+}
+#bookmarksmandiv{
+	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
+	filter: alpha(opacity=70);
+	-moz-opacity:0.7;
+	-khtml-opacity: 0.7;
+	opacity: 0.7;
 }
 
 /* debug */

@@ -47,9 +47,9 @@ module FB3Bookmarks {
 		public DropBookmark(Bookmark: IBookmark): void {
 			// TODO: patch N for all Bookmarks after this
 			for (var I = 0; I < this.Bookmarks.length; I++) {
+				this.Bookmarks[I].N = I;
 				if (this.Bookmarks[I] == Bookmark) {
 					this.Bookmarks.splice(I, 1);
-					return;
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-/// <reference path="FB3BookmarksHead.ts" />
+﻿/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
@@ -25,9 +25,9 @@ var FB3Bookmarks;
         };
         LitResBookmarksProcessor.prototype.DropBookmark = function (Bookmark) {
             for (var I = 0; I < this.Bookmarks.length; I++) {
+                this.Bookmarks[I].N = I;
                 if (this.Bookmarks[I] == Bookmark) {
                     this.Bookmarks.splice(I, 1);
-                    return;
                 }
             }
         };

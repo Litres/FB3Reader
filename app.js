@@ -254,4 +254,62 @@ function GoToc(S) {
     AFB3Reader.GoTO([S]);
     document.getElementById('tocdiv').style.display = "none";
 }
+
+function ShowTOC() {
+    document.getElementById('tocdiv').innerHTML = Toc2Div(AFB3Reader.TOC());
+    document.getElementById('tocdiv').style.display = "block";
+}
+
+function Toc2Div(TOCS) {
+    var Out = '';
+    for (var J = 0; J < TOCS.length; J++) {
+        var TOC = TOCS[J];
+        Out += '<div class="tocitm">';
+        if (TOC.bookmarks && TOC.bookmarks.g0) {
+            Out += '►';
+        }
+        if (TOC.t) {
+            Out += '<a href = "javascript:GoToc(' + TOC.s + ')" > ' + TOC.t + '</a>';
+        }
+        if (TOC.c) {
+            for (var I = 0; I < TOC.c.length; I++) {
+                Out += Toc2Div([TOC.c[I]]);
+            }
+        }
+        Out += '</div>';
+    }
+    return Out;
+}
+
+function GoToc(S) {
+    AFB3Reader.GoTO([S]);
+    CloseBookmarksList();
+}
+
+function Bookmark2Div(Bookmark) {
+    return '<div class="bookmarkdiv"><div style="float:right"><a href="javascript:DropBookmark(' + Bookmark.N + ')">[X]</a></div><a href="javascript:ShowBookmark(' + Bookmark.N + ')">' + Bookmark.Title + '</a></div>';
+}
+
+function ShowBookmark(N) {
+    AFB3Reader.GoTO(AFB3Reader.Bookmarks.Bookmarks[N].Range.From);
+}
+
+function ManageBookmarks() {
+    document.getElementById('bookmarksmandiv').style.display = "block";
+    var Bookmarks = '';
+    for (var J = 0; J < AFB3Reader.Bookmarks.Bookmarks.length; J++) {
+        Bookmarks += Bookmark2Div(AFB3Reader.Bookmarks.Bookmarks[J]);
+    }
+    document.getElementById('bookmarkslist').innerHTML = Bookmarks;
+}
+
+function CloseBookmarksList() {
+    document.getElementById('tocdiv').style.display = "none";
+    document.getElementById('bookmarksmandiv').style.display = "none";
+}
+
+function DropBookmark(I) {
+    AFB3Reader.Bookmarks.Bookmarks[I].Detach();
+    ManageBookmarks();
+}
 //# sourceMappingURL=app.js.map

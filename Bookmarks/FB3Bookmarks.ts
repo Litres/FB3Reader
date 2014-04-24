@@ -135,6 +135,7 @@ module FB3Bookmarks {
 					for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
 						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
 							Found = 1;
+							break;
 						}
 					}
 					if (!Found && !this.Bookmarks[i].NotSavedYet) {

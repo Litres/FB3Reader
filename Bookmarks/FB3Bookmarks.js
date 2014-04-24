@@ -36,7 +36,8 @@ var FB3Bookmarks;
             this.LoadEndCallback = Callback;
             this.WaitForData = true;
             var URL = this.MakeLoadURL(SaveAuto);
-            this.SendNotesRequest(URL, this.AfterTransferFromServerComplete);
+            this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
+            this.SendNotesRequest(URL);
             // todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
             // for now we just fire it as it is, should fire after XML loaded
             // setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -91,6 +92,8 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.StoreBookmarks = function () {
             var XML = this.MakeStoreXML();
             var URL = this.MakeStoreURL(XML);
+            this.XMLHTTPResponseCallback = function () {
+            };
             this.SendNotesRequest(URL);
         };
 
@@ -181,18 +184,17 @@ var FB3Bookmarks;
             return XML;
         };
 
-        LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL, Callback) {
+        LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL) {
             var _this = this;
-            this.XMLHttp.onreadystatechange = function (Callback) {
-                return _this.XMLHTTPResponse(Callback);
+            this.XMLHttp.onreadystatechange = function () {
+                return _this.XMLHTTPResponse();
             };
             this.XMLHttp.open('POST', URL, true);
             this.XMLHttp.send(null);
         };
-        LitResBookmarksProcessor.prototype.XMLHTTPResponse = function (Callback) {
+        LitResBookmarksProcessor.prototype.XMLHTTPResponse = function () {
             if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
-                if (Callback)
-                    Callback(this.XMLHttp.responseXML);
+                this.XMLHTTPResponseCallback(this.XMLHttp.responseXML);
             }
             // TODO: add error handler
         };

@@ -6,6 +6,8 @@ module FB3Bookmarks {
   interface iWindow extends Window { ActiveXObject: any; }
   declare var window: iWindow;
 
+	interface IXMLHTTPResponseCallback { (Data?: XMLDocument): void }
+
 	export class LitResBookmarksProcessor implements IBookmarks {
 		public Ready: boolean;
 		public Reader: FB3Reader.IFBReader;
@@ -21,6 +23,7 @@ module FB3Bookmarks {
 		private SID: string;
 		private Callback: any;
 		private LockID: string;
+		private XMLHTTPResponseCallback: IXMLHTTPResponseCallback;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string) {
 			this.Ready = false;
 			this.FB3DOM.Bookmarks.push(this);
@@ -55,7 +58,8 @@ module FB3Bookmarks {
 			this.LoadEndCallback = Callback;
 			this.WaitForData = true;
 			var URL = this.MakeLoadURL(SaveAuto);
-			this.SendNotesRequest(URL, this.AfterTransferFromServerComplete);
+			this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
+			this.SendNotesRequest(URL);
 			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
 			// for now we just fire it as it is, should fire after XML loaded
 			// setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -107,6 +111,7 @@ module FB3Bookmarks {
 		private StoreBookmarks(): void {
 			var XML = this.MakeStoreXML();
 			var URL = this.MakeStoreURL(XML);
+			this.XMLHTTPResponseCallback = () => {};
 			this.SendNotesRequest(URL);
 		}
 
@@ -200,14 +205,14 @@ module FB3Bookmarks {
 			return XML;
 		}
 
-		private SendNotesRequest(URL: string, Callback?: IBookmarksReadyCallback): void {
-			this.XMLHttp.onreadystatechange = (Callback) => this.XMLHTTPResponse(Callback);
+		private SendNotesRequest(URL: string): void {
+			this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
 			this.XMLHttp.open('POST', URL, true);
 			this.XMLHttp.send(null);
 		}
-		private XMLHTTPResponse(Callback?: IBookmarksReadyCallback): void {
+		private XMLHTTPResponse(): void {
 			if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
-				if (Callback) Callback(this.XMLHttp.responseXML);
+				this.XMLHTTPResponseCallback(this.XMLHttp.responseXML);
 			}
 			// TODO: add error handler
 		}

@@ -72,7 +72,7 @@ var FB3Bookmarks;
             // todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
             var Rows = XML.querySelectorAll('Selection');
             if (Rows.length) {
-                console.log('we have selection');
+                // console.log('we have selection');
                 this.LockID = XML.documentElement.getAttribute('lock-id');
                 for (var j = 0; j < Rows.length; j++) {
                     var Bookmark = new Bookmark(this);
@@ -80,7 +80,7 @@ var FB3Bookmarks;
                     this.AddBookmark(Bookmark);
                 }
             } else {
-                console.log('we dont have any selections on server');
+                // console.log('we dont have any selections on server');
             }
         };
 
@@ -154,7 +154,7 @@ var FB3Bookmarks;
                 this.Bookmarks = TemporaryNotes.Bookmarks;
             }
             if (CurPosUpdate) {
-                // TODO: need very good GoTO
+                this.ApplyPosition();
             } else {
                 this.Reader.Redraw();
             }

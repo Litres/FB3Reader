@@ -55,7 +55,7 @@ module FB3Bookmarks {
 			this.LoadEndCallback = Callback;
 			this.WaitForData = true;
 			var URL = this.MakeLoadURL(SaveAuto);
-			this.SendNotesRequest(URL);
+			this.SendNotesRequest(URL, this.AfterTransferFromServerComplete);
 			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
 			// for now we just fire it as it is, should fire after XML loaded
 			// setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -200,14 +200,14 @@ module FB3Bookmarks {
 			return XML;
 		}
 
-		private SendNotesRequest(URL: string): void {
-			this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
+		private SendNotesRequest(URL: string, Callback?: IBookmarksReadyCallback): void {
+			this.XMLHttp.onreadystatechange = (Callback) => this.XMLHTTPResponse(Callback);
 			this.XMLHttp.open('POST', URL, true);
 			this.XMLHttp.send(null);
 		}
-		private XMLHTTPResponse(): void {
+		private XMLHTTPResponse(Callback?: IBookmarksReadyCallback): void {
 			if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
-				this.AfterTransferFromServerComplete(this.XMLHttp.responseXML);
+				if (Callback) Callback(this.XMLHttp.responseXML);
 			}
 			// TODO: add error handler
 		}

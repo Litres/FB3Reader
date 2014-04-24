@@ -36,7 +36,7 @@ var FB3Bookmarks;
             this.LoadEndCallback = Callback;
             this.WaitForData = true;
             var URL = this.MakeLoadURL(SaveAuto);
-            this.SendNotesRequest(URL);
+            this.SendNotesRequest(URL, this.AfterTransferFromServerComplete);
             // todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
             // for now we just fire it as it is, should fire after XML loaded
             // setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -181,17 +181,18 @@ var FB3Bookmarks;
             return XML;
         };
 
-        LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL) {
+        LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL, Callback) {
             var _this = this;
-            this.XMLHttp.onreadystatechange = function () {
-                return _this.XMLHTTPResponse();
+            this.XMLHttp.onreadystatechange = function (Callback) {
+                return _this.XMLHTTPResponse(Callback);
             };
             this.XMLHttp.open('POST', URL, true);
             this.XMLHttp.send(null);
         };
-        LitResBookmarksProcessor.prototype.XMLHTTPResponse = function () {
+        LitResBookmarksProcessor.prototype.XMLHTTPResponse = function (Callback) {
             if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
-                this.AfterTransferFromServerComplete(this.XMLHttp.responseXML);
+                if (Callback)
+                    Callback(this.XMLHttp.responseXML);
             }
             // TODO: add error handler
         };

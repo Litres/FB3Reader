@@ -12,6 +12,7 @@ module FB3Bookmarks {
 		ID: string;
 		N: number;			// Represents IBookmarks.Bookmarks[N] position
 		DateTime: number; // unix timestamp
+		NotSavedYet: number; // Attr for just created Note
 		Range: FB3DOM.IRange;
 		XStart: IXPath; // xpath for start point
 		XEnd: IXPath;		// xpath for end point

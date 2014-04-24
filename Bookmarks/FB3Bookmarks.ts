@@ -128,30 +128,53 @@ module FB3Bookmarks {
 			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
 			// than check if new "current position" is newer, if so - goto it
 			// and finally
+			var CurPosUpdate = 0;
 			if (this.Bookmarks.length) {
 				var Found;
-				for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
-					Found = 0;
-					for (var i = 0; i < this.Bookmarks.length; i++) {
-						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID &&
-							this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
-								this.Bookmarks[i].Detach();
-								this.AddBookmark(TemporaryNotes.Bookmarks[j]);
+				for (var i = 0; i < this.Bookmarks.length; i++) {
+					for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
+						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
 							Found = 1;
-							break;
 						}
 					}
-					if (!Found) {
-						this.AddBookmark(TemporaryNotes.Bookmarks[j]);
+					if (!Found && !this.Bookmarks[i].NotSavedYet) {
+						this.Bookmarks[i].Detach();
+					}
+				}
+				Found = 0;
+				for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
+					if (TemporaryNotes.Bookmarks[j].Group == 0 &&
+						this.CurPos.DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
+							this.CurPos = TemporaryNotes.Bookmarks[j];
+							CurPosUpdate = 1;
+					} else {
+						Found = 0;
+						for (var i = 0; i < this.Bookmarks.length; i++) {
+							if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
+								if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
+									this.Bookmarks[i].Detach();
+								} else {
+									Found = 1;
+								}
+								break;
+							}
+						}
+						if (!Found) {
+							this.AddBookmark(TemporaryNotes.Bookmarks[j]);
+						}
 					}
 				}
 			} else {
 				this.Bookmarks = TemporaryNotes.Bookmarks;
 			}
+			if (CurPosUpdate) {
+				// TODO: need very good GoTO
+			} else {
+				this.Reader.Redraw();
+			}
 			if (SaveAuto) {
 				this.StoreBookmarks();
 			}
-			this.Reader.Redraw();
 		}
 
 		private MakeLoadURL(SaveAuto: boolean): string {
@@ -202,6 +225,7 @@ module FB3Bookmarks {
 		public XPathMappingReady: boolean;
 		public N: number;
 		public DateTime: number;
+		public NotSavedYet: number;
 		private RequiredChunks: number[];
 		private AfterRemapCallback: IBookmarkSyncCallback;
 		constructor(private Owner: IBookmarks) {
@@ -212,6 +236,7 @@ module FB3Bookmarks {
 			this.XPathMappingReady = true;
 			this.N = -1;
 			this.DateTime = moment().unix();
+			this.NotSavedYet = 1;
 		}
 
 		public InitFromXY(X: number, Y: number): boolean {
@@ -440,6 +465,7 @@ module FB3Bookmarks {
 			this.MakeXPath(XML.getAttribute('selection'));
 			this.DateTime = moment(XML.getAttribute('last-update'), "YYYY-MM-DDTHH:mm:ssZ").unix();
 			this.Note = XML.querySelector('Note').textContent;
+			this.NotSavedYet = 0;
 			// TODO: fill and check
 //			this.RawText = '';
 //			this.XPathMappingReady = true;

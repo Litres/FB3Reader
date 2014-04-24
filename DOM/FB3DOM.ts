@@ -67,6 +67,7 @@ module FB3DOM {
 		private ActiveRequests: AsyncLoadConsumer[];
 		public TOC: ITOC[];
 		public DataChunks: IDataDisposition[];
+		public MetaData: IMetaData;
 		public Ready: boolean;
 		private OnDoneFunc: any;
 		private ArtID: string;
@@ -97,6 +98,7 @@ module FB3DOM {
 		private AfterHeaderLoaded(Data: any):void {
 			this.TOC = Data.Body;
 			this.DataChunks = Data.Parts;
+			this.MetaData = Data.Meta;
 			this.Ready = true;
 			this.OnDoneFunc(this);
 		}

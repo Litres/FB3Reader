@@ -452,7 +452,7 @@ module FB3Bookmarks {
 				(this.Title ? 'title="' + this.Title + '" ' : '') +
 				'id="' + this.ID + '" ' +
 				'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
-				'art-id="' + this.Owner.Reader.UUID + '" ' +
+				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
 				'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' +
 				this.Extract() +
 			'</Selection>';

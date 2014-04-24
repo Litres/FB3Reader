@@ -43,8 +43,7 @@ var FB3Reader;
     FB3Reader.PRIClone = PRIClone;
 
     var Reader = (function () {
-        function Reader(UUID, ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, PagesPositionsCache) {
-            this.UUID = UUID;
+        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, PagesPositionsCache) {
             this.ArtID = ArtID;
             this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;

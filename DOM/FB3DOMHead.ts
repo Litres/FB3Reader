@@ -55,6 +55,17 @@ module FB3DOM {
 		xpe: FB3Bookmarks.IXPath;  // same for the last one
 	}
 
+	export interface IMetaData {
+		Title: string;
+		UUID: string;
+		Authors: IAuthorsData[];
+	}
+	export interface IAuthorsData {
+		First: string;
+		Last: string;
+		Middle: string;
+	}
+
 	export interface IFB3Block {
 		Parent: IFB3Block;
 		XPID: string;				// XPAth-like ID for this DOM-node, allows for reverse search for block
@@ -88,6 +99,7 @@ module FB3DOM {
 		DataProvider: FB3DataProvider.IJsonLoaderFactory;
 		TOC: ITOC[];
 		DataChunks: IDataDisposition[];
+		MetaData: IMetaData;
 		ArtID2URL(Chunk?: string): string;
 		Init(HyphOn: boolean,
 			ArtID: string,

@@ -73,8 +73,7 @@ module FB3Reader {
 			this.Bookmarks.CurPos.Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
 		}
 
-		constructor(public UUID: string,
-			public ArtID: string,
+		constructor(public ArtID: string,
 			public EnableBackgroundPreRender: boolean,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			private FB3DOM: FB3DOM.IFB3DOM,

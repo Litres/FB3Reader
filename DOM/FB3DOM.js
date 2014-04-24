@@ -96,6 +96,7 @@ var FB3DOM;
         DOM.prototype.AfterHeaderLoaded = function (Data) {
             this.TOC = Data.Body;
             this.DataChunks = Data.Parts;
+            this.MetaData = Data.Meta;
             this.Ready = true;
             this.OnDoneFunc(this);
         };

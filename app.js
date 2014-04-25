@@ -16,11 +16,12 @@ window.onload = function () {
 
     //	var ArtID = '178297';
     var ArtID = '120421';
+    var SID = GetSID();
     var Canvas = document.getElementById('reader');
     var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
     var DataProvider = new FB3DataProvider.AJAXDataProvider();
     var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
-    BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM);
+    BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
     AFB3PPCache = new FB3PPCache.PPCache();
     AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
     AFB3Reader.NColumns = 1;
@@ -33,6 +34,18 @@ window.onload = function () {
     //	ShowPosition();
     start = new Date().getTime();
 };
+
+function GetSID() {
+    var URL = window.location.href;
+    var SID = URL.match(/sid=(.[^&]*)/);
+
+    //	console.log(SID[1]);
+    if (!SID.length) {
+        // TODO cookie try
+    } else {
+        return SID[1];
+    }
+}
 
 var MarkupProgress;
 var NativeNote;

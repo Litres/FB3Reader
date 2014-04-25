@@ -36,8 +36,8 @@ module FB3Bookmarks {
 			} else {
 				this.XMLHttp = new XMLHttpRequest();
 			}
-			this.Host = 'http://www.litres.ru/';
-			this.SID = LitresSID || 'ccf52f2b0abd26cb46dbe6296870d877'; // TODO: fix after test
+			this.Host = 'http://robot.litres.ru/'; // TODO: raplace
+			this.SID = LitresSID;
 		}
 
 		public AddBookmark(Bookmark: IBookmark): void {
@@ -45,7 +45,6 @@ module FB3Bookmarks {
 			this.Bookmarks.push(Bookmark);
 		}
 		public DropBookmark(Bookmark: IBookmark): void {
-			// TODO: patch N for all Bookmarks after this
 			for (var I = 0; I < this.Bookmarks.length; I++) {
 				this.Bookmarks[I].N = I;
 				if (this.Bookmarks[I] == Bookmark) {
@@ -59,7 +58,7 @@ module FB3Bookmarks {
 			this.WaitForData = true;
 			var URL = this.MakeLoadURL(SaveAuto);
 			this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
-			this.SendNotesRequest(URL);
+			this.SendNotesRequest(URL, 'GET');
 			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
 			// for now we just fire it as it is, should fire after XML loaded
 			// setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -95,9 +94,13 @@ module FB3Bookmarks {
 				// console.log('we have selection');
 				this.LockID = XML.documentElement.getAttribute('lock-id');
 				for (var j = 0; j < Rows.length; j++) {
-					var Bookmark = new Bookmark(this);
-					Bookmark.ParseXML(Rows[j]);
-					this.AddBookmark(Bookmark);
+					var NewBookmark = new Bookmark(this);
+					NewBookmark.ParseXML(Rows[j]);
+					if (NewBookmark.Group == 0) {
+						this.CurPos = NewBookmark;
+					} else {
+						this.AddBookmark(NewBookmark);
+					}
 				}
 			} else {
 				// console.log('we dont have any selections on server');
@@ -112,7 +115,7 @@ module FB3Bookmarks {
 			var XML = this.MakeStoreXML();
 			var URL = this.MakeStoreURL(XML);
 			this.XMLHTTPResponseCallback = () => {};
-			this.SendNotesRequest(URL);
+			this.SendNotesRequest(URL, 'POST');
 		}
 
 		public ApplyPosition(): void {
@@ -125,7 +128,7 @@ module FB3Bookmarks {
 		}
 
 		public ReLoad(SaveAuto?: boolean) {
-			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM);
+			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
 			TemporaryNotes.Load((Bookmarks: IBookmarks, SaveAuto?: boolean) =>
 				this.ReLoadComplete(Bookmarks, SaveAuto), SaveAuto);
 		}
@@ -206,9 +209,9 @@ module FB3Bookmarks {
 			return XML;
 		}
 
-		private SendNotesRequest(URL: string): void {
+		private SendNotesRequest(URL: string, Type: string): void {
 			this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
-			this.XMLHttp.open('POST', URL, true);
+			this.XMLHttp.open(Type, URL, true);
 			this.XMLHttp.send(null);
 		}
 		private XMLHTTPResponse(): void {
@@ -464,14 +467,16 @@ module FB3Bookmarks {
 			'</Selection>';
 		}
 
-		public ParseXML(XML: HTMLElement): void {
+		public ParseXML(XML: any): void { // TODO: fix, need correct type
 			this.Group = parseInt(XML.getAttribute('group'));
 			this.Class = XML.getAttribute('class');
 			this.Title = XML.getAttribute('title');
 			this.ID = XML.getAttribute('id');
 			this.MakeXPath(XML.getAttribute('selection'));
 			this.DateTime = moment(XML.getAttribute('last-update'), "YYYY-MM-DDTHH:mm:ssZ").unix();
-			this.Note = XML.querySelector('Note').textContent;
+			if (XML.querySelector('Note')) {
+				this.Note = XML.querySelector('Note').textContent;
+			}
 			this.NotSavedYet = 0;
 			// TODO: fill and check
 //			this.RawText = '';

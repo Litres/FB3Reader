@@ -294,4 +294,13 @@ function DropBookmark(I) {
     AFB3Reader.Bookmarks.Bookmarks[I].Detach();
     ManageBookmarks();
 }
+
+function Save() {
+    console.log('save button clicked');
+    BookmarksProcessor.Store();
+}
+function Load() {
+    console.log('load button clicked');
+    BookmarksProcessor.ReLoad();
+}
 //# sourceMappingURL=app.js.map

@@ -18,6 +18,7 @@ var FB3Bookmarks;
             }
             this.Host = 'http://robot.litres.ru/'; // TODO: raplace
             this.SID = LitresSID;
+            this.SaveAuto = false;
         }
         LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
             Bookmark.N = this.Bookmarks.length;
@@ -32,10 +33,10 @@ var FB3Bookmarks;
             }
         };
 
-        LitResBookmarksProcessor.prototype.Load = function (Callback, SaveAuto) {
+        LitResBookmarksProcessor.prototype.Load = function (Callback) {
             this.LoadEndCallback = Callback;
             this.WaitForData = true;
-            var URL = this.MakeLoadURL(SaveAuto);
+            var URL = this.MakeLoadURL();
             this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
             this.SendNotesRequest(URL, 'GET');
             // todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
@@ -78,11 +79,12 @@ var FB3Bookmarks;
                 for (var j = 0; j < Rows.length; j++) {
                     var NewBookmark = new Bookmark(this);
                     NewBookmark.ParseXML(Rows[j]);
-                    if (NewBookmark.Group == 0) {
-                        this.CurPos = NewBookmark;
-                    } else {
-                        this.AddBookmark(NewBookmark);
-                    }
+
+                    //					if (NewBookmark.Group == 0) {
+                    //						this.CurPos = NewBookmark;
+                    //					} else {
+                    this.AddBookmark(NewBookmark);
+                    //					}
                 }
             } else {
                 // console.log('we dont have any selections on server');
@@ -95,10 +97,11 @@ var FB3Bookmarks;
 
         LitResBookmarksProcessor.prototype.StoreBookmarks = function () {
             var XML = this.MakeStoreXML();
-            var URL = this.MakeStoreURL(XML);
+            var URL = this.MakeStoreURL();
+            var Data = this.MakeStoreData(XML);
             this.XMLHTTPResponseCallback = function () {
             };
-            this.SendNotesRequest(URL, 'POST');
+            this.SendNotesRequest(URL, 'POST', Data);
         };
 
         LitResBookmarksProcessor.prototype.ApplyPosition = function () {
@@ -110,14 +113,16 @@ var FB3Bookmarks;
             this.Reader.GoTO(this.CurPos.Range.From.slice(0));
         };
 
-        LitResBookmarksProcessor.prototype.ReLoad = function (SaveAuto) {
+        LitResBookmarksProcessor.prototype.ReLoad = function (SaveAutoState) {
             var _this = this;
             var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
-            TemporaryNotes.Load(function (Bookmarks, SaveAuto) {
-                return _this.ReLoadComplete(Bookmarks, SaveAuto);
-            }, SaveAuto);
+            TemporaryNotes.Reader = this.Reader;
+            this.SaveAuto = SaveAutoState;
+            TemporaryNotes.Load(function (Bookmarks) {
+                return _this.ReLoadComplete(Bookmarks);
+            });
         };
-        LitResBookmarksProcessor.prototype.ReLoadComplete = function (TemporaryNotes, SaveAuto) {
+        LitResBookmarksProcessor.prototype.ReLoadComplete = function (TemporaryNotes) {
             // todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
             // than check if new "current position" is newer, if so - goto it
             // and finally
@@ -165,18 +170,21 @@ var FB3Bookmarks;
             } else {
                 this.Reader.Redraw();
             }
-            if (SaveAuto) {
+            if (this.SaveAuto) {
                 this.StoreBookmarks();
             }
         };
 
-        LitResBookmarksProcessor.prototype.MakeLoadURL = function (SaveAuto) {
-            var URL = this.Host + 'pages/catalit_load_bookmarks/?art=' + this.Reader.ArtID + (SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
+        LitResBookmarksProcessor.prototype.MakeLoadURL = function () {
+            var URL = this.Host + 'pages/catalit_load_bookmarks/?art=' + this.Reader.ArtID + (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
             return URL;
         };
-        LitResBookmarksProcessor.prototype.MakeStoreURL = function (XML) {
-            var URL = this.Host + 'pages/catalit_store_bookmarks/?art' + this.Reader.ArtID + '&data=' + encodeURIComponent(XML) + '&lock_id=' + this.LockID + '&sid=' + this.SID + '&r=' + Math.random();
-            return URL;
+        LitResBookmarksProcessor.prototype.MakeStoreURL = function () {
+            return this.Host + 'pages/catalit_store_bookmarks/';
+        };
+        LitResBookmarksProcessor.prototype.MakeStoreData = function (XML) {
+            var Data = 'art=' + this.Reader.ArtID + '&data=' + encodeURIComponent(XML) + '&lock_id=' + this.LockID + '&sid=' + this.SID + '&r=' + Math.random();
+            return Data;
         };
 
         LitResBookmarksProcessor.prototype.MakeStoreXML = function () {
@@ -189,13 +197,15 @@ var FB3Bookmarks;
             return XML;
         };
 
-        LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL, Type) {
+        LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL, Type, Data) {
             var _this = this;
+            var Data = Data || null;
             this.XMLHttp.onreadystatechange = function () {
                 return _this.XMLHTTPResponse();
             };
             this.XMLHttp.open(Type, URL, true);
-            this.XMLHttp.send(null);
+            this.XMLHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            this.XMLHttp.send(Data);
         };
         LitResBookmarksProcessor.prototype.XMLHTTPResponse = function () {
             if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {

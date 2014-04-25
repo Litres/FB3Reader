@@ -23,6 +23,7 @@ module FB3Bookmarks {
 		private SID: string;
 		private Callback: any;
 		private LockID: string;
+		private SaveAuto: boolean;
 		private XMLHTTPResponseCallback: IXMLHTTPResponseCallback;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string) {
 			this.Ready = false;
@@ -38,6 +39,7 @@ module FB3Bookmarks {
 			}
 			this.Host = 'http://robot.litres.ru/'; // TODO: raplace
 			this.SID = LitresSID;
+			this.SaveAuto = false;
 		}
 
 		public AddBookmark(Bookmark: IBookmark): void {
@@ -53,10 +55,10 @@ module FB3Bookmarks {
 			}
 		}
 
-		public Load(Callback?: IBookmarksReadyCallback, SaveAuto?: boolean) {
+		public Load(Callback?: IBookmarksReadyCallback) {
 			this.LoadEndCallback = Callback;
 			this.WaitForData = true;
-			var URL = this.MakeLoadURL(SaveAuto);
+			var URL = this.MakeLoadURL();
 			this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
 			this.SendNotesRequest(URL, 'GET');
 			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
@@ -96,11 +98,11 @@ module FB3Bookmarks {
 				for (var j = 0; j < Rows.length; j++) {
 					var NewBookmark = new Bookmark(this);
 					NewBookmark.ParseXML(Rows[j]);
-					if (NewBookmark.Group == 0) {
-						this.CurPos = NewBookmark;
-					} else {
+//					if (NewBookmark.Group == 0) {
+//						this.CurPos = NewBookmark;
+//					} else {
 						this.AddBookmark(NewBookmark);
-					}
+//					}
 				}
 			} else {
 				// console.log('we dont have any selections on server');
@@ -113,9 +115,10 @@ module FB3Bookmarks {
 
 		private StoreBookmarks(): void {
 			var XML = this.MakeStoreXML();
-			var URL = this.MakeStoreURL(XML);
+			var URL = this.MakeStoreURL();
+			var Data = this.MakeStoreData(XML);
 			this.XMLHTTPResponseCallback = () => {};
-			this.SendNotesRequest(URL, 'POST');
+			this.SendNotesRequest(URL, 'POST', Data);
 		}
 
 		public ApplyPosition(): void {
@@ -127,12 +130,13 @@ module FB3Bookmarks {
 			this.Reader.GoTO(this.CurPos.Range.From.slice(0));
 		}
 
-		public ReLoad(SaveAuto?: boolean) {
+		public ReLoad(SaveAutoState?: boolean) {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
-			TemporaryNotes.Load((Bookmarks: IBookmarks, SaveAuto?: boolean) =>
-				this.ReLoadComplete(Bookmarks, SaveAuto), SaveAuto);
+			TemporaryNotes.Reader = this.Reader;
+			this.SaveAuto = SaveAutoState;
+			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
 		}
-		private ReLoadComplete(TemporaryNotes: IBookmarks, SaveAuto?: boolean): void {
+		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
 			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
 			// than check if new "current position" is newer, if so - goto it
 			// and finally
@@ -181,21 +185,23 @@ module FB3Bookmarks {
 			} else {
 				this.Reader.Redraw();
 			}
-			if (SaveAuto) {
+			if (this.SaveAuto) {
 				this.StoreBookmarks();
 			}
 		}
 
-		private MakeLoadURL(SaveAuto: boolean): string {
+		private MakeLoadURL(): string {
 			var URL = this.Host + 'pages/catalit_load_bookmarks/?art=' +
-				this.Reader.ArtID + (SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
+				this.Reader.ArtID + (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
 			return URL;
 		}
-		private MakeStoreURL(XML: string): string {
-			var URL = this.Host + 'pages/catalit_store_bookmarks/?art' +
-				this.Reader.ArtID + '&data=' + encodeURIComponent(XML) +
+		private MakeStoreURL(): string {
+			return this.Host + 'pages/catalit_store_bookmarks/';
+		}
+		private MakeStoreData(XML: string): string {
+			var Data = 'art=' + this.Reader.ArtID + '&data=' + encodeURIComponent(XML) +
 				'&lock_id=' + this.LockID + '&sid=' + this.SID + '&r=' + Math.random();
-			return URL;
+			return Data;
 		}
 
 		private MakeStoreXML(): string {
@@ -209,10 +215,12 @@ module FB3Bookmarks {
 			return XML;
 		}
 
-		private SendNotesRequest(URL: string, Type: string): void {
+		private SendNotesRequest(URL: string, Type: string, Data?: string): void {
+			var Data = Data || null;
 			this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
 			this.XMLHttp.open(Type, URL, true);
-			this.XMLHttp.send(null);
+			this.XMLHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+			this.XMLHttp.send(Data);
 		}
 		private XMLHTTPResponse(): void {
 			if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {

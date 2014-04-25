@@ -98,11 +98,11 @@ module FB3Bookmarks {
 				for (var j = 0; j < Rows.length; j++) {
 					var NewBookmark = new Bookmark(this);
 					NewBookmark.ParseXML(Rows[j]);
-//					if (NewBookmark.Group == 0) {
-//						this.CurPos = NewBookmark;
-//					} else {
+					if (NewBookmark.Group == 0) {
+						this.CurPos = NewBookmark;
+					} else {
 						this.AddBookmark(NewBookmark);
-//					}
+					}
 				}
 			} else {
 				// console.log('we dont have any selections on server');

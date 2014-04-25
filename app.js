@@ -99,8 +99,6 @@ function InitNote(NoteType) {
         NativeNote.Group = 1;
         document.getElementById('wholepara').disabled = true;
         document.getElementById('wholepara').checked = true;
-
-        //		BookmarksProcessor.AddBookmark(NativeNote);
         AFB3Reader.Redraw();
         ShowDialog(NativeNote);
     }

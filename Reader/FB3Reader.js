@@ -263,7 +263,7 @@ var FB3Reader;
         Reader.prototype.GetCachedPage = function (NewPos) {
             for (var I = this.PagesPositionsCache.Length() - 1; I >= 0; I--) {
                 var Pos = this.PagesPositionsCache.Get(I).Range;
-                if (PosCompare(Pos.To, NewPos) <= 0 && PosCompare(Pos.From, NewPos) >= 0) {
+                if (PosCompare(Pos.To, NewPos) >= 0 && PosCompare(Pos.From, NewPos) <= 0) {
                     return I;
                 }
             }

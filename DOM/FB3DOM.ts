@@ -140,7 +140,7 @@ module FB3DOM {
 
 		public GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block {
 			var ResponcibleNode: IFB3Block = this;
-			while (Position.length) {
+			while (Position.length && ResponcibleNode.Childs) {
 				ResponcibleNode = ResponcibleNode.Childs[Position.shift()];
 			}
 			return ResponcibleNode;

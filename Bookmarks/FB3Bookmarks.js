@@ -9,6 +9,7 @@ var FB3Bookmarks;
             this.FB3DOM.Bookmarks.push(this);
             this.ClassPrefix = 'my_';
             this.Bookmarks = new Array();
+            this.AddBookmark(new Bookmark(this));
             this.WaitForData = true;
             if (window.ActiveXObject) {
                 this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
@@ -78,6 +79,7 @@ var FB3Bookmarks;
             if (Rows.length) {
                 var CurPosBookmark = new Bookmark(this);
                 this.AddBookmark(CurPosBookmark);
+
                 for (var j = 0; j < Rows.length; j++) {
                     var NewBookmark = new Bookmark(this);
                     NewBookmark.ParseXML(Rows[j]);
@@ -222,7 +224,9 @@ var FB3Bookmarks;
             this.ID = this.MakeSelectionID();
             this.Group = 0;
             this.Class = 'default';
-            this.Range = { From: [20], To: [20] };
+            this.Range = { From: [0], To: [0] };
+            this.XStart = [0];
+            this.XEnd = [0];
             this.XPathMappingReady = true;
             this.N = -1;
             this.DateTime = moment().unix();

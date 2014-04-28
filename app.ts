@@ -79,7 +79,7 @@ function TapEnd(e) {
 function MouseMove(Evt: MouseEvent) {
 	if (NativeNote && !MenuShown && NativeNote.Group == 3 && !DialogShown) {
 		var newNote = NativeNote.RoundClone(false);
-		if (!newNote.ExtendToXY(Evt.pageX, Evt.pageY)) {
+		if (!newNote.ExtendToXY(Evt.clientX, Evt.clientY)) {
 			return undefined;
 		} else {
 			NativeNote.Detach();
@@ -132,8 +132,8 @@ function ShowMenu(e: MouseEvent) {
 	if (!NativeNote) {
 		NativeNote = new FB3Bookmarks.Bookmark(BookmarksProcessor);
 	}
-	var X = e.clientX + window.pageXOffset;
-	var Y = e.clientY + window.pageYOffset;
+	var X = e.clientX;
+	var Y = e.clientY;
 	if (MarkupProgress == 'selectstart') {
 		MenuShown = 'SelectEnd';
 		if (!NativeNote.ExtendToXY(X, Y)) {
@@ -151,8 +151,8 @@ function ShowMenu(e: MouseEvent) {
 		}
 	}
 
-	var posx = X + 3 + 'px'; //Left Position of Mouse Pointer
-	var posy = Y + 3 + 'px'; //Top Position of Mouse Pointer
+	var posx = X + (3 + window.pageXOffset) + 'px'; //Left Position of Mouse Pointer
+	var posy = Y + (3 + window.pageYOffset) + 'px'; //Top Position of Mouse Pointer
 	document.getElementById(MenuShown).style.position = 'absolute';
 	document.getElementById(MenuShown).style.display = 'inline';
 	document.getElementById(MenuShown).style.left = posx;

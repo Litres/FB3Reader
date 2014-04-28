@@ -20,6 +20,17 @@ module FB3DOM {
 	};
 	export var BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
 
+	function XPathCompare(Pos1: any[], Pos2: any[]): number {
+		// todo - this function is a hack around xpath ".05' endings, whould be done some better way
+		if (Pos1.length && Pos1[Pos1.length - 1].match && Pos1[Pos1.length - 1].match(/\.\d/)) {
+			Pos1[Pos1.length - 1] = Pos1[Pos1.length - 1].replace(/\./, '') * 1;
+		}
+		if (Pos2.length && Pos2[Pos2.length - 1].match && Pos2[Pos2.length - 1].match(/\.\d/)) {
+			Pos2[Pos2.length - 1] = Pos2[Pos2.length - 1].replace(/\./, '') * 1;
+		}
+		return FB3Reader.PosCompare(Pos1, Pos2);
+	}
+
 	// Each DOM-node holds xpath-adress of self as an array
 	// Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited
 
@@ -94,8 +105,8 @@ module FB3DOM {
 
 			for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
 
-				var HowIsStart = FB3Reader.PosCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
-				var HowisEnd = FB3Reader.PosCompare(Bookmarks[Bookmark].XEnd, EffectiveXPath);
+				var HowIsStart = XPathCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
+				var HowisEnd = XPathCompare(Bookmarks[Bookmark].XEnd, EffectiveXPath);
 
 				// Start point as far beoung or end point is much before - no use for us or our children
 				if (HowIsStart == 10 || HowisEnd == -10) {

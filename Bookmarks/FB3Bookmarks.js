@@ -9,7 +9,6 @@ var FB3Bookmarks;
             this.FB3DOM.Bookmarks.push(this);
             this.ClassPrefix = 'my_';
             this.Bookmarks = new Array();
-            this.CurPos = new Bookmark(this);
             this.WaitForData = true;
             if (window.ActiveXObject) {
                 this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
@@ -56,11 +55,6 @@ var FB3Bookmarks;
                     this.WaitedToRemapBookmarks++;
                 }
             }
-
-            //			if (!this.CurPos.XPathMappingReady) {
-            //				this.CurPos.RemapWithDOM(() => this.OnChildBookmarkSync());
-            //				this.WaitedToRemapBookmarks++;
-            //			}
             if (!this.WaitedToRemapBookmarks) {
                 this.WaitForData = false;
                 this.LoadEndCallback(this);
@@ -82,11 +76,13 @@ var FB3Bookmarks;
                 this.LockID = XML.documentElement.getAttribute('lock-id');
             }
             if (Rows.length) {
+                var CurPosBookmark = new Bookmark(this);
+                this.AddBookmark(CurPosBookmark);
                 for (var j = 0; j < Rows.length; j++) {
                     var NewBookmark = new Bookmark(this);
                     NewBookmark.ParseXML(Rows[j]);
                     if (NewBookmark.Group == 0) {
-                        this.CurPos = NewBookmark;
+                        this.Bookmarks[0] = NewBookmark;
                     } else {
                         this.AddBookmark(NewBookmark);
                     }
@@ -115,7 +111,7 @@ var FB3Bookmarks;
                 return;
             }
             this.Ready = true;
-            this.Reader.GoTO(this.CurPos.Range.From.slice(0));
+            this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
         };
 
         LitResBookmarksProcessor.prototype.ReLoad = function (SaveAutoState) {
@@ -148,24 +144,19 @@ var FB3Bookmarks;
                 }
                 Found = 0;
                 for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
-                    if (TemporaryNotes.Bookmarks[j].Group == 0 && this.CurPos.DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
-                        this.CurPos = TemporaryNotes.Bookmarks[j];
-                        CurPosUpdate = 1;
-                    } else {
-                        Found = 0;
-                        for (var i = 0; i < this.Bookmarks.length; i++) {
-                            if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
-                                if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
-                                    this.Bookmarks[i].Detach();
-                                } else {
-                                    Found = 1;
-                                }
-                                break;
+                    Found = 0;
+                    for (var i = 0; i < this.Bookmarks.length; i++) {
+                        if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
+                            if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
+                                this.Bookmarks[i].Detach();
+                            } else {
+                                Found = 1;
                             }
+                            break;
                         }
-                        if (!Found) {
-                            this.AddBookmark(TemporaryNotes.Bookmarks[j]);
-                        }
+                    }
+                    if (!Found) {
+                        this.AddBookmark(TemporaryNotes.Bookmarks[j]);
                     }
                 }
             } else {
@@ -199,9 +190,6 @@ var FB3Bookmarks;
             for (var j = 0; j < this.Bookmarks.length; j++) {
                 XML += this.Bookmarks[j].PublicXML();
             }
-            this.CurPos.XStart = this.FB3DOM.GetXPathFromPos(this.CurPos.Range.From);
-            this.CurPos.XEnd = this.CurPos.XStart;
-            XML += this.CurPos.PublicXML();
             XML += '</FictionBookMarkup>';
             return XML;
         };

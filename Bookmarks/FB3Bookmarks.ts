@@ -12,7 +12,6 @@ module FB3Bookmarks {
 		public Ready: boolean;
 		public Reader: FB3Reader.IFBReader;
 		public Bookmarks: IBookmark[];
-		public CurPos: IBookmark;
 		public ClassPrefix: string;
 		public LockID: string;
 		private LoadEndCallback: IBookmarksReadyCallback;
@@ -30,7 +29,6 @@ module FB3Bookmarks {
 			this.FB3DOM.Bookmarks.push(this);
 			this.ClassPrefix = 'my_';
 			this.Bookmarks = new Array();
-			this.CurPos = new Bookmark(this);
 			this.WaitForData = true;
 			if (window.ActiveXObject) {
 				this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
@@ -75,10 +73,6 @@ module FB3Bookmarks {
 					this.WaitedToRemapBookmarks++;
 				}
 			}
-//			if (!this.CurPos.XPathMappingReady) {
-//				this.CurPos.RemapWithDOM(() => this.OnChildBookmarkSync());
-//				this.WaitedToRemapBookmarks++;
-//			}
 			if (!this.WaitedToRemapBookmarks) {
 				this.WaitForData = false;
 				this.LoadEndCallback(this);
@@ -100,12 +94,14 @@ module FB3Bookmarks {
 				this.LockID = XML.documentElement.getAttribute('lock-id');
 			}
 			if (Rows.length) {
+				var CurPosBookmark = new Bookmark(this);
+				this.AddBookmark(CurPosBookmark);
 				// console.log('we have selection');
 				for (var j = 0; j < Rows.length; j++) {
 					var NewBookmark = new Bookmark(this);
 					NewBookmark.ParseXML(Rows[j]);
 					if (NewBookmark.Group == 0) { // TODO: skip for temporary Obj
-						this.CurPos = NewBookmark;
+						this.Bookmarks[0] = NewBookmark;
 					} else {
 						this.AddBookmark(NewBookmark);
 					}
@@ -133,7 +129,7 @@ module FB3Bookmarks {
 				return;
 			}
 			this.Ready = true;
-			this.Reader.GoTO(this.CurPos.Range.From.slice(0));
+			this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
 		}
 
 		public ReLoad(SaveAutoState?: boolean) {
@@ -163,25 +159,19 @@ module FB3Bookmarks {
 				}
 				Found = 0;
 				for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
-					if (TemporaryNotes.Bookmarks[j].Group == 0 &&
-						this.CurPos.DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
-							this.CurPos = TemporaryNotes.Bookmarks[j];
-							CurPosUpdate = 1;
-					} else {
-						Found = 0;
-						for (var i = 0; i < this.Bookmarks.length; i++) {
-							if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
-								if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
-									this.Bookmarks[i].Detach();
-								} else {
-									Found = 1;
-								}
-								break;
+					Found = 0;
+					for (var i = 0; i < this.Bookmarks.length; i++) {
+						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
+							if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
+								this.Bookmarks[i].Detach();
+							} else {
+								Found = 1;
 							}
+							break;
 						}
-						if (!Found) {
-							this.AddBookmark(TemporaryNotes.Bookmarks[j]);
-						}
+					}
+					if (!Found) {
+						this.AddBookmark(TemporaryNotes.Bookmarks[j]);
 					}
 				}
 			} else {
@@ -218,9 +208,6 @@ module FB3Bookmarks {
 			for (var j = 0; j < this.Bookmarks.length; j++) {
 				XML += this.Bookmarks[j].PublicXML();
 			}
-			this.CurPos.XStart = this.FB3DOM.GetXPathFromPos(this.CurPos.Range.From);
-			this.CurPos.XEnd = this.CurPos.XStart;
-			XML += this.CurPos.PublicXML();
 			XML += '</FictionBookMarkup>';
 			return XML;
 		}

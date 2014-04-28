@@ -38,7 +38,6 @@ module FB3Bookmarks {
 		FB3DOM: FB3DOM.IFB3DOM;
 		Reader: FB3Reader.IFBReader;
 		Bookmarks: IBookmark[];
-		CurPos: IBookmark;
 		ClassPrefix: string;
 		AddBookmark(Bookmark: IBookmark): void;
 		DropBookmark(Bookmark: IBookmark): void;

@@ -56,6 +56,11 @@ var FB3Bookmarks;
                     this.WaitedToRemapBookmarks++;
                 }
             }
+
+            //			if (!this.CurPos.XPathMappingReady) {
+            //				this.CurPos.RemapWithDOM(() => this.OnChildBookmarkSync());
+            //				this.WaitedToRemapBookmarks++;
+            //			}
             if (!this.WaitedToRemapBookmarks) {
                 this.WaitForData = false;
                 this.LoadEndCallback(this);
@@ -194,8 +199,9 @@ var FB3Bookmarks;
             for (var j = 0; j < this.Bookmarks.length; j++) {
                 XML += this.Bookmarks[j].PublicXML();
             }
-
-            // XML += this.CurPos.PublicXML();
+            this.CurPos.XStart = this.FB3DOM.GetXPathFromPos(this.CurPos.Range.From);
+            this.CurPos.XEnd = this.CurPos.XStart;
+            XML += this.CurPos.PublicXML();
             XML += '</FictionBookMarkup>';
             return XML;
         };
@@ -463,9 +469,9 @@ var FB3Bookmarks;
                 this.Note = XML.querySelector('Note').textContent;
             }
             this.NotSavedYet = 0;
+            this.XPathMappingReady = false;
             // TODO: fill and check
             //			this.RawText = '';
-            //			this.XPathMappingReady = true;
             //			this.Range;
         };
 
@@ -502,7 +508,7 @@ var FB3Bookmarks;
         Bookmark.prototype.MakeXPath = function (X) {
             var p = X.match(/\/1\/2\/(.[^\)]*)/g);
             var MakeXPathSub = function (str) {
-                return str.replace('/1/2/', '').split('/');
+                return str.replace('/1/2/', '').replace('.', '/.').split('/');
             };
             this.XStart = MakeXPathSub(p[0]);
             if (p.length == 1) {

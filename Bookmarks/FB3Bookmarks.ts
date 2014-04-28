@@ -381,8 +381,8 @@ module FB3Bookmarks {
 		}
 
 		private Raw2FB2(RawText: string): string {
-			RawText = RawText.replace(/\[(\/)?b[^>]*\]/, '<$1strong>');
-			RawText = RawText.replace(/\[(\/)?i[^>]*\]/, '<$1emphasis>');
+			RawText = RawText.replace(/\[(\/)?b[^\]]*\]/, '<$1strong>');
+			RawText = RawText.replace(/\[(\/)?i[^\]]*\]/, '<$1emphasis>');
 			RawText = '<p>' + RawText.replace(/\n/, '</p><p>') + '</p>';
 			return RawText;
 		}

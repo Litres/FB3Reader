@@ -1,4 +1,4 @@
-/// <reference path="FB3BookmarksHead.ts" />
+﻿/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
@@ -357,8 +357,8 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.Raw2FB2 = function (RawText) {
-            RawText = RawText.replace(/\[(\/)?b[^>]*\]/, '<$1strong>');
-            RawText = RawText.replace(/\[(\/)?i[^>]*\]/, '<$1emphasis>');
+            RawText = RawText.replace(/\[(\/)?b[^\]]*\]/, '<$1strong>');
+            RawText = RawText.replace(/\[(\/)?i[^\]]*\]/, '<$1emphasis>');
             RawText = '<p>' + RawText.replace(/\n/, '</p><p>') + '</p>';
             return RawText;
         };

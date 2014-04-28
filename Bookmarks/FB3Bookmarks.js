@@ -357,9 +357,9 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.Raw2FB2 = function (RawText) {
-            RawText = RawText.replace(/\[(\/)?b[^\]]*\]/, '<$1strong>');
-            RawText = RawText.replace(/\[(\/)?i[^\]]*\]/, '<$1emphasis>');
-            RawText = '<p>' + RawText.replace(/\n/, '</p><p>') + '</p>';
+            RawText = RawText.replace(/\[(\/)?b[^\]]*\]/gi, '<$1strong>');
+            RawText = RawText.replace(/\[(\/)?i[^\]]*\]/gi, '<$1emphasis>');
+            RawText = '<p>' + RawText.replace(/\n/gi, '</p><p>') + '</p>';
             return RawText;
         };
         Bookmark.prototype.MakeSelectionID = function () {

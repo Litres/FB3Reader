@@ -187,6 +187,8 @@ var FB3Bookmarks;
 
         LitResBookmarksProcessor.prototype.MakeStoreXML = function () {
             var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' + 'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
+            this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
+            this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart;
             for (var j = 0; j < this.Bookmarks.length; j++) {
                 XML += this.Bookmarks[j].PublicXML();
             }

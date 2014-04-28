@@ -77,9 +77,6 @@ var FB3Bookmarks;
                 this.LockID = XML.documentElement.getAttribute('lock-id');
             }
             if (Rows.length) {
-                var CurPosBookmark = new Bookmark(this);
-                this.AddBookmark(CurPosBookmark);
-
                 for (var j = 0; j < Rows.length; j++) {
                     var NewBookmark = new Bookmark(this);
                     NewBookmark.ParseXML(Rows[j]);

@@ -73,9 +73,10 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.ParseXML = function (XML) {
             // todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
             var Rows = XML.querySelectorAll('Selection');
-            if (Rows.length) {
-                // console.log('we have selection');
+            if (XML.documentElement.getAttribute('lock-id')) {
                 this.LockID = XML.documentElement.getAttribute('lock-id');
+            }
+            if (Rows.length) {
                 for (var j = 0; j < Rows.length; j++) {
                     var NewBookmark = new Bookmark(this);
                     NewBookmark.ParseXML(Rows[j]);
@@ -96,8 +97,8 @@ var FB3Bookmarks;
 
         LitResBookmarksProcessor.prototype.StoreBookmarks = function () {
             var XML = this.MakeStoreXML();
-            var URL = this.MakeStoreURL();
             var Data = this.MakeStoreData(XML);
+            var URL = this.MakeStoreURL();
             this.XMLHTTPResponseCallback = function () {
             };
             this.SendNotesRequest(URL, 'POST', Data);
@@ -117,6 +118,7 @@ var FB3Bookmarks;
             var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
             TemporaryNotes.Reader = this.Reader;
             this.SaveAuto = SaveAutoState;
+            TemporaryNotes.SaveAuto = this.SaveAuto;
             TemporaryNotes.Load(function (Bookmarks) {
                 return _this.ReLoadComplete(Bookmarks);
             });
@@ -170,6 +172,7 @@ var FB3Bookmarks;
                 this.Reader.Redraw();
             }
             if (this.SaveAuto) {
+                this.LockID = TemporaryNotes.LockID;
                 this.StoreBookmarks();
             }
         };
@@ -182,7 +185,7 @@ var FB3Bookmarks;
             return this.Host + 'pages/catalit_store_bookmarks/';
         };
         LitResBookmarksProcessor.prototype.MakeStoreData = function (XML) {
-            var Data = 'art=' + this.Reader.ArtID + '&data=' + encodeURIComponent(XML) + '&lock_id=' + this.LockID + '&sid=' + this.SID + '&r=' + Math.random();
+            var Data = 'uuid=' + this.FB3DOM.MetaData.UUID + '&data=' + encodeURIComponent(XML) + '&lock_id=' + encodeURIComponent(this.LockID) + '&sid=' + this.SID + '&r=' + Math.random();
             return Data;
         };
 
@@ -191,7 +194,8 @@ var FB3Bookmarks;
             for (var j = 0; j < this.Bookmarks.length; j++) {
                 XML += this.Bookmarks[j].PublicXML();
             }
-            XML += this.CurPos.PublicXML();
+
+            // XML += this.CurPos.PublicXML();
             XML += '</FictionBookMarkup>';
             return XML;
         };
@@ -445,7 +449,7 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' + this.Extract() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' + this.Extract() + this.GetNote() + '</Selection>';
         };
 
         Bookmark.prototype.ParseXML = function (XML) {
@@ -465,10 +469,22 @@ var FB3Bookmarks;
             //			this.Range;
         };
 
+        Bookmark.prototype.GetNote = function () {
+            if (!this.Note)
+                return '';
+            return '<Note>' + this.Note + '</Note>';
+        };
+
         Bookmark.prototype.Extract = function () {
+            return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' + this.ExtractNode() + '</Extract>';
+        };
+        Bookmark.prototype.ExtractNode = function () {
             // TODO: fill with code
-            // '<Extract original-location="fb2#xpointer(/1/2/' + para + ')">' + this.Bookmarks[j].Extract() + '</Extract>';
-            return '';
+            return '<p>or 4 test text</p>';
+        };
+        Bookmark.prototype.MakeExtractSelection = function () {
+            var Start = this.MakePointer(this.XStart);
+            return '/1/2/' + Start + '';
         };
 
         Bookmark.prototype.MakeSelection = function () {

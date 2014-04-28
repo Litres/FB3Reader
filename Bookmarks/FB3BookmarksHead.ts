@@ -34,6 +34,7 @@ module FB3Bookmarks {
 
 	export interface IBookmarks {
 		Ready: boolean;
+		LockID?: string;
 		FB3DOM: FB3DOM.IFB3DOM;
 		Reader: FB3Reader.IFBReader;
 		Bookmarks: IBookmark[];

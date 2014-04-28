@@ -37,11 +37,13 @@ window.onload = function () {
 
 function GetSID() {
     var URL = window.location.href;
-    var SID = URL.match(/sid=(.[^&]*)/);
-
-    //	console.log(SID[1]);
-    if (!SID.length) {
-        // TODO cookie try
+    var SID = URL.match(/\bsid=([0-9a-zA-Z]+)\b/);
+    if (SID == null || !SID.length) {
+        var Cookies = document.cookie.match(/(?:(?:^|.*;\s*)SID\s*\=\s*([^;]*).*$)|^.*$/);
+        if (!Cookies.length) {
+            return 'null';
+        }
+        return Cookies[1];
     } else {
         return SID[1];
     }

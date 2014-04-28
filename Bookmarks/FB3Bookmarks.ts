@@ -14,6 +14,7 @@ module FB3Bookmarks {
 		public Bookmarks: IBookmark[];
 		public CurPos: IBookmark;
 		public ClassPrefix: string;
+		public LockID: string;
 		private LoadEndCallback: IBookmarksReadyCallback;
 		private TemporaryNotes: IBookmarks;
 		private WaitedToRemapBookmarks: number;
@@ -22,7 +23,6 @@ module FB3Bookmarks {
 		private Host: string;
 		private SID: string;
 		private Callback: any;
-		private LockID: string;
 		private SaveAuto: boolean;
 		private XMLHTTPResponseCallback: IXMLHTTPResponseCallback;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string) {
@@ -92,13 +92,15 @@ module FB3Bookmarks {
 		private ParseXML(XML: XMLDocument) {
 			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
 			var Rows = XML.querySelectorAll('Selection');
+			if (XML.documentElement.getAttribute('lock-id')) {
+				this.LockID = XML.documentElement.getAttribute('lock-id');
+			}
 			if (Rows.length) {
 				// console.log('we have selection');
-				this.LockID = XML.documentElement.getAttribute('lock-id');
 				for (var j = 0; j < Rows.length; j++) {
 					var NewBookmark = new Bookmark(this);
 					NewBookmark.ParseXML(Rows[j]);
-					if (NewBookmark.Group == 0) {
+					if (NewBookmark.Group == 0) { // TODO: skip for temporary Obj
 						this.CurPos = NewBookmark;
 					} else {
 						this.AddBookmark(NewBookmark);
@@ -115,8 +117,8 @@ module FB3Bookmarks {
 
 		private StoreBookmarks(): void {
 			var XML = this.MakeStoreXML();
-			var URL = this.MakeStoreURL();
 			var Data = this.MakeStoreData(XML);
+			var URL = this.MakeStoreURL();
 			this.XMLHTTPResponseCallback = () => {};
 			this.SendNotesRequest(URL, 'POST', Data);
 		}
@@ -134,6 +136,7 @@ module FB3Bookmarks {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
 			TemporaryNotes.Reader = this.Reader;
 			this.SaveAuto = SaveAutoState;
+			TemporaryNotes.SaveAuto = this.SaveAuto;
 			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
 		}
 		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
@@ -186,6 +189,7 @@ module FB3Bookmarks {
 				this.Reader.Redraw();
 			}
 			if (this.SaveAuto) {
+				this.LockID = TemporaryNotes.LockID;
 				this.StoreBookmarks();
 			}
 		}
@@ -199,8 +203,8 @@ module FB3Bookmarks {
 			return this.Host + 'pages/catalit_store_bookmarks/';
 		}
 		private MakeStoreData(XML: string): string {
-			var Data = 'art=' + this.Reader.ArtID + '&data=' + encodeURIComponent(XML) +
-				'&lock_id=' + this.LockID + '&sid=' + this.SID + '&r=' + Math.random();
+			var Data = 'uuid=' + this.FB3DOM.MetaData.UUID + '&data=' + encodeURIComponent(XML) +
+				'&lock_id=' + encodeURIComponent(this.LockID) + '&sid=' + this.SID + '&r=' + Math.random();
 			return Data;
 		}
 
@@ -210,7 +214,7 @@ module FB3Bookmarks {
 			for (var j = 0; j < this.Bookmarks.length; j++) {
 				XML += this.Bookmarks[j].PublicXML();
 			}
-			XML += this.CurPos.PublicXML();
+			// XML += this.CurPos.PublicXML();
 			XML += '</FictionBookMarkup>';
 			return XML;
 		}
@@ -471,7 +475,7 @@ module FB3Bookmarks {
 				'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
 				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
 				'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' +
-				this.Extract() +
+				this.Extract() + this.GetNote() +
 			'</Selection>';
 		}
 
@@ -492,10 +496,22 @@ module FB3Bookmarks {
 //			this.Range;
 		}
 
+		private GetNote(): string {
+			if (!this.Note) return '';
+			return '<Note>' + this.Note + '</Note>';
+		}
+
 		private Extract(): string {
+			return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
+				this.ExtractNode() + '</Extract>';
+		}
+		private ExtractNode(): string {
 			// TODO: fill with code
-			// '<Extract original-location="fb2#xpointer(/1/2/' + para + ')">' + this.Bookmarks[j].Extract() + '</Extract>';
-			return '';
+			return '<p>or 4 test text</p>';
+		}
+		private MakeExtractSelection(): string {
+			var Start: string = this.MakePointer(this.XStart);
+			return '/1/2/' + Start + '';
 		}
 
 		private MakeSelection(): string {

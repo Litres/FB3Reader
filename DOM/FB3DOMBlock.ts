@@ -20,7 +20,7 @@ module FB3DOM {
 	};
 	export var BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
 
-	function XPathCompare(Pos1: any[], Pos2: any[]): number {
+	export function XPathCompare(Pos1: any[], Pos2: any[]): number {
 		// todo - this function is a hack around xpath ".05' endings, whould be done some better way
 		if (Pos1.length && Pos1[Pos1.length - 1].match && Pos1[Pos1.length - 1].match(/\.\d/)) {
 			Pos1[Pos1.length - 1] = Pos1[Pos1.length - 1].replace(/\./, '') * 1;

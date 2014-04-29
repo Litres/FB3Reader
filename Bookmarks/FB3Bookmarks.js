@@ -384,6 +384,11 @@ var FB3Bookmarks;
         Bookmark.prototype.InitSyncXPathWithDOM = function () {
             var _this = this;
             this.XPathMappingReady = false;
+            if (!this.Owner.FB3DOM.DataChunks) {
+                setTimeout(function () {
+                    return _this.InitSyncXPathWithDOM();
+                }, 10);
+            }
             this.RequiredChunks = this.ChunksRequired();
             var ChunksToLoad = new Array();
 
@@ -439,7 +444,9 @@ var FB3Bookmarks;
 
         Bookmark.prototype.XPChunk = function (X) {
             for (var I = 0; I < this.Owner.FB3DOM.DataChunks.length; I++) {
-                if (FB3Reader.PosCompare(X, this.Owner.FB3DOM.DataChunks[I].xps) <= 0) {
+                var xps = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xps);
+                var xpe = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xpe);
+                if (!xps || !xpe || xps > 0 && xpe < 10) {
                     return I;
                 }
             }

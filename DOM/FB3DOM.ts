@@ -17,10 +17,10 @@ module FB3DOM {
 					this.WaitedBlocks.splice(I,1);
 			}
 			if (!this.WaitedBlocks.length) {
-				var PageData = new PageContainer();
-				var AllBookmarks = new Array();
-				var HTML = this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
 				if (this.OnGetDone) {
+					var PageData = new PageContainer();
+					var AllBookmarks = new Array();
+					this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
 					this.OnGetDone(PageData);
 				} else {
 					this.OnLoadDone();
@@ -149,7 +149,7 @@ module FB3DOM {
 			var Node: IFB3Block = this;
 			var I = 0;
 			while (I < Node.Childs.length) {
-				if (Node.Childs[I].XPath){
+				if (Node.Childs[I] && Node.Childs[I].XPath){
 					var PC = FB3Reader.PosCompare(XPath, Node.Childs[I].XPath);
 					if (PC == 10 || PC == 0) {
 						// This node is the exact xpath or the xpath points a bit above, be assume this is it

@@ -37,6 +37,7 @@ var FB3DOM;
         }
         return FB3Reader.PosCompare(Pos1, Pos2);
     }
+    FB3DOM.XPathCompare = XPathCompare;
 
     // Each DOM-node holds xpath-adress of self as an array
     // Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited

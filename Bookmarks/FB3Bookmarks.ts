@@ -407,6 +407,9 @@ module FB3Bookmarks {
 
 		private InitSyncXPathWithDOM(): void {
 			this.XPathMappingReady = false;
+			if (!this.Owner.FB3DOM.DataChunks) { // No info on chunks yet, keep waiting
+				setTimeout(() => this.InitSyncXPathWithDOM(), 10);
+			}
 			this.RequiredChunks = this.ChunksRequired();
 			var ChunksToLoad = new Array();
 
@@ -457,7 +460,9 @@ module FB3Bookmarks {
 
 		private XPChunk(X: IXPath): number {
 			for (var I = 0; I < this.Owner.FB3DOM.DataChunks.length; I++) {
-				if (FB3Reader.PosCompare(X, this.Owner.FB3DOM.DataChunks[I].xps) <= 0) {
+				var xps = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xps);
+				var xpe = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xpe);
+				if (!xps || !xpe || xps > 0 && xpe < 10) {
 					return I;
 				}
 			}

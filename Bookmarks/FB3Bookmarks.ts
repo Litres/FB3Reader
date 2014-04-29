@@ -512,14 +512,14 @@ module FB3Bookmarks {
 		}
 		private MakeExtractSelection(): string {
 			var Start: string = this.MakePointer(this.XStart);
-			return '/1/2/' + Start + '';
+			return '/1/' + Start + '';
 		}
 
 		private MakeSelection(): string {
 			var Start: string = this.MakePointer(this.XStart);
-			if (FB3Reader.PosCompare(this.XStart, this.XEnd) == 0)
-				return 'point(/1/2/' + Start + ')';
-			return 'point(/1/2/' + Start + ')/range-to(point(/1/2/' + this.MakePointer(this.XEnd) + '))';
+			if (FB3DOM.XPathCompare(this.XStart, this.XEnd) == 0)
+				return 'point(/1/' + Start + ')';
+			return 'point(/1/' + Start + ')/range-to(point(/1/' + this.MakePointer(this.XEnd) + '))';
 		}
 
 		private MakePointer(X: IXPath): string {
@@ -528,9 +528,9 @@ module FB3Bookmarks {
 		}
 
 		private MakeXPath(X: string): void {
-			var p = X.match(/\/1\/2\/(.[^\)]*)/g);
+			var p = X.match(/\/1\/(.[^\)]*)/g);
 			var MakeXPathSub = function (str) {
-				return str.replace('/1/2/', '').replace('.', '/.').split('/');
+				return str.replace('/1/', '').replace('.', '/.').split('/');
 			}
 			this.XStart = MakeXPathSub(p[0]);
 			if (p.length == 1) {

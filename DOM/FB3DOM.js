@@ -1,4 +1,4 @@
-﻿/// <reference path="FB3DOMHead.ts" />
+/// <reference path="FB3DOMHead.ts" />
 /// <reference path="FB3DOMBlock.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -149,8 +149,8 @@ var FB3DOM;
             var I = 0;
             while (I < Node.Childs.length) {
                 if (Node.Childs[I] && Node.Childs[I].XPath) {
-                    var PC = FB3Reader.PosCompare(XPath, Node.Childs[I].XPath);
-                    if (PC == 10 || PC == 0) {
+                    var PC = _FB3DOM.XPathCompare(XPath, Node.Childs[I].XPath);
+                    if (PC == -10 || PC == 0) {
                         // This node is the exact xpath or the xpath points a bit above, be assume this is it
                         return Node.Childs[I].Position();
                     } else if (PC == 1) {

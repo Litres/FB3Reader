@@ -1,4 +1,4 @@
-﻿/// <reference path="FB3BookmarksHead.ts" />
+/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
@@ -488,14 +488,14 @@ var FB3Bookmarks;
         };
         Bookmark.prototype.MakeExtractSelection = function () {
             var Start = this.MakePointer(this.XStart);
-            return '/1/2/' + Start + '';
+            return '/1/' + Start + '';
         };
 
         Bookmark.prototype.MakeSelection = function () {
             var Start = this.MakePointer(this.XStart);
-            if (FB3Reader.PosCompare(this.XStart, this.XEnd) == 0)
-                return 'point(/1/2/' + Start + ')';
-            return 'point(/1/2/' + Start + ')/range-to(point(/1/2/' + this.MakePointer(this.XEnd) + '))';
+            if (FB3DOM.XPathCompare(this.XStart, this.XEnd) == 0)
+                return 'point(/1/' + Start + ')';
+            return 'point(/1/' + Start + ')/range-to(point(/1/' + this.MakePointer(this.XEnd) + '))';
         };
 
         Bookmark.prototype.MakePointer = function (X) {
@@ -504,9 +504,9 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.MakeXPath = function (X) {
-            var p = X.match(/\/1\/2\/(.[^\)]*)/g);
+            var p = X.match(/\/1\/(.[^\)]*)/g);
             var MakeXPathSub = function (str) {
-                return str.replace('/1/2/', '').replace('.', '/.').split('/');
+                return str.replace('/1/', '').replace('.', '/.').split('/');
             };
             this.XStart = MakeXPathSub(p[0]);
             if (p.length == 1) {

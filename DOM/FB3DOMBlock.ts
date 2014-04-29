@@ -23,10 +23,12 @@ module FB3DOM {
 	export function XPathCompare(Pos1: any[], Pos2: any[]): number {
 		// todo - this function is a hack around xpath ".05' endings, whould be done some better way
 		if (Pos1.length && Pos1[Pos1.length - 1].match && Pos1[Pos1.length - 1].match(/\.\d/)) {
-			Pos1[Pos1.length - 1] = Pos1[Pos1.length - 1].replace(/\./, '') * 1;
+			Pos1 = Pos1.slice(0);
+			Pos1[Pos1.length - 1] = Pos1[Pos1.length - 1].replace(/\./, '');
 		}
 		if (Pos2.length && Pos2[Pos2.length - 1].match && Pos2[Pos2.length - 1].match(/\.\d/)) {
-			Pos2[Pos2.length - 1] = Pos2[Pos2.length - 1].replace(/\./, '') * 1;
+			Pos2 = Pos2.slice(0);
+			Pos2[Pos2.length - 1] = Pos2[Pos2.length - 1].replace(/\./, '');
 		}
 		return FB3Reader.PosCompare(Pos1, Pos2);
 	}
@@ -84,7 +86,7 @@ module FB3DOM {
 			var Node:IFB3Block = this;
 			var Result = new Array();
 			while (Node.Parent) {
-				Result.push(Node.ID);
+				Result.unshift(Node.ID);
 				Node = Node.Parent;
 			}
 			return Result;

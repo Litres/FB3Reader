@@ -500,7 +500,7 @@ var FB3Bookmarks;
 
         Bookmark.prototype.MakePointer = function (X) {
             var last = X.pop() + '';
-            return X.join('/') + ((/^\./).test(last) ? '' : '/') + last;
+            return X.join('/') + ((/^\./).test(last) ? '' : '/') + last + ((/^\./).test(last) ? '' : '.0');
         };
 
         Bookmark.prototype.MakeXPath = function (X) {

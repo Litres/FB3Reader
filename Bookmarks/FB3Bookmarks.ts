@@ -524,7 +524,7 @@ module FB3Bookmarks {
 
 		private MakePointer(X: IXPath): string {
 			var last = X.pop() + '';
-			return X.join('/') + ((/^\./).test(last) ? '' : '/') + last;
+			return X.join('/') + ((/^\./).test(last) ? '' : '/') + last + ((/^\./).test(last) ? '' : '.0');
 		}
 
 		private MakeXPath(X: string): void {

@@ -14,6 +14,7 @@ module FB3Bookmarks {
 		public Bookmarks: IBookmark[];
 		public ClassPrefix: string;
 		public LockID: string;
+		public LoadDateTime: number;
 		private LoadEndCallback: IBookmarksReadyCallback;
 		private TemporaryNotes: IBookmarks;
 		private WaitedToRemapBookmarks: number;
@@ -91,6 +92,7 @@ module FB3Bookmarks {
 		private ParseXML(XML: XMLDocument) {
 			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
 			var Rows = XML.querySelectorAll('Selection');
+			this.LoadDateTime = moment().unix();
 			if (XML.documentElement.getAttribute('lock-id')) {
 				this.LockID = XML.documentElement.getAttribute('lock-id');
 			}
@@ -145,7 +147,7 @@ module FB3Bookmarks {
 			var CurPosUpdate = 0;
 			if (this.Bookmarks.length) {
 				var Found;
-				for (var i = 0; i < this.Bookmarks.length; i++) {
+				for (var i = 0; i < this.Bookmarks.length; i++) { // delete old local bookmarks
 					for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
 						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
 							Found = 1;
@@ -157,7 +159,7 @@ module FB3Bookmarks {
 					}
 				}
 				Found = 0;
-				for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
+				for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) { // check new bookmarks
 					Found = 0;
 					for (var i = 0; i < this.Bookmarks.length; i++) {
 						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
@@ -167,6 +169,8 @@ module FB3Bookmarks {
 								Found = 1;
 							}
 							break;
+						} else if (TemporaryNotes.Bookmarks[j].DateTime < this.LoadDateTime) {
+							Found = 1;
 						}
 					}
 					if (!Found) {
@@ -183,6 +187,7 @@ module FB3Bookmarks {
 			}
 			if (this.SaveAuto) {
 				this.LockID = TemporaryNotes.LockID;
+				this.LoadDateTime = TemporaryNotes.LoadDateTime;
 				this.StoreBookmarks();
 			}
 		}

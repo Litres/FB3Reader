@@ -73,6 +73,7 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.ParseXML = function (XML) {
             // todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
             var Rows = XML.querySelectorAll('Selection');
+            this.LoadDateTime = moment().unix();
             if (XML.documentElement.getAttribute('lock-id')) {
                 this.LockID = XML.documentElement.getAttribute('lock-id');
             }
@@ -152,6 +153,8 @@ var FB3Bookmarks;
                                 Found = 1;
                             }
                             break;
+                        } else if (TemporaryNotes.Bookmarks[j].DateTime < this.LoadDateTime) {
+                            Found = 1;
                         }
                     }
                     if (!Found) {
@@ -168,6 +171,7 @@ var FB3Bookmarks;
             }
             if (this.SaveAuto) {
                 this.LockID = TemporaryNotes.LockID;
+                this.LoadDateTime = TemporaryNotes.LoadDateTime;
                 this.StoreBookmarks();
             }
         };

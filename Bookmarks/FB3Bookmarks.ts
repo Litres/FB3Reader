@@ -503,16 +503,20 @@ module FB3Bookmarks {
 		}
 
 		private Extract(): string {
-			return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
+			return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection(true) + ')">' +
 				this.ExtractNode() + '</Extract>';
 		}
 		private ExtractNode(): string {
 			// TODO: fill with code
 			return '<p>or 4 test text</p>';
 		}
-		private MakeExtractSelection(): string {
+		private MakeExtractSelection(SkipChars?:boolean): string {
 			var Start: string = this.MakePointer(this.XStart);
-			return '/1/' + Start + '';
+			var XP = '/1/' + Start + '';
+			if (SkipChars) {
+				XP = XP.replace(/\.\d+$/, '');
+			}
+			return XP;
 		}
 
 		private MakeSelection(): string {

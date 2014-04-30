@@ -1,4 +1,4 @@
-/// <reference path="FB3BookmarksHead.ts" />
+﻿/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
@@ -480,15 +480,19 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.Extract = function () {
-            return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' + this.ExtractNode() + '</Extract>';
+            return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection(true) + ')">' + this.ExtractNode() + '</Extract>';
         };
         Bookmark.prototype.ExtractNode = function () {
             // TODO: fill with code
             return '<p>or 4 test text</p>';
         };
-        Bookmark.prototype.MakeExtractSelection = function () {
+        Bookmark.prototype.MakeExtractSelection = function (SkipChars) {
             var Start = this.MakePointer(this.XStart);
-            return '/1/' + Start + '';
+            var XP = '/1/' + Start + '';
+            if (SkipChars) {
+                XP = XP.replace(/\.\d+$/, '');
+            }
+            return XP;
         };
 
         Bookmark.prototype.MakeSelection = function () {

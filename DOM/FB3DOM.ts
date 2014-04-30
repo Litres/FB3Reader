@@ -162,6 +162,11 @@ module FB3DOM {
 				}
 				I++;
 			}
+			if (Node.Parent) {
+				return Node.Position();
+			} else {
+				return [0]; // that's some unreasonable xpath, we have no idea where it can be
+			}
 		}
 
 		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath {

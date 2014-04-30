@@ -161,6 +161,11 @@ var FB3DOM;
                 }
                 I++;
             }
+            if (Node.Parent) {
+                return Node.Position();
+            } else {
+                return [0];
+            }
         };
 
         DOM.prototype.GetXPathFromPos = function (Position) {

@@ -80,7 +80,14 @@ function TapEnd(e) {
 function MouseMove(Evt) {
     if (NativeNote && !MenuShown && NativeNote.Group == 3 && !DialogShown) {
         var newNote = NativeNote.RoundClone(false);
-        if (!newNote.ExtendToXY(Evt.clientX, Evt.clientY)) {
+        var X = Evt.clientX;
+        var Y = Evt.clientY;
+
+        // hack for touch-based devices
+        if (!isRelativeToViewport())
+            X += window.pageXOffset, Y += window.pageYOffset;
+
+        if (!newNote.ExtendToXY(X, Y)) {
             return undefined;
         } else {
             NativeNote.Detach();
@@ -135,6 +142,11 @@ function ShowMenu(e) {
     }
     var X = e.clientX;
     var Y = e.clientY;
+
+    // hack for touch-based devices
+    if (!isRelativeToViewport())
+        X += window.pageXOffset, Y += window.pageYOffset;
+
     if (MarkupProgress == 'selectstart') {
         MenuShown = 'SelectEnd';
         if (!NativeNote.ExtendToXY(X, Y)) {
@@ -328,6 +340,22 @@ function PrepareCSS() {
 function ApplyStyle() {
     PrepareCSS();
     AFB3Reader.Reset();
+}
+
+// https://github.com/moll/js-element-from-point/blob/master/index.js
+var relativeToViewport;
+function isRelativeToViewport() {
+    if (relativeToViewport != null)
+        return relativeToViewport;
+
+    var x = window.pageXOffset ? window.pageXOffset + window.innerWidth - 1 : 0;
+    var y = window.pageYOffset ? window.pageYOffset + window.innerHeight - 1 : 0;
+    if (!x && !y)
+        return true;
+
+    // Test with a point larger than the viewport. If it returns an element,
+    // then that means elementFromPoint takes page coordinates.
+    return relativeToViewport = !document.elementFromPoint(x, y);
 }
 
 function changecss(theClass, element, value) {

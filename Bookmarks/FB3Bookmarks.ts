@@ -488,7 +488,7 @@ module FB3Bookmarks {
 			this.MakeXPath(XML.getAttribute('selection'));
 			this.DateTime = moment(XML.getAttribute('last-update'), "YYYY-MM-DDTHH:mm:ssZ").unix();
 			if (XML.querySelector('Note')) {
-				this.Note = XML.querySelector('Note').textContent;
+				this.Note = XML.querySelector('Note').innerHTML.replace(/<p\s[^>]+>/, '<p>');
 			}
 			this.NotSavedYet = 0;
 			this.XPathMappingReady = false;

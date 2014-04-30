@@ -24,8 +24,8 @@ window.onload = function () {
     BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
     AFB3PPCache = new FB3PPCache.PPCache();
     AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
-    AFB3Reader.NColumns = 1;
     AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
+    PrepareCSS();
     AFB3Reader.Init();
     window.addEventListener('resize', function () {
         return AFB3Reader.AfterCanvasResize();
@@ -304,5 +304,67 @@ function Save() {
 function Load() {
     console.log('load button clicked');
     BookmarksProcessor.ReLoad();
+}
+
+function PrepareCSS() {
+    var Columns = parseInt(document.getElementById('columns').value);
+    var Spacing = document.getElementById('spacing').value;
+    var FontFace = document.getElementById('fontface').value;
+
+    var FontSize = document.getElementById('fontsize').value;
+    var Colors = document.getElementById('Colors').value.split('/');
+
+    // Colors does not mater for page size, AFB3Reader.NColumns already used internally
+    AFB3Reader.Site.Key = Spacing + ':' + FontFace + ':' + FontSize;
+
+    AFB3Reader.NColumns = Columns;
+    changecss('#FB3ReaderHostDiv', 'line-height', Spacing);
+    changecss('#FB3ReaderHostDiv', 'font-family', FontFace);
+    changecss('#FB3ReaderHostDiv', 'font-size', FontSize + 'px');
+    changecss('#FB3ReaderHostDiv', 'background-color', Colors[0]);
+    changecss('#FB3ReaderHostDiv', 'color', Colors[1]);
+}
+
+function ApplyStyle() {
+    PrepareCSS();
+    AFB3Reader.Reset();
+}
+
+function changecss(theClass, element, value) {
+    //Last Updated on July 4, 2011
+    //documentation for this script at
+    //http://www.shawnolson.net/a/503/altering-css-class-attributes-with-javascript.html
+    var cssRules;
+    var doc = document;
+
+    for (var S = 0; S < doc.styleSheets.length; S++) {
+        try  {
+            doc.styleSheets[S].insertRule(theClass + ' { ' + element + ': ' + value + '; }', doc.styleSheets[S][cssRules].length);
+        } catch (err) {
+            try  {
+                doc.styleSheets[S].addRule(theClass, element + ': ' + value + ';');
+            } catch (err) {
+                try  {
+                    if (doc.styleSheets[S]['rules']) {
+                        cssRules = 'rules';
+                    } else if (doc.styleSheets[S]['cssRules']) {
+                        cssRules = 'cssRules';
+                    } else {
+                        //no rules found... browser unknown
+                    }
+
+                    for (var R = 0; R < doc.styleSheets[S][cssRules].length; R++) {
+                        if (doc.styleSheets[S][cssRules][R].selectorText == theClass) {
+                            if (doc.styleSheets[S][cssRules][R].style[element]) {
+                                doc.styleSheets[S][cssRules][R].style[element] = value;
+                                break;
+                            }
+                        }
+                    }
+                } catch (err) {
+                }
+            }
+        }
+    }
 }
 //# sourceMappingURL=app.js.map

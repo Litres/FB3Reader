@@ -51,7 +51,9 @@ div.FB3ReaderColumnset1 div.FB2readerPage {
 }
 div.FB2readerPage div.footnote {
     max-height: 500px; /* this will be overriden by inline style by engine, no reason to interfere */
-    overflow: auto;
+    font-size: 80%;
+/*    overflow: auto;*/
+
 }
 
 .FB2readerPage img.tag_image {
@@ -85,7 +87,7 @@ div.FB2readerPage div.footnote {
     font-family: 'Times New Roman', serif;
     padding: 4px 0 8px 0;
 }
-.FBReaderContentDiv div, .FBReaderContentDiv p,
+.FBReaderContentDiv div,
 .FBReaderContentDiv h3, .FBReaderContentDiv h4,
 .FBReaderContentDiv h5, .FBReaderContentDiv h6 {
     font-family: 'Arial', sans-serif;
@@ -101,13 +103,17 @@ div.FB2readerPage div.FBReaderContentDiv {
 }
 
 #FB3ReaderHostDiv {
-    background-color: #000070;
-    color:yellow;
+    background-color: #f8f6db;
+    color:#251700;
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
+    text-align: justify;
+    line-height: 1.5;
+    font-family: 'Times New Roman';
+    font-size:15px;
 }
 
 div.FB2readerPage a.footnote_attached {
@@ -118,7 +124,6 @@ div.FB2readerPage a.footnote_attached {
 }
 
 div.FB2readerPage p {
-    text-align: justify;
     padding:0;
     margin:0;
     text-indent:1.3em;
@@ -148,8 +153,6 @@ div.FB2readerPage p.footnote {
 
 .FBReaderNotesDiv {
     border-top: 1px dotted #ffff5d;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #000070;
     margin-bottom: 6px;
 }
 

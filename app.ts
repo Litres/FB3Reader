@@ -286,7 +286,7 @@ function ShowBookmark(N: number): void {
 function ManageBookmarks(): void {
 	document.getElementById('bookmarksmandiv').style.display = "block";
 	var Bookmarks = '';
-	for (var J = 0; J < AFB3Reader.Bookmarks.Bookmarks.length; J++) {
+	for (var J = 1; J < AFB3Reader.Bookmarks.Bookmarks.length; J++) {
 		Bookmarks += Bookmark2Div(AFB3Reader.Bookmarks.Bookmarks[J]);
 	}
 	document.getElementById('bookmarkslist').innerHTML = Bookmarks;

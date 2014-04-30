@@ -476,7 +476,7 @@ module FB3Bookmarks {
 				'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
 				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
 				'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' +
-				this.Extract() + this.GetNote() +
+				this.GetNote() + this.Extract() +
 			'</Selection>';
 		}
 
@@ -503,20 +503,16 @@ module FB3Bookmarks {
 		}
 
 		private Extract(): string {
-			return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection(true) + ')">' +
+			return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
 				this.ExtractNode() + '</Extract>';
 		}
 		private ExtractNode(): string {
 			// TODO: fill with code
 			return '<p>or 4 test text</p>';
 		}
-		private MakeExtractSelection(SkipChars?:boolean): string {
+		private MakeExtractSelection(): string {
 			var Start: string = this.MakePointer(this.XStart);
-			var XP = '/1/' + Start + '';
-			if (SkipChars) {
-				XP = XP.replace(/\.\d+$/, '');
-			}
-			return XP;
+			return '/1/' + Start.replace(/\.\d+$/, '') + '';
 		}
 
 		private MakeSelection(): string {

@@ -453,7 +453,7 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' + this.Extract() + this.GetNote() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' + this.GetNote() + this.Extract() + '</Selection>';
         };
 
         Bookmark.prototype.ParseXML = function (XML) {
@@ -480,19 +480,15 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.Extract = function () {
-            return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection(true) + ')">' + this.ExtractNode() + '</Extract>';
+            return '<Extract original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' + this.ExtractNode() + '</Extract>';
         };
         Bookmark.prototype.ExtractNode = function () {
             // TODO: fill with code
             return '<p>or 4 test text</p>';
         };
-        Bookmark.prototype.MakeExtractSelection = function (SkipChars) {
+        Bookmark.prototype.MakeExtractSelection = function () {
             var Start = this.MakePointer(this.XStart);
-            var XP = '/1/' + Start + '';
-            if (SkipChars) {
-                XP = XP.replace(/\.\d+$/, '');
-            }
-            return XP;
+            return '/1/' + Start.replace(/\.\d+$/, '') + '';
         };
 
         Bookmark.prototype.MakeSelection = function () {

@@ -28,7 +28,7 @@ window.onload = () => {
 	AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
 	PrepareCSS();
-	AFB3Reader.Init();
+	AFB3Reader.Init([0]);
 	window.addEventListener('resize', () => AFB3Reader.AfterCanvasResize());
 //	ShowPosition();
 	start = new Date().getTime();

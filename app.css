@@ -237,7 +237,8 @@ p.my_selec_1_default {
     margin-left: -7px !important;
     margin-right: -3px !important;
     padding-right: 3px !important;
-    background-color: #004d93;
+/*    background-color: #004d93;
+    color:yellow; */
 }
 
 .footnote_clickable {

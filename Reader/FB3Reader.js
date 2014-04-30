@@ -67,11 +67,14 @@ var FB3Reader;
             this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
         };
 
-        Reader.prototype.Init = function () {
+        Reader.prototype.Init = function (StartFrom) {
             var _this = this;
+            this.CurStartPos = StartFrom;
             this.PrepareCanvas();
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
-                _this.Bookmarks.ApplyPosition();
+                if (!_this.Bookmarks.ApplyPosition()) {
+                    _this.GoTO(_this.CurStartPos);
+                }
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;

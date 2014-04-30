@@ -44,7 +44,7 @@ module FB3Bookmarks {
 		DropBookmark(Bookmark: IBookmark): void;
 		Load(Callback?: IBookmarksReadyCallback);   // Loads bookmarks from the server
 		ReLoad();	// Updates itself from the server (may get new current position)
-		ApplyPosition(): void;
+		ApplyPosition(): boolean;
 		Store(): void;
 	}
 

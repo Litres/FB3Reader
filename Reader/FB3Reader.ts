@@ -93,9 +93,14 @@ module FB3Reader {
 			this.IdleOff();
 		}
 
-		public Init(): void {
+		public Init(StartFrom: IPosition): void {
+			this.CurStartPos = StartFrom;
 			this.PrepareCanvas();
-			this.FB3DOM.Init(this.HyphON, this.ArtID, () => { this.Bookmarks.ApplyPosition() });
+			this.FB3DOM.Init(this.HyphON, this.ArtID, () => {
+				if (!this.Bookmarks.ApplyPosition() && this.CurStartPos) {
+					this.GoTO(this.CurStartPos);
+				}
+			});
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
 			this.Bookmarks.Load(() => { this.Bookmarks.ApplyPosition() });

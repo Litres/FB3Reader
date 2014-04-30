@@ -124,13 +124,14 @@ module FB3Bookmarks {
 			this.SendNotesRequest(URL, 'POST', Data);
 		}
 
-		public ApplyPosition(): void {
+		public ApplyPosition(): boolean {
 			// If DOM.TOC not ready yet, we can't expand XPath for any way - we wait while Reader.LoadDone fire this
 			if (!this.FB3DOM.Ready || this.WaitForData) {
-				return;
+				return false;
 			}
 			this.Ready = true;
 			this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
+			return true;
 		}
 
 		public ReLoad(SaveAutoState?: boolean) {

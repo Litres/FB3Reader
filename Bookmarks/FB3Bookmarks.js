@@ -1,4 +1,4 @@
-﻿/// <reference path="FB3BookmarksHead.ts" />
+/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
@@ -16,7 +16,7 @@ var FB3Bookmarks;
             } else {
                 this.XMLHttp = new XMLHttpRequest();
             }
-            this.Host = 'http://robot.litres.ru/'; // TODO: raplace
+            this.Host = 'http://dbt03.litres.ru/'; // TODO: raplace
             this.SID = LitresSID;
             this.SaveAuto = false;
         }
@@ -108,10 +108,11 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.ApplyPosition = function () {
             // If DOM.TOC not ready yet, we can't expand XPath for any way - we wait while Reader.LoadDone fire this
             if (!this.FB3DOM.Ready || this.WaitForData) {
-                return;
+                return false;
             }
             this.Ready = true;
             this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
+            return true;
         };
 
         LitResBookmarksProcessor.prototype.ReLoad = function (SaveAutoState) {

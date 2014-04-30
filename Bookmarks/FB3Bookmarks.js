@@ -1,4 +1,4 @@
-/// <reference path="FB3BookmarksHead.ts" />
+﻿/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
@@ -506,7 +506,7 @@ var FB3Bookmarks;
         Bookmark.prototype.MakeXPath = function (X) {
             var p = X.match(/\/1\/(.[^\)]*)/g);
             var MakeXPathSub = function (str) {
-                return str.replace('/1/', '').replace('.', '/.').split('/');
+                return str.replace(/^\/1\//, '').replace(/\.0$/, '').replace('.', '/.').split('/');
             };
             this.XStart = MakeXPathSub(p[0]);
             if (p.length == 1) {

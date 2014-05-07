@@ -129,7 +129,6 @@ module FB3ReaderPage {
 		public ID: number;
 		public Next: ReaderPage; // If null - it's not a page but prerender container
 		public Ready: boolean;
-		public Reseted: boolean;
 		public PrerenderBlocks: number;
 		public PageN: number;
 		public Pending: boolean;
@@ -138,7 +137,6 @@ module FB3ReaderPage {
 			private FB3DOM: FB3DOM.IFB3DOM,
 			private FBReader: FB3Reader.Reader,
 			Prev: ReaderPage) {
-			this.Reseted = false;
 			if (Prev) {
 				Prev.Next = this;
 			}
@@ -234,10 +232,6 @@ module FB3ReaderPage {
 		DrawInit(PagesToRender: FB3Reader.IPageRenderInstruction[]): void {
 			//console.log(this.ID, 'DrawInit');
 			if (PagesToRender.length == 0) return;
-			if (this.Reseted) {
-				this.Reseted = false;
-				return;
-			}
 			this.Ready = false;
 			this.Pending = true;
 			this.FBReader.IdleOff();
@@ -309,10 +303,6 @@ module FB3ReaderPage {
 
 		DrawEnd(PageData: FB3DOM.IPageContainer) {
 			//console.log(this.ID, 'DrawEnd');
-			if (this.Reseted) {
-				this.Reseted = false;
-				return;
-			}
 			this.Element.Node.innerHTML = PageData.Body.join('');
 			var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
 			if (HasFootnotes) {
@@ -543,7 +533,6 @@ module FB3ReaderPage {
 			clearTimeout(this.RenderBreakerTimeout);
 			//			console.log('Reset ' + this.ID);
 			this.PagesToRender = null;
-			this.Reseted = true;
 			this.Pending = false;
 		}
 

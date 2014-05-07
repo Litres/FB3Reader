@@ -72,7 +72,7 @@ var FB3Reader;
             this.CurStartPos = StartFrom;
             this.PrepareCanvas();
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
-                if (!_this.Bookmarks.ApplyPosition()) {
+                if (!_this.Bookmarks.ApplyPosition() && _this.CurStartPos) {
                     _this.GoTO(_this.CurStartPos);
                 }
             });
@@ -104,6 +104,7 @@ var FB3Reader;
 
             // Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
             // set, NColumns per one. Let's see what start column we are going to deal with
+            this.StopRenders();
             clearTimeout(this.MoveTimeoutID);
             var RealStartPage = Math.floor(Page / this.NColumns) * this.NColumns;
 
@@ -188,6 +189,7 @@ var FB3Reader;
         Reader.prototype.GoToOpenPosition = function (NewPos) {
             clearTimeout(this.MoveTimeoutID);
             this.SetStartPos(NewPos);
+            this.StopRenders();
 
             var NewInstr = [{ Start: NewPos }];
 
@@ -557,10 +559,14 @@ var FB3Reader;
             this.GoTO(this.CurStartPos.slice(0));
         };
 
-        Reader.prototype.Reset = function () {
+        Reader.prototype.StopRenders = function () {
             for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].Reset();
             }
+        };
+
+        Reader.prototype.Reset = function () {
+            this.StopRenders();
             this.BackgroundRenderFrame.Reset();
             this.PrepareCanvas();
             this.GoTO(this.CurStartPos.slice(0));

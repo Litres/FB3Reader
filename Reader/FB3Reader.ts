@@ -125,6 +125,7 @@ module FB3Reader {
 			}
 			// Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
 			// set, NColumns per one. Let's see what start column we are going to deal with
+			this.StopRenders();
 			clearTimeout(this.MoveTimeoutID);
 			var RealStartPage = Math.floor(Page / this.NColumns) * this.NColumns;
 
@@ -209,6 +210,7 @@ module FB3Reader {
 		public GoToOpenPosition(NewPos: IPosition): void {
 			clearTimeout(this.MoveTimeoutID);
 			this.SetStartPos(NewPos);
+			this.StopRenders();
 
 			var NewInstr: IPageRenderInstruction[] = [{ Start: NewPos }];
 
@@ -584,10 +586,14 @@ module FB3Reader {
 			this.GoTO(this.CurStartPos.slice(0));
 		}
 
-		public Reset(): void {
+		private StopRenders() {
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].Reset();
 			}
+		}
+
+		public Reset(): void {
+			this.StopRenders();
 			this.BackgroundRenderFrame.Reset();
 			this.PrepareCanvas();
 			this.GoTO(this.CurStartPos.slice(0));

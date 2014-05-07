@@ -415,6 +415,7 @@ module FB3Bookmarks {
 			this.XPathMappingReady = false;
 			if (!this.Owner.FB3DOM.DataChunks) { // No info on chunks yet, keep waiting
 				setTimeout(() => this.InitSyncXPathWithDOM(), 10);
+				return;
 			}
 			this.RequiredChunks = this.ChunksRequired();
 			var ChunksToLoad = new Array();

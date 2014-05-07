@@ -16,7 +16,7 @@ var FB3Bookmarks;
             } else {
                 this.XMLHttp = new XMLHttpRequest();
             }
-            this.Host = 'http://dbt03.litres.ru/'; // TODO: raplace
+            this.Host = 'http://robot.litres.ru/'; // TODO: raplace
             this.SID = LitresSID;
             this.SaveAuto = false;
         }
@@ -393,6 +393,7 @@ var FB3Bookmarks;
                 setTimeout(function () {
                     return _this.InitSyncXPathWithDOM();
                 }, 10);
+                return;
             }
             this.RequiredChunks = this.ChunksRequired();
             var ChunksToLoad = new Array();

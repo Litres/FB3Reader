@@ -1,4 +1,4 @@
-﻿/// <reference path="PPCacheHead.ts" />
+/// <reference path="PPCacheHead.ts" />
 var FB3PPCache;
 (function (FB3PPCache) {
     var SkipCache = false;

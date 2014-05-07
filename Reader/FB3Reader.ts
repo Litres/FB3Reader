@@ -109,8 +109,6 @@ module FB3Reader {
 		public GoTO(NewPos: IPosition) {
 			clearTimeout(this.MoveTimeoutID);
 			this.IdleOff();
-//			console.log('GoTO ' + NewPos);
-			this.SetStartPos(NewPos); // NewPos is going to be destroyed, we need a hardcopy
 			var GotoPage = this.GetCachedPage(NewPos);
 			if (GotoPage != undefined) {
 				this.GoTOPage(GotoPage);

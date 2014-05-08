@@ -406,16 +406,25 @@ module FB3Reader {
 					this.GoTOPage(this.CurStartPage - this.NColumns);
 				}
 			} else {	// Ouch, we are out of the ladder, this makes things complicated like hell, sometimes
-								// we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
+						// we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
 				var GotoPage = this.GetCachedPage(this.CurStartPos);
-				if (GotoPage != undefined) {// All right, first we check if our current page IS on the ladder already
+				if (GotoPage != undefined) {  // All right, first we check if our current page IS on the ladder already
 					this.GoTOPage(GotoPage);  // If so - go to the ledder and never care of the rest
-				} else {										// If not - we can only wait for the ladder to come to us
-					if (this.EnableBackgroundPreRender) { // We hope some day this will happend
-						this.MoveTimeoutID = setTimeout(() => { this.PageBackward() }, 50);
-					} else {  // No hope to have previous page rendered - for now we husr croak
-						alert('Backward paging not implemented yet, sory');
+				} else { // If not - we can only jump somewhat back, hope this will look like a page
+					var ParaPerPage = 4;
+					if (this.PagesPositionsCache.Length()) {
+						ParaPerPage = Math.round(
+							this.PagesPositionsCache.Get(this.PagesPositionsCache.Length() - 1).Range.To[0] / this.PagesPositionsCache.Length()
+							);
+						if (ParaPerPage < 1) {
+							ParaPerPage = 1
+						}
 					}
+					var TravelBack = this.CurStartPos[0] - ParaPerPage * this.NColumns;
+					if (TravelBack < 0) {
+						TravelBack = 0;
+					}
+					this.GoTO([TravelBack]);
 				}
 			}
 		}

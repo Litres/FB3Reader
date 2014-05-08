@@ -379,7 +379,6 @@ var FB3Reader;
             return;
         };
         Reader.prototype.PageBackward = function () {
-            var _this = this;
             clearTimeout(this.MoveTimeoutID);
             if (this.CurStartPage !== undefined) {
                 if (this.CurStartPage > 0) {
@@ -391,13 +390,18 @@ var FB3Reader;
                 if (GotoPage != undefined) {
                     this.GoTOPage(GotoPage); // If so - go to the ledder and never care of the rest
                 } else {
-                    if (this.EnableBackgroundPreRender) {
-                        this.MoveTimeoutID = setTimeout(function () {
-                            _this.PageBackward();
-                        }, 50);
-                    } else {
-                        alert('Backward paging not implemented yet, sory');
+                    var ParaPerPage = 4;
+                    if (this.PagesPositionsCache.Length()) {
+                        ParaPerPage = Math.round(this.PagesPositionsCache.Get(this.PagesPositionsCache.Length() - 1).Range.To[0] / this.PagesPositionsCache.Length());
+                        if (ParaPerPage < 1) {
+                            ParaPerPage = 1;
+                        }
                     }
+                    var TravelBack = this.CurStartPos[0] - ParaPerPage * this.NColumns;
+                    if (TravelBack < 0) {
+                        TravelBack = 0;
+                    }
+                    this.GoTO([TravelBack]);
                 }
             }
         };

@@ -25,9 +25,11 @@
     <TypeScriptCompile Include="DOM\FB3DOM.ts" />
     <TypeScriptCompile Include="DOM\FB3DOMBlock.ts" />
     <Content Include="DOM\FB3DOMHead.ts" />
+    <TypeScriptCompile Include="plugins\lz-string.d.ts" />
     <TypeScriptCompile Include="plugins\moment.d.ts" />
     <TypeScriptCompile Include="Reader\FB3Reader.ts" />
     <Content Include="FB3ReaderHeaders.ts" />
+    <Content Include="plugins\lz-string.min.js" />
     <Content Include="plugins\moment.min.js" />
     <Content Include="Reader\FB3ReaderHead.ts" />
     <TypeScriptCompile Include="Site\FB3ReaderSite.ts" />

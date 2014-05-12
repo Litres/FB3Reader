@@ -71,6 +71,7 @@ module FB3Reader {
 		private SetStartPos(NewPos: IPosition): void {
 			this.CurStartPos = NewPos.slice(0);
 			this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
+			this.Site.AfterTurnPageDone();
 		}
 
 		constructor(public ArtID: string,
@@ -100,7 +101,6 @@ module FB3Reader {
 				this.Site.HeadersLoaded(this.FB3DOM.MetaData);
 				if (!this.Bookmarks.ApplyPosition() && this.CurStartPos) {
 					this.GoTO(this.CurStartPos);
-					this.Site.ApplyPositionDone();
 				}
 			});
 			this.Bookmarks.FB3DOM = this.FB3DOM;

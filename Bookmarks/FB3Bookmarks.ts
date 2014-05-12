@@ -131,7 +131,6 @@ module FB3Bookmarks {
 			}
 			this.Ready = true;
 			this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
-			this.Reader.Site.ApplyPositionDone();
 			return true;
 		}
 

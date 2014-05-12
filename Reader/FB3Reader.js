@@ -65,6 +65,7 @@ var FB3Reader;
         Reader.prototype.SetStartPos = function (NewPos) {
             this.CurStartPos = NewPos.slice(0);
             this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
+            this.Site.AfterTurnPageDone();
         };
 
         Reader.prototype.Init = function (StartFrom) {
@@ -75,7 +76,6 @@ var FB3Reader;
                 _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
                 if (!_this.Bookmarks.ApplyPosition() && _this.CurStartPos) {
                     _this.GoTO(_this.CurStartPos);
-                    _this.Site.ApplyPositionDone();
                 }
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;

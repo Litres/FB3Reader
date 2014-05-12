@@ -29,7 +29,7 @@ my $Out = $ARGV[3];
 #my $Out = 'C:\Work\FictionHub\cgi\static\out.html';
 
 unless ($Out){
-	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <meta-stylesheet.xsl> <out>\n";
+	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <meta-stylesheet.xsl> </etc/out/>\n";
 	exit(0);
 }
 
@@ -217,7 +217,7 @@ if (@DataToWrite){
 
 PatchFiles();
 
-open $OutFile, ">:utf8","$Out.toc.js";
+open $OutFile, ">:utf8",$Out."toc.js";
 print $OutFile "{$JSonMeta,\nBody: [";
 my $Max = @{$RootTOC->{c}} - 1;
 for (my $i=0;$i<=$Max;$i++) {
@@ -246,11 +246,28 @@ unlink $TmpXML if $TmpXML;
 my %NeedPatch;
 sub FlushFile{
 	return unless @DataToWrite;
-	$DataToWrite[0]=~ /\bxp:(\[\d+(,\d+)*\b])/;
-	my $XPStart = $1;
-	$DataToWrite[$#DataToWrite]=~ /\bxp:(\[\d+(,\d+)*\b])/;
-	my $XPEnd = $1;
-	push @BlockMap,{s=>$Start,e=>$BlockN,fn=>sprintf("$Out.%03i.js",$FileN),
+	my  $i = 0;
+	until ($DataToWrite[$i]=~ /\bxp:(\[\d+(,\d+)*\b])(?!\bxp:\[)/) {
+		$i++;
+	}
+	my $XPStart;
+	if ($DataToWrite[$i]=~ /\bxp:(\[\d+(,\d+)*\b])(?!\bxp:\[)/){
+		$XPStart = $1;
+	} else {
+		die "START XPath not found: ".join("\n",@DataToWrite)
+	}
+
+	$i = $#DataToWrite;
+	until ($DataToWrite[$i]=~ /\bxp:(\[\d+(,\d+)*\b])(?!\bxp:\[)/){
+		$i--;
+	}
+	my $XPEnd;
+	if ($DataToWrite[$i]=~ /\bxp:(\[\d+(,\d+)*\b])(?!\bxp:\[)/){
+		$XPEnd = $1;
+	} else {
+		die "END XPath not found: ".join("\n",@DataToWrite)
+	}
+	push @BlockMap,{s=>$Start,e=>$BlockN,fn=>$Out.sprintf("%03i.js",$FileN),
 									xps=>$XPStart,
 									xpe=>$XPEnd};
 	my $outfile;
@@ -346,7 +363,7 @@ sub GetImageID {
 		my $ContentType=$_->getAttribute('content-type');
 
 		if (defined($id) && $ContentType=~ /image\/(jpeg|png|gif)/i) {
-			my $FN="$Out.$id";
+			my $FN=$Out.$id;
 			open IMGFILE, ">$FN" or die "$FN: $!";
 			binmode IMGFILE;
 			print (IMGFILE decode_base64($_->string_value()));

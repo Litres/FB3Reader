@@ -13,7 +13,7 @@ module FB3ReaderSite {
 		getElementById(elementId: string): HTMLElement;
 		elementFromPoint(x: number, y: number): Element;
 		HeadersLoaded(MetaData: FB3DOM.IMetaData): void; // when headers (Meta, toc and chunks info) loaded
-		ApplyPositionDone():void; // when first start, default position and bookmark position set
+		AfterTurnPageDone():void; // when first start, default position and bookmark position set
 		BookCacheDone():void; // after full 100% book cache done
 	}
 

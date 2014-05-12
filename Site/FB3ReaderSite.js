@@ -20,7 +20,7 @@ var FB3ReaderSite;
         };
         ExampleSite.prototype.HeadersLoaded = function (MetaData) {
         };
-        ExampleSite.prototype.ApplyPositionDone = function () {
+        ExampleSite.prototype.AfterTurnPageDone = function () {
         };
         ExampleSite.prototype.BookCacheDone = function () {
         };

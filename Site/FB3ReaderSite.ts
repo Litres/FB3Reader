@@ -21,7 +21,7 @@ module FB3ReaderSite {
 			return document.elementFromPoint(x,y);
 		}
 		public HeadersLoaded(MetaData: FB3DOM.IMetaData) {}
-		public ApplyPositionDone() {}
+		public AfterTurnPageDone() {}
 		public BookCacheDone() {}
 	}
 

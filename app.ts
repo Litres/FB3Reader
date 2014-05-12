@@ -21,7 +21,7 @@ window.onload = () => {
 	var SID = GetSID();
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
-	var DataProvider = new FB3DataProvider.AJAXDataProvider();
+	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL());
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
 	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
 	AFB3PPCache = new FB3PPCache.PPCache();
@@ -35,7 +35,7 @@ window.onload = () => {
 };
 
 function GetSID(): string {
-	var URL = window.location.href;
+	var URL = decodeURIComponent(window.location.href);
 	var SID = URL.match(/\bsid=([0-9a-zA-Z]+)\b/);
 	if (SID == null || !SID.length) {
 		var Cookies = document.cookie.match(/(?:(?:^|.*;\s*)SID\s*\=\s*([^;]*).*$)|^.*$/);
@@ -46,6 +46,15 @@ function GetSID(): string {
 	} else {
 		return SID[1];
 	}
+}
+
+function GetBaseURL(): string {
+	var URL = decodeURIComponent(window.location.href);
+	var BaseURL = URL.match(/\bbaseurl=([0-9\/a-z\.]+)/i);
+	if (BaseURL == null || !BaseURL.length) {
+		return 'null';
+	}
+	return BaseURL[1];
 }
 
 var MarkupProgress: string;

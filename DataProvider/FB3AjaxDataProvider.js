@@ -2,13 +2,17 @@
 var FB3DataProvider;
 (function (FB3DataProvider) {
     var AJAXDataProvider = (function () {
-        function AJAXDataProvider() {
+        function AJAXDataProvider(LitresURL) {
+            this.LitresURL = LitresURL;
+            this.BaseURL = (LitresURL.match('trials') ? '' : '/download_book') + LitresURL;
         }
         AJAXDataProvider.prototype.Request = function (URL, Callback, Progressor, CustomData) {
             new AjaxLoader(URL, Callback, Progressor, CustomData);
         };
         AJAXDataProvider.prototype.ArtID2URL = function (ArtID, Chunk) {
-            var OutURL = '/DataProvider/AjaxExample/' + ArtID + '.';
+            var OutURL = '/core/DataProvider/AjaxExample/' + ArtID + '.';
+
+            // var OutURL = 'http://www.litres.ru' + this.BaseURL + 'json/';
             if (Chunk == null) {
                 OutURL += 'toc.js';
             } else if (Chunk.match(/\./)) {

@@ -20,8 +20,11 @@ module FB3ReaderSite {
 		elementFromPoint(x: number, y: number): Element {
 			return document.elementFromPoint(x,y);
 		}
-
+		public HeadersLoaded() {}
+		public ApplyPositionDone() {}
+		public BookCacheDone() {}
 	}
+
 	export class ExampleProgressor implements ILoadProgress {
 		private Hourglasses: any;
 		private Progresses: any;

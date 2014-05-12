@@ -12,6 +12,9 @@ module FB3ReaderSite {
 		Key: string; // Settings key, like font size and name, user for cache srore/read
 		getElementById(elementId: string): HTMLElement;
 		elementFromPoint(x: number, y: number): Element;
+		HeadersLoaded(data?: any): any; // when headers (Meta, toc and chunks info) loaded
+		ApplyPositionDone(); // when first start, default position and bookmark position set
+		BookCacheDone(); // after full 100% book cache done
 	}
 
 	// General-purpose interface for progress feedback

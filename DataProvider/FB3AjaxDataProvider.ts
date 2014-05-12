@@ -3,11 +3,16 @@
 module FB3DataProvider {
 
 	export class AJAXDataProvider implements IJsonLoaderFactory {
+		private BaseURL: string;
+		constructor(public LitresURL: string) {
+			this.BaseURL = (LitresURL.match('trials') ? '' : '/download_book') + LitresURL;
+		}
 		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
 			new AjaxLoader(URL, Callback, Progressor, CustomData);
 		}
 		public ArtID2URL(ArtID: string, Chunk?: string): string {
-			var OutURL = '/DataProvider/AjaxExample/' + ArtID+'.';
+			var OutURL = '/core/DataProvider/AjaxExample/' + ArtID+'.'; // TODO: delete after
+			// var OutURL = 'http://www.litres.ru' + this.BaseURL + 'json/';
 			if (Chunk == null) {
 				OutURL += 'toc.js';
 			} else if (Chunk.match(/\./)) {

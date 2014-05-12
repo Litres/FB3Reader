@@ -72,8 +72,10 @@ var FB3Reader;
             this.CurStartPos = StartFrom;
             this.PrepareCanvas();
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
+                _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
                 if (!_this.Bookmarks.ApplyPosition() && _this.CurStartPos) {
                     _this.GoTO(_this.CurStartPos);
+                    _this.Site.ApplyPositionDone();
                 }
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;

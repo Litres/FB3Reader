@@ -97,8 +97,10 @@ module FB3Reader {
 			this.CurStartPos = StartFrom;
 			this.PrepareCanvas();
 			this.FB3DOM.Init(this.HyphON, this.ArtID, () => {
+				this.Site.HeadersLoaded(this.FB3DOM.MetaData);
 				if (!this.Bookmarks.ApplyPosition() && this.CurStartPos) {
 					this.GoTO(this.CurStartPos);
+					this.Site.ApplyPositionDone();
 				}
 			});
 			this.Bookmarks.FB3DOM = this.FB3DOM;

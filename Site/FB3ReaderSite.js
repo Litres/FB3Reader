@@ -18,9 +18,16 @@ var FB3ReaderSite;
         ExampleSite.prototype.elementFromPoint = function (x, y) {
             return document.elementFromPoint(x, y);
         };
+        ExampleSite.prototype.HeadersLoaded = function () {
+        };
+        ExampleSite.prototype.ApplyPositionDone = function () {
+        };
+        ExampleSite.prototype.BookCacheDone = function () {
+        };
         return ExampleSite;
     })();
     FB3ReaderSite.ExampleSite = ExampleSite;
+
     var ExampleProgressor = (function () {
         function ExampleProgressor(AlertSpan, MessSpan, ProgressSpan) {
             this.AlertSpan = AlertSpan;

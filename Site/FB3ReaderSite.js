@@ -18,7 +18,7 @@ var FB3ReaderSite;
         ExampleSite.prototype.elementFromPoint = function (x, y) {
             return document.elementFromPoint(x, y);
         };
-        ExampleSite.prototype.HeadersLoaded = function () {
+        ExampleSite.prototype.HeadersLoaded = function (MetaData) {
         };
         ExampleSite.prototype.ApplyPositionDone = function () {
         };

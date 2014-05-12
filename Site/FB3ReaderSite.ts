@@ -20,7 +20,7 @@ module FB3ReaderSite {
 		elementFromPoint(x: number, y: number): Element {
 			return document.elementFromPoint(x,y);
 		}
-		public HeadersLoaded() {}
+		public HeadersLoaded(MetaData: FB3DOM.IMetaData) {}
 		public ApplyPositionDone() {}
 		public BookCacheDone() {}
 	}

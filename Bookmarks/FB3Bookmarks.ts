@@ -457,10 +457,16 @@ module FB3Bookmarks {
 
 		private ChunksRequired(): number[]{
 			var Result = new Array();
-			Result[0] = this.XPChunk(this.XStart);
+			var StartChunk = this.XPChunk(this.XStart);
 			var EndChunk = this.XPChunk(this.XEnd);
-			if (EndChunk != Result[0]) {
-				Result.push(EndChunk);
+			if (!StartChunk) {
+				StartChunk = EndChunk;
+			}
+			if (StartChunk) {
+				Result[0] = StartChunk;
+				if (EndChunk != Result[0]) {
+					Result.push(EndChunk);
+				}
 			}
 			return Result;
 		}

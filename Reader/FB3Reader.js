@@ -479,6 +479,7 @@ var FB3Reader;
                             this.Site.Alert('Tome taken: ' + time);
                             clearInterval(this.IdleTimeoutID);
                             this.SaveCache();
+                            this.Site.BookCacheDone();
                             return;
                         } else {
                             this.PagesPositionsCache.LastPage(0);

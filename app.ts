@@ -9,6 +9,7 @@ var AFB3Reader: FB3Reader.IFBReader;
 var AFB3PPCache: FB3PPCache.IFB3PPCache;
 var BookmarksProcessor: FB3Bookmarks.IBookmarks;
 var start: number;
+var LocalArtID = 120421;
 
 window.onload = () => {
 
@@ -17,15 +18,15 @@ window.onload = () => {
 	document.getElementById('reader').addEventListener('touchend', TapEnd, false);
 
 //	var ArtID = '178297';
-	var ArtID = '120421';
+	var UUID = '65830123-26b8-4b07-8098-c18229e5026e';
 	var SID = GetSID();
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
-	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL());
+	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(),ArtID2URL);
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
 	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
 	AFB3PPCache = new FB3PPCache.PPCache();
-	AFB3Reader = new FB3Reader.Reader(ArtID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
+	AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
 	PrepareCSS();
 	AFB3Reader.Init([0]);
@@ -33,6 +34,18 @@ window.onload = () => {
 //	ShowPosition();
 	start = new Date().getTime();
 };
+
+function ArtID2URL(ArtID: string, Chunk?: string): string {
+	var OutURL = '/DataProvider/AjaxExample/' + LocalArtID+'.';
+	if (Chunk == null) {
+		OutURL += 'toc.js';
+	} else if (Chunk.match(/\./)) {
+		OutURL += Chunk;
+	} else {
+		OutURL += this.zeroPad(Chunk,3) + '.js?rand=' + Math.random();
+	}
+	return OutURL;
+}
 
 function GetSID(): string {
 	var URL = decodeURIComponent(window.location.href);

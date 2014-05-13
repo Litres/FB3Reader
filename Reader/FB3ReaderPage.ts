@@ -119,6 +119,7 @@ module FB3ReaderPage {
 		private FalloutState: IFalloutState;
 		private QuickFallautState: IQuickFallautState;
 		private RenderBreakerTimeout: number;
+		private ActialRequest: number = 0;
 		public WholeRangeToRender: FB3DOM.IRange; // Range for currently rendered with FallOut page
 		public ThreadsRunning: number;
 
@@ -269,14 +270,15 @@ module FB3ReaderPage {
 
 				this.WholeRangeToRender = this.DefaultRangeApply(this.RenderInstr);
 			}
-
+			this.ActialRequest++;
+			var ReqID = this.ActialRequest;
 			this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON,
 				this.FBReader.BookStyleNotes,
 				FB3Reader.RangeClone(this.WholeRangeToRender),
 				this.ID + '_',
 				this.ViewPortW,
 				this.ViewPortH,
-				(PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData));
+				(PageData: FB3DOM.IPageContainer) => this.DrawEnd(PageData, ReqID));
 		}
 
 		// Take a poind and add PrerenderBlocks of blocks to it
@@ -301,8 +303,12 @@ module FB3ReaderPage {
 			}
 		}
 
-		DrawEnd(PageData: FB3DOM.IPageContainer) {
+		DrawEnd(PageData: FB3DOM.IPageContainer, ReqID?:number) {
 			//console.log(this.ID, 'DrawEnd');
+			if (ReqID != null && ReqID != this.ActialRequest) {
+				// this is some outdated request, we have newer orders since then - so we just ignore this
+				return;
+			}
 			this.Element.Node.innerHTML = PageData.Body.join('');
 			var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
 			if (HasFootnotes) {
@@ -534,6 +540,7 @@ module FB3ReaderPage {
 			//			console.log('Reset ' + this.ID);
 			this.PagesToRender = null;
 			this.Pending = false;
+			this.ActialRequest++;
 		}
 
 		public PutPagePlace(Place: number) {

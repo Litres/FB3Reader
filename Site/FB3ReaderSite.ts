@@ -23,8 +23,10 @@ module FB3ReaderSite {
 		}
 		public HeadersLoaded(MetaData: FB3DOM.IMetaData) {}
 		public AfterTurnPageDone(Data: ITurnPageData) {
-			document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' +
-			(Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
+			if (Data.CurPage) {
+				document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' +
+				(Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
+			}
 		}
 		public BookCacheDone(Data: ITurnPageData) {}
 	}

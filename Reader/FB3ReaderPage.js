@@ -58,6 +58,7 @@ var FB3ReaderPage;
             this.ColumnN = ColumnN;
             this.FB3DOM = FB3DOM;
             this.FBReader = FBReader;
+            this.ActialRequest = 0;
             if (Prev) {
                 Prev.Next = this;
             }
@@ -184,9 +185,10 @@ var FB3ReaderPage;
 
                 this.WholeRangeToRender = this.DefaultRangeApply(this.RenderInstr);
             }
-
+            this.ActialRequest++;
+            var ReqID = this.ActialRequest;
             this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, this.FBReader.BookStyleNotes, FB3Reader.RangeClone(this.WholeRangeToRender), this.ID + '_', this.ViewPortW, this.ViewPortH, function (PageData) {
-                return _this.DrawEnd(PageData);
+                return _this.DrawEnd(PageData, ReqID);
             });
         };
 
@@ -212,9 +214,13 @@ var FB3ReaderPage;
             }
         };
 
-        ReaderPage.prototype.DrawEnd = function (PageData) {
+        ReaderPage.prototype.DrawEnd = function (PageData, ReqID) {
             var _this = this;
             //console.log(this.ID, 'DrawEnd');
+            if (ReqID != null && ReqID != this.ActialRequest) {
+                // this is some outdated request, we have newer orders since then - so we just ignore this
+                return;
+            }
             this.Element.Node.innerHTML = PageData.Body.join('');
             var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
             if (HasFootnotes) {
@@ -450,6 +456,7 @@ var FB3ReaderPage;
             //			console.log('Reset ' + this.ID);
             this.PagesToRender = null;
             this.Pending = false;
+            this.ActialRequest++;
         };
 
         ReaderPage.prototype.PutPagePlace = function (Place) {

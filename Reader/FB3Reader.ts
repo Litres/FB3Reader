@@ -546,7 +546,7 @@ module FB3Reader {
 					case 'fill_page':
 						this.PagesPositionsCache.LastPage(0);
 						if (PageData) {
-								this.BackgroundRenderFrame.DrawEnd(PageData)
+							this.BackgroundRenderFrame.DrawEnd(PageData)
 						}
 						this.IdleAction = 'load_page';
 						break;

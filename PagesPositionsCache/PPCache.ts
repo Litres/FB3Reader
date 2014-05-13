@@ -54,7 +54,7 @@ module FB3PPCache {
 						this.CacheMarkupsList.splice(I, 1);
 					}
 				}
-				if (this.CacheMarkupsList.length >= 15) {
+				if (this.CacheMarkupsList.length >= 25) {
 					this.CacheMarkupsList.shift();
 				}
 				this.CacheMarkupsList.push(

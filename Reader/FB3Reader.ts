@@ -558,7 +558,8 @@ module FB3Reader {
         }
 
 		private SaveCache() {
-			this.PagesPositionsCache.Save(this.BackgroundRenderFrame.ViewPortW + ':' +
+			this.PagesPositionsCache.Save(this.ArtID + ':' +
+				this.BackgroundRenderFrame.ViewPortW + ':' +
 				this.CanvasW + ':' +
 				this.CanvasH + ':' +
 				this.BookStyleNotes + ':' +

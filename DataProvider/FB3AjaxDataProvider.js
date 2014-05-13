@@ -1,4 +1,4 @@
-﻿/// <reference path="FB3DataProviderHead.ts" />
+/// <reference path="FB3DataProviderHead.ts" />
 var FB3DataProvider;
 (function (FB3DataProvider) {
     var AJAXDataProvider = (function () {

@@ -529,11 +529,15 @@ var FB3Reader;
         };
 
         Reader.prototype.SaveCache = function () {
-            this.PagesPositionsCache.Save(this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key);
+            this.PagesPositionsCache.Save(this.FullKey());
         };
 
         Reader.prototype.LoadCache = function () {
-            this.PagesPositionsCache.Load(this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key);
+            this.PagesPositionsCache.Load(this.FullKey());
+        };
+
+        Reader.prototype.FullKey = function () {
+            return this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key;
         };
 
         Reader.prototype.IdleOn = function () {

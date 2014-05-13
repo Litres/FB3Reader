@@ -558,21 +558,20 @@ module FB3Reader {
         }
 
 		private SaveCache() {
-			this.PagesPositionsCache.Save(this.ArtID + ':' +
-				this.BackgroundRenderFrame.ViewPortW + ':' +
-				this.CanvasW + ':' +
-				this.CanvasH + ':' +
-				this.BookStyleNotes + ':' +
-				this.Site.Key);
+			this.PagesPositionsCache.Save(this.FullKey());
 		}
 
 		private LoadCache() {
-			this.PagesPositionsCache.Load(this.ArtID + ':' +
+			this.PagesPositionsCache.Load(this.FullKey());
+		}
+
+		private FullKey(): string {
+			return this.ArtID + ':' +
 				this.BackgroundRenderFrame.ViewPortW + ':' +
 				this.CanvasW + ':' +
 				this.CanvasH + ':' +
 				this.BookStyleNotes + ':' +
-				this.Site.Key);
+				this.Site.Key;
 		}
 
 		public IdleOn(): void {

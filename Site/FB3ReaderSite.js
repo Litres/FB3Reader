@@ -5,6 +5,7 @@ var FB3ReaderSite;
         function ExampleSite(Canvas) {
             var _this = this;
             this.Canvas = Canvas;
+            this.canStoreBookmark = false;
             this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
             this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
             this.Alert = function (Message) {

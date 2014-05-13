@@ -120,7 +120,9 @@ module FB3Bookmarks {
 			var XML = this.MakeStoreXML();
 			var Data = this.MakeStoreData(XML);
 			var URL = this.MakeStoreURL();
-			this.XMLHTTPResponseCallback = () => {};
+			this.XMLHTTPResponseCallback = () => {
+				this.Reader.Site.canStoreBookmark = true;
+			};
 			this.SendNotesRequest(URL, 'POST', Data);
 		}
 
@@ -182,6 +184,7 @@ module FB3Bookmarks {
 			} else {
 				this.Bookmarks = TemporaryNotes.Bookmarks;
 			}
+			this.Reader.Site.canStoreBookmark = false;
 			if (CurPosUpdate) {
 				this.ApplyPosition();
 			} else {
@@ -200,6 +203,7 @@ module FB3Bookmarks {
 				URL += 'uuid=' + this.FB3DOM.MetaData.UUID;
 			} else {
 				URL += 'art=' + this.Reader.ArtID;
+				// URL += 'uuid=' + this.Reader.ArtID;
 			}
 			URL += (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
 			return URL;

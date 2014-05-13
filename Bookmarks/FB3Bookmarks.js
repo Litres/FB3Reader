@@ -97,10 +97,12 @@ var FB3Bookmarks;
         };
 
         LitResBookmarksProcessor.prototype.StoreBookmarks = function () {
+            var _this = this;
             var XML = this.MakeStoreXML();
             var Data = this.MakeStoreData(XML);
             var URL = this.MakeStoreURL();
             this.XMLHTTPResponseCallback = function () {
+                _this.Reader.Site.canStoreBookmark = true;
             };
             this.SendNotesRequest(URL, 'POST', Data);
         };
@@ -166,6 +168,7 @@ var FB3Bookmarks;
             } else {
                 this.Bookmarks = TemporaryNotes.Bookmarks;
             }
+            this.Reader.Site.canStoreBookmark = false;
             if (CurPosUpdate) {
                 this.ApplyPosition();
             } else {
@@ -184,6 +187,7 @@ var FB3Bookmarks;
                 URL += 'uuid=' + this.FB3DOM.MetaData.UUID;
             } else {
                 URL += 'art=' + this.Reader.ArtID;
+                // URL += 'uuid=' + this.Reader.ArtID;
             }
             URL += (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
             return URL;

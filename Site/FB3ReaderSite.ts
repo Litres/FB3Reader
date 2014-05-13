@@ -8,6 +8,7 @@ module FB3ReaderSite {
 		public NotePopup: INotePopup;
 		public Alert: IAlert;
 		public Key: string;
+		public canStoreBookmark: boolean = false;
 		constructor(public Canvas: HTMLElement) {
 			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
 			this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');

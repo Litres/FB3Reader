@@ -10,6 +10,7 @@ module FB3ReaderSite {
 		NotePopup: INotePopup;
 		Alert: IAlert;
 		Key: string; // Settings key, like font size and name, user for cache srore/read
+		canStoreBookmark: boolean;
 		getElementById(elementId: string): HTMLElement;
 		elementFromPoint(x: number, y: number): Element;
 		HeadersLoaded(MetaData: FB3DOM.IMetaData): void; // when headers (Meta, toc and chunks info) loaded

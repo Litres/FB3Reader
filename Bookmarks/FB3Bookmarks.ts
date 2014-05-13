@@ -137,6 +137,7 @@ module FB3Bookmarks {
 		public ReLoad(SaveAutoState?: boolean) {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
 			TemporaryNotes.Reader = this.Reader;
+			TemporaryNotes.Bookmarks[0].Group = -1;
 			this.SaveAuto = SaveAutoState;
 			TemporaryNotes.SaveAuto = this.SaveAuto;
 			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
@@ -174,7 +175,7 @@ module FB3Bookmarks {
 							Found = 1;
 						}
 					}
-					if (!Found) {
+					if (!Found && TemporaryNotes.Bookmarks[j].Group >= 0) {
 						this.AddBookmark(TemporaryNotes.Bookmarks[j]);
 					}
 				}
@@ -194,8 +195,13 @@ module FB3Bookmarks {
 		}
 
 		private MakeLoadURL(): string {
-			var URL = this.Host + 'pages/catalit_load_bookmarks/?art=' +
-				this.Reader.ArtID + (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
+			var URL = this.Host + 'pages/catalit_load_bookmarks/?';
+			if (this.FB3DOM.MetaData) {
+				URL += 'uuid=' + this.FB3DOM.MetaData.UUID;
+			} else {
+				URL += 'art=' + this.Reader.ArtID;
+			}
+			URL += (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
 			return URL;
 		}
 		private MakeStoreURL(): string {

@@ -65,7 +65,11 @@ var FB3Reader;
         Reader.prototype.SetStartPos = function (NewPos) {
             this.CurStartPos = NewPos.slice(0);
             this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
-            this.Site.AfterTurnPageDone();
+            this.Site.AfterTurnPageDone({
+                CurPage: this.CurStartPage,
+                MaxPage: this.PagesPositionsCache.LastPage(),
+                Percent: this.CurPosPercent()
+            });
         };
 
         Reader.prototype.Init = function (StartFrom) {
@@ -479,7 +483,10 @@ var FB3Reader;
                             this.Site.Alert('Tome taken: ' + time);
                             clearInterval(this.IdleTimeoutID);
                             this.SaveCache();
-                            this.Site.BookCacheDone();
+                            this.Site.BookCacheDone({
+                                CurPage: this.CurStartPage,
+                                MaxPage: this.PagesPositionsCache.LastPage()
+                            });
                             return;
                         } else {
                             this.PagesPositionsCache.LastPage(0);

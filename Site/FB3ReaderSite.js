@@ -20,9 +20,9 @@ var FB3ReaderSite;
         };
         ExampleSite.prototype.HeadersLoaded = function (MetaData) {
         };
-        ExampleSite.prototype.AfterTurnPageDone = function () {
+        ExampleSite.prototype.AfterTurnPageDone = function (Data) {
         };
-        ExampleSite.prototype.BookCacheDone = function () {
+        ExampleSite.prototype.BookCacheDone = function (Data) {
         };
         return ExampleSite;
     })();

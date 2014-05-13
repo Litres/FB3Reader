@@ -21,8 +21,8 @@ module FB3ReaderSite {
 			return document.elementFromPoint(x,y);
 		}
 		public HeadersLoaded(MetaData: FB3DOM.IMetaData) {}
-		public AfterTurnPageDone() {}
-		public BookCacheDone() {}
+		public AfterTurnPageDone(Data: ITurnPageData) {}
+		public BookCacheDone(Data: ITurnPageData) {}
 	}
 
 	export class ExampleProgressor implements ILoadProgress {

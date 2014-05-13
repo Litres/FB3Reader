@@ -13,8 +13,8 @@ module FB3ReaderSite {
 		getElementById(elementId: string): HTMLElement;
 		elementFromPoint(x: number, y: number): Element;
 		HeadersLoaded(MetaData: FB3DOM.IMetaData): void; // when headers (Meta, toc and chunks info) loaded
-		AfterTurnPageDone():void; // when first start, default position and bookmark position set
-		BookCacheDone():void; // after full 100% book cache done
+		AfterTurnPageDone(Data: ITurnPageData): void; // when first start, default position and bookmark position set
+		BookCacheDone(Data: ITurnPageData): void; // after full 100% book cache done
 	}
 
 	// General-purpose interface for progress feedback
@@ -34,6 +34,13 @@ module FB3ReaderSite {
 	// When the Reader will want to show the footnote in the poup-up window, it will call this:
 	export interface INotePopup {
 		(NoteBody: FB3DOM.InnerHTML): void;
+	}
+
+	export interface ITurnPageData {
+		CurPage: number;
+		MaxPage: number;
+		Percent?: number;
+		Pos?: FB3Bookmarks.IXPath;
 	}
 
 }

@@ -71,7 +71,11 @@ module FB3Reader {
 		private SetStartPos(NewPos: IPosition): void {
 			this.CurStartPos = NewPos.slice(0);
 			this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
-			this.Site.AfterTurnPageDone();
+			this.Site.AfterTurnPageDone({
+				CurPage: this.CurStartPage,
+				MaxPage: this.PagesPositionsCache.LastPage(),
+				Percent: this.CurPosPercent()
+			});
 		}
 
 		constructor(public ArtID: string,
@@ -502,7 +506,10 @@ module FB3Reader {
 							this.Site.Alert('Tome taken: ' + time);
 							clearInterval(this.IdleTimeoutID);
 							this.SaveCache();
-							this.Site.BookCacheDone();
+							this.Site.BookCacheDone({
+								CurPage: this.CurStartPage,
+								MaxPage: this.PagesPositionsCache.LastPage()
+							});
 							return;
 						} else {
 							this.PagesPositionsCache.LastPage(0);

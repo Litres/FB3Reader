@@ -21,6 +21,7 @@ var FB3ReaderSite;
         ExampleSite.prototype.HeadersLoaded = function (MetaData) {
         };
         ExampleSite.prototype.AfterTurnPageDone = function (Data) {
+            document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' + (Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
         };
         ExampleSite.prototype.BookCacheDone = function (Data) {
         };

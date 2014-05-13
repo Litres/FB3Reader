@@ -21,7 +21,10 @@ module FB3ReaderSite {
 			return document.elementFromPoint(x,y);
 		}
 		public HeadersLoaded(MetaData: FB3DOM.IMetaData) {}
-		public AfterTurnPageDone(Data: ITurnPageData) {}
+		public AfterTurnPageDone(Data: ITurnPageData) {
+			document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' +
+			(Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
+		}
 		public BookCacheDone(Data: ITurnPageData) {}
 	}
 

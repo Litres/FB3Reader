@@ -465,10 +465,10 @@ module FB3Bookmarks {
 			var Result = new Array();
 			var StartChunk = this.XPChunk(this.XStart);
 			var EndChunk = this.XPChunk(this.XEnd);
-			if (!StartChunk) {
+			if (StartChunk === undefined) {
 				StartChunk = EndChunk;
 			}
-			if (StartChunk) {
+			if (StartChunk !== undefined) {
 				Result[0] = StartChunk;
 				if (EndChunk != Result[0]) {
 					Result.push(EndChunk);
@@ -485,6 +485,7 @@ module FB3Bookmarks {
 					return I;
 				}
 			}
+			return undefined; // In case we have out-of-field pointer - define it implicitly
 		}
 
 		public PublicXML(): string {

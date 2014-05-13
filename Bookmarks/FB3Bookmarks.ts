@@ -66,7 +66,7 @@ module FB3Bookmarks {
 			// setTimeout(()=>this.AfterTransferFromServerComplete(),200);
 		}
 
-		private AfterTransferFromServerComplete(XML?: XMLDocument) {
+		private AfterTransferFromServerComplete(XML: XMLDocument) {
 			this.ParseXML(XML);
 			this.WaitedToRemapBookmarks = 0;
 			for (var I = 0; I < this.Bookmarks.length; I++) {

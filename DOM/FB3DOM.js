@@ -150,8 +150,9 @@ var FB3DOM;
             while (I < Node.Childs.length) {
                 if (Node.Childs[I] && Node.Childs[I].XPath) {
                     var PC = _FB3DOM.XPathCompare(XPath, Node.Childs[I].XPath);
-                    if (PC == -10 || PC == 0) {
-                        // This node is the exact xpath or the xpath points a bit above, be assume this is it
+                    if (PC == -10 || PC == 0 || PC == 1 && (!Node.Childs[I].Childs || !Node.Childs[I].Childs.length)) {
+                        // This node is the exact xpath or the xpath points a bit above,
+                        // we assume this is it. Or xpath is more detailed than we can sww with our DOM map
                         return Node.Childs[I].Position();
                     } else if (PC == 1) {
                         Node = Node.Childs[I];

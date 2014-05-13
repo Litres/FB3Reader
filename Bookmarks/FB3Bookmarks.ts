@@ -6,7 +6,7 @@ module FB3Bookmarks {
   interface iWindow extends Window { ActiveXObject: any; }
   declare var window: iWindow;
 
-	interface IXMLHTTPResponseCallback { (Data?: XMLDocument): void }
+	interface IXMLHTTPResponseCallback { (Data: XMLDocument): void }
 
 	export class LitResBookmarksProcessor implements IBookmarks {
 		public Ready: boolean;
@@ -201,14 +201,8 @@ module FB3Bookmarks {
 		}
 
 		private MakeLoadURL(): string {
-			var URL = this.Host + 'pages/catalit_load_bookmarks/?';
-			if (this.FB3DOM.MetaData) {
-				URL += 'uuid=' + this.FB3DOM.MetaData.UUID;
-			} else {
-				URL += 'art=' + this.Reader.ArtID;
-				// URL += 'uuid=' + this.Reader.ArtID;
-			}
-			URL += (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
+			var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.Reader.ArtID +
+				(this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
 			return URL;
 		}
 		private MakeStoreURL(): string {

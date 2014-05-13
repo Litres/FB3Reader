@@ -474,7 +474,8 @@ var FB3Reader;
                             this.Site.IdleThreadProgressor.HourglassOff(this);
                             var end = new Date().getTime();
                             var time = end - start;
-                            alert('Execution time: ' + time);
+
+                            //							alert('Execution time: ' + time);
                             this.Site.Alert('Tome taken: ' + time);
                             clearInterval(this.IdleTimeoutID);
                             this.SaveCache();
@@ -532,7 +533,7 @@ var FB3Reader;
         };
 
         Reader.prototype.LoadCache = function () {
-            this.PagesPositionsCache.Load(this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key);
+            this.PagesPositionsCache.Load(this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key);
         };
 
         Reader.prototype.IdleOn = function () {

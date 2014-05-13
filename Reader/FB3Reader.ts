@@ -567,7 +567,8 @@ module FB3Reader {
 		}
 
 		private LoadCache() {
-			this.PagesPositionsCache.Load(this.BackgroundRenderFrame.ViewPortW + ':' +
+			this.PagesPositionsCache.Load(this.ArtID + ':' +
+				this.BackgroundRenderFrame.ViewPortW + ':' +
 				this.CanvasW + ':' +
 				this.CanvasH + ':' +
 				this.BookStyleNotes + ':' +

@@ -1,4 +1,4 @@
-/// <reference path="FB3DataProviderHead.ts" />
+﻿/// <reference path="FB3DataProviderHead.ts" />
 var FB3DataProvider;
 (function (FB3DataProvider) {
     var AJAXDataProvider = (function () {
@@ -10,7 +10,7 @@ var FB3DataProvider;
             new AjaxLoader(URL, Callback, Progressor, CustomData);
         };
         AJAXDataProvider.prototype.ArtID2URL = function (ArtID, Chunk) {
-            var OutURL = '/core/DataProvider/AjaxExample/' + ArtID + '.';
+            var OutURL = '/DataProvider/AjaxExample/' + ArtID + '.';
 
             // var OutURL = 'http://www.litres.ru' + this.BaseURL + 'json/';
             if (Chunk == null) {

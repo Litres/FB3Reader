@@ -11,7 +11,7 @@ module FB3DataProvider {
 			new AjaxLoader(URL, Callback, Progressor, CustomData);
 		}
 		public ArtID2URL(ArtID: string, Chunk?: string): string {
-			var OutURL = '/core/DataProvider/AjaxExample/' + ArtID+'.'; // TODO: delete after
+			var OutURL = '/DataProvider/AjaxExample/' + ArtID+'.'; // TODO: delete after
 			// var OutURL = 'http://www.litres.ru' + this.BaseURL + 'json/';
 			if (Chunk == null) {
 				OutURL += 'toc.js';

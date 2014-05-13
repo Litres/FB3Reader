@@ -1,7 +1,8 @@
 /// <reference path="PPCacheHead.ts" />
+/// <reference path="../plugins/lz-string.d.ts" />
 var FB3PPCache;
 (function (FB3PPCache) {
-    var SkipCache = true;
+    var SkipCache = false;
 
     var PPCache = (function () {
         function PPCache() {
@@ -53,7 +54,8 @@ var FB3PPCache;
                 });
 
                 // Keep in mind - next line is really, really slow
-                localStorage['FB3Reader1.0'] = JSON.stringify(this.CacheMarkupsList);
+                var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
+                localStorage['FB3Reader1.0'] = LZString.compressToUTF16(uncompressdCacheData);
             }
         };
 
@@ -76,11 +78,12 @@ var FB3PPCache;
         };
 
         PPCache.prototype.LoadOrFillEmptyData = function () {
-            var CacheData = localStorage['FB3Reader1.0'];
+            var compressedCacheData = localStorage['FB3Reader1.0'];
             var DataInitDone = false;
-            if (CacheData) {
+            if (compressedCacheData) {
                 try  {
-                    this.CacheMarkupsList = JSON.parse(CacheData);
+                    var cacheData = LZString.decompressFromUTF16(compressedCacheData);
+                    this.CacheMarkupsList = JSON.parse(cacheData);
                     DataInitDone = true;
                 } catch (e) {
                 }

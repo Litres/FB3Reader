@@ -1,7 +1,8 @@
 /// <reference path="PPCacheHead.ts" />
+/// <reference path="../plugins/lz-string.d.ts" />
 
 module FB3PPCache {
-	var SkipCache = true; // For debug purposes
+	var SkipCache = false; // For debug purposes
 	interface IPageRenderInstructionsCacheEntry {
 		Time: Date;
 		Key: string;
@@ -65,7 +66,8 @@ module FB3PPCache {
 						}
 					);
 				// Keep in mind - next line is really, really slow
-				localStorage['FB3Reader1.0'] = JSON.stringify(this.CacheMarkupsList);
+				var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
+				localStorage['FB3Reader1.0'] = LZString.compressToUTF16(uncompressdCacheData);
 			}//  else { no luck, no store - recreate from scratch } 
 		}
 
@@ -88,11 +90,12 @@ module FB3PPCache {
 		}
 
 		private LoadOrFillEmptyData(): void {
-			var CacheData = localStorage['FB3Reader1.0'];
+			var compressedCacheData = localStorage['FB3Reader1.0'];
 			var DataInitDone = false;
-			if (CacheData) {
+			if (compressedCacheData) {
 				try {
-					this.CacheMarkupsList = JSON.parse(CacheData);
+					var cacheData = LZString.decompressFromUTF16(compressedCacheData);
+					this.CacheMarkupsList = JSON.parse(cacheData);
 					DataInitDone = true;
 				} catch (e) { }
 			}

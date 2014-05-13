@@ -148,7 +148,7 @@ module FB3Bookmarks {
 			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
 			// than check if new "current position" is newer, if so - goto it
 			// and finally
-			var CurPosUpdate = 0;
+			var AnyUpdates = false;
 			if (this.Bookmarks.length) {
 				var Found;
 				for (var i = 0; i < this.Bookmarks.length; i++) { // delete old local bookmarks
@@ -160,6 +160,7 @@ module FB3Bookmarks {
 					}
 					if (!Found && !this.Bookmarks[i].NotSavedYet) {
 						this.Bookmarks[i].Detach();
+						AnyUpdates = true;
 					}
 				}
 				Found = 0;
@@ -178,16 +179,18 @@ module FB3Bookmarks {
 						}
 					}
 					if (!Found && TemporaryNotes.Bookmarks[j].Group >= 0) {
+						AnyUpdates = true;
 						this.AddBookmark(TemporaryNotes.Bookmarks[j]);
 					}
 				}
 			} else {
 				this.Bookmarks = TemporaryNotes.Bookmarks;
+				if (this.Bookmarks.length) {
+					AnyUpdates = true;
+				}
 			}
 			this.Reader.Site.canStoreBookmark = false;
-			if (CurPosUpdate) {
-				this.ApplyPosition();
-			} else {
+			if (AnyUpdates) {
 				this.Reader.Redraw();
 			}
 			if (this.SaveAuto) {

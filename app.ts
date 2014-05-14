@@ -22,7 +22,7 @@ window.onload = () => {
 	var SID = GetSID();
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
-	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(),ArtID2URL);
+	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(), ArtID2URL);
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
 	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
 	AFB3PPCache = new FB3PPCache.PPCache();

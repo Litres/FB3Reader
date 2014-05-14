@@ -13,6 +13,6 @@ module FB3DataProvider {
 			Callback: IJSonLoadedCallback,
 			Progressor: FB3ReaderSite.ILoadProgress,
 			CustomData?: any);
-		ArtID2URL:IArtID2URL;
+		ArtID2URL: IArtID2URL;
 	}
 }

@@ -4,7 +4,7 @@ module FB3DataProvider {
 
 	export class AJAXDataProvider implements IJsonLoaderFactory {
 		private BaseURL: string;
-		constructor(public LitresURL: string, public ArtID2URL:IArtID2URL) {
+		constructor(public LitresURL: string, public ArtID2URL: IArtID2URL) {
 			this.BaseURL = (LitresURL.match('trials') ? '' : '/download_book') + LitresURL;
 		}
 		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {

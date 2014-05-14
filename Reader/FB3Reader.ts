@@ -268,20 +268,19 @@ module FB3Reader {
 		private PatchToc(TOC: FB3DOM.ITOC[], Pos: IPosition, Group: number):void {
 			for (var I = 0; I < TOC.length; I++) {
 				var StartCmp = PosCompare([TOC[I].s], Pos);
-				if (StartCmp <= 0
-					&& PosCompare([TOC[I].e], Pos) >= 0) {	// Pos below the start node in TOC
-					if (StartCmp && TOC[I].c) {							// if the start is the exact match to position - no need to borrow
-						this.PatchToc(TOC[I].c, Pos, Group);	// otherwise we better let childs match the marker
-					} else {
-						if (!TOC[I].bookmarks) {
-							TOC[I].bookmarks = {};
-						}
-						if (TOC[I].bookmarks['g' + Group]) {
-							TOC[I].bookmarks['g' + Group]++;
-						} else {
-							TOC[I].bookmarks['g' + Group] = 1;
-						}
+				var EndComp = PosCompare([TOC[I].e], Pos);
+				if (StartCmp == 0 || StartCmp < 0 && EndComp > 0 && !TOC[I].c || StartCmp > 0) {
+					if (!TOC[I].bookmarks) {
+						TOC[I].bookmarks = {};
 					}
+					if (TOC[I].bookmarks['g' + Group]) {
+						TOC[I].bookmarks['g' + Group]++;
+					} else {
+						TOC[I].bookmarks['g' + Group] = 1;
+					}
+					return;
+				} else if (StartCmp <= 0 && EndComp >= 0 && TOC[I].c) {
+					this.PatchToc(TOC[I].c, Pos, Group);
 					return;
 				}
 			}

@@ -43,7 +43,7 @@ function ArtID2URL(ArtID, Chunk) {
     } else if (Chunk.match(/\./)) {
         OutURL += Chunk;
     } else {
-        OutURL += this.zeroPad(Chunk, 3) + '.js?rand=' + Math.random();
+        OutURL += this.zeroPad(Chunk, 3) + '.js';
     }
     return OutURL;
 }

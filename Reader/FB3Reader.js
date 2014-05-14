@@ -65,6 +65,7 @@ var FB3Reader;
         Reader.prototype.SetStartPos = function (NewPos) {
             this.CurStartPos = NewPos.slice(0);
             this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
+            this.Bookmarks.Bookmarks[0].DateTime = moment().unix();
             this.Site.AfterTurnPageDone({
                 CurPage: this.CurStartPage,
                 MaxPage: this.PagesPositionsCache.LastPage(),

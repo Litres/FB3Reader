@@ -145,14 +145,15 @@ module FB3Bookmarks {
 			TemporaryNotes.Load((Bookmarks: IBookmarks) => this.ReLoadComplete(Bookmarks));
 		}
 		private ReLoadComplete(TemporaryNotes: IBookmarks): void {
-			// todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
+			// merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
 			// than check if new "current position" is newer, if so - goto it
-			// and finally
+			// keep in mind this.Bookmarks[0] is always here and is the current position,
+			// so we skip it on merge
 			var AnyUpdates = false;
 			if (this.Bookmarks.length) {
 				var Found;
-				for (var i = 0; i < this.Bookmarks.length; i++) { // delete old local bookmarks
-					for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
+				for (var i = 1; i < this.Bookmarks.length; i++) { // delete old local bookmarks
+					for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) {
 						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
 							Found = 1;
 							break;
@@ -164,9 +165,9 @@ module FB3Bookmarks {
 					}
 				}
 				Found = 0;
-				for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) { // check new bookmarks
+				for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) { // check new bookmarks
 					Found = 0;
-					for (var i = 0; i < this.Bookmarks.length; i++) {
+					for (var i = 1; i < this.Bookmarks.length; i++) {
 						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
 							if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
 								this.Bookmarks[i].Detach();
@@ -190,7 +191,11 @@ module FB3Bookmarks {
 				}
 			}
 			this.Reader.Site.canStoreBookmark = false;
-			if (AnyUpdates) {
+			if (!TemporaryNotes.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
+				// Newer position from server
+				this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
+			} else if (AnyUpdates) {
+				// Updated bookmarks data from server - we should redraw the page in case there are new notes
 				this.Reader.Redraw();
 			}
 			if (this.SaveAuto) {

@@ -1,4 +1,4 @@
-/// <reference path="FB3BookmarksHead.ts" />
+﻿/// <reference path="FB3BookmarksHead.ts" />
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
@@ -129,14 +129,15 @@ var FB3Bookmarks;
             });
         };
         LitResBookmarksProcessor.prototype.ReLoadComplete = function (TemporaryNotes) {
-            // todo merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
+            // merge data from TemporaryNotes to this, then dispose of temporary LitResBookmarksProcessor
             // than check if new "current position" is newer, if so - goto it
-            // and finally
+            // keep in mind this.Bookmarks[0] is always here and is the current position,
+            // so we skip it on merge
             var AnyUpdates = false;
             if (this.Bookmarks.length) {
                 var Found;
-                for (var i = 0; i < this.Bookmarks.length; i++) {
-                    for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
+                for (var i = 1; i < this.Bookmarks.length; i++) {
+                    for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) {
                         if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
                             Found = 1;
                             break;
@@ -148,9 +149,9 @@ var FB3Bookmarks;
                     }
                 }
                 Found = 0;
-                for (var j = 0; j < TemporaryNotes.Bookmarks.length; j++) {
+                for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) {
                     Found = 0;
-                    for (var i = 0; i < this.Bookmarks.length; i++) {
+                    for (var i = 1; i < this.Bookmarks.length; i++) {
                         if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
                             if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
                                 this.Bookmarks[i].Detach();
@@ -174,7 +175,11 @@ var FB3Bookmarks;
                 }
             }
             this.Reader.Site.canStoreBookmark = false;
-            if (AnyUpdates) {
+            if (!TemporaryNotes.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
+                // Newer position from server
+                this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
+            } else if (AnyUpdates) {
+                // Updated bookmarks data from server - we should redraw the page in case there are new notes
                 this.Reader.Redraw();
             }
             if (this.SaveAuto) {

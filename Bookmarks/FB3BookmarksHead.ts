@@ -24,6 +24,8 @@ module FB3Bookmarks {
 		XPathMappingReady: boolean; // For server-loaded bookmarks, used to watch fb2xpath -> internal xpath mapping progress
 		ClassName(): string;		// css class name for selections of this type
 		InitFromXY(X: number, Y: number): boolean;
+		InitFromXPath(XPath: IXPath): boolean;
+		InitFromPosition(Position: FB3Reader.IPosition): boolean;
 		ExtendToXY(X: number, Y: number): boolean;
 		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
 		Detach(): void; // removes itself from the parent.
@@ -46,6 +48,7 @@ module FB3Bookmarks {
 		ReLoad();	// Updates itself from the server (may get new current position)
 		ApplyPosition(): boolean;
 		Store(): void;
+		CheckBookmarksOnPage(): boolean;
 	}
 
 }

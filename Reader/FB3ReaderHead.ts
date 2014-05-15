@@ -47,5 +47,6 @@ module FB3Reader {
 		Reset(): void;      // Reopens reader on the current position. Call this after you have
 												// changed CSS, resized canvas or some other distructive things
 		Redraw(): void;     // Lignt&fast version of page refresh - only updates bookmarks
+		GetCurrentVisiblePage(): FB3ReaderPage.ReaderPage;
 	}
 }

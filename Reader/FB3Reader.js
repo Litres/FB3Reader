@@ -587,6 +587,10 @@ var FB3Reader;
             this.PrepareCanvas();
             this.GoTO(this.CurStartPos.slice(0));
         };
+
+        Reader.prototype.GetCurrentVisiblePage = function () {
+            return this.Pages[this.CurVisiblePage];
+        };
         return Reader;
     })();
     FB3Reader.Reader = Reader;

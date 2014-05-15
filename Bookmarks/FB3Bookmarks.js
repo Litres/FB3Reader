@@ -228,6 +228,26 @@ var FB3Bookmarks;
             }
             // TODO: add error handler
         };
+
+        LitResBookmarksProcessor.prototype.CheckBookmarksOnPage = function () {
+            if (this.Bookmarks.length <= 1)
+                return false;
+            var CurrentPage = this.Reader.GetCurrentVisiblePage();
+            var X = CurrentPage.RenderInstr.Range.From;
+            var Y = CurrentPage.RenderInstr.Range.To;
+            for (var j = 1; j < this.Bookmarks.length; j++) {
+                if (this.Bookmarks[j].Group == 1) {
+                    var xps = FB3DOM.XPathCompare(this.Bookmarks[j].XStart, X);
+                    var xpe = FB3DOM.XPathCompare(this.Bookmarks[j].XEnd, Y);
+                    console.log(xps);
+                    console.log(xpe);
+                    if (xps <= 0 || xpe >= 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
         return LitResBookmarksProcessor;
     })();
     FB3Bookmarks.LitResBookmarksProcessor = LitResBookmarksProcessor;
@@ -247,10 +267,17 @@ var FB3Bookmarks;
             this.NotSavedYet = 1;
         }
         Bookmark.prototype.InitFromXY = function (X, Y) {
-            var BaseFrom = this.Owner.Reader.ElementAtXY(X, Y);
-            if (BaseFrom) {
-                this.Range.From = BaseFrom.slice(0);
-                this.Range.To = BaseFrom;
+            return this.InitFromPosition(this.Owner.Reader.ElementAtXY(X, Y));
+        };
+
+        Bookmark.prototype.InitFromXPath = function (XPath) {
+            return this.InitFromPosition(this.Owner.FB3DOM.GetAddrByXPath(XPath));
+        };
+
+        Bookmark.prototype.InitFromPosition = function (Position) {
+            if (Position) {
+                this.Range.From = Position.slice(0);
+                this.Range.To = Position;
                 this.GetDataFromText();
                 return true;
             } else {

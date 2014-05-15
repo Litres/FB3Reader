@@ -616,6 +616,10 @@ module FB3Reader {
 			this.PrepareCanvas();
 			this.GoTO(this.CurStartPos.slice(0));
 		}
+
+		public GetCurrentVisiblePage(): FB3ReaderPage.ReaderPage {
+			return this.Pages[this.CurVisiblePage];
+		}
 	}
 
 }

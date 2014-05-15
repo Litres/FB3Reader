@@ -191,9 +191,10 @@ module FB3Bookmarks {
 				}
 			}
 			this.Reader.Site.canStoreBookmark = false;
-			if (!TemporaryNotes.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
-				// Newer position from server
-				this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
+			if (!TemporaryNotes.Bookmarks[0].NotSavedYet &&
+				this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
+					// Newer position from server
+					this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
 			} else if (AnyUpdates) {
 				// Updated bookmarks data from server - we should redraw the page in case there are new notes
 				this.Reader.Redraw();
@@ -244,6 +245,25 @@ module FB3Bookmarks {
 			}
 			// TODO: add error handler
 		}
+
+		public CheckBookmarksOnPage(): boolean {
+			if (this.Bookmarks.length <= 1) return false;
+			var CurrentPage = this.Reader.GetCurrentVisiblePage();
+			var X = CurrentPage.RenderInstr.Range.From;
+			var Y = CurrentPage.RenderInstr.Range.To;
+			for (var j = 1; j < this.Bookmarks.length; j++) {
+				if (this.Bookmarks[j].Group == 1) {
+					var xps = FB3DOM.XPathCompare(this.Bookmarks[j].XStart, X);
+					var xpe = FB3DOM.XPathCompare(this.Bookmarks[j].XEnd, Y);
+					console.log(xps);
+					console.log(xpe);
+					if (xps <= 0 || xpe >= 0) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 	}
 
 	export class Bookmark implements IBookmark {
@@ -276,10 +296,17 @@ module FB3Bookmarks {
 		}
 
 		public InitFromXY(X: number, Y: number): boolean {
-			var BaseFrom = this.Owner.Reader.ElementAtXY(X, Y);
-			if (BaseFrom) {
-				this.Range.From = BaseFrom.slice(0);
-				this.Range.To = BaseFrom;
+			return this.InitFromPosition(this.Owner.Reader.ElementAtXY(X, Y));
+		}
+
+		public InitFromXPath(XPath: IXPath): boolean {
+			return this.InitFromPosition(this.Owner.FB3DOM.GetAddrByXPath(XPath));
+		}
+
+		public InitFromPosition(Position: FB3Reader.IPosition): boolean {
+			if (Position) {
+				this.Range.From = Position.slice(0);
+				this.Range.To = Position;
 				this.GetDataFromText();
 				return true;
 			} else {

@@ -19,7 +19,7 @@ module FB3DOM {
 		nobr: 'span',
 		image: 'img',
 	};
-	export var BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
+	export var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
 
 	export function XPathCompare(Pos1: any[], Pos2: any[]): number {
 		// todo - this function is a hack around xpath ".05' endings, whould be done some better way

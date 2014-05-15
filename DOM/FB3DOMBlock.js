@@ -25,7 +25,7 @@ var FB3DOM;
         nobr: 'span',
         image: 'img'
     };
-    FB3DOM.BlockLVLRegexp = /^(div|blockquote|h\d|p|img)$/;
+    FB3DOM.BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
 
     function XPathCompare(Pos1, Pos2) {
         // todo - this function is a hack around xpath ".05' endings, whould be done some better way

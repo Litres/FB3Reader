@@ -15,6 +15,7 @@ module FB3Bookmarks {
 		public ClassPrefix: string;
 		public LockID: string;
 		public LoadDateTime: number;
+		private DeletedBookmarks: Array<boolean>;
 		private LoadEndCallback: IBookmarksReadyCallback;
 		private TemporaryNotes: IBookmarks;
 		private WaitedToRemapBookmarks: number;
@@ -27,9 +28,10 @@ module FB3Bookmarks {
 		private XMLHTTPResponseCallback: IXMLHTTPResponseCallback;
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string) {
 			this.Ready = false;
-			this.FB3DOM.Bookmarks.push(this);
+			// this.FB3DOM.Bookmarks.push(this);
 			this.ClassPrefix = 'my_';
 			this.Bookmarks = new Array();
+			this.DeletedBookmarks = new Array();
 			this.AddBookmark(new Bookmark(this));
 			this.WaitForData = true;
 			if (window.ActiveXObject) {
@@ -50,6 +52,7 @@ module FB3Bookmarks {
 			for (var I = 0; I < this.Bookmarks.length; I++) {
 				this.Bookmarks[I].N = I;
 				if (this.Bookmarks[I] == Bookmark) {
+					this.DeletedBookmarks[this.Bookmarks[I].ID] = true;
 					this.Bookmarks.splice(I, 1);
 				}
 			}
@@ -167,6 +170,7 @@ module FB3Bookmarks {
 				Found = 0;
 				for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) { // check new bookmarks
 					Found = 0;
+					if (this.DeletedBookmarks[TemporaryNotes.Bookmarks[j].ID]) continue;
 					for (var i = 1; i < this.Bookmarks.length; i++) {
 						if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
 							if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
@@ -225,6 +229,7 @@ module FB3Bookmarks {
 				'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
 			this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
 			this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart;
+			// XML += this.Bookmarks[0].PublicXML();
 			for (var j = 0; j < this.Bookmarks.length; j++) {
 				XML += this.Bookmarks[j].PublicXML();
 			}
@@ -246,23 +251,26 @@ module FB3Bookmarks {
 			// TODO: add error handler
 		}
 
-		public CheckBookmarksOnPage(): boolean {
-			if (this.Bookmarks.length <= 1) return false;
-			var CurrentPage = this.Reader.GetCurrentVisiblePage();
-			var X = CurrentPage.RenderInstr.Range.From;
-			var Y = CurrentPage.RenderInstr.Range.To;
+		public GetBookmarksInRange(): IBookmark[] {
+			var Range = this.Reader.GetVisibleRange();
+			if (this.Bookmarks.length <= 1 || !Range) {
+				return [];
+			}
+			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
+			TemporaryNotes.Reader = this.Reader;
 			for (var j = 1; j < this.Bookmarks.length; j++) {
 				if (this.Bookmarks[j].Group == 1) {
-					var xps = FB3DOM.XPathCompare(this.Bookmarks[j].XStart, X);
-					var xpe = FB3DOM.XPathCompare(this.Bookmarks[j].XEnd, Y);
-					console.log(xps);
-					console.log(xpe);
-					if (xps <= 0 || xpe >= 0) {
-						return true;
+					var xps = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.From);
+					var xpe = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.To);
+					if (Math.abs(xps) != 10 || Math.abs(xpe) != 10){
+						TemporaryNotes.AddBookmark(this.Bookmarks[j]);
 					}
 				}
 			}
-			return false;
+			if (TemporaryNotes.Bookmarks.length) {
+				return TemporaryNotes.Bookmarks;
+			}
+			return [];
 		}
 	}
 
@@ -301,6 +309,11 @@ module FB3Bookmarks {
 
 		public InitFromXPath(XPath: IXPath): boolean {
 			return this.InitFromPosition(this.Owner.FB3DOM.GetAddrByXPath(XPath));
+		}
+
+		public InitFromRange(Range: FB3DOM.IRange): boolean {
+			var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From);
+			return this.InitFromPosition(Element.Position());
 		}
 
 		public InitFromPosition(Position: FB3Reader.IPosition): boolean {

@@ -617,8 +617,15 @@ module FB3Reader {
 			this.GoTO(this.CurStartPos.slice(0));
 		}
 
-		public GetCurrentVisiblePage(): FB3ReaderPage.ReaderPage {
-			return this.Pages[this.CurVisiblePage];
+		public GetVisibleRange(): FB3DOM.IRange {
+			if (!this.Pages[this.CurVisiblePage + this.NColumns - 1].Ready) {
+				return undefined;
+			}
+			var Range = this.Pages[this.CurVisiblePage].RenderInstr.Range;
+			if (this.NColumns > 1) {
+				Range.To = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
+			}
+			return Range;
 		}
 	}
 

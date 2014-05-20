@@ -588,8 +588,15 @@ var FB3Reader;
             this.GoTO(this.CurStartPos.slice(0));
         };
 
-        Reader.prototype.GetCurrentVisiblePage = function () {
-            return this.Pages[this.CurVisiblePage];
+        Reader.prototype.GetVisibleRange = function () {
+            if (!this.Pages[this.CurVisiblePage + this.NColumns - 1].Ready) {
+                return undefined;
+            }
+            var Range = this.Pages[this.CurVisiblePage].RenderInstr.Range;
+            if (this.NColumns > 1) {
+                Range.To = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
+            }
+            return Range;
         };
         return Reader;
     })();

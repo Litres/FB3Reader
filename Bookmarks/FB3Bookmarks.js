@@ -6,9 +6,11 @@ var FB3Bookmarks;
         function LitResBookmarksProcessor(FB3DOM, LitresSID) {
             this.FB3DOM = FB3DOM;
             this.Ready = false;
-            this.FB3DOM.Bookmarks.push(this);
+
+            // this.FB3DOM.Bookmarks.push(this);
             this.ClassPrefix = 'my_';
             this.Bookmarks = new Array();
+            this.DeletedBookmarks = new Array();
             this.AddBookmark(new Bookmark(this));
             this.WaitForData = true;
             if (window.ActiveXObject) {
@@ -28,6 +30,7 @@ var FB3Bookmarks;
             for (var I = 0; I < this.Bookmarks.length; I++) {
                 this.Bookmarks[I].N = I;
                 if (this.Bookmarks[I] == Bookmark) {
+                    this.DeletedBookmarks[this.Bookmarks[I].ID] = true;
                     this.Bookmarks.splice(I, 1);
                 }
             }
@@ -151,6 +154,8 @@ var FB3Bookmarks;
                 Found = 0;
                 for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) {
                     Found = 0;
+                    if (this.DeletedBookmarks[TemporaryNotes.Bookmarks[j].ID])
+                        continue;
                     for (var i = 1; i < this.Bookmarks.length; i++) {
                         if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
                             if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
@@ -205,6 +210,7 @@ var FB3Bookmarks;
             var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' + 'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
             this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
             this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart;
+
             for (var j = 0; j < this.Bookmarks.length; j++) {
                 XML += this.Bookmarks[j].PublicXML();
             }
@@ -229,24 +235,26 @@ var FB3Bookmarks;
             // TODO: add error handler
         };
 
-        LitResBookmarksProcessor.prototype.CheckBookmarksOnPage = function () {
-            if (this.Bookmarks.length <= 1)
-                return false;
-            var CurrentPage = this.Reader.GetCurrentVisiblePage();
-            var X = CurrentPage.RenderInstr.Range.From;
-            var Y = CurrentPage.RenderInstr.Range.To;
+        LitResBookmarksProcessor.prototype.GetBookmarksInRange = function () {
+            var Range = this.Reader.GetVisibleRange();
+            if (this.Bookmarks.length <= 1 || !Range) {
+                return [];
+            }
+            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
+            TemporaryNotes.Reader = this.Reader;
             for (var j = 1; j < this.Bookmarks.length; j++) {
                 if (this.Bookmarks[j].Group == 1) {
-                    var xps = FB3DOM.XPathCompare(this.Bookmarks[j].XStart, X);
-                    var xpe = FB3DOM.XPathCompare(this.Bookmarks[j].XEnd, Y);
-                    console.log(xps);
-                    console.log(xpe);
-                    if (xps <= 0 || xpe >= 0) {
-                        return true;
+                    var xps = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.From);
+                    var xpe = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.To);
+                    if (Math.abs(xps) != 10 || Math.abs(xpe) != 10) {
+                        TemporaryNotes.AddBookmark(this.Bookmarks[j]);
                     }
                 }
             }
-            return false;
+            if (TemporaryNotes.Bookmarks.length) {
+                return TemporaryNotes.Bookmarks;
+            }
+            return [];
         };
         return LitResBookmarksProcessor;
     })();
@@ -272,6 +280,11 @@ var FB3Bookmarks;
 
         Bookmark.prototype.InitFromXPath = function (XPath) {
             return this.InitFromPosition(this.Owner.FB3DOM.GetAddrByXPath(XPath));
+        };
+
+        Bookmark.prototype.InitFromRange = function (Range) {
+            var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From);
+            return this.InitFromPosition(Element.Position());
         };
 
         Bookmark.prototype.InitFromPosition = function (Position) {

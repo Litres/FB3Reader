@@ -82,7 +82,7 @@ module FB3Reader {
 		constructor(public ArtID: string,
 			public EnableBackgroundPreRender: boolean,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
-			private FB3DOM: FB3DOM.IFB3DOM,
+			public FB3DOM: FB3DOM.IFB3DOM,
 			public Bookmarks: FB3Bookmarks.IBookmarks,
 			private PagesPositionsCache: FB3PPCache.IFB3PPCache) {
 

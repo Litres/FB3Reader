@@ -2,8 +2,9 @@
 /// <reference path="FB3Reader.ts" />
 
 module FB3ReaderPage {
-	var BreakIterationEvery = 30; // every ## miliseconds script will process user input
-	var SemiSleepTimeout = 100;     // time for SetTimeout. You can rise it to let the browser mo time for garbage collection
+	export var PageBreakRegexp = /^h[1-4]/;
+	export var BreakIterationEvery = 30; // every ## miliseconds script will process user input
+	export var SemiSleepTimeout = 100;     // time for SetTimeout. You can rise it to let the browser mo time for garbage collection
 
 	var FallCalls = 0; // debug
 
@@ -83,7 +84,7 @@ module FB3ReaderPage {
 	}
 
 	function PageBreakBefore(Node: HTMLElement): boolean {
-		return Node.nodeName.toLowerCase().match(/^h[1-3]/) ? true : false;
+		return Node.nodeName.toLowerCase().match(PageBreakRegexp) ? true : false;
 	}
 	function PageBreakAfter(Node: HTMLElement): boolean {
 		return false; // todo

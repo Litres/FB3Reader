@@ -28,6 +28,7 @@ module FB3Reader {
 		Init(StartFrom: IPosition): void;
 		CacheForward: number;		// Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
 		CacheBackward: number;	// Size of the backward cache (same structure)
+		FB3DOM: FB3DOM.IFB3DOM; // Access to reader's DOM provider
 
 		TOC(): FB3DOM.ITOC[];		// Table of contents (clone, with ITOC.bookmarks filled)
 		GoTO(NewPos: IPosition): void;

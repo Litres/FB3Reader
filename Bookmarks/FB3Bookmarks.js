@@ -338,7 +338,7 @@ var FB3Bookmarks;
         Bookmark.prototype.RoundToWordLVLDn = function (Adress) {
             var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
             var PosInBlock = Adress[Adress.length - 1];
-            while (Block.Parent && (!Block.TagName || !Block.TagName.match(FB3DOM.BlockLVLRegexp))) {
+            while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
                 Block = Block.Parent;
                 PosInBlock = Adress[Adress.length - 1];
                 Adress.pop();
@@ -351,7 +351,7 @@ var FB3Bookmarks;
         Bookmark.prototype.RoundToWordLVLUp = function (Adress) {
             var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
             var PosInBlock = Adress[Adress.length - 1];
-            while (Block.Parent && (!Block.TagName || !Block.TagName.match(FB3DOM.BlockLVLRegexp))) {
+            while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
                 Block = Block.Parent;
                 PosInBlock = Adress[Adress.length - 1];
                 Adress.pop();
@@ -367,7 +367,7 @@ var FB3Bookmarks;
 
         Bookmark.prototype.RoundToBlockLVLUp = function (Adress) {
             var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
-            while (Block.Parent && (!Block.TagName || !Block.TagName.match(FB3DOM.BlockLVLRegexp))) {
+            while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
                 Block = Block.Parent;
                 Adress.pop();
             }
@@ -375,7 +375,7 @@ var FB3Bookmarks;
         Bookmark.prototype.RoundToBlockLVLDn = function (Adress) {
             this.RoundToBlockLVLUp(Adress);
             var Block = this.Owner.FB3DOM.GetElementByAddr(Adress.slice(0));
-            if (Block.TagName && Block.TagName.match(FB3DOM.BlockLVLRegexp)) {
+            if (Block.TagName && Block.IsBlock()) {
                 return;
             }
             if (Block.Parent.Childs.length > Block.ID + 1) {

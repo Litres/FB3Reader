@@ -2,7 +2,7 @@
 
 module FB3DOM {
 	export var MaxFootnoteHeight = 0.75;
-	export var TagMapper = {
+	var TagMapper = {
 		poem: 'div',
 		stanza: 'div',
 		subtitle: 'h6',
@@ -19,7 +19,7 @@ module FB3DOM {
 		nobr: 'span',
 		image: 'img',
 	};
-	export var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
+	var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
 
 	export function XPathCompare(Pos1: any[], Pos2: any[]): number {
 		// todo - this function is a hack around xpath ".05' endings, whould be done some better way
@@ -43,6 +43,8 @@ module FB3DOM {
 		public Data: IJSONBlock;
 		public Childs: IFB3Block[];
 		public XPath: any[];
+		public TagName: string;
+
 		constructor(public text: string,
 			public Parent: IFB3Block,
 			public ID: number,
@@ -127,6 +129,13 @@ module FB3DOM {
 				Bookmarks.splice(Bookmark, 1); // No need to bother childs if this tag is FULLY selected
 			}
 			return ThisNodeSelections.join(' ');
+		}
+		public IsBlock(): boolean {
+			if (this.TagName && this.IsBlock()) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 

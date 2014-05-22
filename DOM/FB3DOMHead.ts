@@ -87,6 +87,7 @@ module FB3DOM {
 			PageData: IPageContainer,
 			Bookmarks: FB3Bookmarks.IBookmark[]);
 		Position(): FB3Reader.IPosition;
+		IsBlock(): boolean;
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }

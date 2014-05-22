@@ -8,7 +8,7 @@ var __extends = this.__extends || function (d, b) {
 var FB3DOM;
 (function (FB3DOM) {
     FB3DOM.MaxFootnoteHeight = 0.75;
-    FB3DOM.TagMapper = {
+    var TagMapper = {
         poem: 'div',
         stanza: 'div',
         subtitle: 'h6',
@@ -25,7 +25,7 @@ var FB3DOM;
         nobr: 'span',
         image: 'img'
     };
-    FB3DOM.BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
+    var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
 
     function XPathCompare(Pos1, Pos2) {
         // todo - this function is a hack around xpath ".05' endings, whould be done some better way
@@ -130,6 +130,13 @@ var FB3DOM;
             }
             return ThisNodeSelections.join(' ');
         };
+        FB3Text.prototype.IsBlock = function () {
+            if (this.TagName && this.IsBlock()) {
+                return true;
+            } else {
+                return false;
+            }
+        };
         return FB3Text;
     })();
     FB3DOM.FB3Text = FB3Text;
@@ -229,8 +236,8 @@ var FB3DOM;
         FB3Tag.prototype.HTMLTagName = function () {
             if (this.Data.f) {
                 return 'a';
-            } else if (FB3DOM.TagMapper[this.TagName]) {
-                return FB3DOM.TagMapper[this.TagName];
+            } else if (TagMapper[this.TagName]) {
+                return TagMapper[this.TagName];
             } else if (this.TagName == 'title' && this.Data.xp) {
                 var lvl = this.Data.xp.length - 1;
                 return 'h' + (lvl < 6 ? lvl : 5);
@@ -269,7 +276,7 @@ var FB3DOM;
                 }
             }
 
-            if (FB3DOM.TagMapper[this.TagName]) {
+            if (TagMapper[this.TagName]) {
                 ElementClasses.push('tag_' + this.TagName);
             }
             if (this.Data.nc) {

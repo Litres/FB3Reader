@@ -1,4 +1,4 @@
-﻿/// <reference path="Site/FB3ReaderSite.ts" />
+/// <reference path="Site/FB3ReaderSite.ts" />
 /// <reference path="Reader/FB3Reader.ts" />
 /// <reference path="DOM/FB3DOM.ts" />
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
@@ -280,7 +280,7 @@ function Toc2Div(TOCS: FB3DOM.ITOC[]): string {
 		var TOC = TOCS[J];
 		Out += '<div class="tocitm">';
 		if (TOC.bookmarks && TOC.bookmarks.g0) {
-			Out += '►';
+			Out += '>';
 		}
 		if (TOC.t) {
 			Out += '<a href = "javascript:GoToc(' + TOC.s + ')" > '

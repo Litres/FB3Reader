@@ -139,6 +139,7 @@ var FB3DOM;
 
         DOM.prototype.GetElementByAddr = function (Position) {
             var ResponcibleNode = this;
+            Position = Position.slice(0);
             while (Position.length && ResponcibleNode.Childs) {
                 ResponcibleNode = ResponcibleNode.Childs[Position.shift()];
             }

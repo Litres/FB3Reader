@@ -76,7 +76,6 @@ module FB3DOM {
 		ArtID2URL(Chunk?: string): string;
 		Data: IJSONBlock;
 		Childs: IFB3Block[];
-		Bookmarks: FB3Bookmarks.IBookmarks[];
 		text: string				// empty for tags, filled for text nodes
 		XPath: FB3Bookmarks.IXPath;		// Source FB2 file adress - allows to work with store/load selections
 		GetHTML(HyphOn: boolean,
@@ -101,6 +100,7 @@ module FB3DOM {
 		DataChunks: IDataDisposition[];
 		MetaData: IMetaData;
 		ArtID2URL(Chunk?: string): string;
+		Bookmarks: FB3Bookmarks.IBookmarks[];
 		Init(HyphOn: boolean,
 			ArtID: string,
 			OnDone: IIFB3DOMReadyFunc);

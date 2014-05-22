@@ -42,7 +42,6 @@ module FB3DOM {
 		public XPID: string;
 		public Data: IJSONBlock;
 		public Childs: IFB3Block[];
-		public Bookmarks: FB3Bookmarks.IBookmarks[];
 		public XPath: any[];
 		constructor(public text: string,
 			public Parent: IFB3Block,
@@ -57,7 +56,6 @@ module FB3DOM {
 				this.XPath = Parent.XPath.slice(0);
 				this.XPath.push(NodeN);
 				this.XPath.push('.' + Chars);
-				this.Bookmarks = Parent.Bookmarks;
 			}
 		}
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {

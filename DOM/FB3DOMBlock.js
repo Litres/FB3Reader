@@ -57,7 +57,6 @@ var FB3DOM;
                 this.XPath = Parent.XPath.slice(0);
                 this.XPath.push(NodeN);
                 this.XPath.push('.' + Chars);
-                this.Bookmarks = Parent.Bookmarks;
             }
         }
         FB3Text.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {

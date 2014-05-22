@@ -54,6 +54,7 @@ module FB3Bookmarks {
 				if (this.Bookmarks[I] == Bookmark) {
 					this.DeletedBookmarks[this.Bookmarks[I].ID] = true;
 					this.Bookmarks.splice(I, 1);
+					I--;
 				}
 			}
 		}
@@ -228,8 +229,8 @@ module FB3Bookmarks {
 			var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' +
 				'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
 			this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
-			this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart;
-			// XML += this.Bookmarks[0].PublicXML();
+			this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart.slice(0);
+//			XML += this.Bookmarks[0].PublicXML();
 			for (var j = 0; j < this.Bookmarks.length; j++) {
 				XML += this.Bookmarks[j].PublicXML();
 			}
@@ -312,7 +313,7 @@ module FB3Bookmarks {
 		}
 
 		public InitFromRange(Range: FB3DOM.IRange): boolean {
-			var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From);
+			var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From.slice(0));
 			return this.InitFromPosition(Element.Position());
 		}
 
@@ -589,6 +590,7 @@ module FB3Bookmarks {
 		}
 
 		private MakePointer(X: IXPath): string {
+			X = X.slice(0);
 			var last = X.pop() + '';
 			return X.join('/') + ((/^\./).test(last) ? '' : '/') + last + ((/^\./).test(last) ? '' : '.0');
 		}
@@ -600,7 +602,7 @@ module FB3Bookmarks {
 			}
 			this.XStart = MakeXPathSub(p[0]);
 			if (p.length == 1) {
-				this.XEnd = this.XStart;
+				this.XEnd = this.XStart.slice(0);
 			} else {
 				this.XEnd = MakeXPathSub(p[1]);
 			}

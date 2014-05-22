@@ -32,6 +32,7 @@ var FB3Bookmarks;
                 if (this.Bookmarks[I] == Bookmark) {
                     this.DeletedBookmarks[this.Bookmarks[I].ID] = true;
                     this.Bookmarks.splice(I, 1);
+                    I--;
                 }
             }
         };
@@ -209,7 +210,7 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.MakeStoreXML = function () {
             var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' + 'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
             this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
-            this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart;
+            this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart.slice(0);
 
             for (var j = 0; j < this.Bookmarks.length; j++) {
                 XML += this.Bookmarks[j].PublicXML();
@@ -283,7 +284,7 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.InitFromRange = function (Range) {
-            var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From);
+            var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From.slice(0));
             return this.InitFromPosition(Element.Position());
         };
 
@@ -564,6 +565,7 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.MakePointer = function (X) {
+            X = X.slice(0);
             var last = X.pop() + '';
             return X.join('/') + ((/^\./).test(last) ? '' : '/') + last + ((/^\./).test(last) ? '' : '.0');
         };
@@ -575,7 +577,7 @@ var FB3Bookmarks;
             };
             this.XStart = MakeXPathSub(p[0]);
             if (p.length == 1) {
-                this.XEnd = this.XStart;
+                this.XEnd = this.XStart.slice(0);
             } else {
                 this.XEnd = MakeXPathSub(p[1]);
             }

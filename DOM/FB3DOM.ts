@@ -72,6 +72,7 @@ module FB3DOM {
 		private OnDoneFunc: any;
 		private ArtID: string;
 		public XPID: string;
+		public Bookmarks: FB3Bookmarks.IBookmarks[];
 		
 		constructor(public Alert: FB3ReaderSite.IAlert,
 			public Progressor: FB3ReaderSite.ILoadProgress,
@@ -140,6 +141,7 @@ module FB3DOM {
 
 		public GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block {
 			var ResponcibleNode: IFB3Block = this;
+			Position = Position.slice(0);
 			while (Position.length && ResponcibleNode.Childs) {
 				ResponcibleNode = ResponcibleNode.Childs[Position.shift()];
 			}

@@ -131,7 +131,7 @@ module FB3DOM {
 			return ThisNodeSelections.join(' ');
 		}
 		public IsBlock(): boolean {
-			if (this.TagName && this.IsBlock()) {
+			if (this.TagName && this.TagName.match(BlockLVLRegexp)) {
 				return true;
 			} else {
 				return false;

@@ -131,7 +131,7 @@ var FB3DOM;
             return ThisNodeSelections.join(' ');
         };
         FB3Text.prototype.IsBlock = function () {
-            if (this.TagName && this.IsBlock()) {
+            if (this.TagName && this.TagName.match(BlockLVLRegexp)) {
                 return true;
             } else {
                 return false;

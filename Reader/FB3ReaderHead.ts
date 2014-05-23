@@ -3,6 +3,7 @@
 module FB3Reader {
 
 	export interface IPosition extends Array<number> {}
+	export interface ICanvasReadyCallback { (VisibleRange: FB3DOM.IRange): void; }
 
 	export interface IPageRenderInstruction {
 		Range?: FB3DOM.IRange;
@@ -24,6 +25,8 @@ module FB3Reader {
 		TextPercent: number;	  // Percantage of the shown text - progress
 		CurStartPos: IPosition;	// Adress of the first visible block, READ ONLY!
 		CurStartPage: number;		// Number of the first visible page (if any)
+
+		CanvasReadyCallback: ICanvasReadyCallback; // fired when the page rendering complete
 
 		Init(StartFrom: IPosition): void;
 		CacheForward: number;		// Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created

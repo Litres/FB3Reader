@@ -363,8 +363,11 @@ module FB3ReaderPage {
 					this.PagesToRender[0].Start = this.RenderInstr.Range.To.splice(0);
 					To2From(this.PagesToRender[0].Start);
 				}
-//				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
-				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, SemiSleepTimeout)
+				//				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
+				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, SemiSleepTimeout);
+				if (this.FBReader.CanvasReadyCallback && this.ID == this.FBReader.CurStartPage + this.FBReader.NColumns) {
+					this.FBReader.CanvasReadyCallback(this.FBReader.GetVisibleRange());
+				}
 			} else if (!this.Next) {
 				//console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
 //				this.FBReader.IdleOn();

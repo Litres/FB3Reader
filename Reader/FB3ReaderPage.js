@@ -281,6 +281,9 @@ var FB3ReaderPage;
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
                 }, FB3ReaderPage.SemiSleepTimeout);
+                if (this.FBReader.CanvasReadyCallback && this.ID == this.FBReader.CurStartPage + this.FBReader.NColumns) {
+                    this.FBReader.CanvasReadyCallback(this.FBReader.GetVisibleRange());
+                }
             } else if (!this.Next) {
                 //console.log(this.ID, FallCalls, 'ApplyPageMetrics IdleOn');
                 //				this.FBReader.IdleOn();

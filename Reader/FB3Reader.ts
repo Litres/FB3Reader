@@ -51,6 +51,7 @@ module FB3Reader {
 		public CurStartPos: IPosition;
 		public CurStartPage: number;
 		public BookStyleNotesTemporaryOff: boolean;
+		public CanvasReadyCallback: ICanvasReadyCallback;
 		public IsIE: boolean;
 
 		private Alert: FB3ReaderSite.IAlert;

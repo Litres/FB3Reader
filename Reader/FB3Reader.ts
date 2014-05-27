@@ -69,6 +69,12 @@ module FB3Reader {
 		private CanvasH: number;
 		private LastSavePercent: number;
 
+		public _CanvasReadyCallback(){
+			if (this.CanvasReadyCallback) {
+				this.CanvasReadyCallback(this.GetVisibleRange());
+			}
+		}
+
 		private SetStartPos(NewPos: IPosition): void {
 			this.CurStartPos = NewPos.slice(0);
 			this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
@@ -139,6 +145,7 @@ module FB3Reader {
 			var FirstFrameToFill: FB3ReaderPage.ReaderPage;
 			var WeeHaveFoundReadyPage = false;
 			// First let's check if the page was ALREADY rendered, so we can show it right away
+			var CallbackFired = false;
 			for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
 				var BasePage = I * this.NColumns;
 				// Page is rendered, that's just great - we first show what we have, then render the rest, if required
@@ -148,6 +155,10 @@ module FB3Reader {
 					// Ok, now we at least see ONE page, first one, from the right set. Let's deal with others
 					var CrawlerCurrentPage = this.Pages[BasePage];
 					for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
+						if (CrawlerCurrentPage.ID == BasePage + this.NColumns) {
+							this._CanvasReadyCallback();
+							CallbackFired = true;
+						}
 						CrawlerCurrentPage = CrawlerCurrentPage.Next;
 						if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != RealStartPage + J) {
 							// Here it is - the page with the wrong content. We set up our re-render queue
@@ -163,6 +174,9 @@ module FB3Reader {
 
 			this.CurStartPage = RealStartPage;
 			if (WeeHaveFoundReadyPage && !FirstFrameToFill) { // Looks like we have our full pages set rendered already,
+				if (!CallbackFired) {
+					this._CanvasReadyCallback();
+				}
 				this.IdleOn();																	// maybe we go to the same place several times? Anyway, quit!
 				return;
 			} else if (!WeeHaveFoundReadyPage) {							// No prerendered page found, bad luck. We start rendering
@@ -401,7 +415,8 @@ module FB3Reader {
 					}
 				} else {
 					this.SetStartPos(PageToView.RenderInstr.Range.From);
-					this.PutBlockIntoView(PageToView.ID-1);
+					this.PutBlockIntoView(PageToView.ID - 1);
+					this._CanvasReadyCallback();
 				}
 			}
 			return;

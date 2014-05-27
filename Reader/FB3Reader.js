@@ -62,6 +62,12 @@ var FB3Reader;
 
             this.IdleOff();
         }
+        Reader.prototype._CanvasReadyCallback = function () {
+            if (this.CanvasReadyCallback) {
+                this.CanvasReadyCallback(this.GetVisibleRange());
+            }
+        };
+
         Reader.prototype.SetStartPos = function (NewPos) {
             this.CurStartPos = NewPos.slice(0);
             this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
@@ -116,6 +122,8 @@ var FB3Reader;
             var FirstFrameToFill;
             var WeeHaveFoundReadyPage = false;
 
+            // First let's check if the page was ALREADY rendered, so we can show it right away
+            var CallbackFired = false;
             for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
                 var BasePage = I * this.NColumns;
 
@@ -127,6 +135,10 @@ var FB3Reader;
                     // Ok, now we at least see ONE page, first one, from the right set. Let's deal with others
                     var CrawlerCurrentPage = this.Pages[BasePage];
                     for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
+                        if (CrawlerCurrentPage.ID == BasePage + this.NColumns) {
+                            this._CanvasReadyCallback();
+                            CallbackFired = true;
+                        }
                         CrawlerCurrentPage = CrawlerCurrentPage.Next;
                         if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != RealStartPage + J) {
                             // Here it is - the page with the wrong content. We set up our re-render queue
@@ -141,6 +153,9 @@ var FB3Reader;
 
             this.CurStartPage = RealStartPage;
             if (WeeHaveFoundReadyPage && !FirstFrameToFill) {
+                if (!CallbackFired) {
+                    this._CanvasReadyCallback();
+                }
                 this.IdleOn(); // maybe we go to the same place several times? Anyway, quit!
                 return;
             } else if (!WeeHaveFoundReadyPage) {
@@ -381,6 +396,7 @@ var FB3Reader;
                 } else {
                     this.SetStartPos(PageToView.RenderInstr.Range.From);
                     this.PutBlockIntoView(PageToView.ID - 1);
+                    this._CanvasReadyCallback();
                 }
             }
             return;

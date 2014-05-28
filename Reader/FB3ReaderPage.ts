@@ -365,7 +365,14 @@ module FB3ReaderPage {
 				}
 				//				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
 				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, SemiSleepTimeout);
-				if (this.ID == this.FBReader.CurStartPage + this.FBReader.NColumns) {
+
+
+				// This page is clearly the last visible by absolute number
+				if (this.PageN + 1 == this.FBReader.CurStartPage + this.FBReader.NColumns
+					||
+					// or, if we walk over the grass (we always start from 0 page then) this it the relative last page
+					this.PageN === undefined && this.FBReader.CurStartPage === undefined && this.ID == this.FBReader.NColumns
+					) {
 					this.FBReader._CanvasReadyCallback();
 				}
 			} else if (!this.Next) {

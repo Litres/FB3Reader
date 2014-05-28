@@ -1,4 +1,4 @@
-/// <reference path="FB3ReaderHead.ts" />
+﻿/// <reference path="FB3ReaderHead.ts" />
 /// <reference path="FB3Reader.ts" />
 var FB3ReaderPage;
 (function (FB3ReaderPage) {
@@ -281,7 +281,9 @@ var FB3ReaderPage;
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
                 }, FB3ReaderPage.SemiSleepTimeout);
-                if (this.ID == this.FBReader.CurStartPage + this.FBReader.NColumns) {
+
+                // This page is clearly the last visible by absolute number
+                if (this.PageN + 1 == this.FBReader.CurStartPage + this.FBReader.NColumns || this.PageN === undefined && this.FBReader.CurStartPage === undefined && this.ID == this.FBReader.NColumns) {
                     this.FBReader._CanvasReadyCallback();
                 }
             } else if (!this.Next) {

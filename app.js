@@ -9,6 +9,7 @@ var AFB3PPCache;
 var BookmarksProcessor;
 var start;
 var LocalArtID = 120421;
+var Temp = 0;
 
 window.onload = function () {
     document.getElementById('reader').addEventListener('touchstart', TapStart, false);
@@ -28,6 +29,9 @@ window.onload = function () {
     AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
     AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
     PrepareCSS();
+    AFB3Reader.CanvasReadyCallback = function () {
+        document.getElementById('REnderEnd').innerHTML = (Temp++).toString();
+    };
     AFB3Reader.Init([0]);
     window.addEventListener('resize', function () {
         return AFB3Reader.AfterCanvasResize();

@@ -173,16 +173,12 @@ function ShowMenu(e: MouseEvent) {
 		MenuShown = 'SelectEnd';
 		if (!NativeNote.ExtendToXY(X, Y)) {
 			return undefined;
-		} else {
-			NativeNote = NativeNote.RoundClone(false);
 		}
 	} else {
 		MenuShown = 'SelectStart'; 
 		if (!NativeNote.InitFromXY(X, Y)) {
 			NativeNote = undefined;
 			return undefined;
-		} else {
-			NativeNote = NativeNote.RoundClone(false);
 		}
 	}
 

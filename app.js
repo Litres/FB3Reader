@@ -1,4 +1,4 @@
-/// <reference path="Site/FB3ReaderSite.ts" />
+﻿/// <reference path="Site/FB3ReaderSite.ts" />
 /// <reference path="Reader/FB3Reader.ts" />
 /// <reference path="DOM/FB3DOM.ts" />
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
@@ -178,16 +178,12 @@ function ShowMenu(e) {
         MenuShown = 'SelectEnd';
         if (!NativeNote.ExtendToXY(X, Y)) {
             return undefined;
-        } else {
-            NativeNote = NativeNote.RoundClone(false);
         }
     } else {
         MenuShown = 'SelectStart';
         if (!NativeNote.InitFromXY(X, Y)) {
             NativeNote = undefined;
             return undefined;
-        } else {
-            NativeNote = NativeNote.RoundClone(false);
         }
     }
 

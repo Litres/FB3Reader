@@ -43,12 +43,13 @@ var FB3Reader;
     FB3Reader.PRIClone = PRIClone;
 
     var Reader = (function () {
-        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, PagesPositionsCache) {
+        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache) {
             this.ArtID = ArtID;
             this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
             this.Bookmarks = Bookmarks;
+            this.Version = Version;
             this.PagesPositionsCache = PagesPositionsCache;
             // Basic class init
             this.HyphON = true;
@@ -75,7 +76,8 @@ var FB3Reader;
             this.Site.AfterTurnPageDone({
                 CurPage: this.CurStartPage,
                 MaxPage: this.PagesPositionsCache.LastPage(),
-                Percent: this.CurPosPercent()
+                Percent: this.CurPosPercent(),
+                Pos: this.CurStartPos
             });
         };
 
@@ -91,7 +93,7 @@ var FB3Reader;
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;
-            this.Bookmarks.Load(function () {
+            this.Bookmarks.LoadFromCache(function () {
                 _this.Bookmarks.ApplyPosition();
             });
         };
@@ -152,6 +154,7 @@ var FB3Reader;
             }
 
             this.CurStartPage = RealStartPage;
+            this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
             if (WeeHaveFoundReadyPage && !FirstFrameToFill) {
                 if (!CallbackFired) {
                     this._CanvasReadyCallback();
@@ -163,7 +166,6 @@ var FB3Reader;
                 FirstFrameToFill = this.Pages[0];
                 this.PutBlockIntoView(0);
             }
-            this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
 
             var CacheBroken = false;
             var NewInstr = new Array();
@@ -207,9 +209,6 @@ var FB3Reader;
 
         Reader.prototype.GoToOpenPosition = function (NewPos) {
             clearTimeout(this.MoveTimeoutID);
-            this.SetStartPos(NewPos);
-            this.StopRenders();
-
             var NewInstr = [{ Start: NewPos }];
 
             var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
@@ -219,6 +218,10 @@ var FB3Reader;
             } else {
                 this.CurStartPage = undefined; // this means we are walking out of the ladder, right over the grass - this fact affects page turning greatly
             }
+
+            this.SetStartPos(NewPos);
+            this.StopRenders();
+
             for (var I = 1; I < (this.CacheForward + 1) * this.NColumns; I++) {
                 NewInstr.push({});
                 if (ShouldWeCachePositions) {
@@ -456,7 +459,13 @@ var FB3Reader;
             if (!this.FB3DOM.TOC) {
                 return undefined;
             }
-            return 100 * this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+            var Percent;
+            if (this.IsFullyInCache()) {
+                Percent = this.CurStartPage / this.PagesPositionsCache.LastPage();
+            } else {
+                Percent = this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+            }
+            return Percent * 100;
         };
 
         Reader.prototype.ElementAtXY = function (X, Y) {
@@ -526,7 +535,7 @@ var FB3Reader;
 
                         this.BackgroundRenderFrame.WholeRangeToRender = this.BackgroundRenderFrame.DefaultRangeApply(PageToPrerender);
 
-                        this.FB3DOM.GetHTMLAsync(this.HyphON, this.BookStyleNotes, RangeClone(this.BackgroundRenderFrame.WholeRangeToRender), this.BackgroundRenderFrame.ID + '_', this.BackgroundRenderFrame.ViewPortW, this.BackgroundRenderFrame.ViewPortH, function (PageData) {
+                        this.FB3DOM.GetHTMLAsync(this.HyphON, this.BookStyleNotes, this.BackgroundRenderFrame.WholeRangeToRender, this.BackgroundRenderFrame.ID + '_', this.BackgroundRenderFrame.ViewPortW, this.BackgroundRenderFrame.ViewPortH, function (PageData) {
                             _this.IdleAction = 'fill_page';
                             _this.IdleGo(PageData);
                         });
@@ -561,7 +570,7 @@ var FB3Reader;
         };
 
         Reader.prototype.FullKey = function () {
-            return this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.BookStyleNotes + ':' + this.Site.Key;
+            return this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.Version + ':' + this.BookStyleNotes + ':' + this.Site.Key;
         };
 
         Reader.prototype.IdleOn = function () {
@@ -608,9 +617,9 @@ var FB3Reader;
             if (!this.Pages[this.CurVisiblePage + this.NColumns - 1].Ready) {
                 return undefined;
             }
-            var Range = this.Pages[this.CurVisiblePage].RenderInstr.Range;
+            var Range = RangeClone(this.Pages[this.CurVisiblePage].RenderInstr.Range);
             if (this.NColumns > 1) {
-                Range.To = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
+                Range.To = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To.slice(0);
             }
             return Range;
         };

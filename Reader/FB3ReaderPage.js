@@ -188,7 +188,7 @@ var FB3ReaderPage;
             }
             this.ActialRequest++;
             var ReqID = this.ActialRequest;
-            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, this.FBReader.BookStyleNotes, FB3Reader.RangeClone(this.WholeRangeToRender), this.ID + '_', this.ViewPortW, this.ViewPortH, function (PageData) {
+            this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, this.FBReader.BookStyleNotes, this.WholeRangeToRender, this.ID + '_', this.ViewPortW, this.ViewPortH, function (PageData) {
                 return _this.DrawEnd(PageData, ReqID);
             });
         };
@@ -225,7 +225,7 @@ var FB3ReaderPage;
             this.Element.Node.innerHTML = PageData.Body.join('');
             var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
             if (HasFootnotes) {
-                this.NotesElement.Node.innerHTML = PageData.FootNotes.join('');
+                this.NotesElement.Node.innerHTML = '<div class="NotesLine"></div>' + PageData.FootNotes.join('');
                 this.NotesElement.Node.style.display = 'block';
                 var NotesNodes = this.NotesElement.Node.children.length;
                 for (var I = 0; I < this.NotesElement.Node.children.length; I++) {
@@ -260,7 +260,7 @@ var FB3ReaderPage;
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
             if (this.RenderInstr.NotesHeight) {
                 this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
-                this.NotesElement.Node.style.top = (this.Element.Height - this.Element.MarginTop - this.RenderInstr.NotesHeight - this.NotesElement.MarginBottom) + 'px';
+                this.NotesElement.Node.style.top = (this.Element.Height - this.RenderInstr.NotesHeight - this.NotesElement.MarginBottom) + 'px';
             } else {
                 this.NotesElement.Node.style.display = 'none';
             }
@@ -273,7 +273,7 @@ var FB3ReaderPage;
             if (this.PagesToRender && this.PagesToRender.length && this.Next) {
                 // we fire setTimeout to let the browser draw the page before we render the next
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
-                    this.PagesToRender[0].Start = this.RenderInstr.Range.To.splice(0);
+                    this.PagesToRender[0].Start = this.RenderInstr.Range.To.slice(0);
                     To2From(this.PagesToRender[0].Start);
                 }
 
@@ -352,12 +352,12 @@ var FB3ReaderPage;
                 this.PagesToRender = [];
                 this.RenderInstr.Range = {
                     From: this.RenderInstr.Start.splice(0),
-                    To: FallOut.FallOut
+                    To: FallOut.FallOut.slice(0)
                 };
             } else {
                 this.RenderInstr.Range = {
                     From: this.RenderInstr.Start.splice(0),
-                    To: FallOut.FallOut
+                    To: FallOut.FallOut.slice(0)
                 };
                 this.QuickFallautState.PrevTo = this.RenderInstr.Range.To.slice(0);
                 CropTo(this.RenderInstr.Range.To);

@@ -82,7 +82,8 @@ module FB3Reader {
 			this.Site.AfterTurnPageDone({
 				CurPage: this.CurStartPage,
 				MaxPage: this.PagesPositionsCache.LastPage(),
-				Percent: this.CurPosPercent()
+				Percent: this.CurPosPercent(),
+				Pos: this.CurStartPos
 			});
 		}
 
@@ -91,6 +92,7 @@ module FB3Reader {
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			public FB3DOM: FB3DOM.IFB3DOM,
 			public Bookmarks: FB3Bookmarks.IBookmarks,
+			public Version: string,
 			private PagesPositionsCache: FB3PPCache.IFB3PPCache) {
 
 			// Basic class init
@@ -117,7 +119,7 @@ module FB3Reader {
 			});
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
-			this.Bookmarks.Load(() => { this.Bookmarks.ApplyPosition() });
+			this.Bookmarks.LoadFromCache(() => { this.Bookmarks.ApplyPosition() });
 		}
 
 		public GoTO(NewPos: IPosition) {
@@ -173,6 +175,7 @@ module FB3Reader {
 
 
 			this.CurStartPage = RealStartPage;
+			this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
 			if (WeeHaveFoundReadyPage && !FirstFrameToFill) { // Looks like we have our full pages set rendered already,
 				if (!CallbackFired) {
 					this._CanvasReadyCallback();
@@ -184,7 +187,6 @@ module FB3Reader {
 				FirstFrameToFill = this.Pages[0];
 				this.PutBlockIntoView(0);
 			}
-			this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
 
 			var CacheBroken = false;
 			var NewInstr: IPageRenderInstruction[] = new Array();
@@ -229,9 +231,6 @@ module FB3Reader {
 
 		public GoToOpenPosition(NewPos: IPosition): void {
 			clearTimeout(this.MoveTimeoutID);
-			this.SetStartPos(NewPos);
-			this.StopRenders();
-
 			var NewInstr: IPageRenderInstruction[] = [{ Start: NewPos }];
 
 			var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
@@ -241,6 +240,10 @@ module FB3Reader {
 			} else {
 				this.CurStartPage = undefined; // this means we are walking out of the ladder, right over the grass - this fact affects page turning greatly
 			}
+
+			this.SetStartPos(NewPos);
+			this.StopRenders();
+
 			for (var I = 1; I < (this.CacheForward + 1) * this.NColumns; I++) {
 				NewInstr.push({});
 				if (ShouldWeCachePositions) {
@@ -479,7 +482,13 @@ module FB3Reader {
 			if (!this.FB3DOM.TOC) {
 				return undefined;
 			}
-			return 100 * this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+			var Percent: number;
+			if (this.IsFullyInCache()) {
+				Percent = this.CurStartPage / this.PagesPositionsCache.LastPage();
+			} else {
+				Percent = this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
+			}
+			return Percent * 100;
 		}
 
 		public ElementAtXY(X: number, Y: number): IPosition {
@@ -550,7 +559,7 @@ module FB3Reader {
 
 						this.FB3DOM.GetHTMLAsync(this.HyphON,
 							this.BookStyleNotes,
-							RangeClone(this.BackgroundRenderFrame.WholeRangeToRender),
+							this.BackgroundRenderFrame.WholeRangeToRender,
 							this.BackgroundRenderFrame.ID + '_',
 							this.BackgroundRenderFrame.ViewPortW,
 							this.BackgroundRenderFrame.ViewPortH,
@@ -593,6 +602,7 @@ module FB3Reader {
 				this.BackgroundRenderFrame.ViewPortW + ':' +
 				this.CanvasW + ':' +
 				this.CanvasH + ':' +
+				this.Version + ':' +
 				this.BookStyleNotes + ':' +
 				this.Site.Key;
 		}
@@ -637,9 +647,9 @@ module FB3Reader {
 			if (!this.Pages[this.CurVisiblePage + this.NColumns - 1].Ready) {
 				return undefined;
 			}
-			var Range = this.Pages[this.CurVisiblePage].RenderInstr.Range;
+			var Range = RangeClone(this.Pages[this.CurVisiblePage].RenderInstr.Range);
 			if (this.NColumns > 1) {
-				Range.To = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
+				Range.To = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To.slice(0);
 			}
 			return Range;
 		}

@@ -8,7 +8,8 @@ module FB3ReaderSite {
 		public NotePopup: INotePopup;
 		public Alert: IAlert;
 		public Key: string;
-		public canStoreBookmark: boolean = false;
+		public CanStoreBookmark: boolean = false;
+		public NeedStoreBookmark: boolean = false;
 		constructor(public Canvas: HTMLElement) {
 			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
 			this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
@@ -29,6 +30,8 @@ module FB3ReaderSite {
 			}
 		}
 		public BookCacheDone(Data: ITurnPageData) {}
+		public StoreBookmarksHandler(timer: number) {}
+		public AfterStoreBookmarks(XMLString: string): void {}
 	}
 
 	export class ExampleProgressor implements ILoadProgress {

@@ -26,6 +26,13 @@ var FB3DOM;
         image: 'img'
     };
     var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
+    var TagSkipDoublePadding = {
+        title: 1,
+        subtitle: 1,
+        epigraph: 1,
+        poem: 1,
+        annotation: 1
+    };
 
     function XPathCompare(Pos1, Pos2) {
         // todo - this function is a hack around xpath ".05' endings, whould be done some better way
@@ -190,6 +197,9 @@ var FB3DOM;
         FB3Tag.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
             // keep in mind after GetBookmarkClasses Bookmarks is cleaned of all unneeded bookmarks
             var ClassNames = '';
+
+            Range = FB3Reader.RangeClone(Range); // We are going to destroy it
+
             if (Bookmarks.length) {
                 ClassNames = this.GetBookmarkClasses(Bookmarks);
             }
@@ -248,8 +258,19 @@ var FB3DOM;
             }
         };
 
+        FB3Tag.prototype.CheckPrevTagName = function () {
+            if (this.ID > 0 && this.Parent.Childs[this.ID - 1] && TagSkipDoublePadding[this.Parent.Childs[this.ID - 1].TagName]) {
+                return true;
+            }
+            return false;
+        };
+
         FB3Tag.prototype.GetCloseTag = function (Range) {
-            return '</' + this.HTMLTagName() + '>';
+            var Out = '</' + this.HTMLTagName() + '>';
+            if (this.TagName == 'image') {
+                Out += '</span></p>';
+            }
+            return Out;
         };
         FB3Tag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var ElementClasses = new Array();
@@ -258,6 +279,10 @@ var FB3DOM;
             }
             if (Range.To[0] < this.Childs.length - 1) {
                 ElementClasses.push('cut_bot');
+            }
+
+            if (TagSkipDoublePadding[this.TagName] && this.CheckPrevTagName()) {
+                ElementClasses.push('skip_double');
             }
 
             if (MoreClasses) {
@@ -276,7 +301,7 @@ var FB3DOM;
                 }
             }
 
-            if (TagMapper[this.TagName]) {
+            if (TagMapper[this.TagName] || this.TagName == 'title') {
                 ElementClasses.push('tag_' + this.TagName);
             }
             if (this.Data.nc) {
@@ -289,24 +314,24 @@ var FB3DOM;
                 var W = this.Data.w;
                 var H = this.Data.h;
                 var Path = this.ArtID2URL(this.Data.s);
+                var pClass = 'tag_image-center' + (ElementClasses.length ? ' ' + ElementClasses.join(' ') : '');
+                Out = ['<p id="i_' + IDPrefix + this.XPID + '" class="' + pClass + '">' + '<span id="ii_' + IDPrefix + this.XPID + '">'];
 
                 // Image is loo large to fit the screen - forcibly zoom it out
                 if (W > ViewPortW || H > ViewPortH) {
                     var Aspect = Math.min((ViewPortW - 1) / W, (ViewPortH - 1) / H);
                     W = Math.floor(W * Aspect);
                     H = Math.floor(H * Aspect);
-                    ElementClasses.push('zoomedout');
-                    Out = ['<div style="position:absolute;" class="SmallImgZoom1"><div style="position:relative;left:0.5em;top:0.5em;" class="SmallImgZoom2"><a href="javascript:ZoomImg(\'' + Path + '\',' + this.Data.w + ',' + this.Data.h + ');return false;" class="ZoomAnchor">◄ Zoom ►</a></div></div><' + this.HTMLTagName()];
-                } else {
-                    Out = ['<' + this.HTMLTagName()];
+                    var zoomEvent = ' onclick="javascript:ZoomImg(\'' + Path + '\',' + this.Data.w + ',' + this.Data.h + ');"';
+                    Out.push('<span class="span-zoom" id="iii_' + IDPrefix + this.XPID + '">' + '<button class="button-zoom"' + zoomEvent + ' id="iiii_' + IDPrefix + this.XPID + '">' + 'Рисунок i' + Path.split('.i').pop() + ' </button></span>');
                 }
-
+                Out.push('<' + this.HTMLTagName());
                 Out.push(' width="' + W + '" height="' + H + '" src="' + Path + '" alt="-"');
             } else {
                 Out = ['<' + this.HTMLTagName()];
             }
 
-            if (ElementClasses.length) {
+            if (ElementClasses.length && this.TagName != 'image') {
                 Out.push(' class="' + ElementClasses.join(' ') + '"');
             }
 

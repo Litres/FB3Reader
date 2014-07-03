@@ -13,6 +13,7 @@ module FB3Bookmarks {
 		N: number;			// Represents IBookmarks.Bookmarks[N] position
 		DateTime: number; // unix timestamp
 		NotSavedYet: number; // Attr for just created Note
+		TemporaryState: number; // new temporary bookmark
 		Range: FB3DOM.IRange;
 		XStart: IXPath; // xpath for start point
 		XEnd: IXPath;		// xpath for end point
@@ -45,11 +46,12 @@ module FB3Bookmarks {
 		ClassPrefix: string;
 		AddBookmark(Bookmark: IBookmark): void;
 		DropBookmark(Bookmark: IBookmark): void;
+		LoadFromCache(Callback?: IBookmarksReadyCallback);   // Loads bookmarks from localStorage
 		Load(Callback?: IBookmarksReadyCallback);   // Loads bookmarks from the server
 		ReLoad();	// Updates itself from the server (may get new current position)
 		ApplyPosition(): boolean;
 		Store(): void;
-		GetBookmarksInRange(): IBookmark[];
+		GetBookmarksInRange(Range?: FB3DOM.IRange): IBookmark[];
 	}
 
 }

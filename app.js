@@ -17,6 +17,7 @@ window.onload = function () {
     document.getElementById('reader').addEventListener('touchend', TapEnd, false);
 
     //	var ArtID = '178297';
+    var Version = '1.0';
     var UUID = '65830123-26b8-4b07-8098-c18229e5026e';
     var SID = GetSID();
     var Canvas = document.getElementById('reader');
@@ -26,7 +27,7 @@ window.onload = function () {
     BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
     BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
     AFB3PPCache = new FB3PPCache.PPCache();
-    AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, AFB3PPCache);
+    AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, Version, AFB3PPCache);
     AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
     PrepareCSS();
     AFB3Reader.CanvasReadyCallback = function () {

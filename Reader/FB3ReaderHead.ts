@@ -26,6 +26,8 @@ module FB3Reader {
 		CurStartPos: IPosition;	// Adress of the first visible block, READ ONLY!
 		CurStartPage: number;		// Number of the first visible page (if any)
 
+		Version: string;
+
 		CanvasReadyCallback: ICanvasReadyCallback; // fired when the page rendering complete
 
 		Init(StartFrom: IPosition): void;

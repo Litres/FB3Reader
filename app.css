@@ -231,7 +231,8 @@ span.my_selec_1_default, strong.my_selec_1_default, em.my_selec_1_default {
     background-color:red;
     color: white;
 }
-p.my_selec_1_default, div.my_selec_1_default {
+p.my_selec_1_default, div.my_selec_1_default, img.my_selec_1_default, em.my_selec_1_default,
+  h1.my_selec_1_default, h2.my_selec_1_default, h3.my_selec_1_default, h4.my_selec_1_default {
     border-left: 3px solid blue; 
     padding-left: 5px !important;
     margin-left: -7px !important;

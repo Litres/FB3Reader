@@ -542,8 +542,8 @@ var FB3Bookmarks;
 
         Bookmark.prototype.ChunksRequired = function () {
             var Result = new Array();
-            var StartChunk = this.XPChunk(this.XStart);
-            var EndChunk = this.XPChunk(this.XEnd);
+            var StartChunk = this.Owner.FB3DOM.XPChunk(this.XStart);
+            var EndChunk = this.Owner.FB3DOM.XPChunk(this.XEnd);
             if (StartChunk === undefined) {
                 StartChunk = EndChunk;
             }
@@ -554,17 +554,6 @@ var FB3Bookmarks;
                 }
             }
             return Result;
-        };
-
-        Bookmark.prototype.XPChunk = function (X) {
-            for (var I = 0; I < this.Owner.FB3DOM.DataChunks.length; I++) {
-                var xps = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xps);
-                var xpe = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xpe);
-                if (!xps || !xpe || xps > 0 && xpe < 10) {
-                    return I;
-                }
-            }
-            return undefined;
         };
 
         Bookmark.prototype.PublicXML = function () {

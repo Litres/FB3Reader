@@ -455,6 +455,34 @@ var FB3Reader;
             }
         };
 
+        /**
+        * Navigates to the specific point within base FB2 targeting scheme.
+        * First resolves external xpath to internal (asyncroneous operation),
+        * then fires GoToOpenPosition()
+        *
+        * @XP external xpath to jump to
+        */
+        Reader.prototype.GoToXPath = function (XP) {
+            var _this = this;
+            var TargetChunk = this.FB3DOM.XPChunk(XP);
+            if (!this.XPToJump) {
+                this.XPToJump = XP;
+                if (!this.FB3DOM.DataChunks[TargetChunk].loaded) {
+                    this.FB3DOM.LoadChunks([TargetChunk], function () {
+                        return _this.GoToXPathFinal();
+                    });
+                } else {
+                    this.GoToXPathFinal();
+                }
+            }
+        };
+
+        Reader.prototype.GoToXPathFinal = function () {
+            var XP = this.XPToJump;
+            this.XPToJump = undefined; // clean it before the async monster comes!
+            this.GoToOpenPosition(this.FB3DOM.GetAddrByXPath(this.XPToJump));
+        };
+
         Reader.prototype.CurPosPercent = function () {
             if (!this.FB3DOM.TOC) {
                 return undefined;

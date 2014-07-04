@@ -214,6 +214,17 @@ var FB3DOM;
             }
             return ChunksMissing;
         };
+
+        DOM.prototype.XPChunk = function (X) {
+            for (var I = 0; I < this.DataChunks.length; I++) {
+                var xps = _FB3DOM.XPathCompare(X, this.DataChunks[I].xps);
+                var xpe = _FB3DOM.XPathCompare(X, this.DataChunks[I].xpe);
+                if (!xps || !xpe || xps > 0 && xpe < 10) {
+                    return I;
+                }
+            }
+            return undefined;
+        };
         return DOM;
     })(_FB3DOM.FB3Tag);
     _FB3DOM.DOM = DOM;

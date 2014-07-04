@@ -2,6 +2,7 @@
 
 module FB3DOM {
 
+	export interface IXPath extends Array<any> { }
 	export interface InnerHTML extends String {};
 	export interface IRange {
 		From: FB3Reader.IPosition;
@@ -33,17 +34,18 @@ module FB3DOM {
 		c?: ITOC[];	// contents (subitems)
 	}
 	export interface IJSONBlock {	// Compact notation for the same reason
-		t: string;				// Tag name
+		t: string;			// Tag name
 		xp?: number[];		// XPAth shurtcut for this node in the native XML
-		c?: any[];				// Child nodes/text for this tag (array)
-		nc?: string;			// Native class name for the block
-		css?: string;			// Native CSS for the block
-		i?: string;				// FB/HTML ID (may be user as anchor target f.e.)
+		c?: any[];			// Child nodes/text for this tag (array)
+		nc?: string;		// Native class name for the block
+		css?: string;		// Native CSS for the block
+		i?: string;			// FB/HTML ID (may be user as anchor target f.e.)
 		href?: string;		// Anchor
-		f?: any;					// Footnote contents
-		w?: number;				// image width
-		h?: number;				// image height
-		s?: string;				// image src attribute
+		f?: any;			// Footnote contents
+		w?: number;			// image width
+		h?: number;			// image height
+		s?: string;			// image src attribute
+		hr: number[];		// target internal xpath for internal hrefs
 	}
 
 	export interface IDataDisposition {
@@ -51,8 +53,8 @@ module FB3DOM {
 		e: number;
 		url: string;
 		loaded: number; // 0 - not loaded, 1 - requested, 2 - loaded, available
-		xps: FB3Bookmarks.IXPath;  // native fb2 xpath for the chunk first element 
-		xpe: FB3Bookmarks.IXPath;  // same for the last one
+		xps: IXPath;  // native fb2 xpath for the chunk first element 
+		xpe: IXPath;  // same for the last one
 	}
 
 	export interface IMetaData {
@@ -77,7 +79,7 @@ module FB3DOM {
 		Data: IJSONBlock;
 		Childs: IFB3Block[];
 		text: string				// empty for tags, filled for text nodes
-		XPath: FB3Bookmarks.IXPath;		// Source FB2 file adress - allows to work with store/load selections
+		XPath: IXPath;		// Source FB2 file adress - allows to work with store/load selections
 		GetHTML(HyphOn: boolean,
 			BookStyleNotes: boolean,
 			Range: IRange,
@@ -106,15 +108,15 @@ module FB3DOM {
 			ArtID: string,
 			OnDone: IIFB3DOMReadyFunc);
 		GetHTMLAsync(HyphOn: boolean,
-			BookStyleNotes:boolean,
+			BookStyleNotes: boolean,
 			Range: IRange,
 			IDPrefix: string,
 			ViewPortW: number,
 			ViewPortH: number,
 			Callback: IDOMTextReadyCallback): void;
 		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
-		GetAddrByXPath(XPath: FB3Bookmarks.IXPath): FB3Reader.IPosition;
-		GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath;
+		GetAddrByXPath(XPath: IXPath): FB3Reader.IPosition;
+		GetXPathFromPos(Position: FB3Reader.IPosition): IXPath;
 		OnChunkLoaded(Data: IJSONBlock[], CustomData?: any): void;
 		ChunkUrl(N: number): string;
 		LoadChunks(MissingChunks: number[], Callback: IChunkLoadedCallback): void; // Sets the chunks to be loaded
@@ -125,6 +127,8 @@ module FB3DOM {
 			ViewPortW: number,
 			ViewPortH: number,
 			PageData: IPageContainer);
+		XPChunk(X: IXPath): number;
+
 	}
 
 }

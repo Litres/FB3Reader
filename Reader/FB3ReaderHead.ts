@@ -37,8 +37,8 @@ module FB3Reader {
 
 		TOC(): FB3DOM.ITOC[];		// Table of contents (clone, with ITOC.bookmarks filled)
 		GoTO(NewPos: IPosition): void;
-		//		GoTOPage(Page: number): void;
 		GoToOpenPosition(NewPos: IPosition): void;
+		GoToXPath(XP: FB3DOM.IXPath): void;
 		ResetCache(): void;
 		GetCachedPage(NewPos: IPosition): number;
 		SearchForText(Text: string): FB3DOM.ITOC[];

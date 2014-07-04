@@ -44,7 +44,7 @@ module FB3ReaderSite {
 		CurPage: number;
 		MaxPage: number;
 		Percent?: number;
-		Pos?: FB3Bookmarks.IXPath;
+		Pos?: FB3DOM.IXPath;
 	}
 
 }

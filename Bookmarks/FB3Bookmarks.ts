@@ -328,8 +328,8 @@ module FB3Bookmarks {
 	export class Bookmark implements IBookmark {
 		public ID: string;
 		public Range: FB3DOM.IRange;
-		public XStart: IXPath;
-		public XEnd: IXPath;
+		public XStart: FB3DOM.IXPath;
+		public XEnd: FB3DOM.IXPath;
 		public Group: number;
 		public Class: string;
 		public Title: string;
@@ -360,7 +360,7 @@ module FB3Bookmarks {
 			return this.InitFromPosition(this.Owner.Reader.ElementAtXY(X, Y));
 		}
 
-		public InitFromXPath(XPath: IXPath): boolean {
+		public InitFromXPath(XPath: FB3DOM.IXPath): boolean {
 			return this.InitFromPosition(this.Owner.FB3DOM.GetAddrByXPath(XPath));
 		}
 
@@ -565,8 +565,8 @@ module FB3Bookmarks {
 
 		private ChunksRequired(): number[]{
 			var Result = new Array();
-			var StartChunk = this.XPChunk(this.XStart);
-			var EndChunk = this.XPChunk(this.XEnd);
+			var StartChunk = this.Owner.FB3DOM.XPChunk(this.XStart);
+			var EndChunk = this.Owner.FB3DOM.XPChunk(this.XEnd);
 			if (StartChunk === undefined) {
 				StartChunk = EndChunk;
 			}
@@ -577,17 +577,6 @@ module FB3Bookmarks {
 				}
 			}
 			return Result;
-		}
-
-		private XPChunk(X: IXPath): number {
-			for (var I = 0; I < this.Owner.FB3DOM.DataChunks.length; I++) {
-				var xps = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xps);
-				var xpe = FB3DOM.XPathCompare(X, this.Owner.FB3DOM.DataChunks[I].xpe);
-				if (!xps || !xpe || xps > 0 && xpe < 10) {
-					return I;
-				}
-			}
-			return undefined; // In case we have out-of-field pointer - define it implicitly
 		}
 
 		public PublicXML(): string {
@@ -681,7 +670,7 @@ module FB3Bookmarks {
 			return 'point(/1/' + Start + ')/range-to(point(/1/' + this.MakePointer(this.XEnd) + '))';
 		}
 
-		private MakePointer(X: IXPath): string {
+		private MakePointer(X: FB3DOM.IXPath): string {
 			X = X.slice(0);
 			var last = X.pop() + '';
 			return X.join('/') + ((/^\./).test(last) ? '' : '/') + last + ((/^\./).test(last) ? '' : '.0');

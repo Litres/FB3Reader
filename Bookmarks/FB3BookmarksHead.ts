@@ -2,7 +2,6 @@
 
 module FB3Bookmarks {
 
-	export interface IXPath extends Array<any> { }
 	export interface InnerFB2 extends String {}
 
 	export interface IBookmarksReadyCallback { (Bookmarks: IBookmarks): void; }
@@ -15,8 +14,8 @@ module FB3Bookmarks {
 		NotSavedYet: number; // Attr for just created Note
 		TemporaryState: number; // new temporary bookmark
 		Range: FB3DOM.IRange;
-		XStart: IXPath; // xpath for start point
-		XEnd: IXPath;		// xpath for end point
+		XStart: FB3DOM.IXPath; // xpath for start point
+		XEnd: FB3DOM.IXPath;		// xpath for end point
 		Group: number;
 		Class?: string;
 		Title?: string;
@@ -25,7 +24,7 @@ module FB3Bookmarks {
 		XPathMappingReady: boolean; // For server-loaded bookmarks, used to watch fb2xpath -> internal xpath mapping progress
 		ClassName(): string;		// css class name for selections of this type
 		InitFromXY(X: number, Y: number): boolean;
-		InitFromXPath(XPath: IXPath): boolean;
+		InitFromXPath(XPath: FB3DOM.IXPath): boolean;
 		InitFromRange(Range: FB3DOM.IRange): boolean;
 		InitFromPosition(Position: FB3Reader.IPosition): boolean;
 		ExtendToXY(X: number, Y: number): boolean;

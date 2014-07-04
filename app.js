@@ -8,7 +8,7 @@ var AFB3Reader;
 var AFB3PPCache;
 var BookmarksProcessor;
 var start;
-var LocalArtID = 120421;
+var LocalArtID = 178297;
 var Temp = 0;
 
 window.onload = function () {
@@ -18,7 +18,7 @@ window.onload = function () {
 
     //	var ArtID = '178297';
     var Version = '1.0';
-    var UUID = '65830123-26b8-4b07-8098-c18229e5026e';
+    var UUID = 'd4e7833a-51c6-102c-9c5b-e8b0b7836b8f';
     var SID = GetSID();
     var Canvas = document.getElementById('reader');
     var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
@@ -33,7 +33,7 @@ window.onload = function () {
     AFB3Reader.CanvasReadyCallback = function () {
         document.getElementById('REnderEnd').innerHTML = (Temp++).toString();
     };
-    AFB3Reader.Init([0]);
+    AFB3Reader.Init([4417]);
     window.addEventListener('resize', function () {
         return AFB3Reader.AfterCanvasResize();
     });
@@ -379,6 +379,10 @@ function isRelativeToViewport() {
     // Test with a point larger than the viewport. If it returns an element,
     // then that means elementFromPoint takes page coordinates.
     return relativeToViewport = !document.elementFromPoint(x, y);
+}
+
+function GoXPath(NewPos) {
+    AFB3Reader.GoTO(NewPos);
 }
 
 function changecss(theClass, element, value) {

@@ -68,6 +68,7 @@ module FB3Reader {
 		private CanvasW: number;
 		private CanvasH: number;
 		private LastSavePercent: number;
+		private XPToJump: FB3DOM.IXPath;
 
 		public _CanvasReadyCallback(){
 			if (this.CanvasReadyCallback) {
@@ -476,6 +477,31 @@ module FB3Reader {
                 var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
                 this.GoTO([BlockN]);
             }
+		}
+
+        /** 
+        * Navigates to the specific point within base FB2 targeting scheme.
+        * First resolves external xpath to internal (asyncroneous operation),
+        * then fires GoToOpenPosition()
+        *
+        * @XP external xpath to jump to
+        */
+		public GoToXPath(XP: FB3DOM.IXPath): void {
+			var TargetChunk = this.FB3DOM.XPChunk(XP);
+			if (!this.XPToJump) {
+				this.XPToJump = XP;
+				if (!this.FB3DOM.DataChunks[TargetChunk].loaded) {
+					this.FB3DOM.LoadChunks([TargetChunk], () => this.GoToXPathFinal());
+				} else {
+					this.GoToXPathFinal();
+				}
+			}
+		}
+
+		private GoToXPathFinal(): void {
+			var XP = this.XPToJump;
+			this.XPToJump = undefined; // clean it before the async monster comes!
+			this.GoToOpenPosition(this.FB3DOM.GetAddrByXPath(this.XPToJump));
 		}
 
 		public CurPosPercent(): number {

@@ -327,6 +327,8 @@ var FB3DOM;
                 }
                 Out.push('<' + this.HTMLTagName());
                 Out.push(' width="' + W + '" height="' + H + '" src="' + Path + '" alt="-"');
+            } else if (this.TagName == 'a') {
+                Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
             } else {
                 Out = ['<' + this.HTMLTagName()];
             }

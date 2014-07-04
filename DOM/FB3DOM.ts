@@ -147,7 +147,7 @@ module FB3DOM {
 			}
 			return ResponcibleNode;
 		}
-		public GetAddrByXPath(XPath: FB3Bookmarks.IXPath): FB3Reader.IPosition {
+		public GetAddrByXPath(XPath: FB3DOM.IXPath): FB3Reader.IPosition {
 			var Node: IFB3Block = this;
 			var I = 0;
 			while (I < Node.Childs.length) {
@@ -177,7 +177,7 @@ module FB3DOM {
 			}
 		}
 
-		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3Bookmarks.IXPath {
+		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3DOM.IXPath {
 			var Element = this.GetElementByAddr(Position);
 			if (Element) {
 				return Element.XPath;
@@ -232,6 +232,17 @@ module FB3DOM {
 				}
 			}
 			return ChunksMissing;
+		}
+
+		public XPChunk(X: FB3DOM.IXPath): number {
+			for (var I = 0; I < this.DataChunks.length; I++) {
+				var xps = XPathCompare(X, this.DataChunks[I].xps);
+				var xpe = XPathCompare(X, this.DataChunks[I].xpe);
+				if (!xps || !xpe || xps > 0 && xpe < 10) {
+					return I;
+				}
+			}
+			return undefined; // In case we have out-of-field pointer - define it implicitly
 		}
 
 	}

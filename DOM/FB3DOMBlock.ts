@@ -330,8 +330,12 @@ module FB3DOM {
 				}
 				Out.push('<' + this.HTMLTagName());
 				Out.push(' width="' + W + '" height="' + H + '" src="' + Path + '" alt="-"');
-			} else if (this.TagName == 'a') {
-				Out = ['<a href="javascript:GoXPath(['+this.Data.hr+'])"'];
+			} else if (this.TagName == 'a' && !this.IsFootnote) {
+				if (this.Data.hr) {
+					Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
+				} else if (this.Data.href) {
+					Out = ['<a href="' + this.Data.href + '" target="_top"'];
+				}
 			} else {
 				Out = ['<' + this.HTMLTagName()];
 			}

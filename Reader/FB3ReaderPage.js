@@ -5,6 +5,7 @@ var FB3ReaderPage;
     FB3ReaderPage.PageBreakRegexp = /^h[1-4]/;
     FB3ReaderPage.BreakIterationEvery = 30;
     FB3ReaderPage.SemiSleepTimeout = 100;
+    FB3ReaderPage.PrerenderBlocks = 6;
 
     var FallCalls = 0;
 
@@ -63,7 +64,7 @@ var FB3ReaderPage;
             if (Prev) {
                 Prev.Next = this;
             }
-            this.PrerenderBlocks = 16;
+            this.PrerenderBlocks = FB3ReaderPage.PrerenderBlocks;
             this.Ready = false;
             this.Pending = false;
             this.FalloutState = {};
@@ -280,6 +281,7 @@ var FB3ReaderPage;
                 //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
                 this.RenderMoreTimeout = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
+                    _this.RenderMoreTimeout = 0;
                 }, FB3ReaderPage.SemiSleepTimeout);
 
                 // This page is clearly the last visible by absolute number
@@ -517,6 +519,7 @@ var FB3ReaderPage;
 
                         //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
                         _this.FallOut();
+                        _this.RenderMoreTimeout = 0;
                     }, FB3ReaderPage.SemiSleepTimeout);
                     return;
                 }

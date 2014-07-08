@@ -1,4 +1,4 @@
-﻿/// <reference path="Site/FB3ReaderSite.ts" />
+/// <reference path="Site/FB3ReaderSite.ts" />
 /// <reference path="Reader/FB3Reader.ts" />
 /// <reference path="DOM/FB3DOM.ts" />
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />

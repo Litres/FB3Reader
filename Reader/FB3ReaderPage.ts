@@ -5,6 +5,7 @@ module FB3ReaderPage {
 	export var PageBreakRegexp = /^h[1-4]/;
 	export var BreakIterationEvery = 30; // every ## miliseconds script will process user input
 	export var SemiSleepTimeout = 100;     // time for SetTimeout. You can rise it to let the browser mo time for garbage collection
+	export var PrerenderBlocks = 6;
 
 	var FallCalls = 0; // debug
 
@@ -142,7 +143,7 @@ module FB3ReaderPage {
 			if (Prev) {
 				Prev.Next = this;
 			}
-			this.PrerenderBlocks = 16;
+			this.PrerenderBlocks = PrerenderBlocks;
 			this.Ready = false;
 			this.Pending = false;
 			this.FalloutState = <IFalloutState> {};
@@ -364,7 +365,7 @@ module FB3ReaderPage {
 					To2From(this.PagesToRender[0].Start);
 				}
 				//				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
-				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender) }, SemiSleepTimeout);
+				this.RenderMoreTimeout = setTimeout(() => { this.Next.DrawInit(this.PagesToRender); this.RenderMoreTimeout = 0; }, SemiSleepTimeout);
 
 
 				// This page is clearly the last visible by absolute number
@@ -605,6 +606,7 @@ module FB3ReaderPage {
 						this.ThreadsRunning--;
 						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
 						this.FallOut();
+						this.RenderMoreTimeout = 0;
 					}, SemiSleepTimeout);
 					return;
 				}

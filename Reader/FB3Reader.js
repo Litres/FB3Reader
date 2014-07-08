@@ -99,6 +99,10 @@ var FB3Reader;
         };
 
         Reader.prototype.GoTO = function (NewPos) {
+            if (!NewPos || NewPos.length == 0) {
+                this.Site.Alert('Bad adress targeted');
+                return;
+            }
             clearTimeout(this.MoveTimeoutID);
             this.IdleOff();
             var GotoPage = this.GetCachedPage(NewPos);
@@ -387,11 +391,11 @@ var FB3Reader;
                     PageToView = PageToView.Next;
                 }
                 if (!PageToView.Ready) {
-                    if (PageToView.Pending) {
+                    if (PageToView.Pending || !this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr || !this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range || !this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To || !this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To.length) {
                         this.MoveTimeoutID = setTimeout(function () {
                             _this.PageForward();
                         }, 50);
-                    } else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1 || this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
+                    } else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1 || this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
                         return;
                     } else {
                         this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);

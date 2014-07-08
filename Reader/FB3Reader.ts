@@ -411,7 +411,7 @@ module FB3Reader {
 				if (!PageToView.Ready) {
 					if (PageToView.Pending) {
 						this.MoveTimeoutID = setTimeout(() => { this.PageForward() }, 50)
-					} else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1
+					} else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1
 						|| this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
 						return; // EOF reached, the book is over
 					} else {

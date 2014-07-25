@@ -173,8 +173,8 @@ var FB3Reader;
                 return;
             } else if (!WeeHaveFoundReadyPage) {
                 FirstPageNToRender = RealStartPage; // just as if we would during the application start
-                FirstFrameToFill = this.Pages[0];
-                this.PutBlockIntoView(0);
+                FirstFrameToFill = this.Pages[this.CurVisiblePage];
+                this.PutBlockIntoView(this.CurVisiblePage);
             }
 
             var CacheBroken = false;

@@ -197,8 +197,8 @@ module FB3Reader {
 				return;
 			} else if (!WeeHaveFoundReadyPage) {							// No prerendered page found, bad luck. We start rendering
 				FirstPageNToRender = RealStartPage;							// just as if we would during the application start
-				FirstFrameToFill = this.Pages[0];
-				this.PutBlockIntoView(0);
+				FirstFrameToFill = this.Pages[this.CurVisiblePage];
+				this.PutBlockIntoView(this.CurVisiblePage);
 			}
 
 			var CacheBroken = false;

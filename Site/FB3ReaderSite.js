@@ -6,7 +6,6 @@ var FB3ReaderSite;
             var _this = this;
             this.Canvas = Canvas;
             this.CanStoreBookmark = false;
-            this.NeedStoreBookmark = false;
             this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
             this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
             this.Alert = function (Message) {
@@ -31,7 +30,10 @@ var FB3ReaderSite;
         };
         ExampleSite.prototype.StoreBookmarksHandler = function (timer) {
         };
-        ExampleSite.prototype.AfterStoreBookmarks = function (XMLString) {
+        ExampleSite.prototype.AfterStoreBookmarks = function () {
+        };
+        ExampleSite.prototype.BeforeBookmarksAction = function () {
+            return true;
         };
         return ExampleSite;
     })();

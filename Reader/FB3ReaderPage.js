@@ -256,6 +256,28 @@ var FB3ReaderPage;
             }
         };
 
+        ReaderPage.prototype.AddHandlers = function () {
+            var _this = this;
+            var links = this.Element.Node.querySelectorAll('a');
+            for (var j = 0; j < links.length; j++) {
+                links[j].addEventListener('click', function (t) {
+                    var obj = (t.currentTarget) ? t.currentTarget : t.srcElement;
+                    var href = obj.getAttribute('data-href');
+                    if (href == undefined) {
+                        return true;
+                    }
+                    t.preventDefault();
+                    t.stopPropagation();
+                    var tmpArr = href.split(',');
+                    var newPos = [];
+                    for (var i = 0; i < tmpArr.length; i++) {
+                        newPos.push(parseInt(tmpArr[i]));
+                    }
+                    _this.FBReader.GoTO(newPos);
+                }, false);
+            }
+        };
+
         ReaderPage.prototype.ApplyPageMetrics = function () {
             var _this = this;
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
@@ -266,6 +288,7 @@ var FB3ReaderPage;
                 this.NotesElement.Node.style.display = 'none';
             }
             this.Element.Node.style.overflow = 'hidden';
+            this.AddHandlers();
 
             this.Ready = true;
             this.Pending = false;

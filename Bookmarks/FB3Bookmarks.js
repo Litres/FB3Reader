@@ -56,6 +56,8 @@ var FB3Bookmarks;
         };
 
         LitResBookmarksProcessor.prototype.Load = function (Callback) {
+            if (!this.Reader.Site.BeforeBookmarksAction())
+                return;
             this.LoadEndCallback = Callback;
             this.WaitForData = true;
             var URL = this.MakeLoadURL();
@@ -142,13 +144,14 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.StoreBookmarks = function () {
             var _this = this;
             var XML = this.MakeStoreXML();
-            var Data = this.MakeStoreData(XML);
-            var URL = this.MakeStoreURL();
-            this.XMLHTTPResponseCallback = function () {
-                var XMLString = _this.MakeStoreXML();
-                _this.Reader.Site.AfterStoreBookmarks(XMLString);
-            };
-            this.SendNotesRequest(URL, 'POST', Data);
+            if (this.Reader.Site.BeforeBookmarksAction()) {
+                var Data = this.MakeStoreData(XML);
+                var URL = this.MakeStoreURL();
+                this.XMLHTTPResponseCallback = function () {
+                    _this.Reader.Site.AfterStoreBookmarks();
+                };
+                this.SendNotesRequest(URL, 'POST', Data);
+            }
         };
 
         LitResBookmarksProcessor.prototype.ApplyPosition = function () {
@@ -178,7 +181,7 @@ var FB3Bookmarks;
             // keep in mind this.Bookmarks[0] is always here and is the current position,
             // so we skip it on merge
             var AnyUpdates = false;
-            this.Reader.Site.CanStoreBookmark = false;
+            this.Reader.Site.CanStoreBookmark = false; // TODO fix in future
             if (this.Bookmarks.length) {
                 var Found;
                 for (var i = 1; i < this.Bookmarks.length; i++) {
@@ -249,13 +252,15 @@ var FB3Bookmarks;
 
         LitResBookmarksProcessor.prototype.MakeStoreXML = function () {
             var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' + 'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
-            this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
-            this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart.slice(0);
-            XML += this.Bookmarks[0].PublicXML();
-            for (var j = 1; j < this.Bookmarks.length; j++) {
-                if (this.Bookmarks[j].TemporaryState)
-                    continue;
-                XML += this.Bookmarks[j].PublicXML();
+            if (this.Bookmarks.length) {
+                this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
+                this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart.slice(0);
+                XML += this.Bookmarks[0].PublicXML();
+                for (var j = 1; j < this.Bookmarks.length; j++) {
+                    if (this.Bookmarks[j].TemporaryState)
+                        continue;
+                    XML += this.Bookmarks[j].PublicXML();
+                }
             }
             XML += '</FictionBookMarkup>';
             return XML;
@@ -474,7 +479,7 @@ var FB3Bookmarks;
                 }
                 return text;
             };
-            var text = '', chars = 'ABCDEFabcdef0123456789';
+            var text = '', chars = 'abcdef0123456789';
             text += MakeSelectionIDSub(chars, 8) + '-';
             text += MakeSelectionIDSub(chars, 4) + '-';
             text += MakeSelectionIDSub(chars, 4) + '-';
@@ -557,14 +562,14 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' + this.GetNote() + this.Extract() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' + this.GetNote() + this.GetPercent() + this.Extract() + '</Selection>';
         };
 
         Bookmark.prototype.ParseXML = function (XML) {
             this.Group = parseInt(XML.getAttribute('group'));
             this.Class = XML.getAttribute('class');
             this.Title = XML.getAttribute('title');
-            this.ID = XML.getAttribute('id');
+            this.ID = XML.getAttribute('id').toLowerCase();
             this.MakeXPath(XML.getAttribute('selection'));
             this.DateTime = moment(XML.getAttribute('last-update'), "YYYY-MM-DDTHH:mm:ssZ").unix();
             if (XML.querySelector('Note')) {
@@ -575,7 +580,9 @@ var FB3Bookmarks;
                 } else {
                     NoteHTML = this.parseXMLNote(tmpNote);
                 }
-                this.Note = NoteHTML.replace(/<p\s[^>]+>/, '<p>');
+
+                // this.Note = NoteHTML.replace(/<p\s[^>]+>/g, '<p>');
+                this.Note = NoteHTML.replace(/(<[^>]*)\bfb:/g, '$1');
             }
             this.NotSavedYet = 0;
             this.XPathMappingReady = false;
@@ -612,15 +619,19 @@ var FB3Bookmarks;
         Bookmark.prototype.GetNote = function () {
             if (!this.Note)
                 return '';
-            return '<Note>' + this.Note + '</Note>';
+            return '<Note>' + this.Note.replace(/(<\/?)/g, '$1fb:').replace(/(<[^>]*\/?)fb:p/g, '$1p') + '</Note>';
         };
-
+        Bookmark.prototype.GetPercent = function () {
+            if (this.Group == 0)
+                return '';
+            return 'percent="' + this.Owner.Reader.CurPosPercent() + '" ';
+        };
         Bookmark.prototype.Extract = function () {
             return '<Extract ' + this.GetRawText() + 'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' + this.ExtractNode() + '</Extract>';
         };
         Bookmark.prototype.ExtractNode = function () {
             // TODO: fill with code
-            return '<p>or 4 test text</p>';
+            return '<p>or4</p>';
         };
         Bookmark.prototype.GetRawText = function () {
             if (!this.RawText)

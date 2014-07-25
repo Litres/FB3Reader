@@ -25,7 +25,8 @@ module FB3DOM {
 		subtitle: 1,
 		epigraph: 1,
 		poem: 1,
-		annotation: 1
+		annotation: 1,
+		cite: 1
 	};
 
 	export function XPathCompare(Pos1: any[], Pos2: any[]): number {
@@ -330,10 +331,11 @@ module FB3DOM {
 				}
 				Out.push('<' + this.HTMLTagName());
 				Out.push(' width="' + W + '" height="' + H + '" src="' + Path + '" alt="-"');
-			} else if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr) {
-				Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
+			} else if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr){
+				// Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
+				Out = ['<a href="about:blank" data-href="' + this.Data.hr + '"'];
 			} else if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr && this.Data.href) {
-				Out = ['<a href="' + this.Data.href + '" target="_top"'];
+					Out = ['<a href="' + this.Data.href + '" target="_top"'];
 			} else {
 				Out = ['<' + this.HTMLTagName()];
 			}

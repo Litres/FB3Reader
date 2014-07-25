@@ -1,19 +1,19 @@
 /// <reference path="FB3DataProviderHead.ts" />
 var FB3DataProvider;
 (function (FB3DataProvider) {
+    function zeroPad(num, places) {
+        var zero = places - num.toString().length + 1;
+        return Array(+(zero > 0 && zero)).join("0") + num;
+    }
+    FB3DataProvider.zeroPad = zeroPad;
     var AJAXDataProvider = (function () {
         function AJAXDataProvider(LitresURL, ArtID2URL) {
             this.LitresURL = LitresURL;
             this.ArtID2URL = ArtID2URL;
-            this.BaseURL = (LitresURL.match('trials') ? '' : '/download_book') + LitresURL;
+            this.BaseURL = LitresURL;
         }
         AJAXDataProvider.prototype.Request = function (URL, Callback, Progressor, CustomData) {
             new AjaxLoader(URL, Callback, Progressor, CustomData);
-        };
-
-        AJAXDataProvider.prototype.zeroPad = function (num, places) {
-            var zero = places - num.toString().length + 1;
-            return Array(+(zero > 0 && zero)).join("0") + num;
         };
         return AJAXDataProvider;
     })();

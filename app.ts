@@ -48,7 +48,7 @@ function ArtID2URL(ArtID: string, Chunk?: string): string {
 	} else if (Chunk.match(/\./)) {
 		OutURL += Chunk;
 	} else {
-		OutURL += this.zeroPad(Chunk,3) + '.js';
+		OutURL += FB3DataProvider.zeroPad(Chunk,3) + '.js';
 	}
 	return OutURL;
 }

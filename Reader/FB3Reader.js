@@ -66,19 +66,23 @@ var FB3Reader;
         Reader.prototype._CanvasReadyCallback = function () {
             if (this.CanvasReadyCallback) {
                 this.CanvasReadyCallback(this.GetVisibleRange());
+                this.Site.AfterTurnPageDone({
+                    CurPage: this.CurStartPage,
+                    MaxPage: this.PagesPositionsCache.LastPage(),
+                    Percent: this.CurPosPercent(),
+                    Pos: this.CurStartPos
+                });
             }
         };
 
         Reader.prototype.SetStartPos = function (NewPos) {
+            if (this.RedrawState) {
+                this.RedrawState = false;
+                return;
+            }
             this.CurStartPos = NewPos.slice(0);
             this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
             this.Bookmarks.Bookmarks[0].DateTime = moment().unix();
-            this.Site.AfterTurnPageDone({
-                CurPage: this.CurStartPage,
-                MaxPage: this.PagesPositionsCache.LastPage(),
-                Percent: this.CurPosPercent(),
-                Pos: this.CurStartPos
-            });
         };
 
         Reader.prototype.Init = function (StartFrom) {
@@ -130,6 +134,10 @@ var FB3Reader;
 
             // First let's check if the page was ALREADY rendered, so we can show it right away
             var CallbackFired = false;
+
+            this.CurStartPage = RealStartPage;
+            this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
+
             for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
                 var BasePage = I * this.NColumns;
 
@@ -157,8 +165,6 @@ var FB3Reader;
                 }
             }
 
-            this.CurStartPage = RealStartPage;
-            this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
             if (WeeHaveFoundReadyPage && !FirstFrameToFill) {
                 if (!CallbackFired) {
                     this._CanvasReadyCallback();
@@ -626,6 +632,7 @@ var FB3Reader;
         };
 
         Reader.prototype.Redraw = function () {
+            this.RedrawState = true;
             for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].Ready = false;
             }

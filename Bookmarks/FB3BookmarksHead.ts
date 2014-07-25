@@ -45,12 +45,13 @@ module FB3Bookmarks {
 		ClassPrefix: string;
 		AddBookmark(Bookmark: IBookmark): void;
 		DropBookmark(Bookmark: IBookmark): void;
-		LoadFromCache(Callback?: IBookmarksReadyCallback);   // Loads bookmarks from localStorage
-		Load(Callback?: IBookmarksReadyCallback);   // Loads bookmarks from the server
+		LoadFromCache(Callback?: IBookmarksReadyCallback); // Loads bookmarks from localStorage
+		Load(Callback?: IBookmarksReadyCallback); // Loads bookmarks from the server
 		ReLoad();	// Updates itself from the server (may get new current position)
 		ApplyPosition(): boolean;
 		Store(): void;
 		GetBookmarksInRange(Range?: FB3DOM.IRange): IBookmark[];
+		MakeStoreXML(): string;
 	}
 
 }

@@ -342,6 +342,27 @@ module FB3ReaderPage {
 			}
 		}
 
+		private AddHandlers() {
+			var links = this.Element.Node.querySelectorAll('a');
+			for (var j = 0; j < links.length; j++) {
+				links[j].addEventListener('click', (t) => {
+					var obj = (t.currentTarget) ? t.currentTarget : t.srcElement;
+					var href = (<HTMLElement> obj).getAttribute('data-href');
+					if (href == undefined) {
+						return true;
+					}
+					t.preventDefault();
+					t.stopPropagation();
+					var tmpArr = href.split(',');
+					var newPos = [];
+					for (var i = 0; i < tmpArr.length; i++) {
+						newPos.push(parseInt(tmpArr[i]));
+					}
+					this.FBReader.GoTO(newPos);
+				}, false);
+			}
+		}
+
 		private ApplyPageMetrics() {
 			this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
 			if (this.RenderInstr.NotesHeight) {
@@ -353,6 +374,7 @@ module FB3ReaderPage {
 				this.NotesElement.Node.style.display = 'none'
 			}
 			this.Element.Node.style.overflow = 'hidden';
+			this.AddHandlers();
 
 			this.Ready = true;
 			this.Pending = false;

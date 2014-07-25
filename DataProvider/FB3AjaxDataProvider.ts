@@ -2,20 +2,18 @@
 
 module FB3DataProvider {
 
+	export function zeroPad(num, places): string {
+		var zero = places - num.toString().length + 1;
+		return Array(+(zero > 0 && zero)).join("0") + num;
+	}
 	export class AJAXDataProvider implements IJsonLoaderFactory {
 		private BaseURL: string;
 		constructor(public LitresURL: string, public ArtID2URL: IArtID2URL) {
-			this.BaseURL = (LitresURL.match('trials') ? '' : '/download_book') + LitresURL;
+			this.BaseURL = LitresURL;
 		}
 		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
 			new AjaxLoader(URL, Callback, Progressor, CustomData);
 		}
-
-		private zeroPad(num, places) {
-			var zero = places - num.toString().length + 1;
-			return Array(+(zero > 0 && zero)).join("0") + num;
-		}
-
 	}
 
 	interface AJWindow extends Window { JSON: JSON; XMLHttpRequest: XMLHttpRequest; ActiveXObject: any}

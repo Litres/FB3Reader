@@ -70,22 +70,28 @@ module FB3Reader {
 		private LastSavePercent: number;
 		private XPToJump: FB3DOM.IXPath;
 
+		private RedrawState: boolean; // stupid workaround to fix AfterTurnPageDone fire
+
 		public _CanvasReadyCallback(){
 			if (this.CanvasReadyCallback) {
 				this.CanvasReadyCallback(this.GetVisibleRange());
+				this.Site.AfterTurnPageDone({
+					CurPage: this.CurStartPage,
+					MaxPage: this.PagesPositionsCache.LastPage(),
+					Percent: this.CurPosPercent(),
+					Pos: this.CurStartPos
+				});
 			}
 		}
 
 		private SetStartPos(NewPos: IPosition): void {
+			if (this.RedrawState) {
+				this.RedrawState = false;
+				return;
+			}
 			this.CurStartPos = NewPos.slice(0);
 			this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
 			this.Bookmarks.Bookmarks[0].DateTime = moment().unix();
-			this.Site.AfterTurnPageDone({
-				CurPage: this.CurStartPage,
-				MaxPage: this.PagesPositionsCache.LastPage(),
-				Percent: this.CurPosPercent(),
-				Pos: this.CurStartPos
-			});
 		}
 
 		constructor(public ArtID: string,
@@ -153,6 +159,10 @@ module FB3Reader {
 			var WeeHaveFoundReadyPage = false;
 			// First let's check if the page was ALREADY rendered, so we can show it right away
 			var CallbackFired = false;
+
+			this.CurStartPage = RealStartPage;
+			this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
+
 			for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
 				var BasePage = I * this.NColumns;
 				// Page is rendered, that's just great - we first show what we have, then render the rest, if required
@@ -179,8 +189,6 @@ module FB3Reader {
 			}
 
 
-			this.CurStartPage = RealStartPage;
-			this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
 			if (WeeHaveFoundReadyPage && !FirstFrameToFill) { // Looks like we have our full pages set rendered already,
 				if (!CallbackFired) {
 					this._CanvasReadyCallback();
@@ -352,7 +360,6 @@ module FB3Reader {
 
 			InnerHTML += '</div>'
 			this.Site.Canvas.innerHTML = InnerHTML;
-
 
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].BindToHTMLDoc(this.Site);
@@ -659,6 +666,7 @@ module FB3Reader {
 		}
 
 		public Redraw(): void {
+			this.RedrawState = true;
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].Ready = false;
 			}

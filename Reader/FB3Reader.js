@@ -238,12 +238,15 @@ var FB3Reader;
                     NewInstr[I].CacheAs = I;
                 }
             }
-            this.PutBlockIntoView(0);
-            for (var I = 1; I < this.Pages.length; I++) {
+
+            for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].Ready = false;
             }
-            this.Pages[0].SetPending(NewInstr);
-            this.Pages[0].DrawInit(NewInstr);
+            if (!this.CurVisiblePage) {
+                this.PutBlockIntoView(0);
+            }
+            this.Pages[this.CurVisiblePage].SetPending(NewInstr);
+            this.Pages[this.CurVisiblePage].DrawInit(NewInstr);
         };
 
         Reader.prototype.TOC = function () {

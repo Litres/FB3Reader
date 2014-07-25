@@ -97,6 +97,7 @@ var FB3Reader;
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;
+            this.PutBlockIntoView(0);
             this.Bookmarks.LoadFromCache(function () {
                 _this.Bookmarks.ApplyPosition();
             });

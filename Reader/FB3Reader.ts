@@ -126,6 +126,7 @@ module FB3Reader {
 			});
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
+			this.PutBlockIntoView(0);
 			this.Bookmarks.LoadFromCache(() => { this.Bookmarks.ApplyPosition() });
 		}
 

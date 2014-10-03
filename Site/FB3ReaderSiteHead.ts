@@ -19,6 +19,8 @@ module FB3ReaderSite {
 		StoreBookmarksHandler(timer: number);
 		AfterStoreBookmarks(): void;
 		BeforeBookmarksAction(): boolean;
+		ZoomImg(obj): void;
+		HistoryHandler(Pos: FB3DOM.IXPath): void;
 	}
 
 	// General-purpose interface for progress feedback

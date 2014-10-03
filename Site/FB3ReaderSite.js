@@ -35,6 +35,14 @@ var FB3ReaderSite;
         ExampleSite.prototype.BeforeBookmarksAction = function () {
             return true;
         };
+        ExampleSite.prototype.ZoomImg = function (obj) {
+            // obj
+            // 	data-path="" - src for real img
+            //	data-w="" - real img width
+            //	data-h="" - real img height
+        };
+        ExampleSite.prototype.HistoryHandler = function (Pos) {
+        };
         return ExampleSite;
     })();
     FB3ReaderSite.ExampleSite = ExampleSite;

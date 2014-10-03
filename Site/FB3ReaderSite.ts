@@ -34,6 +34,13 @@ module FB3ReaderSite {
 		public BeforeBookmarksAction(): boolean {
 			return true;
 		}
+		public ZoomImg(obj): void {
+			// obj
+			// 	data-path="" - src for real img
+			//	data-w="" - real img width
+			//	data-h="" - real img height
+		}
+		public HistoryHandler(Pos: FB3DOM.IXPath): void {}
 	}
 
 	export class ExampleProgressor implements ILoadProgress {

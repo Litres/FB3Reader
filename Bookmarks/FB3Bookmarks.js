@@ -18,7 +18,7 @@ var FB3Bookmarks;
             } else {
                 this.XMLHttp = new XMLHttpRequest();
             }
-            this.Host = 'http://robot.litres.ru/'; // TODO: raplace
+            this.Host = '/'; // TODO: replace
             this.SID = LitresSID;
             this.SaveAuto = false;
             this.LocalXML = LitresLocalXML;
@@ -562,7 +562,7 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' + this.GetNote() + this.GetPercent() + this.Extract() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '" ' + this.GetPercent() + '>' + this.GetNote() + this.Extract() + '</Selection>';
         };
 
         Bookmark.prototype.ParseXML = function (XML) {
@@ -622,9 +622,9 @@ var FB3Bookmarks;
             return '<Note>' + this.Note.replace(/(<\/?)/g, '$1fb:').replace(/(<[^>]*\/?)fb:p/g, '$1p') + '</Note>';
         };
         Bookmark.prototype.GetPercent = function () {
-            if (this.Group == 0)
+            if (this.Group != 0)
                 return '';
-            return 'percent="' + this.Owner.Reader.CurPosPercent() + '" ';
+            return 'percent="' + Math.round(this.Owner.Reader.CurPosPercent()) + '"';
         };
         Bookmark.prototype.Extract = function () {
             return '<Extract ' + this.GetRawText() + 'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' + this.ExtractNode() + '</Extract>';

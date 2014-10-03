@@ -3,8 +3,8 @@
 
 module FB3ReaderPage {
 	export var PageBreakRegexp = /^h[1-4]/;
-	export var BreakIterationEvery = 30; // every ## miliseconds script will process user input
-	export var SemiSleepTimeout = 100;     // time for SetTimeout. You can rise it to let the browser mo time for garbage collection
+	export var BreakIterationEvery = 50; // every ## miliseconds script will process user input
+	export var SemiSleepTimeout = 20;     // time for SetTimeout. You can rise it to let the browser more time for garbage collection
 	export var PrerenderBlocks = 6;
 
 	var FallCalls = 0; // debug
@@ -65,9 +65,9 @@ module FB3ReaderPage {
 	}
 	
 	// hanging para extermination - we need inline to hang for hyph to work, but no reason for block to hang
-	export function CropTo(To: FB3Reader.IPosition): void {
-		if (To.length == 1) {
-			To[0]--;
+	export function CropTo(Range: FB3DOM.IRange): void {
+		if (Range.To.length == 1 && Range.To[0] > Range.From[0]) {
+			Range.To[0]--;
 		}
 	}
 	export function To2From(From: FB3Reader.IPosition): void {
@@ -171,7 +171,7 @@ module FB3ReaderPage {
 			this.ID = ID;
 			return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns +
 				' FB2readerPage"><div class="FBReaderContentDiv" id="FB3ReaderColumn' + this.ID +
-				'">...</div><div class="FBReaderNotesDiv" id="FB3ReaderNotes' + this.ID + '">...</div></div>';
+				'">&#160;</div><div class="FBReaderNotesDiv" id="FB3ReaderNotes' + this.ID + '">&#160;</div></div>';
 		}
 
 		private FillElementData(ID: string): ElementDesc {
@@ -257,14 +257,20 @@ module FB3ReaderPage {
 				//  |d eeeee|<if page cut here - error>               |d  eee-| << this hyphen fits ok, next will not
 				//  |-ee    |<< this hyphen must be the               |eeee   | << this tail bring excess part down
 				//              6-th char, so "eeeee" would NOT fit
-				if (this.WholeRangeToRender.To[this.WholeRangeToRender.To.length - 1]) {
-					this.WholeRangeToRender.To[this.WholeRangeToRender.To.length - 1]++;
-				} else {
-					//while (Addr.length && Addr[Addr.length - 1] == 0) {
-					//	Addr.pop();
-					//	Addr[Addr.length - 1]--;
-					//}
+				// With IE it's even worse as IE renders soft hyps randomly, it may break asdasd-asdadsad
+				// where asdasdasdads-ad would fit. So it's not enough to only have "asdasd-as",
+				// we have to have the whole word in place to render always the same way in IE
+				var RangeNodeTo = this.FB3DOM.GetElementByAddr(this.WholeRangeToRender.To);
+				if (RangeNodeTo.text) {
+					var RangeToNodeParent = RangeNodeTo.Parent;
+					while (this.WholeRangeToRender.To[this.WholeRangeToRender.To.length - 1] < RangeToNodeParent.Childs.length - 2) {
+						this.WholeRangeToRender.To[this.WholeRangeToRender.To.length - 1]++;
+						if (RangeToNodeParent.Childs[this.WholeRangeToRender.To[this.WholeRangeToRender.To.length-1]].text.match(/\s/)) {
+							break;
+						}
+					}
 				}
+
 			} else {
 				if (!this.RenderInstr.Start) { // It's fake instruction. We consider in as "Render from start" request
 					this.RenderInstr.Start = [0];
@@ -344,27 +350,39 @@ module FB3ReaderPage {
 
 		private AddHandlers() {
 			var links = this.Element.Node.querySelectorAll('a');
-			for (var j = 0; j < links.length; j++) {
-				links[j].addEventListener('click', (t) => {
-					var obj = (t.currentTarget) ? t.currentTarget : t.srcElement;
-					var href = (<HTMLElement> obj).getAttribute('data-href');
-					if (href == undefined) {
-						return true;
-					}
-					t.preventDefault();
-					t.stopPropagation();
-					var tmpArr = href.split(',');
-					var newPos = [];
-					for (var i = 0; i < tmpArr.length; i++) {
-						newPos.push(parseInt(tmpArr[i]));
-					}
-					this.FBReader.GoTO(newPos);
-				}, false);
+			if (links.length) {
+				for (var j = 0; j < links.length; j++) {
+					links[j].addEventListener('click', (t) => {
+						var obj = (t.currentTarget) ? t.currentTarget : t.srcElement;
+						var href = (<HTMLElement> obj).getAttribute('data-href');
+						if (href == undefined) {
+							return true;
+						}
+						t.preventDefault();
+						t.stopPropagation();
+						var tmpArr = href.split(',');
+						var newPos = [];
+						for (var i = 0; i < tmpArr.length; i++) {
+							newPos.push(parseInt(tmpArr[i]));
+						}
+						this.FBReader.Site.HistoryHandler(this.FBReader.CurStartPos);
+						this.FBReader.GoTO(newPos);
+					}, false);
+				}
+			}
+			var zoom = this.Element.Node.querySelectorAll('.button-zoom');
+			if (zoom.length) {
+				for (var j = 0; j < zoom.length; j++) {
+					zoom[j].addEventListener('click', (t) => {
+						var obj = (t.currentTarget) ? t.currentTarget : t.srcElement;
+						this.FBReader.Site.ZoomImg(obj);
+					}, false);
+				}
 			}
 		}
 
 		private ApplyPageMetrics() {
-			this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop) + 'px';
+			this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop - 1) + 'px';
 			if (this.RenderInstr.NotesHeight) {
 				this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
 				this.NotesElement.Node.style.top = (this.Element.Height
@@ -472,7 +490,7 @@ module FB3ReaderPage {
 					To: FallOut.FallOut.slice(0)
 				};
 				this.QuickFallautState.PrevTo = this.RenderInstr.Range.To.slice(0);
-				CropTo(this.RenderInstr.Range.To);
+				CropTo(this.RenderInstr.Range);
 			}
 			this.RenderInstr.Height = FallOut.Height;
 			this.RenderInstr.NotesHeight = FallOut.NotesHeight;
@@ -528,7 +546,7 @@ module FB3ReaderPage {
 					this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
 					NextPageRange.To = FallOut.FallOut.slice(0);
 
-					CropTo(NextPageRange.To);
+					CropTo(NextPageRange);
 
 					this.PagesToRender[this.QuickFallautState.QuickFallout].Height = FallOut.Height - this.QuickFallautState.CollectedHeight + this.Element.MarginTop;
 					this.PagesToRender[this.QuickFallautState.QuickFallout].NotesHeight = FallOut.NotesHeight;
@@ -555,15 +573,15 @@ module FB3ReaderPage {
 							}, SemiSleepTimeout);
 							return; // should be here to make ApplyPageMetrics work
 						}
-					} else {
-						if (!this.PagesToRender.length) {
-							this.FBReader.IdleOn();
-						}
 					}
 				}
 			}
 			if (this.Next) {
 				this.ApplyPageMetrics();
+			}
+			if (!this.PagesToRender.length || !this.ID) {
+				// Get back to idle processing if we are done or we are in idle mode already
+				this.FBReader.IdleOn();
 			}
 		}
 

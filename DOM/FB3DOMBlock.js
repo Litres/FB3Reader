@@ -273,11 +273,20 @@ var FB3DOM;
             }
             return Out;
         };
+        FB3Tag.prototype.CutTop = function (Path) {
+            for (var I = 0; I <= Path.length; I++) {
+                if (Path[I])
+                    return true;
+            }
+            return false;
+        };
         FB3Tag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var ElementClasses = new Array();
-            if (Range.From[0] > 0) {
+            if (this.CutTop(Range.From)) {
                 ElementClasses.push('cut_top');
             }
+
+            // FixMe - this is a weak detection, can't see last p in div splitted (see CutTop above, that's the right way)
             if (Range.To[0] < this.Childs.length - 1) {
                 ElementClasses.push('cut_bot');
             }
@@ -323,7 +332,7 @@ var FB3DOM;
                     var Aspect = Math.min((ViewPortW - 1) / W, (ViewPortH - 1) / H);
                     W = Math.floor(W * Aspect);
                     H = Math.floor(H * Aspect);
-                    var zoomEvent = ' onclick="javascript:ZoomImg(\'' + Path + '\',' + this.Data.w + ',' + this.Data.h + ');"';
+                    var zoomEvent = ' data-path="' + Path + '" data-w="' + this.Data.w + '" data-h="' + this.Data.h + '"';
                     Out.push('<span class="span-zoom" id="iii_' + IDPrefix + this.XPID + '">' + '<button class="button-zoom"' + zoomEvent + ' id="iiii_' + IDPrefix + this.XPID + '">' + 'Рисунок i' + Path.split('.i').pop() + ' </button></span>');
                 }
                 Out.push('<' + this.HTMLTagName());

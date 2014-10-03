@@ -59,7 +59,7 @@ var FB3Reader;
             this.BookStyleNotes = true;
             this.BookStyleNotesTemporaryOff = false;
             this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
-            this.LastSavePercent = 0;
+            this.TicksFromSave = 0;
 
             this.IdleOff();
         }
@@ -345,9 +345,11 @@ var FB3Reader;
 
             this.BackgroundRenderFrame.BindToHTMLDoc(this.Site);
             this.BackgroundRenderFrame.PagesToRender = new Array(100);
+            this.BackgroundRenderFrame.ViewPortH = this.Pages[0].ViewPortH;
+            this.BackgroundRenderFrame.ViewPortW = this.Pages[0].ViewPortW;
             this.CanvasW = this.Site.Canvas.clientWidth;
             this.CanvasH = this.Site.Canvas.clientHeight;
-            this.LastSavePercent = 0;
+            this.TicksFromSave = 0;
             this.LoadCache();
         };
 
@@ -558,10 +560,12 @@ var FB3Reader;
                             return;
                         } else {
                             this.PagesPositionsCache.LastPage(0);
-                            if (NewPos - this.LastSavePercent > 3) {
+                            if (this.TicksFromSave > 30) {
                                 // We only save pages position cache once per 3% because it is SLOW like hell
                                 this.SaveCache();
-                                this.LastSavePercent = NewPos;
+                                this.TicksFromSave = 0;
+                            } else {
+                                this.TicksFromSave++;
                             }
                             this.Site.IdleThreadProgressor.Progress(this, NewPos);
                             this.Site.IdleThreadProgressor.Alert(this.PagesPositionsCache.Length().toFixed(0) + ' pages ready');
@@ -653,6 +657,7 @@ var FB3Reader;
             this.StopRenders();
             this.BackgroundRenderFrame.Reset();
             this.PrepareCanvas();
+            this.CurVisiblePage = 0;
             this.GoTO(this.CurStartPos.slice(0));
         };
 

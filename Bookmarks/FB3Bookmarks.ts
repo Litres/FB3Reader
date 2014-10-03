@@ -43,7 +43,7 @@ module FB3Bookmarks {
 			} else {
 				this.XMLHttp = new XMLHttpRequest();
 			}
-			this.Host = 'http://robot.litres.ru/'; // TODO: raplace
+			this.Host = '/'; // TODO: replace
 			this.SID = LitresSID;
 			this.SaveAuto = false;
 			this.LocalXML = LitresLocalXML;
@@ -591,8 +591,9 @@ module FB3Bookmarks {
 				'id="' + this.ID + '" ' +
 				'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
 				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
-				'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '">' +
-				this.GetNote() + this.GetPercent() + this.Extract() +
+				'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '" ' +
+				this.GetPercent() + '>' +
+				this.GetNote() + this.Extract() +
 			'</Selection>';
 		}
 
@@ -650,8 +651,8 @@ module FB3Bookmarks {
 			return '<Note>' + this.Note.replace(/(<\/?)/g, '$1fb:').replace(/(<[^>]*\/?)fb:p/g, '$1p') + '</Note>';
 		}
 		private GetPercent(): string {
-			if (this.Group == 0) return '';
-			return 'percent="' + this.Owner.Reader.CurPosPercent() + '" ';
+			if (this.Group != 0) return '';
+			return 'percent="' + Math.round(this.Owner.Reader.CurPosPercent()) + '"';
 		}
 		private Extract(): string {
 			return '<Extract ' +

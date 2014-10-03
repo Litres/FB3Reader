@@ -1,69 +1,4 @@
-﻿/* this are engine-required CSS, do not change it */
-html, body {
-    height: 100%;
-}
-
-div, p, h1, h2, h3, h4, h5, h6, blockquote {
-    position: relative;
-    margin-bottom: 0; /* Messing mith margins in DOM is a hell, I'll return to this later on */
-    margin-top: 0;
-}
-
-div.FB2readerPage {
-    overflow:hidden;
-    float:left;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-}
-
-
-.cut_top {
-    padding-top:0;
-    margin-top:0;
-    border-top: none;
-}
-
-.cut_bot {
-/*    padding-bottom:0;*/
-    margin-bottom:0;
-    border-bottom: none;
-}
-
-div.FB3ReaderColumnset4 div.FB2readerPage {
-    width: 25%;
-}
-div.FB3ReaderColumnset3 div.FB2readerPage {
-    width: 33.3%;
-}
-div.FB3ReaderColumnset2 div.FB2readerPage {
-    width: 50%;
-}
-
-div.FB3ReaderColumnset1 div.FB2readerPage {
-    width: 100%;
-}
-
-/* background renderer page - removed from sight here to avoid IE blinking bug */
-#FB3ReaderColumn0 {
-    background-color: lime;
-    top: 5000px;
-}
-div.FB2readerPage div.footnote {
-    max-height: 500px; /* this will be overriden by inline style by engine, no reason to interfere */
-    font-size: 80%;
-/*    overflow: auto;*/
-
-}
-
-.FB2readerPage img.tag_image {
-    position: relative;
-}
-
-
-/* engine-required CSS END */
-
-/* this are engine-independent CSS, do with it whatewer you see fit */
+﻿/* this are engine-independent CSS, do with it whatewer you see fit */
 /*
   Several things to note:
 
@@ -80,17 +15,17 @@ div.FB2readerPage div.footnote {
     
 */
 .FBReaderContentDiv h1 {
-    font-family: 'Times New Roman', serif;
-    padding: 5px 0 10px 0;
+    /*font-family: 'Times New Roman', serif;*/
+      /*padding: 5px 0 10px 0;*/
 }
 .FBReaderContentDiv h2 {
-    font-family: 'Times New Roman', serif;
-    padding: 4px 0 8px 0;
+    /*font-family: 'Times New Roman', serif;*/
+    /*padding: 4px 0 8px 0;*/
 }
 .FBReaderContentDiv div,
 .FBReaderContentDiv h3, .FBReaderContentDiv h4,
 .FBReaderContentDiv h5, .FBReaderContentDiv h6 {
-    font-family: 'Arial', sans-serif;
+    /*font-family: 'Arial', sans-serif;*/
 }
 #reader {
     height:800px;
@@ -103,17 +38,11 @@ div.FB2readerPage div.FBReaderContentDiv {
 }
 
 #FB3ReaderHostDiv {
-    background-color: #f8f6db;
-    color:#251700;
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
-    text-align: justify;
-    line-height: 1.5;
-    font-family: 'Times New Roman';
-    font-size:15px;
 }
 
 div.FB2readerPage a.footnote_attached {
@@ -132,7 +61,7 @@ div.FB2readerPage p.cut_top {
     text-indent:0;
 }
 div.FB2readerPage div.footnote {
-    font-size: 80%;
+    font-size: 70%;
     clear:both;
 }
 
@@ -147,7 +76,7 @@ div.FB2readerPage div.footnote {
 
 div.FB2readerPage p.footnote {
     text-align: left;
-    font-size: 80%;
+    font-size: 70%;
     width:auto;
 }
 
@@ -168,7 +97,7 @@ div.FB2readerPage p.footnote {
 .FBReaderNotesDiv h4.footnote,
 .FBReaderNotesDiv h5.footnote,
 .FBReaderNotesDiv h6.footnote{
-    font-size: 80%;
+    font-size: 70%;
     vertical-align: super;
     margin:0;
     padding:0;
@@ -181,22 +110,25 @@ div.FB2readerPage p.footnote {
 }
 
 .FB2readerPage img {
-    background-color:white;
-    text-align: center;
+    /*background-color:white;*/
+    /*text-align: center;*/
 }
-
-a.ZoomAnchor {
-    text-decoration:none;
+/*div.SmallImgZoom1 {
+  opacity: 0.4;
+  filter: alpha(opacity=40); *//*For IE8 and earlier*//*
+  position:absolute;
 }
 div.SmallImgZoom2 {
-    padding: 0.1em 0.2em 0.2em 0.2em;
-    background-color: silver;
-    border: 1px solid black;
-} 
-div.SmallImgZoom1 {
-    opacity: 0.4;
-    filter: alpha(opacity=40); /* For IE8 and earlier */
+  padding: 0.1em 0.2em 0.2em 0.2em;
+  background-color: silver;
+  border: 1px solid black;
+  position:relative;
+  left:0.5em;
+  top:0.5em;
 }
+div.SmallImgZoom2 a {
+  text-decoration:none;
+}*/
 
 table.contextmenu, table.notedialog {
     border: 1px solid #808080;
@@ -222,17 +154,16 @@ table.contextmenu td {
     padding: 5px 7px;
 }
 
-.my_selec_3_default {
+/*.my_selec_3_default {
     background-color:black;
     color: white;
-}
+}*/
 
 span.my_selec_1_default, strong.my_selec_1_default, em.my_selec_1_default {
     background-color:red;
     color: white;
 }
-p.my_selec_1_default, div.my_selec_1_default, img.my_selec_1_default, em.my_selec_1_default,
-  h1.my_selec_1_default, h2.my_selec_1_default, h3.my_selec_1_default, h4.my_selec_1_default {
+p.my_selec_1_default, div.my_selec_1_default {
     border-left: 3px solid blue; 
     padding-left: 5px !important;
     margin-left: -7px !important;
@@ -276,3 +207,69 @@ div.tocitm {
 }
 
 /* debug */
+
+/* this are engine-required CSS, do not change it */
+html, body {
+    height: 100%;
+}
+
+div, p, h1, h2, h3, h4, h5, h6, blockquote {
+    position: relative;
+    margin-bottom: 0; /* Messing mith margins in DOM is a hell, I'll return to this later on */
+    margin-top: 0;
+}
+
+div.FB2readerPage {
+    overflow:hidden;
+    float:left;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+
+.cut_top {
+    padding-top:0 !important;
+    margin-top:0 !important;
+    border-top: none !important;
+}
+
+.cut_bot {
+/*    padding-bottom:0;*/
+    margin-bottom:0 !important;
+    border-bottom: none !important;
+}
+
+div.FB3ReaderColumnset4 div.FB2readerPage {
+    width: 25%;
+}
+div.FB3ReaderColumnset3 div.FB2readerPage {
+    width: 33.3%;
+}
+div.FB3ReaderColumnset2 div.FB2readerPage {
+    width: 50%;
+}
+
+div.FB3ReaderColumnset1 div.FB2readerPage {
+    width: 100%;
+}
+
+/* background renderer page - removed from sight here to avoid IE blinking bug */
+#FB3ReaderColumn0 {
+    background-color: lime;
+    top: 5000px;
+}
+div.FB2readerPage div.footnote {
+    max-height: 500px; /* this will be overriden by inline style by engine, no reason to interfere */
+    font-size: 80%;
+/*    overflow: auto;*/
+
+}
+
+.FB2readerPage img.tag_image {
+    position: relative;
+}
+
+
+/* engine-required CSS END */
+

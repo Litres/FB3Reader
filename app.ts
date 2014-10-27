@@ -19,16 +19,16 @@ window.onload = () => {
 	document.getElementById('reader').addEventListener('touchend', TapEnd, false);
 
 //	var ArtID = '178297';
-	var Version = '1.0';
+	var Version = '1.1';
 	var UUID = 'd4e7833a-51c6-102c-9c5b-e8b0b7836b8f';
 	var SID = GetSID();
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
 	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(), ArtID2URL);
-	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider);
+	AFB3PPCache = new FB3PPCache.PPCache();
+	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider, AFB3PPCache);
 	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
 	BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
-	AFB3PPCache = new FB3PPCache.PPCache();
 	AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, Version, AFB3PPCache);
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
 	PrepareCSS();
@@ -112,7 +112,7 @@ function MouseMove(Evt: MouseEvent) {
 		// hack for touch-based devices
 		if (!isRelativeToViewport()) X += window.pageXOffset, Y += window.pageYOffset;
 
-		if (!newNote.ExtendToXY(X, Y)) {
+		if (!newNote.ExtendToXY(X, Y, false)) {
 			return undefined;
 		} else {
 			NativeNote.Detach();
@@ -172,12 +172,12 @@ function ShowMenu(e: MouseEvent) {
 
 	if (MarkupProgress == 'selectstart') {
 		MenuShown = 'SelectEnd';
-		if (!NativeNote.ExtendToXY(X, Y)) {
+		if (!NativeNote.ExtendToXY(X, Y, false)) {
 			return undefined;
 		}
 	} else {
 		MenuShown = 'SelectStart'; 
-		if (!NativeNote.InitFromXY(X, Y)) {
+		if (!NativeNote.InitFromXY(X, Y, false)) {
 			NativeNote = undefined;
 			return undefined;
 		}

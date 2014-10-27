@@ -41,6 +41,12 @@ var FB3ReaderSite;
             //	data-w="" - real img width
             //	data-h="" - real img height
         };
+        ExampleSite.prototype.ZoomHTML = function (HTML) {
+            // For zoomed down (for any reason) elements engine will call this to
+            // show full-scale contents of the element
+            alert(HTML);
+        };
+
         ExampleSite.prototype.HistoryHandler = function (Pos) {
         };
         return ExampleSite;

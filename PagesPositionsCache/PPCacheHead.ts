@@ -6,6 +6,8 @@ module FB3PPCache {
 		Get(I: number): FB3Reader.IPageRenderInstruction;
 		Save(Key: string): void;
 		Load(Key: string): void;
+		SetMargin(XP: string, Margin: number): void;
+		GetMargin(XP: string): number;
 		Reset(): void;
 		Length(): number;
 		LastPage(LastPageN?:number): number;

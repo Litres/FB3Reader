@@ -9,10 +9,12 @@ module FB3Bookmarks {
 
 	export interface IBookmark {
 		ID: string;
+		Owner: IBookmarks;
 		N: number;			// Represents IBookmarks.Bookmarks[N] position
 		DateTime: number; // unix timestamp
 		NotSavedYet: number; // Attr for just created Note
 		TemporaryState: number; // new temporary bookmark
+		SkipUpdateDatetime: boolean; // skip update datetime for current position when we have new curpos from server
 		Range: FB3DOM.IRange;
 		XStart: FB3DOM.IXPath; // xpath for start point
 		XEnd: FB3DOM.IXPath;		// xpath for end point
@@ -23,16 +25,17 @@ module FB3Bookmarks {
 		RawText: string;
 		XPathMappingReady: boolean; // For server-loaded bookmarks, used to watch fb2xpath -> internal xpath mapping progress
 		ClassName(): string;		// css class name for selections of this type
-		InitFromXY(X: number, Y: number): boolean;
+		InitFromXY(X: number, Y: number, AllowBlock: boolean): boolean;
 		InitFromXPath(XPath: FB3DOM.IXPath): boolean;
 		InitFromRange(Range: FB3DOM.IRange): boolean;
 		InitFromPosition(Position: FB3Reader.IPosition): boolean;
-		ExtendToXY(X: number, Y: number): boolean;
+		ExtendToXY(X: number, Y: number, AllowBlock: boolean): boolean;
 		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
 		Detach(): void; // removes itself from the parent.
 		RemapWithDOM(Callback: IBookmarkSyncCallback): void;
 		PublicXML(): string;
 		ParseXML(XML: any): void;
+		MakePreviewFromNote(): string;
 	}
 
 	export interface IBookmarks {

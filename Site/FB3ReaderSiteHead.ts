@@ -19,7 +19,8 @@ module FB3ReaderSite {
 		StoreBookmarksHandler(timer: number);
 		AfterStoreBookmarks(): void;
 		BeforeBookmarksAction(): boolean;
-		ZoomImg(obj): void;
+//		ZoomImg(obj): void;
+		ZoomHTML(HTML: FB3DOM.InnerHTML): void;
 		HistoryHandler(Pos: FB3DOM.IXPath): void;
 	}
 

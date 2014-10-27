@@ -40,6 +40,12 @@ module FB3ReaderSite {
 			//	data-w="" - real img width
 			//	data-h="" - real img height
 		}
+		public ZoomHTML(HTML: FB3DOM.InnerHTML): void {
+			// For zoomed down (for any reason) elements engine will call this to
+			// show full-scale contents of the element
+			alert(HTML);
+		}
+
 		public HistoryHandler(Pos: FB3DOM.IXPath): void {}
 	}
 

@@ -18,13 +18,16 @@ var FB3Bookmarks;
             } else {
                 this.XMLHttp = new XMLHttpRequest();
             }
-            this.Host = '/'; // TODO: replace
+            this.Host = '/';
+
+            // this.Host = 'http://www.litres.ru/'; // TODO: replace
             this.SID = LitresSID;
             this.SaveAuto = false;
             this.LocalXML = LitresLocalXML;
         }
         LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
             Bookmark.N = this.Bookmarks.length;
+            Bookmark.Owner = this;
             this.Bookmarks.push(Bookmark);
         };
         LitResBookmarksProcessor.prototype.DropBookmark = function (Bookmark) {
@@ -160,6 +163,7 @@ var FB3Bookmarks;
                 return false;
             }
             this.Ready = true;
+            this.Bookmarks[0].SkipUpdateDatetime = true;
             this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
             return true;
         };
@@ -199,17 +203,20 @@ var FB3Bookmarks;
                 Found = 0;
                 for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) {
                     Found = 0;
-                    if (this.DeletedBookmarks[TemporaryNotes.Bookmarks[j].ID])
+                    if (this.DeletedBookmarks[TemporaryNotes.Bookmarks[j].ID]) {
                         continue;
+                    }
                     for (var i = 1; i < this.Bookmarks.length; i++) {
                         if (this.Bookmarks[i].ID == TemporaryNotes.Bookmarks[j].ID) {
+                            // we have new bookmark with same ID
                             if (this.Bookmarks[i].DateTime < TemporaryNotes.Bookmarks[j].DateTime) {
                                 this.Bookmarks[i].Detach();
                             } else {
+                                // if not new, skip
                                 Found = 1;
                             }
                             break;
-                        } else if (TemporaryNotes.Bookmarks[j].DateTime < this.LoadDateTime) {
+                        } else if (this.SaveAuto && TemporaryNotes.Bookmarks[j].DateTime < this.LoadDateTime) {
                             Found = 1;
                         }
                     }
@@ -226,6 +233,7 @@ var FB3Bookmarks;
             }
             if (!TemporaryNotes.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
                 // Newer position from server
+                this.Bookmarks[0].SkipUpdateDatetime = true;
                 this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
             } else if (AnyUpdates) {
                 // Updated bookmarks data from server - we should redraw the page in case there are new notes
@@ -296,6 +304,8 @@ var FB3Bookmarks;
                     var xps_e = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.To);
                     var xpe_s = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.From);
 
+                    // TODO: fix variants
+                    //					console.log(this.Bookmarks[j]);
                     //					console.log('xps ' + this.Bookmarks[j].Range.From.join('_') + ' ' + Range.From.join('_') + ' ' + xps);
                     //					console.log('xpe ' + this.Bookmarks[j].Range.To.join('_') + ' ' + Range.To.join('_') + ' ' + xpe);
                     //					console.log('xps_e ' + this.Bookmarks[j].Range.From.join('_') + ' ' + Range.To.join('_') + ' ' + xps_e);
@@ -314,6 +324,7 @@ var FB3Bookmarks;
     var Bookmark = (function () {
         function Bookmark(Owner) {
             this.Owner = Owner;
+            this.NotePreviewLimit = 140;
             this.ID = this.MakeSelectionID();
             this.Group = 0;
             this.Class = 'default';
@@ -325,9 +336,18 @@ var FB3Bookmarks;
             this.DateTime = moment().unix();
             this.NotSavedYet = 1;
             this.TemporaryState = 0;
+            this.SkipUpdateDatetime = false;
         }
-        Bookmark.prototype.InitFromXY = function (X, Y) {
-            return this.InitFromPosition(this.Owner.Reader.ElementAtXY(X, Y));
+        Bookmark.prototype.InitFromXY = function (X, Y, AllowBlock) {
+            var StartAddr = this.Owner.Reader.ElementAtXY(X, Y);
+            if (StartAddr) {
+                var NewElement = this.Owner.FB3DOM.GetElementByAddr(StartAddr);
+                if (NewElement.IsBlock()) {
+                    return false;
+                } else {
+                    return this.InitFromPosition(StartAddr);
+                }
+            }
         };
 
         Bookmark.prototype.InitFromXPath = function (XPath) {
@@ -350,15 +370,33 @@ var FB3Bookmarks;
             }
         };
 
-        Bookmark.prototype.ExtendToXY = function (X, Y) {
+        Bookmark.prototype.ExtendToXY = function (X, Y, AllowBlock) {
             var BaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-            if (BaseTo && BaseTo.length > 1) {
-                this.Range.To = BaseTo;
-                this.GetDataFromText();
-                return true;
-            } else {
-                return undefined;
+
+            if (!BaseTo || BaseTo.length < 1)
+                return false;
+
+            // To catch gap between lines we may go up to the nearest non-block element
+            if (!AllowBlock) {
+                var Trials = 0;
+                var Element = this.Owner.FB3DOM.GetElementByAddr(BaseTo);
+                while (Trials < 10 && Element.IsBlock()) {
+                    Y = Y - 3; // We believe 3px is nice, no need to jump 1px cause no elements are so small
+                    var NewBaseTo = this.Owner.Reader.ElementAtXY(X, Y);
+                    Trials++;
+                    if (NewBaseTo && NewBaseTo.length > 1) {
+                        var NewElement = this.Owner.FB3DOM.GetElementByAddr(NewBaseTo);
+                        if (!NewElement.IsBlock()) {
+                            BaseTo = NewBaseTo;
+                            Element = NewElement;
+                        }
+                    }
+                }
             }
+
+            this.Range.To = BaseTo;
+            this.GetDataFromText();
+            return true;
         };
 
         Bookmark.prototype.RoundClone = function (ToBlock) {
@@ -410,9 +448,7 @@ var FB3Bookmarks;
                 PosInBlock = Adress[Adress.length - 1];
                 Adress.pop();
             }
-            if (PosInBlock < Block.Childs.length - 2) {
-                PosInBlock++;
-            }
+
             while (PosInBlock > 0 && !Block.Childs[PosInBlock - 1].Childs && !Block.Childs[PosInBlock - 1].text.match(/\s$/)) {
                 PosInBlock--;
             }
@@ -562,13 +598,14 @@ var FB3Bookmarks;
         };
 
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '" ' + this.GetPercent() + '>' + this.GetNote() + this.Extract() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '"' + this.GetPercent() + '>' + this.GetNote() + this.Extract() + '</Selection>';
         };
 
         Bookmark.prototype.ParseXML = function (XML) {
             this.Group = parseInt(XML.getAttribute('group'));
             this.Class = XML.getAttribute('class');
             this.Title = XML.getAttribute('title');
+            this.parseTitle();
             this.ID = XML.getAttribute('id').toLowerCase();
             this.MakeXPath(XML.getAttribute('selection'));
             this.DateTime = moment(XML.getAttribute('last-update'), "YYYY-MM-DDTHH:mm:ssZ").unix();
@@ -582,7 +619,10 @@ var FB3Bookmarks;
                 }
 
                 // this.Note = NoteHTML.replace(/<p\s[^>]+>/g, '<p>');
-                this.Note = NoteHTML.replace(/(<[^>]*)\bfb:/g, '$1');
+                this.Note = NoteHTML.replace(/<(\/)?[fb:]+/ig, '<$1').replace(/(\sxmlns(:fb)?.[^>]+)/ig, '').replace(/<p\/>/ig, '<p></p>');
+                if (this.Note == '<p>') {
+                    this.Note = '<p></p>';
+                }
             }
             this.NotSavedYet = 0;
             this.XPathMappingReady = false;
@@ -592,6 +632,15 @@ var FB3Bookmarks;
                 this.RawText = XML.querySelector('Extract').getAttribute('selection-text');
             }
             // this.Range; // will be filled in ReMapping
+        };
+
+        Bookmark.prototype.parseTitle = function () {
+            if (this.Title == '' || this.Title == null) {
+                if (this.Group == 1)
+                    this.Title = 'Закладка';
+                else if (this.Group == 3 || this.Group == 5)
+                    this.Title = 'Заметка';
+            }
         };
 
         Bookmark.prototype.parseXMLNote = function (el) {
@@ -619,12 +668,22 @@ var FB3Bookmarks;
         Bookmark.prototype.GetNote = function () {
             if (!this.Note)
                 return '';
-            return '<Note>' + this.Note.replace(/(<\/?)/g, '$1fb:').replace(/(<[^>]*\/?)fb:p/g, '$1p') + '</Note>';
+            return '<Note><p>' + this.MakePreviewFromNote() + '</p></Note>';
+            return '<Note>' + this.Note.replace(/(<\/?)/ig, '$1fb:').replace(/(\sxmlns(:fb)?.[^>]+)/ig, '').replace(/fb:p/ig, 'p') + '</Note>';
+        };
+        Bookmark.prototype.MakePreviewFromNote = function () {
+            var tmpDiv = document.createElement('div');
+            tmpDiv.innerHTML = this.Note;
+            var p = tmpDiv.querySelectorAll('p');
+            var text = p[0].innerText || p[0].textContent;
+            text = text.length > this.NotePreviewLimit ? text.substring(0, this.NotePreviewLimit) + '...' : text;
+            tmpDiv = undefined;
+            return text;
         };
         Bookmark.prototype.GetPercent = function () {
             if (this.Group != 0)
                 return '';
-            return 'percent="' + Math.round(this.Owner.Reader.CurPosPercent()) + '"';
+            return ' percent="' + Math.round(this.Owner.Reader.CurPosPercent()) + '"';
         };
         Bookmark.prototype.Extract = function () {
             return '<Extract ' + this.GetRawText() + 'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' + this.ExtractNode() + '</Extract>';

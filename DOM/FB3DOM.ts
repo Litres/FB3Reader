@@ -3,7 +3,6 @@
 
 module FB3DOM {
 	declare var window;
-
 	class AsyncLoadConsumer {
 		private ImDone: boolean;
 		BlockLoaded(N: number): boolean {
@@ -76,7 +75,8 @@ module FB3DOM {
 		
 		constructor(public Alert: FB3ReaderSite.IAlert,
 			public Progressor: FB3ReaderSite.ILoadProgress,
-			public DataProvider: FB3DataProvider.IJsonLoaderFactory) {
+			public DataProvider: FB3DataProvider.IJsonLoaderFactory,
+			public PagesPositionsCache: FB3PPCache.IFB3PPCache) {
 			super(null, null, 0);
 			this.ActiveRequests = [];
 			this.Ready = false;
@@ -186,7 +186,11 @@ module FB3DOM {
 			}
 		}
 
-		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
+		public GetHTML(HyphOn: boolean, BookStyleNotes: boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer) {
+			if (Range.From.length == 1 && this.Childs[Range.From[0]] && this.Childs[Range.From[0]].TagName == 'empty-line') {
+				Range.From[0]++;	// We do not need empty-line at the start of the page,
+									// see FallOut for more hacks on this
+			}
 			var FullBookmarksList: FB3Bookmarks.IBookmark[] = new Array;
 			for (var I = 0; I < this.Bookmarks.length; I++) {
 				FullBookmarksList = FullBookmarksList.concat(this.Bookmarks[I].Bookmarks);
@@ -200,7 +204,7 @@ module FB3DOM {
 			var LoadedChunk: number = CustomData.ChunkN;
 			var Shift = this.DataChunks[LoadedChunk].s;
 			for (var I = 0; I < Data.length; I++) {
-				this.Childs[I + Shift] = new FB3Tag(Data[I],this, I + Shift);
+				this.Childs[I + Shift] = TagClassFactory(Data[I], this, I + Shift, 0, 0, false); //new FB3Tag(Data[I], this, I + Shift);
 			}
 			this.DataChunks[LoadedChunk].loaded = 2;
 

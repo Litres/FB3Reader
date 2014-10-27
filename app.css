@@ -206,6 +206,20 @@ div.tocitm {
 	opacity: 0.7;
 }
 
+.FBReaderContentDiv div.fit_to_page p, /* for legacy json, remove it later */
+.FBReaderContentDiv div.img_with_subscr p {
+    text-indent:0;
+    font-size: 80%;
+    width:80%;
+    margin-left:10%;
+    line-height: 130%;
+    margin-top: 0.3em;
+}
+.FBReaderContentDiv div.tag_image {
+    display: block;
+    margin:0 auto;
+}
+
 /* debug */
 
 /* this are engine-required CSS, do not change it */

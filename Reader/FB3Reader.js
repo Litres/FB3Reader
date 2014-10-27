@@ -42,6 +42,49 @@ var FB3Reader;
     }
     FB3Reader.PRIClone = PRIClone;
 
+    function GetElementRect(elem) {
+        var Dat;
+        if (elem.getBoundingClientRect) {
+            // "правильный" вариант
+            Dat = getOffsetRect(elem);
+        } else {
+            // пусть работает хоть как-то
+            Dat = getOffsetSum(elem);
+        }
+        Dat.right = Dat.left + elem.offsetWidth;
+        Dat.bottom = Dat.top + elem.offsetHeight;
+        return Dat;
+    }
+
+    function getOffsetSum(elem) {
+        var top = 0, left = 0;
+        while (elem) {
+            top = top + parseInt(elem.offsetTop);
+            left = left + parseInt(elem.offsetLeft);
+            elem = elem.offsetParent;
+        }
+
+        return { top: top, left: left };
+    }
+
+    function getOffsetRect(elem) {
+        var box = elem.getBoundingClientRect();
+
+        var body = document.body;
+        var docElem = document.documentElement;
+
+        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
+        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
+
+        var clientTop = docElem.clientTop || body.clientTop || 0;
+        var clientLeft = docElem.clientLeft || body.clientLeft || 0;
+
+        var top = box.top + scrollTop - clientTop;
+        var left = box.left + scrollLeft - clientLeft;
+
+        return { top: Math.round(top), left: Math.round(left) };
+    }
+
     var Reader = (function () {
         function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache) {
             this.ArtID = ArtID;
@@ -52,6 +95,7 @@ var FB3Reader;
             this.Version = Version;
             this.PagesPositionsCache = PagesPositionsCache;
             // Basic class init
+            this.Destroy = false;
             this.HyphON = true;
             this.NColumns = 2;
             this.CacheForward = 6;
@@ -60,6 +104,8 @@ var FB3Reader;
             this.BookStyleNotesTemporaryOff = false;
             this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
             this.TicksFromSave = 0;
+            this.LineHeight = 0;
+            this.CachingDone = {};
 
             this.IdleOff();
         }
@@ -82,7 +128,11 @@ var FB3Reader;
             }
             this.CurStartPos = NewPos.slice(0);
             this.Bookmarks.Bookmarks[0].Range = { From: NewPos.slice(0), To: NewPos.slice(0) };
-            this.Bookmarks.Bookmarks[0].DateTime = moment().unix();
+            if (!this.Bookmarks.Bookmarks[0].SkipUpdateDatetime) {
+                this.Bookmarks.Bookmarks[0].DateTime = moment().unix();
+            } else {
+                this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = false;
+            }
         };
 
         Reader.prototype.Init = function (StartFrom) {
@@ -92,6 +142,7 @@ var FB3Reader;
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
                 _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
                 if (!_this.Bookmarks.ApplyPosition() && _this.CurStartPos) {
+                    _this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
                     _this.GoTO(_this.CurStartPos);
                 }
             });
@@ -220,6 +271,11 @@ var FB3Reader;
 
         Reader.prototype.GoToOpenPosition = function (NewPos) {
             clearTimeout(this.MoveTimeoutID);
+
+            if (NewPos[0] > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+                NewPos = [this.FB3DOM.TOC.length - 1];
+            }
+
             var NewInstr = [{ Start: NewPos }];
 
             var ShouldWeCachePositions = NewPos.length == 1 && NewPos[0] == 0;
@@ -304,7 +360,7 @@ var FB3Reader;
         Reader.prototype.GetCachedPage = function (NewPos) {
             for (var I = this.PagesPositionsCache.Length() - 1; I >= 0; I--) {
                 var Pos = this.PagesPositionsCache.Get(I).Range;
-                if (PosCompare(Pos.To, NewPos) >= 0 && PosCompare(Pos.From, NewPos) <= 0) {
+                if (PosCompare(Pos.To, NewPos) >= -1 && PosCompare(Pos.From, NewPos) <= 0) {
                     return I;
                 }
             }
@@ -313,7 +369,6 @@ var FB3Reader;
 
         Reader.prototype.StoreCachedPage = function (Range) {
             this.PagesPositionsCache.Set(Range.CacheAs, PRIClone(Range));
-            // 			this.SaveCache(); // slow - removed for now.
         };
 
         Reader.prototype.SearchForText = function (Text) {
@@ -350,6 +405,7 @@ var FB3Reader;
             this.CanvasW = this.Site.Canvas.clientWidth;
             this.CanvasH = this.Site.Canvas.clientHeight;
             this.TicksFromSave = 0;
+            this.LineHeight = this.BackgroundRenderFrame.GetLineHeight();
             this.LoadCache();
         };
 
@@ -407,7 +463,7 @@ var FB3Reader;
                         this.MoveTimeoutID = setTimeout(function () {
                             _this.PageForward();
                         }, 50);
-                    } else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1 || this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
+                    } else if (this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To[0] == -1 || this.Pages[this.CurVisiblePage + this.NColumns] && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
                         return;
                     } else {
                         this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);
@@ -504,7 +560,7 @@ var FB3Reader;
                 return undefined;
             }
             var Percent;
-            if (this.IsFullyInCache()) {
+            if (!(this.CurStartPage === undefined) && this.IsFullyInCache()) {
                 Percent = this.CurStartPage / this.PagesPositionsCache.LastPage();
             } else {
                 Percent = this.CurStartPos[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
@@ -519,17 +575,35 @@ var FB3Reader;
                 return undefined;
             }
 
-            while (!Node.id && Node.parentElement) {
-                Node = Node.parentElement;
+            if (!Node.id.match(/n(_\d+)+/)) {
+                return undefined;
             }
 
-            if (!Node.id.match(/n(_\d+)+/)) {
+            if (!Node.nodeName.match(/span/i)) {
+                var ElRect = GetElementRect(Node);
+
+                // too bad, this is a block, we have to search for it's text
+                var MayShift = Node.scrollWidth;
+                var NewX = X + 3;
+                while (NewX < ElRect.right && (!Node || !Node.nodeName.match(/span/i) || !Node.id.match(/n(_\d+)+/))) {
+                    NewX = NewX + 3;
+                    Node = this.Site.elementFromPoint(NewX, Y);
+                }
+                NewX = X - 3;
+                while (NewX > ElRect.left && (!Node || !Node.nodeName.match(/span/i) || !Node.id.match(/n(_\d+)+/))) {
+                    NewX = NewX - 3;
+                    Node = this.Site.elementFromPoint(NewX, Y);
+                }
+            }
+
+            if (!Node || !Node.nodeName.match(/span/i) || !Node.id.match(/n(_\d+)+/)) {
                 return undefined;
             }
 
             var Addr = Node.id.split('_');
             Addr.shift();
             Addr.shift();
+            FB3ReaderPage.NumericArray(Addr);
             return Addr;
         };
 
@@ -557,6 +631,7 @@ var FB3Reader;
                                 CurPage: this.CurStartPage,
                                 MaxPage: this.PagesPositionsCache.LastPage()
                             });
+                            this.CachingDone[this.FullKey()] = true;
                             return;
                         } else {
                             this.PagesPositionsCache.LastPage(0);
@@ -608,7 +683,9 @@ var FB3Reader;
         };
 
         Reader.prototype.SaveCache = function () {
-            this.PagesPositionsCache.Save(this.FullKey());
+            if (!this.CachingDone[this.FullKey()]) {
+                this.PagesPositionsCache.Save(this.FullKey());
+            }
         };
 
         Reader.prototype.LoadCache = function () {

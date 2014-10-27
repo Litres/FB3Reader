@@ -19,7 +19,6 @@ module FB3DOM {
 		t?: string;	// title
 		s: number;	// start root node N
 		e: number;	// end root node (including, use [0,-1] Pointer to get last block)
-		op: boolean;// Is this node unbreakable, should it fit on the page?
 		bookmarks?: {	// Number of currently existing bookmarks, by type (see FB3Bookmarks.IBookmark.Group)
 			g0?: number; // number of bookmarks type 0, this is the current position. <=0
 			g1?: number; // 1 bookmark
@@ -47,6 +46,7 @@ module FB3DOM {
 		h?: number;			// image height
 		s?: string;			// image src attribute
 		hr: number[];		// target internal xpath for internal hrefs
+		op: boolean;		// Is this node unbreakable, should it fit on ONE page, mo matter the cost?
 	}
 
 	export interface IDataDisposition {
@@ -103,6 +103,7 @@ module FB3DOM {
 		TOC: ITOC[];
 		DataChunks: IDataDisposition[];
 		MetaData: IMetaData;
+		PagesPositionsCache: FB3PPCache.IFB3PPCache;
 		ArtID2URL(Chunk?: string): string;
 		Bookmarks: FB3Bookmarks.IBookmarks[];
 		Init(HyphOn: boolean,

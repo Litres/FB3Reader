@@ -71,11 +71,12 @@ var FB3DOM;
 
     var DOM = (function (_super) {
         __extends(DOM, _super);
-        function DOM(Alert, Progressor, DataProvider) {
+        function DOM(Alert, Progressor, DataProvider, PagesPositionsCache) {
             _super.call(this, null, null, 0);
             this.Alert = Alert;
             this.Progressor = Progressor;
             this.DataProvider = DataProvider;
+            this.PagesPositionsCache = PagesPositionsCache;
             this.ActiveRequests = [];
             this.Ready = false;
             this.XPID = '';
@@ -180,6 +181,10 @@ var FB3DOM;
         };
 
         DOM.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
+            if (Range.From.length == 1 && this.Childs[Range.From[0]] && this.Childs[Range.From[0]].TagName == 'empty-line') {
+                Range.From[0]++; // We do not need empty-line at the start of the page,
+                // see FallOut for more hacks on this
+            }
             var FullBookmarksList = new Array;
             for (var I = 0; I < this.Bookmarks.length; I++) {
                 FullBookmarksList = FullBookmarksList.concat(this.Bookmarks[I].Bookmarks);
@@ -191,7 +196,7 @@ var FB3DOM;
             var LoadedChunk = CustomData.ChunkN;
             var Shift = this.DataChunks[LoadedChunk].s;
             for (var I = 0; I < Data.length; I++) {
-                this.Childs[I + Shift] = new _FB3DOM.FB3Tag(Data[I], this, I + Shift);
+                this.Childs[I + Shift] = _FB3DOM.TagClassFactory(Data[I], this, I + Shift, 0, 0, false); //new FB3Tag(Data[I], this, I + Shift);
             }
             this.DataChunks[LoadedChunk].loaded = 2;
 

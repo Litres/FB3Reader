@@ -12,6 +12,9 @@ module FB3Reader {
 		Height?: number;
 		NotesHeight?: number;
 	}
+	//export interface IBlockHeightsCache {
+	//}
+
 
 	export interface IFBReader { // Keep in mind - all action calls, like PageForward, are asyncroneous
 		Site: FB3ReaderSite.IFB3ReaderSite;
@@ -22,10 +25,12 @@ module FB3Reader {
 		BookStyleNotesTemporaryOff: boolean;
 		NColumns: number;
 		EnableBackgroundPreRender: boolean; // Should we scan the document?
-		TextPercent: number;	  // Percantage of the shown text - progress
+		TextPercent: number;	// Percantage of the shown text - progress
 		CurStartPos: IPosition;	// Adress of the first visible block, READ ONLY!
-		CurStartPage: number;		// Number of the first visible page (if any)
-
+		CurStartPage: number;	// Number of the first visible page (if any)
+		LineHeight: number;		// Height of the line in P - in pixels, to align blocks vertically
+		PagesPositionsCache: FB3PPCache.IFB3PPCache;
+		CurVisiblePage: number;	// ID of the first page visible, shared for FB3ReaderPage only
 		Version: string;
 
 		CanvasReadyCallback: ICanvasReadyCallback; // fired when the page rendering complete
@@ -54,5 +59,7 @@ module FB3Reader {
 												// changed CSS, resized canvas or some other distructive things
 		Redraw(): void;     // Lignt&fast version of page refresh - only updates bookmarks
 		GetVisibleRange(): FB3DOM.IRange;
+
+		Destroy: boolean; // hack for apps, like win8, when we change page, abort all
 	}
 }

@@ -2,6 +2,7 @@
 /// <reference path="../plugins/lz-string.d.ts" />
 var FB3PPCache;
 (function (FB3PPCache) {
+    FB3PPCache.MaxCacheRecords = 15;
     var SkipCache = false;
 
     var PPCache = (function () {
@@ -18,6 +19,7 @@ var FB3PPCache;
         PPCache.prototype.Reset = function () {
             this.CacheMarkupsList = null;
             this.PagesPositionsCache = new Array();
+            this.MarginsCache = {};
         };
 
         PPCache.prototype.Length = function () {
@@ -43,14 +45,15 @@ var FB3PPCache;
                         this.CacheMarkupsList.splice(I, 1);
                     }
                 }
-                if (this.CacheMarkupsList.length >= 25) {
+                if (this.CacheMarkupsList.length >= FB3PPCache.MaxCacheRecords) {
                     this.CacheMarkupsList.shift();
                 }
                 this.CacheMarkupsList.push({
                     Time: new Date,
                     Key: Key,
                     Cache: this.PagesPositionsCache,
-                    LastPage: this.LastPageN
+                    LastPage: this.LastPageN,
+                    MarginsCache: this.MarginsCache
                 });
 
                 // Keep in mind - next line is really, really slow
@@ -70,6 +73,7 @@ var FB3PPCache;
                 for (var I = 0; I < this.CacheMarkupsList.length; I++) {
                     if (this.CacheMarkupsList[I].Key == Key) {
                         this.PagesPositionsCache = this.CacheMarkupsList[I].Cache;
+                        this.MarginsCache = this.CacheMarkupsList[I].MarginsCache;
                         this.LastPageN = this.CacheMarkupsList[I].LastPage;
                         break;
                     }
@@ -99,6 +103,13 @@ var FB3PPCache;
             } else {
                 this.LastPageN = LastPageN;
             }
+        };
+        PPCache.prototype.SetMargin = function (XP, Margin) {
+            this.MarginsCache[XP] = Margin;
+        };
+
+        PPCache.prototype.GetMargin = function (XP) {
+            return this.MarginsCache[XP];
         };
         return PPCache;
     })();

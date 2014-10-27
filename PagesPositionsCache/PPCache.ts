@@ -2,18 +2,22 @@
 /// <reference path="../plugins/lz-string.d.ts" />
 
 module FB3PPCache {
+	export var MaxCacheRecords = 15;
 	var SkipCache = false; // For debug purposes
+
 	interface IPageRenderInstructionsCacheEntry {
 		Time: Date;
 		Key: string;
 		LastPage: number;
 		Cache: FB3Reader.IPageRenderInstruction[];
+		MarginsCache: any; // we are going to store a plain hash here for all "margined" elements
 	}
 
 	export class PPCache implements IFB3PPCache {
 		private PagesPositionsCache: FB3Reader.IPageRenderInstruction[];
 		private CacheMarkupsList: IPageRenderInstructionsCacheEntry[];
 		private LastPageN: number;
+		private MarginsCache: any; // we are going to store a plain hash here for all "margined" elements
 
 		constructor() {
 			this.Reset();
@@ -29,6 +33,7 @@ module FB3PPCache {
 		public Reset(): void {
 			this.CacheMarkupsList = null;
 			this.PagesPositionsCache = new Array();
+			this.MarginsCache = {};
 		}
 
 		public Length(): number {
@@ -54,7 +59,7 @@ module FB3PPCache {
 						this.CacheMarkupsList.splice(I, 1);
 					}
 				}
-				if (this.CacheMarkupsList.length >= 25) {
+				if (this.CacheMarkupsList.length >= MaxCacheRecords) {
 					this.CacheMarkupsList.shift();
 				}
 				this.CacheMarkupsList.push(
@@ -62,7 +67,8 @@ module FB3PPCache {
 							Time: new Date,
 							Key: Key,
 							Cache: this.PagesPositionsCache,
-							LastPage: this.LastPageN
+							LastPage: this.LastPageN,
+							MarginsCache: this.MarginsCache
 						}
 					);
 				// Keep in mind - next line is really, really slow
@@ -82,6 +88,7 @@ module FB3PPCache {
 				for (var I = 0; I < this.CacheMarkupsList.length; I++) {
 					if (this.CacheMarkupsList[I].Key == Key) {
 						this.PagesPositionsCache = this.CacheMarkupsList[I].Cache;
+						this.MarginsCache = this.CacheMarkupsList[I].MarginsCache;
 						this.LastPageN = this.CacheMarkupsList[I].LastPage;
 						break;
 					}
@@ -110,6 +117,13 @@ module FB3PPCache {
 			} else {
 				this.LastPageN = LastPageN;
 			}
+		}
+		public SetMargin(XP: string, Margin: number): void {
+			this.MarginsCache[XP] = Margin;
+		}
+
+		public GetMargin(XP: string): number {
+			return this.MarginsCache[XP];
 		}
 
 	}

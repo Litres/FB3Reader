@@ -1,6 +1,7 @@
 ﻿/// <reference path="FB3DOMHead.ts" />
 
 module FB3DOM {
+
 	export var MaxFootnoteHeight = 0.75;
 	var TagMapper = {
 		poem: 'div',
@@ -19,7 +20,7 @@ module FB3DOM {
 		nobr: 'span',
 		image: 'img',
 	};
-	var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author)$/;
+	export var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author|empty-line)$/;
 	var TagSkipDoublePadding = {
 		title: 1,
 		subtitle: 1,
@@ -28,6 +29,24 @@ module FB3DOM {
 		annotation: 1,
 		cite: 1
 	};
+
+	// FixMe - separate class for (at least) 'a' required, see if-else hacks in GetInitTag below
+	export function TagClassFactory(Data: IJSONBlock, Parent: IFB3Block,
+		ID: number, NodeN: number, Chars: number, IsFootnote: boolean): IFB3Block {
+		var Kid: IFB3Block;
+		if (typeof Data === "string") {
+			if (Parent.Data.f) {
+				Data = (<any> Data).replace(/[\[\]\{\}\(\)]+/g, '');
+			}
+			Kid = new FB3Text((<any> Data), Parent, ID, NodeN, Chars, IsFootnote);
+		} else if (Data.t == 'image') {
+			Kid = new FB3ImgTag(Data, Parent, ID, IsFootnote);
+		} else {
+			Kid = new FB3Tag(Data, Parent, ID, IsFootnote);
+		}
+		return Kid;
+	}
+
 
 	export function XPathCompare(Pos1: any[], Pos2: any[]): number {
 		// todo - this function is a hack around xpath ".05' endings, whould be done some better way
@@ -116,6 +135,10 @@ module FB3DOM {
 
 			for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
 
+				if (Bookmarks[Bookmark].Group == 0) { // current position, no need to draw it
+					continue;
+				}
+
 				var HowIsStart = XPathCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
 				var HowisEnd = XPathCompare(Bookmarks[Bookmark].XEnd, EffectiveXPath);
 
@@ -152,6 +175,11 @@ module FB3DOM {
 		public TagName: string;
 
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]):void {
+
+			// If someone asks for impossible - just ignore it. May happend when someone tries to go over the end
+			if (Range.From[0] > this.Childs.length - 1) {
+				Range.From = [this.Childs.length - 1];
+			}
 
 			// keep in mind after GetBookmarkClasses Bookmarks is cleaned of all unneeded bookmarks
 			var ClassNames = '';
@@ -226,15 +254,10 @@ module FB3DOM {
 				var Chars = 0;
 				for (var I = 0; I < Data.c.length; I++) {
 					var Itm = Data.c[I];
-					var Kid: IFB3Block;
+					var Kid = TagClassFactory(Itm, <IFB3Block> this, I + Base, NodeN, Chars, IsFootnote);
 					if (typeof Itm === "string") {
-						if (Data.f) {
-							Itm = Itm.replace(/[\[\]\{\}\(\)]+/g, '');
-						}
-						Kid = new FB3Text(Itm, this, I + Base, NodeN, Chars, IsFootnote);
 						Chars += Kid.Chars;
 					} else {
-						Kid = new FB3Tag(Itm, this, I + Base, IsFootnote);
 						NodeN += 2;
 						Chars = 0;
 					}
@@ -268,11 +291,7 @@ module FB3DOM {
 		}
 
 		public GetCloseTag(Range: IRange): string {
-			var Out = '</' + this.HTMLTagName() + '>';
-			if (this.TagName == 'image') {
-				Out += '</span></p>';
-			}
-			return Out;
+			return '</' + this.HTMLTagName() + '>';
 		}
 		private CutTop(Path: FB3Reader.IPosition): boolean {
 			for (var I = 0; I <= Path.length; I++) {
@@ -280,35 +299,16 @@ module FB3DOM {
 			}
 			return false;
 		}
-		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+
+		public ElementClasses(): string[] {
 			var ElementClasses = new Array();
-			if (this.CutTop(Range.From)) {
-				ElementClasses.push('cut_top');
-			}
-			
-			// FixMe - this is a weak detection, can't see last p in div splitted (see CutTop above, that's the right way)
-			if (Range.To[0] < this.Childs.length - 1) {
-				ElementClasses.push('cut_bot');
-			}
 
 			if (TagSkipDoublePadding[this.TagName] && this.CheckPrevTagName()) {
 				ElementClasses.push('skip_double');
 			}
 
-			if (MoreClasses) {
-				ElementClasses.push(MoreClasses);
-			}
-			//if (this.Data.xp && this.Data.xp.length) {
-			//	ElementClasses.push('xp_' + this.Data.xp.join('_'))
-			//}
-
 			if (this.IsFootnote) {
 				ElementClasses.push('footnote')
-			} else if (this.Data.f) {
-				ElementClasses.push('footnote_attached')
-				if (!BookStyleNotes) {
-					ElementClasses.push('footnote_clickable')
-				}
 			}
 
 			if (TagMapper[this.TagName] || this.TagName == 'title') {
@@ -317,54 +317,120 @@ module FB3DOM {
 			if (this.Data.nc) {
 				ElementClasses.push(this.Data.nc)
 			}
+			if (this.Data.op) {
+				ElementClasses.push('fit_to_page')
+			}
+			return ElementClasses
+		}
 
-			var Out: string[];
-
-			if (this.TagName == 'image') {
-				var W = this.Data.w;
-				var H = this.Data.h;
-				var Path = this.ArtID2URL(this.Data.s);
-				var pClass = 'tag_image-center' + (ElementClasses.length ? ' ' + ElementClasses.join(' ') : '');
-				Out = ['<p id="i_' + IDPrefix + this.XPID + '" class="' + pClass + '">' +
-					'<span id="ii_' + IDPrefix + this.XPID + '">'];
-				// Image is loo large to fit the screen - forcibly zoom it out
-				if (W > ViewPortW || H > ViewPortH) {
-					var Aspect = Math.min((ViewPortW - 1) / W, (ViewPortH - 1) / H);
-					W = Math.floor(W * Aspect);
-					H = Math.floor(H * Aspect);
-					var zoomEvent = ' data-path="' + Path + '" data-w="' + this.Data.w + '" data-h="' + this.Data.h + '"';
-					Out.push('<span class="span-zoom" id="iii_' + IDPrefix + this.XPID + '">' +
-						'<button class="button-zoom"' + zoomEvent + ' id="iiii_' + IDPrefix + this.XPID + '">' +
-						'Рисунок i' + Path.split('.i').pop() + ' </button></span>');
+		public InlineStyle(): string {
+			// top-level block elements, we want to align it to greed vertically
+			var InlineStyle = '';
+			if (!this.Parent.Parent) {
+				var Margin = (<IFB3DOM>this.Parent).PagesPositionsCache.GetMargin(this.XPID);
+				if (Margin) {
+					InlineStyle = 'margin-bottom: ' + Margin + 'px';
 				}
-				Out.push('<' + this.HTMLTagName());
-				Out.push(' width="' + W + '" height="' + H + '" src="' + Path + '" alt="-"');
-			} else if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr){
-				// Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
-				Out = ['<a href="about:blank" data-href="' + this.Data.hr + '"'];
-			} else if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr && this.Data.href) {
-					Out = ['<a href="' + this.Data.href + '" target="_top"'];
-			} else {
-				Out = ['<' + this.HTMLTagName()];
 			}
 
-			if (ElementClasses.length && this.TagName != 'image') {
+			if (InlineStyle) {
+				InlineStyle = ' style="' + InlineStyle + '"';
+			}
+			return InlineStyle;
+		}
+
+		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+			var ElementClasses = this.ElementClasses();
+
+			if (this.Data.f) {
+				ElementClasses.push('footnote_attached')
+				if (!BookStyleNotes) {
+					ElementClasses.push('footnote_clickable')
+				}
+			}
+			if (MoreClasses) {
+				ElementClasses.push(MoreClasses);
+			}
+
+			if (this.CutTop(Range.From)) {
+				ElementClasses.push('cut_top');
+			}
+
+			// FixMe - this is a weak detection, can't see last p in div splitted (see CutTop above, that's the right way)
+			if (Range.To[0] < this.Childs.length - 1) {
+				ElementClasses.push('cut_bot');
+			}
+
+
+			var InlineStyle = this.InlineStyle();
+
+			var Out: string[] = ['<'];
+
+			if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr){
+				// Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
+				Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
+			} else if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr && this.Data.href) {
+				Out.push('a href="' + this.Data.href + '" target="_top"');
+			} else {
+				Out.push(this.HTMLTagName());
+			}
+
+			if (ElementClasses.length) {
 				Out.push(' class="' + ElementClasses.join(' ') + '"');
 			}
-			//if (this.data.css) {
-			//	out += ' style="' + this.data.css + '"';
-			//}
+			Out.push(InlineStyle);
 
-			//			if (this.Data.i) {}
 			if (this.IsFootnote) {
-				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
-//				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '" style="max-height: ' + (ViewPortH * MaxFootnoteHeight).toFixed(0) + 'px">');
+//				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
+				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '" style="max-height: ' + (ViewPortH * MaxFootnoteHeight).toFixed(0) + 'px">');
 			} else if (this.Data.f && !BookStyleNotes) {
-				Out.push(' onclick="alert(1)" href="#">');
+				Out.push(' id="n_' + IDPrefix + this.XPID + '" onclick="alert(1)" href="#">');
 			}  else {
 				Out.push(' id="n_' + IDPrefix + this.XPID + '">');
 			}
 			return Out;
+		}
+	}
+	export class FB3ImgTag extends FB3Tag implements IFB3Block {
+		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+			var ElementClasses = this.ElementClasses();
+
+			if (MoreClasses) {
+				ElementClasses.push(MoreClasses);
+			}
+			ElementClasses.push('');
+
+			var InlineStyle = this.InlineStyle();
+
+			var Path = this.ArtID2URL(this.Data.s);
+			// This is kind of a hack, normally images a inline, but if we have op:1 this mians it's block-level one
+			var TagName = this.HTMLTagName();
+			var Out = ['<' + TagName + ' id="ii_' + IDPrefix + this.XPID + '"' + InlineStyle];
+
+			if (ElementClasses.length) {
+				Out.push(' class="' + ElementClasses.join(' ') + '"');
+			}
+			Out.push('><img width = "' + this.Data.w + '" height = "' + this.Data.h + '" src = "' + Path + '" alt = "-"');
+
+			Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');
+			return Out;
+		}
+		public HTMLTagName(): string{
+			// FixMe - uncomment this when new json generation finished for all books.
+//			return this.Data.op ? 'div' : 'span';
+			return 'div'; // Only div may have fixed width|height
+		}
+		public InlineStyle(): string {
+			// top-level block elements, we want to align it to greed vertically
+			var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h+'px;';
+			if (!this.Parent.Parent) {
+				var Margin = (<IFB3DOM>this.Parent).PagesPositionsCache.GetMargin(this.XPID);
+				if (Margin) {
+					InlineStyle += 'margin-bottom: ' + Margin + 'px';
+				}
+			}
+
+			return ' style="' + InlineStyle + '"';
 		}
 	}
 }

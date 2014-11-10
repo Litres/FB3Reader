@@ -12,15 +12,15 @@ var FB3Bookmarks;
             this.Bookmarks = new Array();
             this.DeletedBookmarks = {};
             this.AddBookmark(new Bookmark(this));
-            this.WaitForData = true;
+            this.WaitForData = false;
             if (window.ActiveXObject) {
                 this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
             } else {
                 this.XMLHttp = new XMLHttpRequest();
             }
-            this.Host = '/';
 
-            // this.Host = 'http://www.litres.ru/'; // TODO: replace
+            //this.Host = '/';
+            this.Host = 'http://www.litres.ru/'; // TODO: replace
             this.SID = LitresSID;
             this.SaveAuto = false;
             this.LocalXML = LitresLocalXML;

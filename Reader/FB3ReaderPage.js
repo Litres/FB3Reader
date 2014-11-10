@@ -275,6 +275,7 @@ var FB3ReaderPage;
                 this.ThreadsRunning++;
 
                 //				console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
+                clearTimeout(this.RenderBreakerTimeout);
                 this.RenderBreakerTimeout = setTimeout(function () {
                     _this.ThreadsRunning--;
 
@@ -415,6 +416,7 @@ var FB3ReaderPage;
                 }
 
                 //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
+                clearTimeout(this.RenderMoreTimeoutApply);
                 this.RenderMoreTimeoutApply = setTimeout(function () {
                     _this.Next.DrawInit(_this.PagesToRender);
                     _this.RenderMoreTimeoutApply = 0;
@@ -527,6 +529,7 @@ var FB3ReaderPage;
 
                     //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
                     this.ThreadsRunning++;
+                    clearTimeout(this.RenderBreakerTimeoutFallout);
                     this.RenderBreakerTimeoutFallout = setTimeout(function () {
                         _this.ThreadsRunning--;
 
@@ -576,6 +579,7 @@ var FB3ReaderPage;
                             //this.FallOut();
                             //							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
                             this.ThreadsRunning++;
+                            clearTimeout(this.RenderMoreTimeout);
                             this.RenderMoreTimeout = setTimeout(function () {
                                 _this.ThreadsRunning--;
 
@@ -659,6 +663,7 @@ var FB3ReaderPage;
                 if (FB3ReaderPage.BreakIterationEvery && new Date().getTime() - IterationStartedAt > FB3ReaderPage.BreakIterationEvery) {
                     //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
                     this.ThreadsRunning++;
+                    clearTimeout(this.RenderMoreTimeoutFallout);
                     this.RenderMoreTimeoutFallout = setTimeout(function () {
                         _this.ThreadsRunning--;
 

@@ -13,6 +13,8 @@ module FB3DataProvider {
 			Callback: IJSonLoadedCallback,
 			Progressor: FB3ReaderSite.ILoadProgress,
 			CustomData?: any);
+		Reset(): void;	// stops any kind of activities, ignores all data arriving from previour requests
+						// we believe data is browser-cached well, so no need to wory about it's dropped
 		ArtID2URL: IArtID2URL;
 	}
 }

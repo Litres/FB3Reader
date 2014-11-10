@@ -366,7 +366,7 @@ var FB3DOM;
             if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr) {
                 // Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
                 Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
-            } else if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr && this.Data.href) {
+            } else if (this.TagName == 'a' && !this.IsFootnote && this.Data.href) {
                 Out.push('a href="' + this.Data.href + '" target="_top"');
             } else {
                 Out.push(this.HTMLTagName());

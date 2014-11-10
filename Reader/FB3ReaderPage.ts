@@ -368,7 +368,8 @@ module FB3ReaderPage {
 				this.QuickFallautState.CollectedHeight = 0;
 				this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes, false);
 				this.ThreadsRunning++;
-//				console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
+				//				console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
+				clearTimeout(this.RenderBreakerTimeout);
 				this.RenderBreakerTimeout = setTimeout(() => {
 					this.ThreadsRunning--;
 //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
@@ -514,6 +515,7 @@ module FB3ReaderPage {
 					To2From(this.PagesToRender[0].Start);
 				}
 				//				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
+				clearTimeout(this.RenderMoreTimeoutApply);
 				this.RenderMoreTimeoutApply = setTimeout(() => { this.Next.DrawInit(this.PagesToRender); this.RenderMoreTimeoutApply = 0; }, SemiSleepTimeout);
 
 
@@ -637,6 +639,7 @@ module FB3ReaderPage {
 					FallCalls++;
 //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
 					this.ThreadsRunning++;
+					clearTimeout(this.RenderBreakerTimeoutFallout);
 					this.RenderBreakerTimeoutFallout = setTimeout(() => {
 						this.ThreadsRunning--;
 //						console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
@@ -687,6 +690,7 @@ module FB3ReaderPage {
 							//this.FallOut();
 //							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
 							this.ThreadsRunning++;
+							clearTimeout(this.RenderMoreTimeout);
 							this.RenderMoreTimeout = setTimeout(() => {
 								this.ThreadsRunning--;
 //								console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
@@ -769,6 +773,7 @@ module FB3ReaderPage {
 				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
 					//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
 					this.ThreadsRunning++;
+					clearTimeout(this.RenderMoreTimeoutFallout);
 					this.RenderMoreTimeoutFallout = setTimeout(() => {
 						this.ThreadsRunning--;
 						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');

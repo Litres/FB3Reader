@@ -137,13 +137,12 @@ var FB3Reader;
 
         Reader.prototype.Init = function (StartFrom) {
             var _this = this;
-            this.CurStartPos = StartFrom;
             this.PrepareCanvas();
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
                 _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
                 if (!_this.Bookmarks.ApplyPosition() && _this.CurStartPos) {
                     _this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
-                    _this.GoTO(_this.CurStartPos);
+                    _this.GoTO(StartFrom);
                 }
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
@@ -154,9 +153,12 @@ var FB3Reader;
             });
         };
 
-        Reader.prototype.GoTO = function (NewPos) {
+        Reader.prototype.GoTO = function (NewPos, Force) {
             if (!NewPos || NewPos.length == 0) {
                 this.Site.Alert('Bad adress targeted');
+                return;
+            }
+            if (!Force && this.CurStartPos && PosCompare(this.CurStartPos, NewPos) == 0) {
                 return;
             }
             clearTimeout(this.MoveTimeoutID);
@@ -721,7 +723,7 @@ var FB3Reader;
             for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].Ready = false;
             }
-            this.GoTO(this.CurStartPos.slice(0));
+            this.GoTO(this.CurStartPos.slice(0), true);
         };
 
         Reader.prototype.StopRenders = function () {
@@ -731,11 +733,12 @@ var FB3Reader;
         };
 
         Reader.prototype.Reset = function () {
+            this.FB3DOM.Reset();
             this.StopRenders();
             this.BackgroundRenderFrame.Reset();
             this.PrepareCanvas();
             this.CurVisiblePage = 0;
-            this.GoTO(this.CurStartPos.slice(0));
+            this.GoTO(this.CurStartPos.slice(0), true);
         };
 
         Reader.prototype.GetVisibleRange = function () {

@@ -47,13 +47,17 @@ var FB3DOM;
                     var AllBookmarks = new Array();
                     this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
                     this.OnGetDone(PageData);
-                } else {
+                } else if (this.OnLoadDone) {
                     this.OnLoadDone();
                 }
                 return true;
             } else {
                 return false;
             }
+        };
+        AsyncLoadConsumer.prototype.Reset = function () {
+            this.OnLoadDone = null;
+            this.OnGetDone = null;
         };
         return AsyncLoadConsumer;
     })();
@@ -83,6 +87,11 @@ var FB3DOM;
             this.XPath = new Array();
             this.Bookmarks = new Array();
         }
+        DOM.prototype.Reset = function () {
+            for (var I = 0; I < this.ActiveRequests.length; I++) {
+                this.ActiveRequests[I].Reset();
+            }
+        };
         DOM.prototype.GetCloseTag = function (Range) {
             return '';
         };

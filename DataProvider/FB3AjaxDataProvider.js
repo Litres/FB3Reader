@@ -11,20 +11,37 @@ var FB3DataProvider;
             this.LitresURL = LitresURL;
             this.ArtID2URL = ArtID2URL;
             this.BaseURL = LitresURL;
+            this.CurrentRequestID = 0;
+            this.ActiveRequests = {};
         }
         AJAXDataProvider.prototype.Request = function (URL, Callback, Progressor, CustomData) {
-            new AjaxLoader(URL, Callback, Progressor, CustomData);
+            var _this = this;
+            this.CurrentRequestID++;
+            this.ActiveRequests['req' + this.CurrentRequestID] = Callback;
+            new AjaxLoader(URL, function (ID, Data, CustomData) {
+                return _this.CallbackWrap(ID, Data, CustomData);
+            }, Progressor, this.CurrentRequestID, CustomData);
+        };
+        AJAXDataProvider.prototype.CallbackWrap = function (ID, Data, CustomData) {
+            var Func = this.ActiveRequests['req' + this.CurrentRequestID];
+            if (Func) {
+                this.ActiveRequests['req' + this.CurrentRequestID](Data, CustomData);
+            }
+        };
+        AJAXDataProvider.prototype.Reset = function () {
+            this.ActiveRequests = {};
         };
         return AJAXDataProvider;
     })();
     FB3DataProvider.AJAXDataProvider = AJAXDataProvider;
 
     var AjaxLoader = (function () {
-        function AjaxLoader(URL, Callback, Progressor, CustomData) {
+        function AjaxLoader(URL, Callback, Progressor, ID, CustomData) {
             var _this = this;
             this.URL = URL;
             this.Callback = Callback;
             this.Progressor = Progressor;
+            this.ID = ID;
             this.CustomData = CustomData;
             this.Progressor.HourglassOn(this, false, 'Loading ' + URL);
             this.Req = this.HttpRequest();
@@ -53,7 +70,7 @@ var FB3DataProvider;
             } else {
                 this.Progressor.HourglassOff(this);
                 if (this.Req.status == 200) {
-                    this.Callback(this.parseJSON(this.Req.responseText), this.CustomData);
+                    this.Callback(this.ID, this.parseJSON(this.Req.responseText), this.CustomData);
                 } else {
                     this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
                 }

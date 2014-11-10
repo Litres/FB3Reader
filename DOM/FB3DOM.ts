@@ -21,13 +21,17 @@ module FB3DOM {
 					var AllBookmarks = new Array();
 					this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
 					this.OnGetDone(PageData);
-				} else {
+				} else if (this.OnLoadDone) {
 					this.OnLoadDone();
 				}
 				return true;
 			} else {
 				return false;
 			}
+		}
+		Reset(): void {
+			this.OnLoadDone = null;
+			this.OnGetDone = null;
 		}
 		constructor(private FB3DOM: IFB3DOM,
 			private WaitedBlocks: number[],
@@ -85,6 +89,11 @@ module FB3DOM {
 			this.Bookmarks = new Array();
 		}
 
+		public Reset(): void {
+			for (var I = 0; I < this.ActiveRequests.length; I++) {
+				this.ActiveRequests[I].Reset();
+			}
+		}
 		public GetCloseTag(Range: IRange): string {
 			return '';
 		}

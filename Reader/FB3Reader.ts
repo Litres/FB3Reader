@@ -176,13 +176,12 @@ module FB3Reader {
 		}
 
 		public Init(StartFrom: IPosition): void {
-			this.CurStartPos = StartFrom;
 			this.PrepareCanvas();
 			this.FB3DOM.Init(this.HyphON, this.ArtID, () => {
 				this.Site.HeadersLoaded(this.FB3DOM.MetaData);
 				if (!this.Bookmarks.ApplyPosition() && this.CurStartPos) {
 					this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
-					this.GoTO(this.CurStartPos);
+					this.GoTO(StartFrom);
 				}
 			});
 			this.Bookmarks.FB3DOM = this.FB3DOM;
@@ -191,10 +190,13 @@ module FB3Reader {
 			this.Bookmarks.LoadFromCache(() => { this.Bookmarks.ApplyPosition() });
 		}
 
-		public GoTO(NewPos: IPosition) {
+		public GoTO(NewPos: IPosition, Force?: boolean) {
 			if (!NewPos || NewPos.length == 0) {
 				this.Site.Alert('Bad adress targeted');
 				return;
+			}
+			if (!Force && this.CurStartPos && PosCompare(this.CurStartPos, NewPos) == 0) {
+				return; // Already there
 			}
 			clearTimeout(this.MoveTimeoutID);
 			this.IdleOff();
@@ -767,7 +769,7 @@ module FB3Reader {
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].Ready = false;
 			}
-			this.GoTO(this.CurStartPos.slice(0));
+			this.GoTO(this.CurStartPos.slice(0),true);
 		}
 
 		private StopRenders() {
@@ -777,11 +779,12 @@ module FB3Reader {
 		}
 
 		public Reset(): void {
+			this.FB3DOM.Reset();
 			this.StopRenders();
 			this.BackgroundRenderFrame.Reset();
 			this.PrepareCanvas();
 			this.CurVisiblePage = 0;
-			this.GoTO(this.CurStartPos.slice(0));
+			this.GoTO(this.CurStartPos.slice(0), true);
 		}
 
 		public GetVisibleRange(): FB3DOM.IRange {

@@ -41,7 +41,7 @@ module FB3Reader {
 		FB3DOM: FB3DOM.IFB3DOM; // Access to reader's DOM provider
 
 		TOC(): FB3DOM.ITOC[];		// Table of contents (clone, with ITOC.bookmarks filled)
-		GoTO(NewPos: IPosition): void;
+		GoTO(NewPos: IPosition, Force?:boolean): void;
 		GoToOpenPosition(NewPos: IPosition): void;
 		GoToXPath(XP: FB3DOM.IXPath): void;
 		ResetCache(): void;

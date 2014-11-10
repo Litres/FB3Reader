@@ -21,7 +21,6 @@
     <TypeScriptCompile Include="Bookmarks\FB3Bookmarks.ts" />
     <TypeScriptCompile Include="Bookmarks\FB3BookmarksHead.ts" />
     <TypeScriptCompile Include="DataProvider\FB3DataProviderHead.ts" />
-    <Content Include="default.htm" />
     <TypeScriptCompile Include="DOM\FB3DOM.ts" />
     <TypeScriptCompile Include="DOM\FB3DOMBlock.ts" />
     <Content Include="DOM\FB3DOMHead.ts" />
@@ -37,6 +36,7 @@
     <TypeScriptCompile Include="PagesPositionsCache\PPCache.ts" />
     <TypeScriptCompile Include="Reader\FB3ReaderPage.ts" />
     <Content Include="Site\FB3ReaderSiteHead.ts" />
+    <TypeScriptCompile Include="Site\LocalBookmarks.ts" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />

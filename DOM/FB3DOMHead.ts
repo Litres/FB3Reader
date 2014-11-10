@@ -130,6 +130,7 @@ module FB3DOM {
 			ViewPortH: number,
 			PageData: IPageContainer);
 		XPChunk(X: IXPath): number;
+		Reset(): void; // Stop all callbacks (leaving some internal processing)
 
 	}
 

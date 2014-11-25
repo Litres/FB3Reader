@@ -4,18 +4,18 @@
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
 /// <reference path="Bookmarks/FB3Bookmarks.ts" />
 /// <reference path="PagesPositionsCache/PPCache.ts" />
+/// <reference path="Site/LocalBookmarks.ts" />
 var AFB3Reader;
 var AFB3PPCache;
 var BookmarksProcessor;
 var start;
 var LocalArtID = 178297;
 var Temp = 0;
-
+var LitresLocalBookmarks = new LocalBookmarks.LocalBookmarksClass(LocalArtID.toString());
 window.onload = function () {
     document.getElementById('reader').addEventListener('touchstart', TapStart, false);
     document.getElementById('reader').addEventListener('touchmove', TapMove, false);
     document.getElementById('reader').addEventListener('touchend', TapEnd, false);
-
     //	var ArtID = '178297';
     var Version = '1.1';
     var UUID = 'd4e7833a-51c6-102c-9c5b-e8b0b7836b8f';
@@ -25,7 +25,7 @@ window.onload = function () {
     var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(), ArtID2URL);
     AFB3PPCache = new FB3PPCache.PPCache();
     var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider, AFB3PPCache);
-    BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
+    BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID, LitresLocalBookmarks.GetCurrentArtBookmarks());
     BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
     AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, Version, AFB3PPCache);
     AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
@@ -34,26 +34,24 @@ window.onload = function () {
         document.getElementById('REnderEnd').innerHTML = (Temp++).toString();
     };
     AFB3Reader.Init([4417]);
-    window.addEventListener('resize', function () {
-        return AFB3Reader.AfterCanvasResize();
-    });
-
+    // AFB3Reader.Init(LitresLocalBookmarks.GetCurrentPosition()); // start from localBookmarks
+    window.addEventListener('resize', function () { return AFB3Reader.AfterCanvasResize(); });
     //	ShowPosition();
     start = new Date().getTime();
 };
-
 function ArtID2URL(ArtID, Chunk) {
     var OutURL = '/DataProvider/AjaxExample/' + LocalArtID + '.';
     if (Chunk == null) {
         OutURL += 'toc.js';
-    } else if (Chunk.match(/\./)) {
+    }
+    else if (Chunk.match(/\./)) {
         OutURL += Chunk;
-    } else {
+    }
+    else {
         OutURL += FB3DataProvider.zeroPad(Chunk, 3) + '.js';
     }
     return OutURL;
 }
-
 function GetSID() {
     var URL = decodeURIComponent(window.location.href);
     var SID = URL.match(/\bsid=([0-9a-zA-Z]+)\b/);
@@ -63,11 +61,11 @@ function GetSID() {
             return 'null';
         }
         return Cookies[1];
-    } else {
+    }
+    else {
         return SID[1];
     }
 }
-
 function GetBaseURL() {
     var URL = decodeURIComponent(window.location.href);
     var BaseURL = URL.match(/\bbaseurl=([0-9\/a-z\.]+)/i);
@@ -76,12 +74,10 @@ function GetBaseURL() {
     }
     return BaseURL[1];
 }
-
 var MarkupProgress;
 var NativeNote;
 var RoundedNote;
 var DialogShown;
-
 var TouchMoving = false;
 var TouchData;
 function TapStart(e) {
@@ -98,26 +94,25 @@ function TapEnd(e) {
     if (!TouchMoving) {
         if (TouchData.pageX * 1 < screen.width * 0.4) {
             Pagebackward();
-        } else if (TouchData.pageX * 1 > screen.width * 0.6) {
+        }
+        else if (TouchData.pageX * 1 > screen.width * 0.6) {
             PageForward();
         }
         return false;
     }
 }
-
 function MouseMove(Evt) {
     if (NativeNote && !MenuShown && NativeNote.Group == 3 && !DialogShown) {
         var newNote = NativeNote.RoundClone(false);
         var X = Evt.clientX;
         var Y = Evt.clientY;
-
         // hack for touch-based devices
         if (!isRelativeToViewport())
             X += window.pageXOffset, Y += window.pageYOffset;
-
         if (!newNote.ExtendToXY(X, Y, false)) {
             return undefined;
-        } else {
+        }
+        else {
             NativeNote.Detach();
             NativeNote = newNote;
             BookmarksProcessor.AddBookmark(NativeNote);
@@ -125,12 +120,12 @@ function MouseMove(Evt) {
         }
     }
 }
-
 function InitNote(NoteType) {
     if (NoteType == 'note') {
         MarkupProgress = 'selectstart';
         NativeNote.Group = 3;
-    } else {
+    }
+    else {
         RoundedNote = undefined;
         NativeNote = NativeNote.RoundClone(true);
         NativeNote.Group = 1;
@@ -141,14 +136,12 @@ function InitNote(NoteType) {
     }
     HideMenu();
 }
-
 function FinishNote() {
     NativeNote.Detach();
     HideMenu();
     NativeNote.Group = 3;
     ShowDialog(NativeNote);
 }
-
 function CancelNote(NoDestroy) {
     if (!NoDestroy) {
         NativeNote.Detach();
@@ -158,7 +151,6 @@ function CancelNote(NoDestroy) {
     HideMenu();
     AFB3Reader.Redraw();
 }
-
 var MenuShown;
 function ShowMenu(e) {
     if (NativeNote) {
@@ -170,26 +162,24 @@ function ShowMenu(e) {
     }
     var X = e.clientX;
     var Y = e.clientY;
-
     // hack for touch-based devices
     if (!isRelativeToViewport())
         X += window.pageXOffset, Y += window.pageYOffset;
-
     if (MarkupProgress == 'selectstart') {
         MenuShown = 'SelectEnd';
         if (!NativeNote.ExtendToXY(X, Y, false)) {
             return undefined;
         }
-    } else {
+    }
+    else {
         MenuShown = 'SelectStart';
         if (!NativeNote.InitFromXY(X, Y, false)) {
             NativeNote = undefined;
             return undefined;
         }
     }
-
-    var posx = X + (3 + window.pageXOffset) + 'px';
-    var posy = Y + (3 + window.pageYOffset) + 'px';
+    var posx = X + (3 + window.pageXOffset) + 'px'; //Left Position of Mouse Pointer
+    var posy = Y + (3 + window.pageYOffset) + 'px'; //Top Position of Mouse Pointer
     document.getElementById(MenuShown).style.position = 'absolute';
     document.getElementById(MenuShown).style.display = 'inline';
     document.getElementById(MenuShown).style.left = posx;
@@ -202,24 +192,20 @@ function HideMenu() {
         MenuShown = undefined;
     }
 }
-
 function FinishAll() {
     CancelNote(true);
     HideDialog();
 }
-
 function DestroyBookmark() {
     NativeNote.Detach();
     DialogBookmark.Detach();
     FinishAll();
     AFB3Reader.Redraw();
 }
-
 function HideAll() {
     HideMenu();
     HideDialog();
 }
-
 var DialogBookmark;
 function ShowDialog(Bookmark) {
     DialogBookmark = Bookmark;
@@ -234,7 +220,6 @@ function ShowDialog(Bookmark) {
     document.getElementById('notedialog').style.display = 'block';
     DialogShown = true;
 }
-
 function RoundNoteUp() {
     DialogBookmark.Detach();
     if (document.getElementById('wholepara').checked) {
@@ -242,19 +227,18 @@ function RoundNoteUp() {
             RoundedNote = DialogBookmark.RoundClone(true);
         }
         ShowDialog(RoundedNote);
-    } else {
+    }
+    else {
         ShowDialog(NativeNote);
     }
     AFB3Reader.Redraw();
 }
-
 function HideDialog() {
     document.getElementById('notedialog').style.display = 'none';
     document.getElementById('wholepara').checked = false;
     document.getElementById('wholepara').disabled = false;
     DialogShown = false;
 }
-
 function ShowPosition() {
     document.getElementById('CurPos').innerHTML = AFB3Reader.CurStartPos.join('/');
     document.getElementById('CurPosPercent').innerHTML = AFB3Reader.CurPosPercent() ? AFB3Reader.CurPosPercent().toFixed(2) : '?';
@@ -263,22 +247,18 @@ function PageForward() {
     AFB3Reader.PageForward();
     ShowPosition();
 }
-
 function Pagebackward() {
     AFB3Reader.PageBackward();
     ShowPosition();
 }
-
 function GoToPercent() {
     AFB3Reader.GoToPercent(parseFloat(document.getElementById('gotopercent').value));
     ShowPosition();
 }
-
 function ShowTOC() {
     document.getElementById('tocdiv').innerHTML = Toc2Div(AFB3Reader.TOC());
     document.getElementById('tocdiv').style.display = "block";
 }
-
 function Toc2Div(TOCS) {
     var Out = '';
     for (var J = 0; J < TOCS.length; J++) {
@@ -299,20 +279,16 @@ function Toc2Div(TOCS) {
     }
     return Out;
 }
-
 function GoToc(S) {
     AFB3Reader.GoTO([S]);
     CloseBookmarksList();
 }
-
 function Bookmark2Div(Bookmark) {
     return '<div class="bookmarkdiv"><div style="float:right"><a href="javascript:DropBookmark(' + Bookmark.N + ')">[X]</a></div><a href="javascript:ShowBookmark(' + Bookmark.N + ')">' + Bookmark.Title + '</a></div>';
 }
-
 function ShowBookmark(N) {
     AFB3Reader.GoTO(AFB3Reader.Bookmarks.Bookmarks[N].Range.From);
 }
-
 function ManageBookmarks() {
     document.getElementById('bookmarksmandiv').style.display = "block";
     var Bookmarks = '';
@@ -321,37 +297,31 @@ function ManageBookmarks() {
     }
     document.getElementById('bookmarkslist').innerHTML = Bookmarks;
 }
-
 function CloseBookmarksList() {
     document.getElementById('tocdiv').style.display = "none";
     document.getElementById('bookmarksmandiv').style.display = "none";
 }
-
 function DropBookmark(I) {
     AFB3Reader.Bookmarks.Bookmarks[I].Detach();
     ManageBookmarks();
 }
-
 function Save() {
     console.log('save button clicked');
+    LitresLocalBookmarks.StoreBookmarks(BookmarksProcessor.MakeStoreXML());
     BookmarksProcessor.Store();
 }
 function Load() {
     console.log('load button clicked');
     BookmarksProcessor.ReLoad();
 }
-
 function PrepareCSS() {
     var Columns = parseInt(document.getElementById('columns').value);
     var Spacing = document.getElementById('spacing').value;
     var FontFace = document.getElementById('fontface').value;
-
     var FontSize = document.getElementById('fontsize').value;
     var Colors = document.getElementById('Colors').value.split('/');
-
     // Colors does not mater for page size, AFB3Reader.NColumns already used internally
     AFB3Reader.Site.Key = Spacing + ':' + FontFace + ':' + FontSize;
-
     AFB3Reader.NColumns = Columns;
     changecss('#FB3ReaderHostDiv', 'line-height', Spacing);
     changecss('#FB3ReaderHostDiv', 'font-family', FontFace);
@@ -359,55 +329,50 @@ function PrepareCSS() {
     changecss('#FB3ReaderHostDiv', 'background-color', Colors[0]);
     changecss('#FB3ReaderHostDiv', 'color', Colors[1]);
 }
-
 function ApplyStyle() {
     PrepareCSS();
     AFB3Reader.Reset();
 }
-
 // https://github.com/moll/js-element-from-point/blob/master/index.js
 var relativeToViewport;
 function isRelativeToViewport() {
     if (relativeToViewport != null)
         return relativeToViewport;
-
     var x = window.pageXOffset ? window.pageXOffset + window.innerWidth - 1 : 0;
     var y = window.pageYOffset ? window.pageYOffset + window.innerHeight - 1 : 0;
     if (!x && !y)
         return true;
-
     // Test with a point larger than the viewport. If it returns an element,
     // then that means elementFromPoint takes page coordinates.
     return relativeToViewport = !document.elementFromPoint(x, y);
 }
-
 function GoXPath(NewPos) {
     AFB3Reader.GoTO(NewPos);
 }
-
 function changecss(theClass, element, value) {
     //Last Updated on July 4, 2011
     //documentation for this script at
     //http://www.shawnolson.net/a/503/altering-css-class-attributes-with-javascript.html
     var cssRules;
     var doc = document;
-
     for (var S = 0; S < doc.styleSheets.length; S++) {
-        try  {
+        try {
             doc.styleSheets[S].insertRule(theClass + ' { ' + element + ': ' + value + '; }', doc.styleSheets[S][cssRules].length);
-        } catch (err) {
-            try  {
+        }
+        catch (err) {
+            try {
                 doc.styleSheets[S].addRule(theClass, element + ': ' + value + ';');
-            } catch (err) {
-                try  {
+            }
+            catch (err) {
+                try {
                     if (doc.styleSheets[S]['rules']) {
                         cssRules = 'rules';
-                    } else if (doc.styleSheets[S]['cssRules']) {
-                        cssRules = 'cssRules';
-                    } else {
-                        //no rules found... browser unknown
                     }
-
+                    else if (doc.styleSheets[S]['cssRules']) {
+                        cssRules = 'cssRules';
+                    }
+                    else {
+                    }
                     for (var R = 0; R < doc.styleSheets[S][cssRules].length; R++) {
                         if (doc.styleSheets[S][cssRules][R].selectorText == theClass) {
                             if (doc.styleSheets[S][cssRules][R].style[element]) {
@@ -416,7 +381,8 @@ function changecss(theClass, element, value) {
                             }
                         }
                     }
-                } catch (err) {
+                }
+                catch (err) {
                 }
             }
         }

@@ -8,9 +8,7 @@ var FB3ReaderSite;
             this.CanStoreBookmark = false;
             this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
             this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
-            this.Alert = function (Message) {
-                return _this.Progressor.Alert(Message);
-            };
+            this.Alert = function (Message) { return _this.Progressor.Alert(Message); };
             this.Key = 'Times:16';
         }
         ExampleSite.prototype.getElementById = function (elementId) {
@@ -25,6 +23,7 @@ var FB3ReaderSite;
             if (Data.CurPage) {
                 document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' + (Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
             }
+            LitresLocalBookmarks.SetCurrentPosition(Data.Pos);
         };
         ExampleSite.prototype.BookCacheDone = function (Data) {
         };
@@ -46,13 +45,11 @@ var FB3ReaderSite;
             // show full-scale contents of the element
             alert(HTML);
         };
-
         ExampleSite.prototype.HistoryHandler = function (Pos) {
         };
         return ExampleSite;
     })();
     FB3ReaderSite.ExampleSite = ExampleSite;
-
     var ExampleProgressor = (function () {
         function ExampleProgressor(AlertSpan, MessSpan, ProgressSpan) {
             this.AlertSpan = AlertSpan;
@@ -93,15 +90,16 @@ var FB3ReaderSite;
             if (!HaveLive) {
                 this.Hourglasses = {};
                 this.Progresses = {};
-                //				document.body.style.cursor = '';
-            } else {
+            }
+            else {
                 this.Progress(Owner, 100);
             }
         };
         ExampleProgressor.prototype.Tick = function (Owner) {
             if (!this.Progresses[Owner]) {
                 this.Progresses[Owner] = 1;
-            } else if (this.Progresses[Owner] < 99) {
+            }
+            else if (this.Progresses[Owner] < 99) {
                 this.Progresses[Owner] += 1;
             }
             this.Progress(Owner, this.Progresses[Owner]);

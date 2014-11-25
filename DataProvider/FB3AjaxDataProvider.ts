@@ -82,11 +82,11 @@ module FB3DataProvider {
 		}
 		private onTransferFailed(e: ProgressEvent) {
 			this.Progressor.HourglassOff(this);
-			this.Progressor.Alert('Failed to load "' + URL + '"');
+			this.Progressor.Alert('Failed to load "' + this.URL + '"');
 		}
 		private onTransferAborted(e: ProgressEvent) {
 			this.Progressor.HourglassOff(this);
-			this.Progressor.Alert('Failed to load "' + URL + '" (interrupted)');
+			this.Progressor.Alert('Failed to load "' + this.URL + '" (interrupted)');
 		}
 
 		private HttpRequest(): XMLHttpRequest {

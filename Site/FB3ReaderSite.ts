@@ -27,6 +27,7 @@ module FB3ReaderSite {
 				document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' +
 				(Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
 			}
+			LitresLocalBookmarks.SetCurrentPosition(Data.Pos);
 		}
 		public BookCacheDone(Data: ITurnPageData) {}
 		public StoreBookmarksHandler(timer: number) {}

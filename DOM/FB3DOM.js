@@ -23,9 +23,7 @@ var FB3DOM;
             this.ViewPortH = ViewPortH;
             for (var I = 0; I < this.WaitedBlocks.length; I++) {
                 if (!this.FB3DOM.DataChunks[this.WaitedBlocks[I]].loaded) {
-                    this.FB3DOM.DataProvider.Request(this.FB3DOM.ChunkUrl(this.WaitedBlocks[I]), function (Data, CustomData) {
-                        return _this.FB3DOM.OnChunkLoaded(Data, CustomData);
-                    }, this.FB3DOM.Progressor, { ChunkN: this.WaitedBlocks[I] });
+                    this.FB3DOM.DataProvider.Request(this.FB3DOM.ChunkUrl(this.WaitedBlocks[I]), function (Data, CustomData) { return _this.FB3DOM.OnChunkLoaded(Data, CustomData); }, this.FB3DOM.Progressor, { ChunkN: this.WaitedBlocks[I] });
                     this.FB3DOM.DataChunks[this.WaitedBlocks[I]].loaded = 1;
                 }
             }
@@ -47,11 +45,13 @@ var FB3DOM;
                     var AllBookmarks = new Array();
                     this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
                     this.OnGetDone(PageData);
-                } else if (this.OnLoadDone) {
+                }
+                else if (this.OnLoadDone) {
                     this.OnLoadDone();
                 }
                 return true;
-            } else {
+            }
+            else {
                 return false;
             }
         };
@@ -61,9 +61,7 @@ var FB3DOM;
         };
         return AsyncLoadConsumer;
     })();
-
     ;
-
     var PageContainer = (function () {
         function PageContainer() {
             this.Body = new Array();
@@ -72,7 +70,6 @@ var FB3DOM;
         return PageContainer;
     })();
     _FB3DOM.PageContainer = PageContainer;
-
     var DOM = (function (_super) {
         __extends(DOM, _super);
         function DOM(Alert, Progressor, DataProvider, PagesPositionsCache) {
@@ -98,11 +95,9 @@ var FB3DOM;
         DOM.prototype.GetInitTag = function (Range) {
             return [];
         };
-
         DOM.prototype.CheckAndPullRequiredBlocks = function (Range) {
             return [1];
         };
-
         DOM.prototype.AfterHeaderLoaded = function (Data) {
             this.TOC = Data.Body;
             this.DataChunks = Data.Parts;
@@ -110,7 +105,6 @@ var FB3DOM;
             this.Ready = true;
             this.OnDoneFunc(this);
         };
-
         // Wondering why I make Init public? Because you can't inherite private methods, darling!
         DOM.prototype.Init = function (HyphOn, ArtID, OnDone) {
             var _this = this;
@@ -119,9 +113,7 @@ var FB3DOM;
             this.ArtID = ArtID;
             this.Childs = new Array();
             this.Progressor.HourglassOn(this, true, 'Loading meta...');
-            this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), function (Data) {
-                return _this.AfterHeaderLoaded(Data);
-            }, this.Progressor);
+            this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), function (Data) { return _this.AfterHeaderLoaded(Data); }, this.Progressor);
             this.Progressor.HourglassOff(this);
         };
         DOM.prototype.GetHTMLAsync = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback) {
@@ -130,23 +122,20 @@ var FB3DOM;
                 var PageData = new PageContainer();
                 this.GetHTML(HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
                 Callback(PageData);
-            } else {
+            }
+            else {
                 this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, Callback, undefined, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH));
             }
         };
-
         DOM.prototype.LoadChunks = function (MissingChunks, Callback) {
             this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, undefined, Callback));
         };
-
         DOM.prototype.ChunkUrl = function (N) {
             return this.ArtID2URL(N.toString());
         };
-
         DOM.prototype.ArtID2URL = function (Chunk) {
             return this.DataProvider.ArtID2URL(this.ArtID, Chunk);
         };
-
         DOM.prototype.GetElementByAddr = function (Position) {
             var ResponcibleNode = this;
             Position = Position.slice(0);
@@ -165,7 +154,8 @@ var FB3DOM;
                         // This node is the exact xpath or the xpath points a bit above,
                         // we assume this is it. Or xpath is more detailed than we can sww with our DOM map
                         return Node.Childs[I].Position();
-                    } else if (PC == 1) {
+                    }
+                    else if (PC == 1) {
                         Node = Node.Childs[I];
                         I = 0;
                         continue;
@@ -175,24 +165,23 @@ var FB3DOM;
             }
             if (Node.Parent) {
                 return Node.Position();
-            } else {
-                return [0];
+            }
+            else {
+                return [0]; // that's some unreasonable xpath, we have no idea where it can be
             }
         };
-
         DOM.prototype.GetXPathFromPos = function (Position) {
             var Element = this.GetElementByAddr(Position);
             if (Element) {
                 return Element.XPath;
-            } else {
+            }
+            else {
                 return undefined;
             }
         };
-
         DOM.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
             if (Range.From.length == 1 && this.Childs[Range.From[0]] && this.Childs[Range.From[0]].TagName == 'empty-line') {
                 Range.From[0]++; // We do not need empty-line at the start of the page,
-                // see FallOut for more hacks on this
             }
             var FullBookmarksList = new Array;
             for (var I = 0; I < this.Bookmarks.length; I++) {
@@ -200,7 +189,6 @@ var FB3DOM;
             }
             _super.prototype.GetHTML.call(this, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, FullBookmarksList);
         };
-
         DOM.prototype.OnChunkLoaded = function (Data, CustomData) {
             var LoadedChunk = CustomData.ChunkN;
             var Shift = this.DataChunks[LoadedChunk].s;
@@ -208,17 +196,16 @@ var FB3DOM;
                 this.Childs[I + Shift] = _FB3DOM.TagClassFactory(Data[I], this, I + Shift, 0, 0, false); //new FB3Tag(Data[I], this, I + Shift);
             }
             this.DataChunks[LoadedChunk].loaded = 2;
-
             var I = 0;
             while (I < this.ActiveRequests.length) {
                 if (this.ActiveRequests[I].BlockLoaded(LoadedChunk)) {
                     this.ActiveRequests.splice(I, 1);
-                } else {
+                }
+                else {
                     I++;
                 }
             }
         };
-
         DOM.prototype.CheckRangeLoaded = function (From, To) {
             var ChunksMissing = [];
             for (var I = 0; I < this.DataChunks.length; I++) {
@@ -228,7 +215,6 @@ var FB3DOM;
             }
             return ChunksMissing;
         };
-
         DOM.prototype.XPChunk = function (X) {
             for (var I = 0; I < this.DataChunks.length; I++) {
                 var xps = _FB3DOM.XPathCompare(X, this.DataChunks[I].xps);
@@ -237,7 +223,7 @@ var FB3DOM;
                     return I;
                 }
             }
-            return undefined;
+            return undefined; // In case we have out-of-field pointer - define it implicitly
         };
         return DOM;
     })(_FB3DOM.FB3Tag);

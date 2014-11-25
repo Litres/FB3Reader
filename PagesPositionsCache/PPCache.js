@@ -3,8 +3,7 @@
 var FB3PPCache;
 (function (FB3PPCache) {
     FB3PPCache.MaxCacheRecords = 15;
-    var SkipCache = false;
-
+    var SkipCache = false; // For debug purposes
     var PPCache = (function () {
         function PPCache() {
             this.Reset();
@@ -15,22 +14,18 @@ var FB3PPCache;
         PPCache.prototype.Set = function (I, Instr) {
             this.PagesPositionsCache[I] = Instr;
         };
-
         PPCache.prototype.Reset = function () {
             this.CacheMarkupsList = null;
             this.PagesPositionsCache = new Array();
             this.MarginsCache = {};
         };
-
         PPCache.prototype.Length = function () {
             return this.PagesPositionsCache.length;
         };
-
         PPCache.prototype.Save = function (Key) {
             if (SkipCache) {
                 return;
             }
-
             // We are going to save no more than 50 cache entries
             // We reuse slots on write request based on access time
             if (typeof (Storage) !== "undefined" && localStorage && JSON) {
@@ -55,13 +50,11 @@ var FB3PPCache;
                     LastPage: this.LastPageN,
                     MarginsCache: this.MarginsCache
                 });
-
                 // Keep in mind - next line is really, really slow
                 var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
                 localStorage['FB3Reader1.0'] = LZString.compressToUTF16(uncompressdCacheData);
-            }
+            } //  else { no luck, no store - recreate from scratch } 
         };
-
         PPCache.prototype.Load = function (Key) {
             if (SkipCache) {
                 return;
@@ -80,34 +73,33 @@ var FB3PPCache;
                 }
             }
         };
-
         PPCache.prototype.LoadOrFillEmptyData = function () {
             var compressedCacheData = localStorage['FB3Reader1.0'];
             var DataInitDone = false;
             if (compressedCacheData) {
-                try  {
+                try {
                     var cacheData = LZString.decompressFromUTF16(compressedCacheData);
                     this.CacheMarkupsList = JSON.parse(cacheData);
                     DataInitDone = true;
-                } catch (e) {
+                }
+                catch (e) {
                 }
             }
             if (!DataInitDone) {
                 this.CacheMarkupsList = new Array();
             }
         };
-
         PPCache.prototype.LastPage = function (LastPageN) {
             if (LastPageN == undefined) {
                 return this.LastPageN;
-            } else {
+            }
+            else {
                 this.LastPageN = LastPageN;
             }
         };
         PPCache.prototype.SetMargin = function (XP, Margin) {
             this.MarginsCache[XP] = Margin;
         };
-
         PPCache.prototype.GetMargin = function (XP) {
             return this.MarginsCache[XP];
         };

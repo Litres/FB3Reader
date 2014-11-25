@@ -18,9 +18,7 @@ var FB3DataProvider;
             var _this = this;
             this.CurrentRequestID++;
             this.ActiveRequests['req' + this.CurrentRequestID] = Callback;
-            new AjaxLoader(URL, function (ID, Data, CustomData) {
-                return _this.CallbackWrap(ID, Data, CustomData);
-            }, Progressor, this.CurrentRequestID, CustomData);
+            new AjaxLoader(URL, function (ID, Data, CustomData) { return _this.CallbackWrap(ID, Data, CustomData); }, Progressor, this.CurrentRequestID, CustomData);
         };
         AJAXDataProvider.prototype.CallbackWrap = function (ID, Data, CustomData) {
             var Func = this.ActiveRequests['req' + this.CurrentRequestID];
@@ -34,7 +32,6 @@ var FB3DataProvider;
         return AJAXDataProvider;
     })();
     FB3DataProvider.AJAXDataProvider = AJAXDataProvider;
-
     var AjaxLoader = (function () {
         function AjaxLoader(URL, Callback, Progressor, ID, CustomData) {
             var _this = this;
@@ -45,21 +42,14 @@ var FB3DataProvider;
             this.CustomData = CustomData;
             this.Progressor.HourglassOn(this, false, 'Loading ' + URL);
             this.Req = this.HttpRequest();
-            try  {
-                this.Req.addEventListener("progress", function (e) {
-                    return _this.onUpdateProgress(e);
-                }, false);
-                this.Req.addEventListener("error", function (e) {
-                    return _this.onTransferFailed(e);
-                }, false);
-                this.Req.addEventListener("abort", function (e) {
-                    return _this.onTransferAborted(e);
-                }, false);
-            } catch (e) {
+            try {
+                this.Req.addEventListener("progress", function (e) { return _this.onUpdateProgress(e); }, false);
+                this.Req.addEventListener("error", function (e) { return _this.onTransferFailed(e); }, false);
+                this.Req.addEventListener("abort", function (e) { return _this.onTransferAborted(e); }, false);
             }
-            this.Req.onreadystatechange = function () {
-                return _this.onTransferComplete();
-            };
+            catch (e) {
+            }
+            this.Req.onreadystatechange = function () { return _this.onTransferComplete(); };
             this.Req.open('GET', URL, true);
             this.Req.send(null);
         }
@@ -67,11 +57,13 @@ var FB3DataProvider;
             //			try {
             if (this.Req.readyState != 4) {
                 this.Progressor.Tick(this);
-            } else {
+            }
+            else {
                 this.Progressor.HourglassOff(this);
                 if (this.Req.status == 200) {
                     this.Callback(this.ID, this.parseJSON(this.Req.responseText), this.CustomData);
-                } else {
+                }
+                else {
                     this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
                 }
             }
@@ -80,24 +72,23 @@ var FB3DataProvider;
             //	this.Progressor.Alert('Failed to load "' + this.URL + '" (unknown error "' + err.description+'")');
             //}
         };
-
         AjaxLoader.prototype.onUpdateProgress = function (e) {
             this.Progressor.Progress(this, e.loaded / e.total * 100);
         };
         AjaxLoader.prototype.onTransferFailed = function (e) {
             this.Progressor.HourglassOff(this);
-            this.Progressor.Alert('Failed to load "' + URL + '"');
+            this.Progressor.Alert('Failed to load "' + this.URL + '"');
         };
         AjaxLoader.prototype.onTransferAborted = function (e) {
             this.Progressor.HourglassOff(this);
-            this.Progressor.Alert('Failed to load "' + URL + '" (interrupted)');
+            this.Progressor.Alert('Failed to load "' + this.URL + '" (interrupted)');
         };
-
         AjaxLoader.prototype.HttpRequest = function () {
             var ref = null;
             if (window.XMLHttpRequest) {
                 ref = new XMLHttpRequest();
-            } else if (window.ActiveXObject) {
+            }
+            else if (window.ActiveXObject) {
                 ref = new ActiveXObject("MSXML2.XMLHTTP.3.0");
             }
             return ref;
@@ -107,7 +98,6 @@ var FB3DataProvider;
             if (data === undefined || data == '') {
                 return null;
             }
-
             // trim for IE
             //data = data.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
             // Attempt to parse using the native JSON parser first

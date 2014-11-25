@@ -21,7 +21,7 @@ module FB3Bookmarks {
 		Group: number;
 		Class?: string;
 		Title?: string;
-		Note?: InnerFB2;
+		Note?: InnerFB2[];
 		RawText: string;
 		XPathMappingReady: boolean; // For server-loaded bookmarks, used to watch fb2xpath -> internal xpath mapping progress
 		ClassName(): string;		// css class name for selections of this type

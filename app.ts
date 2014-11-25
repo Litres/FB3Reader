@@ -4,6 +4,7 @@
 /// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
 /// <reference path="Bookmarks/FB3Bookmarks.ts" />
 /// <reference path="PagesPositionsCache/PPCache.ts" />
+/// <reference path="Site/LocalBookmarks.ts" />
 
 var AFB3Reader: FB3Reader.IFBReader;
 var AFB3PPCache: FB3PPCache.IFB3PPCache;
@@ -11,6 +12,7 @@ var BookmarksProcessor: FB3Bookmarks.IBookmarks;
 var start: number;
 var LocalArtID = 178297;
 var Temp = 0;
+var LitresLocalBookmarks = new LocalBookmarks.LocalBookmarksClass(LocalArtID.toString());
 
 window.onload = () => {
 
@@ -27,7 +29,8 @@ window.onload = () => {
 	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(), ArtID2URL);
 	AFB3PPCache = new FB3PPCache.PPCache();
 	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider, AFB3PPCache);
-	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID);
+	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID,
+		LitresLocalBookmarks.GetCurrentArtBookmarks());
 	BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
 	AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, Version, AFB3PPCache);
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
@@ -36,6 +39,7 @@ window.onload = () => {
 		document.getElementById('REnderEnd').innerHTML = (Temp++).toString();
 	}
 	AFB3Reader.Init([4417]);
+	// AFB3Reader.Init(LitresLocalBookmarks.GetCurrentPosition()); // start from localBookmarks
 	window.addEventListener('resize', () => AFB3Reader.AfterCanvasResize());
 //	ShowPosition();
 	start = new Date().getTime();
@@ -335,6 +339,7 @@ function DropBookmark(I: number): void {
 
 function Save() {
 	console.log('save button clicked');
+	LitresLocalBookmarks.StoreBookmarks(BookmarksProcessor.MakeStoreXML());
 	BookmarksProcessor.Store();
 }
 function Load() {
@@ -420,3 +425,4 @@ function changecss(theClass:string, element:string, value:string) {
 		}
 	}
 }
+

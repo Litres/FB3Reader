@@ -43,8 +43,8 @@ module FB3Bookmarks {
 			} else {
 				this.XMLHttp = new XMLHttpRequest();
 			}
-			//this.Host = '/';
-			 this.Host = 'http://www.litres.ru/'; // TODO: replace
+			this.Host = '/';
+			this.Host = 'http://www.litres.ru/'; // TODO: replace
 			this.SID = LitresSID;
 			this.SaveAuto = false;
 			this.LocalXML = LitresLocalXML;
@@ -142,7 +142,12 @@ module FB3Bookmarks {
 
 		private ParseXML(XML: XMLDocument) {
 			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
-			var Rows = XML.querySelectorAll('Selection');
+			var Rows;
+			if (typeof XML.querySelectorAll === 'undefined') {
+				Rows = XML.getElementsByTagName('Selection');
+			} else {
+				Rows = XML.querySelectorAll('Selection');
+			}
 			this.LoadDateTime = moment().unix();
 			if (XML.documentElement.getAttribute('lock-id')) {
 				this.LockID = XML.documentElement.getAttribute('lock-id');
@@ -250,8 +255,10 @@ module FB3Bookmarks {
 					AnyUpdates = true;
 				}
 			}
-			if (!TemporaryNotes.Bookmarks[0].NotSavedYet &&
-				this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
+			if (!TemporaryNotes.Bookmarks[0].NotSavedYet
+				&& (this.Bookmarks[0].NotSavedYet
+					|| this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime)
+				) {
 					// Newer position from server
 					this.Bookmarks[0].SkipUpdateDatetime = true;
 					this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
@@ -350,7 +357,7 @@ module FB3Bookmarks {
 		public Group: number;
 		public Class: string;
 		public Title: string;
-		public Note: InnerFB2;
+		public Note: InnerFB2[];
 		public RawText: string;
 		public XPathMappingReady: boolean;
 		public N: number;
@@ -361,11 +368,13 @@ module FB3Bookmarks {
 		private RequiredChunks: number[];
 		private AfterRemapCallback: IBookmarkSyncCallback;
 		private NotePreviewLimit: number = 140;
+		private Extract;
 		constructor(public Owner: IBookmarks) {
 			this.ID = this.MakeSelectionID();
 			this.Group = 0;
 			this.Class = 'default';
 			this.Range = { From: [0], To: [0] };
+			this.Note = ['', ''];
 			this.XStart = [0];
 			this.XEnd = [0];
 			this.XPathMappingReady = true;
@@ -374,6 +383,7 @@ module FB3Bookmarks {
 			this.NotSavedYet = 1;
 			this.TemporaryState = 0;
 			this.SkipUpdateDatetime = false;
+			this.Extract = '';
 		}
 
 		public InitFromXY(X: number, Y: number, AllowBlock: boolean): boolean {
@@ -532,7 +542,7 @@ module FB3Bookmarks {
 			this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
 			this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
 			this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
-			this.Note = this.Raw2FB2(this.RawText);
+			this.Note[0] = this.Raw2FB2(this.RawText);
 			// todo - should fill this.Extract with something equal|close to raw fb2 fragment
 			this.XStart = this.Owner.FB3DOM.GetXPathFromPos(this.Range.From.slice(0));
 			this.XEnd = this.Owner.FB3DOM.GetXPathFromPos(this.Range.To.slice(0));
@@ -634,7 +644,7 @@ module FB3Bookmarks {
 				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
 				'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '"' +
 				this.GetPercent() + '>' +
-				this.GetNote() + this.Extract() +
+				this.GetNote() + this.GetExtract() +
 			'</Selection>';
 		}
 
@@ -646,8 +656,9 @@ module FB3Bookmarks {
 			this.ID = XML.getAttribute('id').toLowerCase();
 			this.MakeXPath(XML.getAttribute('selection'));
 			this.DateTime = moment(XML.getAttribute('last-update'), "YYYY-MM-DDTHH:mm:ssZ").unix();
-			if (XML.querySelector('Note')) {
-				var tmpNote = XML.querySelector('Note');
+			var tmpNotes = XML.querySelectorAll('Note');
+			for (var j = 0; j < tmpNotes.length; j++) {
+				var tmpNote = tmpNotes[j];
 				var NoteHTML = '';
 				if (tmpNote.innerHTML) {
 					NoteHTML = tmpNote.innerHTML;
@@ -655,19 +666,27 @@ module FB3Bookmarks {
 					NoteHTML = this.parseXMLNote(tmpNote);
 				}
 				// this.Note = NoteHTML.replace(/<p\s[^>]+>/g, '<p>');
-				this.Note = NoteHTML
+				this.Note[j] = NoteHTML
 					.replace(/<(\/)?[fb:]+/ig, '<$1')
 					.replace(/(\sxmlns(:fb)?.[^>]+)/ig, '')
 					.replace(/<p\/>/ig, '<p></p>');
-				if (this.Note == '<p>') {
-					this.Note = '<p></p>';
+				if (this.Note[j] == '<p>') {
+					this.Note[j] = '<p></p>';
 				}
 			}
 			this.NotSavedYet = 0;
 			this.XPathMappingReady = false;
 			// TODO: fill and check
 			if (XML.querySelector('Extract')) {
-				this.RawText = XML.querySelector('Extract').getAttribute('selection-text');
+				var tmpExtract = XML.querySelector('Extract');
+				var ExtractHTML = '';
+				if (tmpExtract.innerHTML) {
+					ExtractHTML = tmpExtract.innerHTML;
+				} else {
+					ExtractHTML = this.parseXMLNote(tmpExtract);
+				}
+				this.Extract = ExtractHTML;
+				// this.RawText = XML.querySelector('Extract').getAttribute('selection-text');
 			}
 			// this.Range; // will be filled in ReMapping
 		}
@@ -702,16 +721,21 @@ module FB3Bookmarks {
 		}
 
 		private GetNote(): string {
-			if (!this.Note) return '';
-			return '<Note><p>' + this.MakePreviewFromNote() + '</p></Note>';
-			return '<Note>' + this.Note
-				.replace(/(<\/?)/ig, '$1fb:')
-				.replace(/(\sxmlns(:fb)?.[^>]+)/ig, '')
-				.replace(/fb:p/ig, 'p') + '</Note>';
+			var out = '';
+			if (this.Note[0] != '') {
+				out += '<Note><p>' + this.MakePreviewFromNote() + '</p></Note>';
+			}
+			if (this.Note[1] != '') {
+				out += '<Note>' + this.Note[1] + '</Note>';
+			}
+			return out;
 		}
 		public MakePreviewFromNote(): string {
+			if (this.Note[0] == '') {
+				return '';
+			}
 			var tmpDiv = document.createElement('div');
-			tmpDiv.innerHTML = <string> this.Note;
+			tmpDiv.innerHTML = <string> this.Note[0];
 			var p = tmpDiv.querySelectorAll('p');
 			var text = (<HTMLElement> p[0]).innerText || p[0].textContent;
 			text = text.length > this.NotePreviewLimit ? text.substring(0, this.NotePreviewLimit) + '...' : text;
@@ -722,7 +746,8 @@ module FB3Bookmarks {
 			if (this.Group != 0) return '';
 			return ' percent="' + Math.round(this.Owner.Reader.CurPosPercent()) + '"';
 		}
-		private Extract(): string {
+		private GetExtract(): string {
+			return this.Extract;
 			return '<Extract ' +
 				this.GetRawText() +
 				'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
@@ -767,4 +792,5 @@ module FB3Bookmarks {
 			}
 		}
 
-	}}
+	}
+}

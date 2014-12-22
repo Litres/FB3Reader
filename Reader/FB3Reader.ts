@@ -2,6 +2,7 @@
 /// <reference path="FB3ReaderPage.ts" />
 
 module FB3Reader {
+	export var SaveCacheEveryNIterations = 30;
 //	interface IDumbCallback { () }
 
 	// 0 on equal
@@ -128,6 +129,7 @@ module FB3Reader {
 		public _CanvasReadyCallback(){
 			if (this.CanvasReadyCallback) {
 				this.CanvasReadyCallback(this.GetVisibleRange());
+				if (!this.RedrawState) {
 				this.Site.AfterTurnPageDone({
 					CurPage: this.CurStartPage,
 					MaxPage: this.PagesPositionsCache.LastPage(),
@@ -135,6 +137,7 @@ module FB3Reader {
 					Pos: this.CurStartPos
 				});
 			}
+		}
 		}
 
 		private SetStartPos(NewPos: IPosition): void {
@@ -177,17 +180,25 @@ module FB3Reader {
 
 		public Init(StartFrom: IPosition): void {
 			this.PrepareCanvas();
+			this.Bookmarks.LoadFromCache();
+			this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
 			this.FB3DOM.Init(this.HyphON, this.ArtID, () => {
 				this.Site.HeadersLoaded(this.FB3DOM.MetaData);
-				if (!this.Bookmarks.ApplyPosition() && this.CurStartPos) {
+				if (!this.Bookmarks.ApplyPosition()) {
 					this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
 					this.GoTO(StartFrom);
 				}
 			});
 			this.Bookmarks.FB3DOM = this.FB3DOM;
 			this.Bookmarks.Reader = this;
+			if (this.Bookmarks.Bookmarks.length > 1) {
+				this.Bookmarks.ReLoad();
+			} else {
+				this.Bookmarks.Load(() => {
+					this.Bookmarks.ApplyPosition()
+				});
+			}
 			this.PutBlockIntoView(0);
-			this.Bookmarks.LoadFromCache(() => { this.Bookmarks.ApplyPosition() });
 		}
 
 		public GoTO(NewPos: IPosition, Force?: boolean) {
@@ -675,7 +686,7 @@ module FB3Reader {
 							return;
 						} else {
 							this.PagesPositionsCache.LastPage(0);
-							if (this.TicksFromSave > 30) {
+							if (this.TicksFromSave > SaveCacheEveryNIterations) {
 								// We only save pages position cache once per 3% because it is SLOW like hell
 								this.SaveCache();
 								this.TicksFromSave = 0;
@@ -770,6 +781,19 @@ module FB3Reader {
 				this.Pages[I].Ready = false;
 			}
 			this.GoTO(this.CurStartPos.slice(0),true);
+		}
+
+		public RedrawVisible(): void {
+			this.RedrawState = true;
+			var NewInstr: IPageRenderInstruction[] = new Array();
+			for (var I = this.CurVisiblePage; I < this.CurVisiblePage + this.NColumns; I++) {
+				if (this.Pages[I].RenderInstr) {
+					NewInstr.push(this.Pages[I].RenderInstr);
+					this.Pages[I].Ready = false;
+				}
+			}
+			this.Pages[this.CurVisiblePage].SetPending(NewInstr);
+			this.Pages[this.CurVisiblePage].DrawInit(NewInstr);
 		}
 
 		private StopRenders() {

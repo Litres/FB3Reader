@@ -396,7 +396,9 @@ var FB3ReaderPage;
         ReaderPage.prototype.FalloutConsumeFirst = function (FallOut) {
             var _this = this;
             //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeFirst');
-            if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0 && FallOut.FallOut[0] < this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+            if (!FallOut.FitAnythingAtAll) {
+                //if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0
+                //	&& FallOut.FallOut[0] < this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                 // It's too bad baby: text does not fit the page, not even a char
                 // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
                 if (this.FBReader.BookStyleNotes && this.FalloutState.HasFootnotes) {
@@ -474,7 +476,7 @@ var FB3ReaderPage;
             // content to create next page(s) with EXACTLY the required html - this will
             // speed up the render a lot
             var LastChild = this.Element.Node.children[this.Element.Node.children.length - 1];
-            if (FB3ReaderPage.EnableForwardScan && LastChild && !PageCorrupt && FallOut.EndReached) {
+            if (!FallOut.DenyForwardScan && FB3ReaderPage.EnableForwardScan && LastChild && !PageCorrupt && FallOut.EndReached) {
                 this.QuickFallautState.CollectedHeight = FallOut.Height;
                 this.QuickFallautState.CollectedNotesHeight = FallOut.NotesHeight;
                 var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
@@ -598,6 +600,8 @@ var FB3ReaderPage;
             this.FalloutState.ThisBlockLineShift = 0;
             this.FalloutState.Baseline = this.QuickFallautState.CollectedHeight || this.Element.MarginTop;
             this.FalloutState.UnconfirmedShift = 0;
+            this.FalloutState.DenyForwardScan = false;
+            this.FalloutState.FitAnythingAtAll = false;
         };
         // Hand mage CSS3 tabs. I thouth it would take more than this
         ReaderPage.prototype.FallOut = function () {
@@ -663,11 +667,12 @@ var FB3ReaderPage;
                 if ((ChildBot + FootnotesHeightNow <= this.FalloutState.Limit) && !this.FalloutState.PrevPageBreaker || this.FalloutState.ForceFitBlock || Child.className.match(/\btag_empty-line\b/)) {
                     this.FalloutState.ForceDenyElementBreaking = false;
                     this.FalloutState.ForceFitBlock = false;
+                    this.FalloutState.FitAnythingAtAll = true;
                     if (FootnotesAddon) {
                         this.FalloutState.FootnotesAddonCollected = FootnotesAddon;
+                        this.FalloutState.DenyForwardScan = true;
                     }
-                    ;
-                    if (Math.abs(this.FalloutState.LastFullLinePosition - ChildBot) > 1) {
+                    if (Math.abs(this.FalloutState.LastFullLinePosition - ChildBot) > 1 || FootnotesAddon) {
                         this.FalloutState.LastLineBreakerParent = this.FalloutState.Element;
                         this.FalloutState.LastLineBreakerPos = this.FalloutState.I;
                         this.FalloutState.LastFullLinePosition = ChildBot;
@@ -817,7 +822,9 @@ var FB3ReaderPage;
                 Height: FinalHeight,
                 NotesHeight: this.FalloutState.FootnotesAddonCollected ? this.FalloutState.FootnotesAddonCollected - this.NotesElement.MarginTop : 0,
                 FalloutElementN: this.FalloutState.FalloutElementN,
-                EndReached: this.FalloutState.EndReached
+                EndReached: this.FalloutState.EndReached,
+                DenyForwardScan: this.FalloutState.DenyForwardScan,
+                FitAnythingAtAll: this.FalloutState.FitAnythingAtAll
             };
             if (this.FalloutState.QuickMode) {
                 //console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoNext');
@@ -834,7 +841,7 @@ var FB3ReaderPage;
             if (CurBottomLine / this.FBReader.LineHeight != LinesFit && Element.id) {
                 // Ok. this element has non-standard height, we align it's bottom line
                 // so that the next element will be aligned
-                var XPID = Element.id.replace(/\w+_\d+_/, '');
+                var XPID = Element.id.replace(/[a-z0-9]+_\d+_/, '');
                 if (XPID) {
                     var ExactNewMargin = this.FBReader.PagesPositionsCache.GetMargin(XPID);
                     if (!ExactNewMargin) {

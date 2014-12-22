@@ -41,22 +41,34 @@ module FB3DataProvider {
 
 	class AjaxLoader {
 		private Req: XMLHttpRequest;
+		private xhrIE9: boolean;
 		constructor(public URL: string,
 			private Callback: IJSonLoadedCallbackWrap,
 			private Progressor: FB3ReaderSite.ILoadProgress,
 			private ID: number,
 			public CustomData?: any
 			) {
-			this.Progressor.HourglassOn(this, false, 'Loading ' + URL);
+				this.xhrIE9 = false;
+				this.Progressor.HourglassOn(this, false, 'Loading ' + this.URL);
 			this.Req = this.HttpRequest();
 			try { // Old IE with it's internals does not support this
 				this.Req.addEventListener("progress", (e: ProgressEvent) => this.onUpdateProgress(e), false);
 				this.Req.addEventListener("error", (e: ProgressEvent) => this.onTransferFailed(e), false);
 				this.Req.addEventListener("abort", (e: ProgressEvent) => this.onTransferAborted(e), false);
-			} catch (e) { }
+				} catch (e) {
+					this.Req.onprogress = function () {};
+					this.Req.onerror = (e: any) => this.onTransferFailed(e);
+					this.Req.ontimeout = (e: ProgressEvent) => this.onTransferAborted(e);
+				}
+				this.Req.open('GET', this.URL, true);
+				if (this.xhrIE9) {
+					this.Req.timeout = 0;
+					this.Req.onload = () => this.onTransferIE9Complete();
+					setTimeout(() => this.Req.send(null), '200');
+				} else {
 			this.Req.onreadystatechange = () => this.onTransferComplete();
-			this.Req.open('GET', URL, true);
 			this.Req.send(null);
+		}
 		}
 
 		public onTransferComplete() {
@@ -77,6 +89,14 @@ module FB3DataProvider {
 			//}
 		}
 
+		private onTransferIE9Complete() {
+			if (this.Req.responseText && this.Req.responseText != '') {
+				this.Callback(this.ID, this.parseJSON(this.Req.responseText), this.CustomData);
+			} else {
+				this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "NO STATUS FOR IE9"');
+			}
+		}
+
 		private onUpdateProgress(e: ProgressEvent) {
 			this.Progressor.Progress(this, e.loaded / e.total * 100);
 		}
@@ -91,6 +111,10 @@ module FB3DataProvider {
 
 		private HttpRequest(): XMLHttpRequest {
 			var ref = null;
+			/*if (document.all && !window.atob && (<any> window).XDomainRequest && aldebaran_or4) {
+				ref = new XDomainRequest(); // IE9 =< fix
+				this.xhrIE9 = true;
+			} else */
 			if (window.XMLHttpRequest) {
 				ref = new XMLHttpRequest();
 			} else if (window.ActiveXObject) { // Older IE.

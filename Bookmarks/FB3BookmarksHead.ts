@@ -46,9 +46,10 @@ module FB3Bookmarks {
 		Reader: FB3Reader.IFBReader;
 		Bookmarks: IBookmark[];
 		ClassPrefix: string;
+		aldebaran: boolean;
 		AddBookmark(Bookmark: IBookmark): void;
 		DropBookmark(Bookmark: IBookmark): void;
-		LoadFromCache(Callback?: IBookmarksReadyCallback); // Loads bookmarks from localStorage
+		LoadFromCache(); // Loads bookmarks from localStorage
 		Load(Callback?: IBookmarksReadyCallback); // Loads bookmarks from the server
 		ReLoad();	// Updates itself from the server (may get new current position)
 		ApplyPosition(): boolean;

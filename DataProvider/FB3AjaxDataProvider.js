@@ -40,7 +40,8 @@ var FB3DataProvider;
             this.Progressor = Progressor;
             this.ID = ID;
             this.CustomData = CustomData;
-            this.Progressor.HourglassOn(this, false, 'Loading ' + URL);
+            this.xhrIE9 = false;
+            this.Progressor.HourglassOn(this, false, 'Loading ' + this.URL);
             this.Req = this.HttpRequest();
             try {
                 this.Req.addEventListener("progress", function (e) { return _this.onUpdateProgress(e); }, false);
@@ -48,10 +49,21 @@ var FB3DataProvider;
                 this.Req.addEventListener("abort", function (e) { return _this.onTransferAborted(e); }, false);
             }
             catch (e) {
+                this.Req.onprogress = function () {
+                };
+                this.Req.onerror = function (e) { return _this.onTransferFailed(e); };
+                this.Req.ontimeout = function (e) { return _this.onTransferAborted(e); };
             }
-            this.Req.onreadystatechange = function () { return _this.onTransferComplete(); };
-            this.Req.open('GET', URL, true);
-            this.Req.send(null);
+            this.Req.open('GET', this.URL, true);
+            if (this.xhrIE9) {
+                this.Req.timeout = 0;
+                this.Req.onload = function () { return _this.onTransferIE9Complete(); };
+                setTimeout(function () { return _this.Req.send(null); }, '200');
+            }
+            else {
+                this.Req.onreadystatechange = function () { return _this.onTransferComplete(); };
+                this.Req.send(null);
+            }
         }
         AjaxLoader.prototype.onTransferComplete = function () {
             //			try {
@@ -72,6 +84,14 @@ var FB3DataProvider;
             //	this.Progressor.Alert('Failed to load "' + this.URL + '" (unknown error "' + err.description+'")');
             //}
         };
+        AjaxLoader.prototype.onTransferIE9Complete = function () {
+            if (this.Req.responseText && this.Req.responseText != '') {
+                this.Callback(this.ID, this.parseJSON(this.Req.responseText), this.CustomData);
+            }
+            else {
+                this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "NO STATUS FOR IE9"');
+            }
+        };
         AjaxLoader.prototype.onUpdateProgress = function (e) {
             this.Progressor.Progress(this, e.loaded / e.total * 100);
         };
@@ -85,6 +105,10 @@ var FB3DataProvider;
         };
         AjaxLoader.prototype.HttpRequest = function () {
             var ref = null;
+            /*if (document.all && !window.atob && (<any> window).XDomainRequest && aldebaran_or4) {
+                ref = new XDomainRequest(); // IE9 =< fix
+                this.xhrIE9 = true;
+            } else */
             if (window.XMLHttpRequest) {
                 ref = new XMLHttpRequest();
             }

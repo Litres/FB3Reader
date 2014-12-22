@@ -179,16 +179,21 @@ var FB3DOM;
                 this.Chars += NKid.Chars;
             }
             if (Data.c) {
-                var NodeN = 1; // For text nodes in the mixed content we need it's invisible-node number
+                var NodeN = 0; // For text nodes in the mixed content we need it's invisible-node number
+                var PrevItmType = 'unknown';
                 var Chars = 0;
                 for (var I = 0; I < Data.c.length; I++) {
                     var Itm = Data.c[I];
+                    var ItmType = (typeof Itm === "string") ? 'text' : 'tag';
+                    if (ItmType != PrevItmType || ItmType != 'text') {
+                        NodeN++;
+                    }
+                    PrevItmType = ItmType;
                     var Kid = TagClassFactory(Itm, this, I + Base, NodeN, Chars, IsFootnote);
-                    if (typeof Itm === "string") {
+                    if (ItmType == 'text') {
                         Chars += Kid.Chars;
                     }
                     else {
-                        NodeN += 2;
                         Chars = 0;
                     }
                     this.Childs.push(Kid);
@@ -330,7 +335,6 @@ var FB3DOM;
             var InlineStyle = this.InlineStyle();
             var Out = ['<'];
             if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr) {
-                // Out = ['<a href="javascript:GoXPath([' + this.Data.hr + '])"'];
                 Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
             }
             else if (this.TagName == 'a' && !this.IsFootnote && this.Data.href) {

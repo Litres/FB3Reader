@@ -64,8 +64,8 @@ module LocalBookmarks {
 				return null;
 			}
 		}
-		public SetCurrentPosition(LitreCurPos: any[]) {
-			this.CurPos = LitreCurPos;
+		public SetCurrentPosition(LitresCurPos: any[]) {
+			this.CurPos = LitresCurPos;
 		}
 		public GetCurrentPosition(): any[] {
 			return this.CurPos;

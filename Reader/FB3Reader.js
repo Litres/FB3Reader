@@ -2,6 +2,7 @@
 /// <reference path="FB3ReaderPage.ts" />
 var FB3Reader;
 (function (FB3Reader) {
+    FB3Reader.SaveCacheEveryNIterations = 30;
     //	interface IDumbCallback { () }
     // 0 on equal
     // 1 if 1 past 2 on child level like [0,1,2] is past [0,1]
@@ -98,12 +99,14 @@ var FB3Reader;
         Reader.prototype._CanvasReadyCallback = function () {
             if (this.CanvasReadyCallback) {
                 this.CanvasReadyCallback(this.GetVisibleRange());
-                this.Site.AfterTurnPageDone({
-                    CurPage: this.CurStartPage,
-                    MaxPage: this.PagesPositionsCache.LastPage(),
-                    Percent: this.CurPosPercent(),
-                    Pos: this.CurStartPos
-                });
+                if (!this.RedrawState) {
+                    this.Site.AfterTurnPageDone({
+                        CurPage: this.CurStartPage,
+                        MaxPage: this.PagesPositionsCache.LastPage(),
+                        Percent: this.CurPosPercent(),
+                        Pos: this.CurStartPos
+                    });
+                }
             }
         };
         Reader.prototype.SetStartPos = function (NewPos) {
@@ -123,19 +126,26 @@ var FB3Reader;
         Reader.prototype.Init = function (StartFrom) {
             var _this = this;
             this.PrepareCanvas();
+            this.Bookmarks.LoadFromCache();
+            this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
                 _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
-                if (!_this.Bookmarks.ApplyPosition() && _this.CurStartPos) {
+                if (!_this.Bookmarks.ApplyPosition()) {
                     _this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
                     _this.GoTO(StartFrom);
                 }
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;
+            if (this.Bookmarks.Bookmarks.length > 1) {
+                this.Bookmarks.ReLoad();
+            }
+            else {
+                this.Bookmarks.Load(function () {
+                    _this.Bookmarks.ApplyPosition();
+                });
+            }
             this.PutBlockIntoView(0);
-            this.Bookmarks.LoadFromCache(function () {
-                _this.Bookmarks.ApplyPosition();
-            });
         };
         Reader.prototype.GoTO = function (NewPos, Force) {
             if (!NewPos || NewPos.length == 0) {
@@ -600,7 +610,7 @@ var FB3Reader;
                         }
                         else {
                             this.PagesPositionsCache.LastPage(0);
-                            if (this.TicksFromSave > 30) {
+                            if (this.TicksFromSave > FB3Reader.SaveCacheEveryNIterations) {
                                 // We only save pages position cache once per 3% because it is SLOW like hell
                                 this.SaveCache();
                                 this.TicksFromSave = 0;
@@ -676,6 +686,18 @@ var FB3Reader;
                 this.Pages[I].Ready = false;
             }
             this.GoTO(this.CurStartPos.slice(0), true);
+        };
+        Reader.prototype.RedrawVisible = function () {
+            this.RedrawState = true;
+            var NewInstr = new Array();
+            for (var I = this.CurVisiblePage; I < this.CurVisiblePage + this.NColumns; I++) {
+                if (this.Pages[I].RenderInstr) {
+                    NewInstr.push(this.Pages[I].RenderInstr);
+                    this.Pages[I].Ready = false;
+                }
+            }
+            this.Pages[this.CurVisiblePage].SetPending(NewInstr);
+            this.Pages[this.CurVisiblePage].DrawInit(NewInstr);
         };
         Reader.prototype.StopRenders = function () {
             for (var I = 0; I < this.Pages.length; I++) {

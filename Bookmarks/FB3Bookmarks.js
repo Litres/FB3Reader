@@ -5,6 +5,7 @@ var FB3Bookmarks;
     var LitResBookmarksProcessor = (function () {
         function LitResBookmarksProcessor(FB3DOM, LitresSID, LitresLocalXML) {
             this.FB3DOM = FB3DOM;
+            this.xhrIE9 = false;
             this.Ready = false;
             // this.FB3DOM.Bookmarks.push(this);
             this.ClassPrefix = 'my_';
@@ -12,7 +13,11 @@ var FB3Bookmarks;
             this.DeletedBookmarks = {};
             this.AddBookmark(new Bookmark(this));
             this.WaitForData = false;
-            if (window.ActiveXObject) {
+            if (document.all && !window.atob && window.XDomainRequest && this.aldebaran) {
+                this.XMLHttp = new XDomainRequest(); // IE9 =< fix
+                this.xhrIE9 = true;
+            }
+            else if (window.ActiveXObject) {
                 this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
             }
             else {
@@ -44,16 +49,11 @@ var FB3Bookmarks;
                 this.Bookmarks[I].N = I;
             }
         };
-        LitResBookmarksProcessor.prototype.LoadFromCache = function (Callback) {
-            this.LoadEndCallback = Callback;
+        LitResBookmarksProcessor.prototype.LoadFromCache = function () {
             if (this.LocalXML) {
                 var XML = this.MakeXMLFromString(this.LocalXML);
                 this.LocalXML = null;
                 this.AfterTransferFromServerComplete(XML);
-                this.ReLoad();
-            }
-            else {
-                this.Load(Callback);
             }
         };
         LitResBookmarksProcessor.prototype.Load = function (Callback) {
@@ -102,14 +102,18 @@ var FB3Bookmarks;
             }
             if (!this.WaitedToRemapBookmarks) {
                 this.WaitForData = false;
-                this.LoadEndCallback(this);
+                if (this.LoadEndCallback) {
+                    this.LoadEndCallback(this);
+                }
             }
         };
         LitResBookmarksProcessor.prototype.OnChildBookmarkSync = function () {
             this.WaitedToRemapBookmarks--;
             if (!this.WaitedToRemapBookmarks) {
                 this.WaitForData = false;
-                this.LoadEndCallback(this);
+                if (this.LoadEndCallback) {
+                    this.LoadEndCallback(this);
+                }
             }
         };
         LitResBookmarksProcessor.prototype.ParseXML = function (XML) {
@@ -161,7 +165,7 @@ var FB3Bookmarks;
                 return false;
             }
             this.Ready = true;
-            this.Bookmarks[0].SkipUpdateDatetime = true;
+            this.Bookmarks[0].SkipUpdateDatetime = true; // skip update current pos time after localBookmakrs load
             this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
             return true;
         };
@@ -169,6 +173,7 @@ var FB3Bookmarks;
             var _this = this;
             var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
             TemporaryNotes.Reader = this.Reader;
+            TemporaryNotes.aldebaran = this.aldebaran;
             TemporaryNotes.Bookmarks[0].Group = -1;
             this.SaveAuto = SaveAutoState;
             TemporaryNotes.SaveAuto = this.SaveAuto;
@@ -229,7 +234,7 @@ var FB3Bookmarks;
                     AnyUpdates = true;
                 }
             }
-            if (!TemporaryNotes.Bookmarks[0].NotSavedYet && (this.Bookmarks[0].NotSavedYet || this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime)) {
+            if (!this.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
                 // Newer position from server
                 this.Bookmarks[0].SkipUpdateDatetime = true;
                 this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
@@ -273,14 +278,29 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL, Type, Data) {
             var _this = this;
             var Data = Data || null;
-            this.XMLHttp.onreadystatechange = function () { return _this.XMLHTTPResponse(); };
+            if (this.xhrIE9) {
+                this.XMLHttp.onload = function () { return _this.XMLHTTPIE9Response(); };
+            }
+            else {
+                this.XMLHttp.onreadystatechange = function () { return _this.XMLHTTPResponse(); };
+            }
             this.XMLHttp.open(Type, URL, true);
-            this.XMLHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            if (!this.xhrIE9) {
+                this.XMLHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            }
             this.XMLHttp.send(Data);
         };
         LitResBookmarksProcessor.prototype.XMLHTTPResponse = function () {
             if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
                 this.XMLHTTPResponseCallback(this.XMLHttp.responseXML);
+            }
+            // TODO: add error handler
+        };
+        LitResBookmarksProcessor.prototype.XMLHTTPIE9Response = function () {
+            if (this.XMLHttp.responseText && this.XMLHttp.responseText != '') {
+                var parser = new DOMParser();
+                var xml = parser.parseFromString(this.XMLHttp.responseText, 'text/xml');
+                this.XMLHTTPResponseCallback(xml);
             }
             // TODO: add error handler
         };
@@ -425,11 +445,16 @@ var FB3Bookmarks;
                 return;
             }
             var PosInBlock = Adress[Adress.length - 1];
-            while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
+            while (Block.Parent && !Block.TagName && !Block.IsBlock()) {
                 Block = Block.Parent;
                 PosInBlock = Adress[Adress.length - 1];
                 Adress.pop();
             }
+            //if (PosInBlock < Block.Childs.length - 2) {
+            //	PosInBlock++;
+            //}
+            if (PosInBlock > Block.Childs.length - 2)
+                PosInBlock = Block.Childs.length - 2;
             while (PosInBlock > 0 && !Block.Childs[PosInBlock - 1].Childs && !Block.Childs[PosInBlock - 1].text.match(/\s$/)) {
                 PosInBlock--;
             }
@@ -469,6 +494,8 @@ var FB3Bookmarks;
             this.RawText = this.RawText.replace(/<(\/)?strong[^>]*>/gi, '[$1b]');
             this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
             this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
+            // this.RawText = this.RawText.replace(/<a class="footnote[^>]+>/gi, '');
+            // TODO: skip footnotes
             this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
             this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
             this.Note[0] = this.Raw2FB2(this.RawText);
@@ -560,7 +587,7 @@ var FB3Bookmarks;
             return Result;
         };
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '"' + this.GetPercent() + '>' + this.GetNote() + this.GetExtract() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' + this.GetPercent() + '>' + this.GetNote() + this.GetExtract() + '</Selection>';
         };
         Bookmark.prototype.ParseXML = function (XML) {
             this.Group = parseInt(XML.getAttribute('group'));
@@ -648,10 +675,20 @@ var FB3Bookmarks;
             }
             var tmpDiv = document.createElement('div');
             tmpDiv.innerHTML = this.Note[0];
-            var p = tmpDiv.querySelectorAll('p');
-            var text = p[0].innerText || p[0].textContent;
-            text = text.length > this.NotePreviewLimit ? text.substring(0, this.NotePreviewLimit) + '...' : text;
+            var text = this.PreparePreviewText(tmpDiv.querySelectorAll('p'));
+            text = text.length > this.NotePreviewLimit ? text.substring(0, this.NotePreviewLimit) + '…' : text;
             tmpDiv = undefined;
+            return text;
+        };
+        Bookmark.prototype.PreparePreviewText = function (obj) {
+            var text = '';
+            for (var j = 0; j < obj.length; j++) {
+                var tmp = obj[j].innerText || obj[j].textContent;
+                text += tmp;
+                if (j != obj.length - 1) {
+                    text += ' ';
+                }
+            }
             return text;
         };
         Bookmark.prototype.GetPercent = function () {

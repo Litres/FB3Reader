@@ -30,7 +30,10 @@ module FB3Bookmarks {
 		private SaveAuto: boolean; // save state after ReLoad
 		private XMLHTTPResponseCallback: IXMLHTTPResponseCallback;
 		private LocalXML: string;
+		private xhrIE9: boolean;
+		public aldebaran: boolean; // stupid hack
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string, LitresLocalXML?: string) {
+			this.xhrIE9 = false;
 			this.Ready = false;
 			// this.FB3DOM.Bookmarks.push(this);
 			this.ClassPrefix = 'my_';
@@ -38,7 +41,10 @@ module FB3Bookmarks {
 			this.DeletedBookmarks = {};
 			this.AddBookmark(new Bookmark(this));
 			this.WaitForData = false;
-			if (window.ActiveXObject) {
+			if (document.all && !window.atob && (<any> window).XDomainRequest && this.aldebaran) {
+				this.XMLHttp = new XDomainRequest(); // IE9 =< fix
+				this.xhrIE9 = true;
+			} else if (window.ActiveXObject) {
 				this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
 			} else {
 				this.XMLHttp = new XMLHttpRequest();
@@ -71,15 +77,11 @@ module FB3Bookmarks {
 			}
 		}
 
-		public LoadFromCache(Callback?: IBookmarksReadyCallback) {
-			this.LoadEndCallback = Callback;
+		public LoadFromCache() {
 			if (this.LocalXML) {
 				var XML = this.MakeXMLFromString(this.LocalXML);
 				this.LocalXML = null;
 				this.AfterTransferFromServerComplete(XML);
-				this.ReLoad();
-			} else {
-				this.Load(Callback);
 			}
 		}
 
@@ -128,7 +130,9 @@ module FB3Bookmarks {
 			}
 			if (!this.WaitedToRemapBookmarks) {
 				this.WaitForData = false;
-				this.LoadEndCallback(this);
+				if (this.LoadEndCallback) {
+					this.LoadEndCallback(this);
+				}
 			}
 		}
 
@@ -136,7 +140,9 @@ module FB3Bookmarks {
 			this.WaitedToRemapBookmarks--;
 			if (!this.WaitedToRemapBookmarks) {
 				this.WaitForData = false;
-				this.LoadEndCallback(this);
+				if (this.LoadEndCallback) {
+					this.LoadEndCallback(this);
+				}
 			}
 		}
 
@@ -190,7 +196,7 @@ module FB3Bookmarks {
 				return false;
 			}
 			this.Ready = true;
-			this.Bookmarks[0].SkipUpdateDatetime = true;
+			this.Bookmarks[0].SkipUpdateDatetime = true; // skip update current pos time after localBookmakrs load
 			this.Reader.GoTO(this.Bookmarks[0].Range.From.slice(0));
 			return true;
 		}
@@ -198,6 +204,7 @@ module FB3Bookmarks {
 		public ReLoad(SaveAutoState?: boolean) {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
 			TemporaryNotes.Reader = this.Reader;
+			TemporaryNotes.aldebaran = this.aldebaran;
 			TemporaryNotes.Bookmarks[0].Group = -1;
 			this.SaveAuto = SaveAutoState;
 			TemporaryNotes.SaveAuto = this.SaveAuto;
@@ -255,10 +262,7 @@ module FB3Bookmarks {
 					AnyUpdates = true;
 				}
 			}
-			if (!TemporaryNotes.Bookmarks[0].NotSavedYet
-				&& (this.Bookmarks[0].NotSavedYet
-					|| this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime)
-				) {
+			if (!this.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
 					// Newer position from server
 					this.Bookmarks[0].SkipUpdateDatetime = true;
 					this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
@@ -305,14 +309,28 @@ module FB3Bookmarks {
 
 		private SendNotesRequest(URL: string, Type: string, Data?: string): void {
 			var Data = Data || null;
+			if (this.xhrIE9) {
+				this.XMLHttp.onload = () => this.XMLHTTPIE9Response();
+			} else {
 			this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
+			}
 			this.XMLHttp.open(Type, URL, true);
+			if (!this.xhrIE9) {
 			this.XMLHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+			}
 			this.XMLHttp.send(Data);
 		}
 		private XMLHTTPResponse(): void {
 			if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
 				this.XMLHTTPResponseCallback(this.XMLHttp.responseXML);
+			}
+			// TODO: add error handler
+		}
+		private XMLHTTPIE9Response(): void {
+			if (this.XMLHttp.responseText && this.XMLHttp.responseText != '') {
+				var parser = new DOMParser();
+				var xml = parser.parseFromString(this.XMLHttp.responseText, 'text/xml');
+				this.XMLHTTPResponseCallback(xml);
 			}
 			// TODO: add error handler
 		}
@@ -491,7 +509,7 @@ module FB3Bookmarks {
 				return;
 			}
 			var PosInBlock = Adress[Adress.length - 1];
-			while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
+			while (Block.Parent && !Block.TagName && !Block.IsBlock()) {
 				Block = Block.Parent;
 				PosInBlock = Adress[Adress.length - 1];
 				Adress.pop();
@@ -499,6 +517,8 @@ module FB3Bookmarks {
 			//if (PosInBlock < Block.Childs.length - 2) {
 			//	PosInBlock++;
 			//}
+			if (PosInBlock > Block.Childs.length - 2)
+				PosInBlock = Block.Childs.length - 2;
 			while (PosInBlock > 0 && !Block.Childs[PosInBlock-1].Childs && !Block.Childs[PosInBlock-1].text.match(/\s$/)) {
 				PosInBlock--;
 			}
@@ -540,6 +560,8 @@ module FB3Bookmarks {
 			this.RawText = this.RawText.replace(/<(\/)?strong[^>]*>/gi, '[$1b]');
 			this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
 			this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
+			// this.RawText = this.RawText.replace(/<a class="footnote[^>]+>/gi, '');
+			// TODO: skip footnotes
 			this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
 			this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
 			this.Note[0] = this.Raw2FB2(this.RawText);
@@ -642,7 +664,7 @@ module FB3Bookmarks {
 				'id="' + this.ID + '" ' +
 				'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
 				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
-				'last-update="' + moment().format("YYYY-MM-DDTHH:mm:ssZ") + '"' +
+				'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' +
 				this.GetPercent() + '>' +
 				this.GetNote() + this.GetExtract() +
 			'</Selection>';
@@ -736,10 +758,20 @@ module FB3Bookmarks {
 			}
 			var tmpDiv = document.createElement('div');
 			tmpDiv.innerHTML = <string> this.Note[0];
-			var p = tmpDiv.querySelectorAll('p');
-			var text = (<HTMLElement> p[0]).innerText || p[0].textContent;
-			text = text.length > this.NotePreviewLimit ? text.substring(0, this.NotePreviewLimit) + '...' : text;
+			var text = this.PreparePreviewText(tmpDiv.querySelectorAll('p'));
+			text = text.length > this.NotePreviewLimit ? text.substring(0, this.NotePreviewLimit) + '…' : text;
 			tmpDiv = undefined;
+			return text;
+		}
+		private PreparePreviewText(obj): string {
+			var text = '';
+			for (var j = 0; j < obj.length; j++) {
+				var tmp = (<HTMLElement> obj[j]).innerText || obj[j].textContent;
+				text += tmp;
+				if (j != obj.length - 1) {
+					text += ' ';
+				}
+			}
 			return text;
 		}
 		private GetPercent(): string {

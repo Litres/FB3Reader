@@ -60,8 +60,8 @@ var LocalBookmarks;
                 return null;
             }
         };
-        LocalBookmarksClass.prototype.SetCurrentPosition = function (LitreCurPos) {
-            this.CurPos = LitreCurPos;
+        LocalBookmarksClass.prototype.SetCurrentPosition = function (LitresCurPos) {
+            this.CurPos = LitresCurPos;
         };
         LocalBookmarksClass.prototype.GetCurrentPosition = function () {
             return this.CurPos;

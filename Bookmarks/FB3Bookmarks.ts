@@ -343,23 +343,16 @@ module FB3Bookmarks {
 			var NotesInRange = [];
 			for (var j = 1; j < this.Bookmarks.length; j++) {
 				if (Type === undefined || this.Bookmarks[j].Group == Type) {
-					var xps = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.From);
-					var xpe = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.To);
-					var xps_e = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.To);
-					var xpe_s = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.From);
-					// TODO: fix variants
-//					console.log(this.Bookmarks[j]);
-//					console.log('xps ' + this.Bookmarks[j].Range.From.join('_') + ' ' + Range.From.join('_') + ' ' + xps);
-//					console.log('xpe ' + this.Bookmarks[j].Range.To.join('_') + ' ' + Range.To.join('_') + ' ' + xpe);
-//					console.log('xps_e ' + this.Bookmarks[j].Range.From.join('_') + ' ' + Range.To.join('_') + ' ' + xps_e);
-//					console.log('xpe_s ' + this.Bookmarks[j].Range.To.join('_') + ' ' + Range.From.join('_') + ' ' + xpe_s);
+					var BStart2RStart = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.From);
+					var BEnd2REnd = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.To);
+					var BStart2REnd = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.To);
+					var BEnd2RStart = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.From);
 					if (
-							(xps >= 0 && xpe <= 0) || // in page range
-							(xps >= 0 && xps_e <= 0) || // start point in range
-							(xpe_s >= 0 && xpe <= 0) || // end point in range
-							(xps < 0 && xpe > 0)
+						(BStart2RStart >= 0 && BStart2REnd <= 0) || // [{]  Bookmark start in range
+						(BEnd2RStart >= 0 && BEnd2REnd <= 0) ||		// [}]  Bookmark end in range
+						(BStart2RStart < 0 && BEnd2REnd > 0)		// {[]} Bookmark covers the whole range
 						) {
-							NotesInRange.push(this.Bookmarks[j]);
+						NotesInRange.push(this.Bookmarks[j]);
 					}
 				}
 			}

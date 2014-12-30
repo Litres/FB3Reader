@@ -142,4 +142,3 @@ var FB3DataProvider;
         return AjaxLoader;
     })();
 })(FB3DataProvider || (FB3DataProvider = {}));
-//# sourceMappingURL=FB3AjaxDataProvider.js.map

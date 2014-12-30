@@ -388,4 +388,3 @@ function changecss(theClass, element, value) {
         }
     }
 }
-//# sourceMappingURL=app.js.map

@@ -887,4 +887,3 @@ var FB3ReaderPage;
     })();
     FB3ReaderPage.ReaderPage = ReaderPage;
 })(FB3ReaderPage || (FB3ReaderPage = {}));
-//# sourceMappingURL=FB3ReaderPage.js.map

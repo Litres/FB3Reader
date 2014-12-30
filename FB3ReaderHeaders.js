@@ -22,4 +22,3 @@ function ProfileOut(Procedure) {
         this.Profiler[Procedure] = null;
     }
 }
-//# sourceMappingURL=FB3ReaderHeaders.js.map

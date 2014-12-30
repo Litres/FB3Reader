@@ -70,4 +70,3 @@ var LocalBookmarks;
     })();
     LocalBookmarks.LocalBookmarksClass = LocalBookmarksClass;
 })(LocalBookmarks || (LocalBookmarks = {}));
-//# sourceMappingURL=LocalBookmarks.js.map

@@ -405,4 +405,3 @@ var FB3DOM;
     })(FB3Tag);
     FB3DOM.FB3ImgTag = FB3ImgTag;
 })(FB3DOM || (FB3DOM = {}));
-//# sourceMappingURL=FB3DOMBlock.js.map

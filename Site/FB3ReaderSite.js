@@ -108,4 +108,3 @@ var FB3ReaderSite;
     })();
     FB3ReaderSite.ExampleProgressor = ExampleProgressor;
 })(FB3ReaderSite || (FB3ReaderSite = {}));
-//# sourceMappingURL=FB3ReaderSite.js.map

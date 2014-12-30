@@ -726,4 +726,3 @@ var FB3Reader;
     })();
     FB3Reader.Reader = Reader;
 })(FB3Reader || (FB3Reader = {}));
-//# sourceMappingURL=FB3Reader.js.map

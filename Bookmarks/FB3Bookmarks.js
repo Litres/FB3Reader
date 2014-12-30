@@ -304,14 +304,14 @@ var FB3Bookmarks;
             }
             // TODO: add error handler
         };
-        LitResBookmarksProcessor.prototype.GetBookmarksInRange = function (Range) {
+        LitResBookmarksProcessor.prototype.GetBookmarksInRange = function (Type, Range) {
             var Range = Range || this.Reader.GetVisibleRange();
             if (this.Bookmarks.length <= 1 || !Range) {
                 return [];
             }
             var NotesInRange = [];
             for (var j = 1; j < this.Bookmarks.length; j++) {
-                if (this.Bookmarks[j].Group == 1) {
+                if (Type === undefined || this.Bookmarks[j].Group == Type) {
                     var xps = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.From);
                     var xpe = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.To);
                     var xps_e = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.To);
@@ -487,15 +487,14 @@ var FB3Bookmarks;
             var PageData = new FB3DOM.PageContainer();
             this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, this.Range, '', 100, 100, PageData);
             // We first remove unknown characters
-            var InnerHTML = PageData.Body.join('').replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
+            var InnerHTML = PageData.Body.join('');
+            InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, '').replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
             // Then we extract plain text
             this.Title = InnerHTML.replace(/<[^>]+>|\u00AD/gi, '').substr(0, 50).replace(/\s+\S*$/, '');
             this.RawText = InnerHTML.replace(/(\s\n\r)+/gi, ' ');
             this.RawText = this.RawText.replace(/<(\/)?strong[^>]*>/gi, '[$1b]');
             this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
             this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
-            // this.RawText = this.RawText.replace(/<a class="footnote[^>]+>/gi, '');
-            // TODO: skip footnotes
             this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
             this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
             this.Note[0] = this.Raw2FB2(this.RawText);
@@ -741,4 +740,3 @@ var FB3Bookmarks;
     })();
     FB3Bookmarks.Bookmark = Bookmark;
 })(FB3Bookmarks || (FB3Bookmarks = {}));
-//# sourceMappingURL=FB3Bookmarks.js.map

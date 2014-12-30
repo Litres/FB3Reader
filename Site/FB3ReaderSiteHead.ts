@@ -30,7 +30,7 @@ module FB3ReaderSite {
 		Progress(Owner: any, Progress: number): void; // Progress vary 0 - 100, means percent
 		HourglassOff(Owner: any): void;
 		Tick(Owner: any): void;
-		Alert: IAlert;
+		Alert(Message: string): void;
 	}
 
 	// A dumb clone of window.alert(). Defined just to make this clear

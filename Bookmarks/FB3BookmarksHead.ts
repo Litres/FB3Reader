@@ -54,7 +54,7 @@ module FB3Bookmarks {
 		ReLoad();	// Updates itself from the server (may get new current position)
 		ApplyPosition(): boolean;
 		Store(): void;
-		GetBookmarksInRange(Range?: FB3DOM.IRange): IBookmark[];
+		GetBookmarksInRange(Type?:number, Range?: FB3DOM.IRange): IBookmark[];
 		MakeStoreXML(): string;
 	}
 

@@ -599,16 +599,16 @@ var FB3Reader;
                 return undefined;
             }
             var elemDim = elem.getBoundingClientRect();
-            var dimensions = { start: { x: elemDim.left.toFixed(0), y: '0' }, end: { x: '0', y: '0' }, height: '0' };
+            var dimensions = { start: { x: elemDim.left.toFixed(0), y: '0' }, end: { x: '0', y: '0' }, lineHeight: '0' };
             if (elem.className.match('skip_childs') != null) {
                 var childDim = elem.querySelector('span').getBoundingClientRect();
-                dimensions.height = childDim.height.toFixed(0);
+                dimensions.lineHeight = childDim.height.toFixed(0);
                 dimensions.start.y = childDim.top.toFixed(0);
                 dimensions.end.x = (childDim.left + childDim.width).toFixed(0);
                 dimensions.end.y = dimensions.start.y;
             }
             else {
-                dimensions.height = elemDim.height.toFixed(0);
+                dimensions.lineHeight = elemDim.height.toFixed(0);
                 dimensions.start.y = elemDim.top.toFixed(0);
                 dimensions.end.x = (elemDim.left + elemDim.width).toFixed(0);
                 dimensions.end.y = dimensions.start.y;

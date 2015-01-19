@@ -588,32 +588,32 @@ var FB3Reader;
             return Addr;
         };
         Reader.prototype.GetElementXY = function (Node) {
-            var elem;
-            for (var j = this.CurVisiblePage; j <= this.CurVisiblePage + this.NColumns; j++) {
-                elem = this.Site.getElementById('n_' + j + '_' + Node.XPID);
-                if (elem) {
+            var Elem;
+            for (var J = this.CurVisiblePage; J <= this.CurVisiblePage + this.NColumns; J++) {
+                Elem = this.Site.getElementById('n_' + J + '_' + Node.XPID);
+                if (Elem) {
                     break;
                 }
             }
-            if (!elem) {
+            if (!Elem) {
                 return undefined;
             }
-            var elemDim = elem.getBoundingClientRect();
-            var dimensions = { start: { x: elemDim.left.toFixed(0), y: '0' }, end: { x: '0', y: '0' }, lineHeight: '0' };
-            if (elem.className.match('skip_childs') != null) {
-                var childDim = elem.querySelector('span').getBoundingClientRect();
-                dimensions.lineHeight = childDim.height.toFixed(0);
-                dimensions.start.y = childDim.top.toFixed(0);
-                dimensions.end.x = (childDim.left + childDim.width).toFixed(0);
-                dimensions.end.y = dimensions.start.y;
+            var ElemDim = Elem.getBoundingClientRect();
+            var Dimensions = { Start: { X: ElemDim.left.toFixed(0), Y: '0' }, End: { X: '0', Y: '0' }, LineHeight: '0' };
+            if (Elem.className.match('skip_childs') != null) {
+                var ChildDim = Elem.querySelector('span').getBoundingClientRect();
+                Dimensions.LineHeight = ChildDim.height.toFixed(0);
+                Dimensions.Start.Y = ChildDim.top.toFixed(0);
+                Dimensions.End.X = (ChildDim.left + ChildDim.width).toFixed(0);
+                Dimensions.End.Y = Dimensions.Start.Y;
             }
             else {
-                dimensions.lineHeight = elemDim.height.toFixed(0);
-                dimensions.start.y = elemDim.top.toFixed(0);
-                dimensions.end.x = (elemDim.left + elemDim.width).toFixed(0);
-                dimensions.end.y = dimensions.start.y;
+                Dimensions.LineHeight = ElemDim.height.toFixed(0);
+                Dimensions.Start.Y = ElemDim.top.toFixed(0);
+                Dimensions.End.X = (ElemDim.left + ElemDim.width).toFixed(0);
+                Dimensions.End.Y = Dimensions.Start.Y;
             }
-            return dimensions;
+            return Dimensions;
         };
         Reader.prototype.GetElemetnXYByPosition = function (Position) {
             var ResponcibleNode = this.FB3DOM.GetElementByAddr(Position);

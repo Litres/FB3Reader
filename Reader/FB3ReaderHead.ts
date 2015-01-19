@@ -17,9 +17,9 @@ module FB3Reader {
 	//}
 
 	export interface IDimensions {
-		start: { x: string; y: string };
-		end: { x: string; y: string };
-		lineHeight: string;
+		Start: { X: string; Y: string };
+		End: { X: string; Y: string };
+		LineHeight: string;
 	}
 
 	export interface IFBReader { // Keep in mind - all action calls, like PageForward, are asyncroneous

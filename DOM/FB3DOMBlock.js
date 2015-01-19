@@ -92,6 +92,15 @@ var FB3DOM;
             }
             var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
             var ClassNames = this.GetBookmarkClasses(Bookmarks);
+            if (OutStr.match(/\u00AD/)) {
+                var _class = 'skip_childs';
+                if (ClassNames) {
+                    ClassNames += ' ' + _class;
+                }
+                else {
+                    ClassNames = _class;
+                }
+            }
             if (ClassNames) {
                 ClassNames = ' class="' + ClassNames + '"';
             }
@@ -99,6 +108,9 @@ var FB3DOM;
                 TargetStream[TargetStream.length - 1] = TargetStream[TargetStream.length - 1].replace('</span>', OutStr.replace(/\u00AD/, '') + '</span>');
             }
             else {
+                if (OutStr.match(/\u00AD/)) {
+                    OutStr = OutStr + '<span></span>';
+                }
                 TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
             }
         };
@@ -405,3 +417,4 @@ var FB3DOM;
     })(FB3Tag);
     FB3DOM.FB3ImgTag = FB3ImgTag;
 })(FB3DOM || (FB3DOM = {}));
+//# sourceMappingURL=FB3DOMBlock.js.map

@@ -123,11 +123,14 @@ var FB3Reader;
                 this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = false;
             }
         };
-        Reader.prototype.Init = function (StartFrom) {
+        Reader.prototype.Init = function (StartFrom, DateTime) {
             var _this = this;
             this.PrepareCanvas();
             this.Bookmarks.LoadFromCache();
             this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
+            if (DateTime) {
+                this.Bookmarks.Bookmarks[0].DateTime = DateTime;
+            }
             this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
                 _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
                 if (!_this.Bookmarks.ApplyPosition()) {
@@ -448,7 +451,9 @@ var FB3Reader;
                         return; // EOF reached, the book is over
                     }
                     else {
-                        this.GoToOpenPosition(this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To);
+                        var From = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
+                        FB3ReaderPage.To2From(From);
+                        this.GoToOpenPosition(From);
                     }
                 }
                 else {
@@ -581,6 +586,38 @@ var FB3Reader;
             Addr.shift();
             FB3ReaderPage.NumericArray(Addr);
             return Addr;
+        };
+        Reader.prototype.GetElementXY = function (Node) {
+            var elem;
+            for (var j = this.CurVisiblePage; j <= this.CurVisiblePage + this.NColumns; j++) {
+                elem = this.Site.getElementById('n_' + j + '_' + Node.XPID);
+                if (elem) {
+                    break;
+                }
+            }
+            if (!elem) {
+                return undefined;
+            }
+            var elemDim = elem.getBoundingClientRect();
+            var dimensions = { start: { x: elemDim.left.toFixed(0), y: '0' }, end: { x: '0', y: '0' }, height: '0' };
+            if (elem.className.match('skip_childs') != null) {
+                var childDim = elem.querySelector('span').getBoundingClientRect();
+                dimensions.height = childDim.height.toFixed(0);
+                dimensions.start.y = childDim.top.toFixed(0);
+                dimensions.end.x = (childDim.left + childDim.width).toFixed(0);
+                dimensions.end.y = dimensions.start.y;
+            }
+            else {
+                dimensions.height = elemDim.height.toFixed(0);
+                dimensions.start.y = elemDim.top.toFixed(0);
+                dimensions.end.x = (elemDim.left + elemDim.width).toFixed(0);
+                dimensions.end.y = dimensions.start.y;
+            }
+            return dimensions;
+        };
+        Reader.prototype.GetElemetnXYByPosition = function (Position) {
+            var ResponcibleNode = this.FB3DOM.GetElementByAddr(Position);
+            return this.GetElementXY(ResponcibleNode);
         };
         Reader.prototype.IdleGo = function (PageData) {
             var _this = this;
@@ -726,3 +763,4 @@ var FB3Reader;
     })();
     FB3Reader.Reader = Reader;
 })(FB3Reader || (FB3Reader = {}));
+//# sourceMappingURL=FB3Reader.js.map

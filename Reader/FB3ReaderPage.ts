@@ -125,6 +125,9 @@ module FB3ReaderPage {
 		if (Node.className.match(/\bfit_to_page\b/)){
 			return true;
 		}
+		if (Node.className.match('skip_childs') != null) {
+			return true;
+		}
 		return false;
 	}
 

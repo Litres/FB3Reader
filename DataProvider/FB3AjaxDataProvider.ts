@@ -78,7 +78,7 @@ module FB3DataProvider {
 				} else {
 					this.Progressor.HourglassOff(this);
 					if (this.Req.status == 200) {
-						this.Callback(this.ID, this.parseJSON(this.Req.responseText), this.CustomData);
+						this.ParseData(this.Req.responseText);
 					} else {
 						this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
 					}
@@ -91,9 +91,23 @@ module FB3DataProvider {
 
 		private onTransferIE9Complete() {
 			if (this.Req.responseText && this.Req.responseText != '') {
-				this.Callback(this.ID, this.parseJSON(this.Req.responseText), this.CustomData);
+				this.ParseData(this.Req.responseText);
 			} else {
 				this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "NO STATUS FOR IE9"');
+			}
+		}
+
+		private ParseData(Result) {
+			var Data = this.parseJSON(Result);
+			var URL = this.FindRedirectInJSON(Data);
+			if (URL) {
+				new AjaxLoader(URL,
+					(ID, Data: any, CustomData?: any) => this.Callback(ID, Data, CustomData),
+					this.Progressor,
+					this.ID,
+					this.CustomData);
+			} else {
+				this.Callback(this.ID, Data, this.CustomData);
 			}
 		}
 
@@ -111,16 +125,21 @@ module FB3DataProvider {
 
 		private HttpRequest(): XMLHttpRequest {
 			var ref = null;
-			/*if (document.all && !window.atob && (<any> window).XDomainRequest && aldebaran_or4) {
+			if (document.all && !window.atob && (<any> window).XDomainRequest && aldebaran_or4) {
 				ref = new XDomainRequest(); // IE9 =< fix
 				this.xhrIE9 = true;
-			} else */
-			if (window.XMLHttpRequest) {
+			} else if (window.XMLHttpRequest) {
 				ref = new XMLHttpRequest();
 			} else if (window.ActiveXObject) { // Older IE.
 				ref = new ActiveXObject("MSXML2.XMLHTTP.3.0");
 			}
 			return ref;
+		}
+		private FindRedirectInJSON(data): string {
+			if (data && data.url) {
+				return data.url;
+			}
+			return undefined;
 		}
 		private parseJSON(data: string): Object {
 			// Borrowed bits from JQuery & http://json.org/json2.js

@@ -16,6 +16,11 @@ module FB3Reader {
 	//export interface IBlockHeightsCache {
 	//}
 
+	export interface IDimensions {
+		start: { x: string; y: string };
+		end: { x: string; y: string };
+		height: string;
+	}
 
 	export interface IFBReader { // Keep in mind - all action calls, like PageForward, are asyncroneous
 		Site: FB3ReaderSite.IFB3ReaderSite;
@@ -36,7 +41,7 @@ module FB3Reader {
 
 		CanvasReadyCallback: ICanvasReadyCallback; // fired when the page rendering complete
 
-		Init(StartFrom: IPosition): void;
+		Init(StartFrom: IPosition, DateTime?: number): void;
 		CacheForward: number;		// Number of PAGES (!) of forward cache, NColumns*CacheForward blocks will be created
 		CacheBackward: number;	// Size of the backward cache (same structure)
 		FB3DOM: FB3DOM.IFB3DOM; // Access to reader's DOM provider
@@ -56,6 +61,8 @@ module FB3Reader {
 		IdleOff(): void;
 		CurPosPercent(): number;
 		ElementAtXY(X: number, Y: number): IPosition;
+		// GetElementXY(Node: FB3DOM.IFB3Block): IDimensions;
+		GetElemetnXYByPosition(Position: IPosition): IDimensions;	// Get element start xy and end xy related to window
 		Reset(): void;      // Reopens reader on the current position. Call this after you have
 												// changed CSS, resized canvas or some other distructive things
 		Redraw(): void;     // pages refresh - only updates bookmarks

@@ -99,13 +99,25 @@ module FB3DOM {
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
 
 			var ClassNames = this.GetBookmarkClasses(Bookmarks);
+			if (OutStr.match(/\u00AD/)) {
+				var _class = 'skip_childs';
+				if (ClassNames) {
+					ClassNames += ' ' + _class;
+				} else {
+					ClassNames = _class;
+				}
+			}
 			if (ClassNames) {
 				ClassNames = ' class="' + ClassNames + '"';
 			}
 
 			if (!HyphOn && OutStr.match(/^\u00AD/)) {
-				TargetStream[TargetStream.length - 1] = TargetStream[TargetStream.length - 1].replace('</span>', OutStr.replace(/\u00AD/, '') + '</span>');
+				TargetStream[TargetStream.length - 1] = TargetStream[TargetStream.length - 1]
+					.replace('</span>', OutStr.replace(/\u00AD/, '') + '</span>');
 			} else {
+				if (OutStr.match(/\u00AD/)) {
+					OutStr = OutStr + '<span></span>';
+				}
 				TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
 			}
 		}

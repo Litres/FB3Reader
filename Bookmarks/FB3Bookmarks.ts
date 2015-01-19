@@ -40,6 +40,7 @@ module FB3Bookmarks {
 			this.Bookmarks = new Array();
 			this.DeletedBookmarks = {};
 			this.AddBookmark(new Bookmark(this));
+			this.Bookmarks[0].DateTime = 0; // Newly created curpos bookmark is older than any real one
 			this.WaitForData = false;
 			if (document.all && !window.atob && (<any> window).XDomainRequest && this.aldebaran) {
 				this.XMLHttp = new XDomainRequest(); // IE9 =< fix
@@ -547,8 +548,8 @@ module FB3Bookmarks {
 			this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, this.Range, '', 100, 100, PageData);
 			// We first remove unknown characters
 			var InnerHTML = PageData.Body.join('');
-			InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, '') // remove all note links
-				.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
+			InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, ''); // remove all note links
+			InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
 			// Then we extract plain text
 			this.Title = InnerHTML.replace(/<[^>]+>|\u00AD/gi, '').substr(0, 50).replace(/\s+\S*$/, '');
 			this.RawText = InnerHTML.replace(/(\s\n\r)+/gi, ' ');

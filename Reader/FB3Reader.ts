@@ -694,7 +694,7 @@ module FB3Reader {
 			return Dimensions;
 		}
 
-		public GetElemetnXYByPosition(Position: IPosition): IDimensions {
+		public GetElementXYByPosition(Position: IPosition): IDimensions {
 			var ResponcibleNode: FB3DOM.IFB3Block = this.FB3DOM.GetElementByAddr(Position);
 			return this.GetElementXY(ResponcibleNode);
 		}

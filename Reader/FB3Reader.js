@@ -615,7 +615,7 @@ var FB3Reader;
             }
             return Dimensions;
         };
-        Reader.prototype.GetElemetnXYByPosition = function (Position) {
+        Reader.prototype.GetElementXYByPosition = function (Position) {
             var ResponcibleNode = this.FB3DOM.GetElementByAddr(Position);
             return this.GetElementXY(ResponcibleNode);
         };

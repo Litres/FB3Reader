@@ -62,7 +62,7 @@ module FB3Reader {
 		CurPosPercent(): number;
 		ElementAtXY(X: number, Y: number): IPosition;
 		// GetElementXY(Node: FB3DOM.IFB3Block): IDimensions;
-		GetElemetnXYByPosition(Position: IPosition): IDimensions;	// Get element start xy and end xy related to window
+		GetElementXYByPosition(Position: IPosition): IDimensions;	// Get element start xy and end xy related to window
 		Reset(): void;      // Reopens reader on the current position. Call this after you have
 												// changed CSS, resized canvas or some other distructive things
 		Redraw(): void;     // pages refresh - only updates bookmarks

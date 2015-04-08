@@ -37,7 +37,7 @@ module FB3Reader {
 		LineHeight: number;		// Height of the line in P - in pixels, to align blocks vertically
 		PagesPositionsCache: FB3PPCache.IFB3PPCache;
 		CurVisiblePage: number;	// ID of the first page visible, shared for FB3ReaderPage only
-		Version: string;
+		Version: string;        // Used to verify cache compatibility with the current renderer
 
 		CanvasReadyCallback: ICanvasReadyCallback; // fired when the page rendering complete
 
@@ -68,6 +68,7 @@ module FB3Reader {
 		Redraw(): void;     // pages refresh - only updates bookmarks
 		RedrawVisible(): void; // light version of redraw, refresh only visible pages (boookmark selection)
 		GetVisibleRange(): FB3DOM.IRange;
+		PatchRangeTo(Range: FB3DOM.IRange): FB3DOM.IRange;
 
 		Destroy: boolean; // hack for apps, like win8, when we change page, abort all
 	}

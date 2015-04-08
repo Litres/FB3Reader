@@ -6,6 +6,7 @@ var FB3ReaderSite;
             var _this = this;
             this.Canvas = Canvas;
             this.CanStoreBookmark = false;
+            this.ViewText = new ViewText();
             this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
             this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
             this.Alert = function (Message) { return _this.Progressor.Alert(Message); };
@@ -46,6 +47,18 @@ var FB3ReaderSite;
             alert(HTML);
         };
         ExampleSite.prototype.HistoryHandler = function (Pos) {
+        };
+        ExampleSite.prototype.showTrialEnd = function (ID) {
+            return '';
+        };
+        ExampleSite.prototype.addTrialHandlers = function () {
+        };
+        ExampleSite.prototype.PrepareHTML = function (HTMLString) {
+            return HTMLString;
+        };
+        ExampleSite.prototype.PatchNoteNode = function (Node) {
+            Node.className += ' overfloatednote';
+            return Node;
         };
         return ExampleSite;
     })();
@@ -107,5 +120,19 @@ var FB3ReaderSite;
         return ExampleProgressor;
     })();
     FB3ReaderSite.ExampleProgressor = ExampleProgressor;
+    var ViewText = (function () {
+        function ViewText() {
+            this.TextArray = {
+                'BOOKMARK_IMAGE_PREVIEW_TEXT': '�����������',
+                'BOOKMARK_EMPTY_TYPE_1_TEXT': '��������',
+                'BOOKMARK_EMPTY_TYPE_3_TEXT': '�������'
+            };
+        }
+        ViewText.prototype.Print = function (Index) {
+            return this.TextArray[Index];
+        };
+        return ViewText;
+    })();
+    FB3ReaderSite.ViewText = ViewText;
 })(FB3ReaderSite || (FB3ReaderSite = {}));
 //# sourceMappingURL=FB3ReaderSite.js.map

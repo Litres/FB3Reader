@@ -3,6 +3,7 @@
 module FB3ReaderSite {
 
 	export class ExampleSite implements IFB3ReaderSite {
+		public ViewText: IViewText;
 		public Progressor: ILoadProgress;
 		public IdleThreadProgressor:ILoadProgress;
 		public NotePopup: INotePopup;
@@ -10,6 +11,7 @@ module FB3ReaderSite {
 		public Key: string;
 		public CanStoreBookmark: boolean = false;
 		constructor(public Canvas: HTMLElement) {
+			this.ViewText = new ViewText();
 			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
 			this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
 			this.Alert = (Message: string) => this.Progressor.Alert(Message);
@@ -48,6 +50,15 @@ module FB3ReaderSite {
 		}
 
 		public HistoryHandler(Pos: FB3DOM.IXPath): void {}
+		public showTrialEnd(ID: string): string { return ''; }
+		public addTrialHandlers(): void { }
+		public PrepareHTML(HTMLString: string): string {
+			return HTMLString;
+		}
+		public PatchNoteNode(Node: HTMLElement): HTMLElement {
+			Node.className += ' overfloatednote';
+			return Node;
+		}
 	}
 
 	export class ExampleProgressor implements ILoadProgress {
@@ -104,4 +115,17 @@ module FB3ReaderSite {
 		}
 	}
 
+	export class ViewText implements IViewText {
+		private TextArray: ITextArray;
+		constructor() {
+			this.TextArray = {
+				'BOOKMARK_IMAGE_PREVIEW_TEXT': 'Изображение',
+				'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Закладка',
+				'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Заметка'
+			};
+		}
+		public Print(Index: string): string {
+			return this.TextArray[Index];
+		}
+	}
 }

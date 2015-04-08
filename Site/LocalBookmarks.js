@@ -10,9 +10,15 @@ var LocalBookmarks;
             this.LZState = true; // for testing only, default = true
             this.GetBookmarks();
             this.CurPos = [0];
+            this.DateTime = 0;
             var FoundBookmark;
             if (FoundBookmark = this.GetBookmarkByArt(this.ArtID)) {
-                this.CurPos = FoundBookmark.CurPos;
+                if (FoundBookmark.CurPos) {
+                    this.CurPos = FoundBookmark.CurPos;
+                }
+                if (FoundBookmark.DateTime) {
+                    this.DateTime = FoundBookmark.DateTime;
+                }
             }
         }
         LocalBookmarksClass.prototype.GetBookmarkByArt = function (ArtID) {
@@ -26,9 +32,8 @@ var LocalBookmarks;
         LocalBookmarksClass.prototype.GetBookmarks = function () {
             var bookmarksXML = this.local.getItem(this.storageVal);
             if (bookmarksXML) {
-                if (this.LZState)
-                    var cacheData = LZString.decompressFromUTF16(bookmarksXML);
-                this.LocalBookmarks = JSON.parse(this.LZState ? cacheData : bookmarksXML);
+                var cacheData = this.DecodeData(bookmarksXML);
+                this.LocalBookmarks = JSON.parse(cacheData);
             }
         };
         LocalBookmarksClass.prototype.StoreBookmarks = function (XMLString) {
@@ -38,7 +43,8 @@ var LocalBookmarks;
             var localBookmarksTmp = {
                 ArtID: this.ArtID,
                 Cache: XMLString,
-                CurPos: this.CurPos
+                CurPos: this.CurPos,
+                DateTime: this.DateTime
             };
             for (var j = 0; j < this.LocalBookmarks.length; j++) {
                 if (this.LocalBookmarks[j].ArtID == this.ArtID) {
@@ -47,9 +53,8 @@ var LocalBookmarks;
             }
             this.LocalBookmarks.push(localBookmarksTmp);
             var BookmarksString = JSON.stringify(this.LocalBookmarks);
-            if (this.LZState)
-                var cacheData = LZString.compressToUTF16(BookmarksString);
-            this.local.setItem(this.storageVal, this.LZState ? cacheData : BookmarksString);
+            var cacheData = this.EncodeData(BookmarksString);
+            this.local.setItem(this.storageVal, cacheData);
         };
         LocalBookmarksClass.prototype.GetCurrentArtBookmarks = function () {
             var FoundBookmark;
@@ -65,6 +70,28 @@ var LocalBookmarks;
         };
         LocalBookmarksClass.prototype.GetCurrentPosition = function () {
             return this.CurPos;
+        };
+        LocalBookmarksClass.prototype.SetCurrentDateTime = function (value) {
+            this.DateTime = value;
+        };
+        LocalBookmarksClass.prototype.GetCurrentDateTime = function () {
+            return this.DateTime;
+        };
+        LocalBookmarksClass.prototype.EncodeData = function (Data) {
+            if (this.LZState) {
+                return LZString.compressToUTF16(Data);
+            }
+            else {
+                return Data;
+            }
+        };
+        LocalBookmarksClass.prototype.DecodeData = function (Data) {
+            if (this.LZState) {
+                return LZString.decompressFromUTF16(Data);
+            }
+            else {
+                return Data;
+            }
         };
         return LocalBookmarksClass;
     })();

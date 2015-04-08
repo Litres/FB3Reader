@@ -6,6 +6,7 @@ var FB3PPCache;
     var SkipCache = false; // For debug purposes
     var PPCache = (function () {
         function PPCache() {
+            this.Encrypt = true;
             this.Reset();
         }
         PPCache.prototype.Get = function (I) {
@@ -28,7 +29,7 @@ var FB3PPCache;
             }
             // We are going to save no more than 50 cache entries
             // We reuse slots on write request based on access time
-            if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+            if (this.ChechStorageAvail()) {
                 // localStorage support required
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
@@ -52,14 +53,14 @@ var FB3PPCache;
                 });
                 // Keep in mind - next line is really, really slow
                 var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
-                localStorage['FB3Reader1.0'] = LZString.compressToUTF16(uncompressdCacheData);
+                this.SaveData(this.EncodeData(uncompressdCacheData));
             } //  else { no luck, no store - recreate from scratch } 
         };
         PPCache.prototype.Load = function (Key) {
             if (SkipCache) {
                 return;
             }
-            if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+            if (this.ChechStorageAvail()) {
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
                 }
@@ -73,12 +74,22 @@ var FB3PPCache;
                 }
             }
         };
+        PPCache.prototype.LoadDataAsync = function (ArtID) {
+        };
+        PPCache.prototype.ChechStorageAvail = function () {
+            if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        };
         PPCache.prototype.LoadOrFillEmptyData = function () {
-            var compressedCacheData = localStorage['FB3Reader1.0'];
+            var compressedCacheData = this.LoadData();
             var DataInitDone = false;
             if (compressedCacheData) {
                 try {
-                    var cacheData = LZString.decompressFromUTF16(compressedCacheData);
+                    var cacheData = this.DecodeData(compressedCacheData);
                     this.CacheMarkupsList = JSON.parse(cacheData);
                     DataInitDone = true;
                 }
@@ -102,6 +113,36 @@ var FB3PPCache;
         };
         PPCache.prototype.GetMargin = function (XP) {
             return this.MarginsCache[XP];
+        };
+        PPCache.prototype.CheckIfKnown = function (From) {
+            for (var I = 1; I < this.PagesPositionsCache.length; I++) {
+                if (FB3Reader.PosCompare(this.PagesPositionsCache[I].Range.From, From) === 0) {
+                    return I;
+                }
+            }
+            return undefined;
+        };
+        PPCache.prototype.DecodeData = function (Data) {
+            if (this.Encrypt) {
+                return LZString.decompressFromUTF16(Data);
+            }
+            else {
+                return Data;
+            }
+        };
+        PPCache.prototype.EncodeData = function (Data) {
+            if (this.Encrypt) {
+                return LZString.compressToUTF16(Data);
+            }
+            else {
+                return Data;
+            }
+        };
+        PPCache.prototype.LoadData = function () {
+            return localStorage['FB3Reader1.0'];
+        };
+        PPCache.prototype.SaveData = function (Data) {
+            localStorage['FB3Reader1.0'] = Data;
         };
         return PPCache;
     })();

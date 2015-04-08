@@ -72,9 +72,9 @@ var FB3DOM;
     _FB3DOM.PageContainer = PageContainer;
     var DOM = (function (_super) {
         __extends(DOM, _super);
-        function DOM(Alert, Progressor, DataProvider, PagesPositionsCache) {
-            _super.call(this, null, null, 0);
-            this.Alert = Alert;
+        function DOM(Site, Progressor, DataProvider, PagesPositionsCache) {
+            _super.call(this, null, null, null, 0);
+            this.Site = Site;
             this.Progressor = Progressor;
             this.DataProvider = DataProvider;
             this.PagesPositionsCache = PagesPositionsCache;
@@ -99,6 +99,7 @@ var FB3DOM;
             return [1];
         };
         DOM.prototype.AfterHeaderLoaded = function (Data) {
+            Data = Data.length ? Data[0] : Data; // hack for winjs app
             this.TOC = Data.Body;
             this.DataChunks = Data.Parts;
             this.MetaData = Data.Meta;
@@ -170,10 +171,15 @@ var FB3DOM;
                 return [0]; // that's some unreasonable xpath, we have no idea where it can be
             }
         };
-        DOM.prototype.GetXPathFromPos = function (Position) {
+        DOM.prototype.GetXPathFromPos = function (Position, End) {
             var Element = this.GetElementByAddr(Position);
             if (Element) {
-                return Element.XPath;
+                var XPath = Element.XPath.slice(0);
+                if (End && Element.text && XPath[XPath.length - 1].match && XPath[XPath.length - 1].match(/^\.\d+$/)) {
+                    var EndChar = XPath[XPath.length - 1].replace('.', '') * 1 + Element.text.replace(/\u00AD|&shy;|\s$/g, '').length - 1; // First char already counted in number
+                    XPath[XPath.length - 1] = '.' + EndChar;
+                }
+                return XPath;
             }
             else {
                 return undefined;
@@ -193,7 +199,7 @@ var FB3DOM;
             var LoadedChunk = CustomData.ChunkN;
             var Shift = this.DataChunks[LoadedChunk].s;
             for (var I = 0; I < Data.length; I++) {
-                this.Childs[I + Shift] = _FB3DOM.TagClassFactory(Data[I], this, I + Shift, 0, 0, false); //new FB3Tag(Data[I], this, I + Shift);
+                this.Childs[I + Shift] = _FB3DOM.TagClassFactory(Data[I], this, I + Shift, 0, 0, false, this); //new FB3Tag(Data[I], this, I + Shift);
             }
             this.DataChunks[LoadedChunk].loaded = 2;
             var I = 0;

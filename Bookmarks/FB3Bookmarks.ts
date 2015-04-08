@@ -3,6 +3,8 @@
 
 module FB3Bookmarks {
 
+	export var ActiveXXMLHttp: boolean = true;
+
   interface iWindow extends Window {
 		ActiveXObject: any;
 		DOMParser: any;
@@ -12,25 +14,27 @@ module FB3Bookmarks {
 	interface IXMLHTTPResponseCallback { (Data: XMLDocument): void; }
 
 	export class LitResBookmarksProcessor implements IBookmarks {
+		public Host: string;
 		public Ready: boolean;
 		public Reader: FB3Reader.IFBReader;
 		public Bookmarks: IBookmark[];
 		public ClassPrefix: string;
 		public LockID: string;
 		public LoadDateTime: number;
+		public ReadyCallback: IBookmarkSyncCallback;
 		private DeletedBookmarks;
 		private LoadEndCallback: IBookmarksReadyCallback;
 		private TemporaryNotes: IBookmarks;
 		private WaitedToRemapBookmarks: number;
 		private WaitForData: boolean;
 		private XMLHttp: any;
-		private Host: string;
 		private SID: string;
 		private Callback: any;
 		private SaveAuto: boolean; // save state after ReLoad
 		private XMLHTTPResponseCallback: IXMLHTTPResponseCallback;
 		private LocalXML: string;
 		private xhrIE9: boolean;
+		private MakeStoreXMLAsyncTimeout: number;
 		public aldebaran: boolean; // stupid hack
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string, LitresLocalXML?: string) {
 			this.xhrIE9 = false;
@@ -42,16 +46,22 @@ module FB3Bookmarks {
 			this.AddBookmark(new Bookmark(this));
 			this.Bookmarks[0].DateTime = 0; // Newly created curpos bookmark is older than any real one
 			this.WaitForData = false;
+			this.Host = '/';
+			//// local testing part start
+			this.Host = 'http://www.litres.ru/';
+//			this.aldebaran = true;
+			//// local testing part end
 			if (document.all && !window.atob && (<any> window).XDomainRequest && this.aldebaran) {
+				// IE8-IE9 cant do cross-domain ajax properly (IE7 i think cant do it at all)
+				// this workaround send empty clean request, no params, no session, no cookies
+				// answer must be text/plain
 				this.XMLHttp = new XDomainRequest(); // IE9 =< fix
 				this.xhrIE9 = true;
-			} else if (window.ActiveXObject) {
+			} else if (window.ActiveXObject && ActiveXXMLHttp) {
 				this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
 			} else {
 				this.XMLHttp = new XMLHttpRequest();
 			}
-			this.Host = '/';
-			this.Host = 'http://www.litres.ru/'; // TODO: replace
 			this.SID = LitresSID;
 			this.SaveAuto = false;
 			this.LocalXML = LitresLocalXML;
@@ -129,32 +139,29 @@ module FB3Bookmarks {
 					this.WaitedToRemapBookmarks++;
 				}
 			}
+			this.CheckWaitedSync();
+		}
+
+		private OnChildBookmarkSync() {
+			this.WaitedToRemapBookmarks--;
+			this.CheckWaitedSync();
+		}
+
+		private CheckWaitedSync() {
 			if (!this.WaitedToRemapBookmarks) {
 				this.WaitForData = false;
 				if (this.LoadEndCallback) {
 					this.LoadEndCallback(this);
 				}
-			}
-		}
-
-		private OnChildBookmarkSync() {
-			this.WaitedToRemapBookmarks--;
-			if (!this.WaitedToRemapBookmarks) {
-				this.WaitForData = false;
-				if (this.LoadEndCallback) {
-					this.LoadEndCallback(this);
+				if (this.ReadyCallback) {
+					this.ReadyCallback();
 				}
 			}
 		}
 
 		private ParseXML(XML: XMLDocument) {
 			// todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
-			var Rows;
-			if (typeof XML.querySelectorAll === 'undefined') {
-				Rows = XML.getElementsByTagName('Selection');
-			} else {
-				Rows = XML.querySelectorAll('Selection');
-			}
+			var Rows = XML.querySelectorAll('Selection');
 			this.LoadDateTime = moment().unix();
 			if (XML.documentElement.getAttribute('lock-id')) {
 				this.LockID = XML.documentElement.getAttribute('lock-id');
@@ -204,7 +211,9 @@ module FB3Bookmarks {
 
 		public ReLoad(SaveAutoState?: boolean) {
 			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
+			TemporaryNotes.Host = this.Host;
 			TemporaryNotes.Reader = this.Reader;
+			// TemporaryNotes.ReadyCallback = this.ReadyCallback;
 			TemporaryNotes.aldebaran = this.aldebaran;
 			TemporaryNotes.Bookmarks[0].Group = -1;
 			this.SaveAuto = SaveAutoState;
@@ -263,10 +272,17 @@ module FB3Bookmarks {
 					AnyUpdates = true;
 				}
 			}
+			if (this.ReadyCallback) {
+				this.ReadyCallback();
+			}
 			if (!this.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
 				// Newer position from server
 				this.Bookmarks[0].SkipUpdateDatetime = true;
 				this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
+				if (AnyUpdates &&
+					FB3Reader.PosCompare(this.Bookmarks[0].Range.From, TemporaryNotes.Bookmarks[0].Range.From) == 0) {
+						this.Reader.Redraw();
+				}
 			} else if (AnyUpdates) {
 				// Updated bookmarks data from server - we should redraw the page in case there are new notes
 				this.Reader.Redraw();
@@ -296,16 +312,37 @@ module FB3Bookmarks {
 			var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' +
 				'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
 			if (this.Bookmarks.length) {
+				// TODO: check if this 2 lines needed
 				this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
 				this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart.slice(0);
 				XML += this.Bookmarks[0].PublicXML();
 				for (var j = 1; j < this.Bookmarks.length; j++) {
-					if (this.Bookmarks[j].TemporaryState) continue;
+					if (this.Bookmarks[j].TemporaryState) {
+						continue;
+					}
 					XML += this.Bookmarks[j].PublicXML();
 				}
 			}
 			XML += '</FictionBookMarkup>';
 			return XML;
+		}
+
+		public MakeStoreXMLAsync(Callback): string {
+			if (this.Bookmarks.length) {
+				for (var j = 0; j < this.Bookmarks.length; j++) {
+					if (this.Bookmarks[j].TemporaryState) {
+						continue;
+					}
+					if (!this.Bookmarks[j].XPathMappingReady) {
+						clearTimeout(this.MakeStoreXMLAsyncTimeout);
+						this.MakeStoreXMLAsyncTimeout = setTimeout(() => this.MakeStoreXMLAsync(Callback), 10);
+						return;
+					}
+				}
+				return Callback(this.MakeStoreXML());
+			} else {
+				return undefined;
+			}
 		}
 
 		private SendNotesRequest(URL: string, Type: string, Data?: string): void {
@@ -323,14 +360,14 @@ module FB3Bookmarks {
 		}
 		private XMLHTTPResponse(): void {
 			if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
-				this.XMLHTTPResponseCallback(this.XMLHttp.responseXML);
+				var xml = this.MakeXMLFromString(this.XMLHttp.responseText);
+				this.XMLHTTPResponseCallback(xml);
 			}
 			// TODO: add error handler
 		}
 		private XMLHTTPIE9Response(): void {
 			if (this.XMLHttp.responseText && this.XMLHttp.responseText != '') {
-				var parser = new DOMParser();
-				var xml = parser.parseFromString(this.XMLHttp.responseText, 'text/xml');
+				var xml = this.MakeXMLFromString(this.XMLHttp.responseText);
 				this.XMLHTTPResponseCallback(xml);
 			}
 			// TODO: add error handler
@@ -344,10 +381,17 @@ module FB3Bookmarks {
 			var NotesInRange = [];
 			for (var j = 1; j < this.Bookmarks.length; j++) {
 				if (Type === undefined || this.Bookmarks[j].Group == Type) {
+					var BRangeTo = this.Bookmarks[j].Range.To;
+					if (this.Bookmarks[j].Group == 1 && this.Bookmarks[j].XPathMappingReady) {
+						// we need this workaround to fix bookmark end point Range
+						// we cant check [}] without this
+						// dont think this is best fix
+						BRangeTo.push(this.Reader.FB3DOM.Childs[this.Bookmarks[j].Range.To[0]].Childs.length);
+					}
 					var BStart2RStart = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.From);
-					var BEnd2REnd = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.To);
+					var BEnd2REnd = FB3Reader.PosCompare(BRangeTo, Range.To);
 					var BStart2REnd = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.To);
-					var BEnd2RStart = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.From);
+					var BEnd2RStart = FB3Reader.PosCompare(BRangeTo, Range.From);
 					if (
 						(BStart2RStart >= 0 && BStart2REnd <= 0) || // [{]  Bookmark start in range
 						(BEnd2RStart >= 0 && BEnd2REnd <= 0) ||		// [}]  Bookmark end in range
@@ -381,6 +425,10 @@ module FB3Bookmarks {
 		private AfterRemapCallback: IBookmarkSyncCallback;
 		private NotePreviewLimit: number = 140;
 		private Extract;
+		private InitSyncXPathWithDOMTimeout: number;
+		private DoSyncXPathWithDOMTimeout: number;
+		private TitleLenLimit: number = 100;
+		private ClassLenLimit: number = 30;
 		constructor(public Owner: IBookmarks) {
 			this.ID = this.MakeSelectionID();
 			this.Group = 0;
@@ -396,67 +444,6 @@ module FB3Bookmarks {
 			this.TemporaryState = 0;
 			this.SkipUpdateDatetime = false;
 			this.Extract = '';
-		}
-
-		public InitFromXY(X: number, Y: number, AllowBlock: boolean): boolean {
-			var StartAddr = this.Owner.Reader.ElementAtXY(X, Y);
-			if (StartAddr) {
-
-				var NewElement = this.Owner.FB3DOM.GetElementByAddr(StartAddr);
-				if (NewElement.IsBlock()) {
-					return false;
-				} else {
-					return this.InitFromPosition(StartAddr);
-				}
-			}
-		}
-
-		public InitFromXPath(XPath: FB3DOM.IXPath): boolean {
-			return this.InitFromPosition(this.Owner.FB3DOM.GetAddrByXPath(XPath));
-		}
-
-		public InitFromRange(Range: FB3DOM.IRange): boolean {
-			var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From);
-			return this.InitFromPosition(Element.Position());
-		}
-
-		public InitFromPosition(Position: FB3Reader.IPosition): boolean {
-			if (Position) {
-				this.Range.From = Position.slice(0);
-				this.Range.To = Position;
-				this.GetDataFromText();
-				return true;
-			} else {
-				return undefined;
-			}
-		}
-
-		public ExtendToXY(X: number, Y: number, AllowBlock: boolean): boolean {
-			var BaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-
-			if (!BaseTo || BaseTo.length < 1) return false;
-
-			// To catch gap between lines we may go up to the nearest non-block element
-			if (!AllowBlock) {
-				var Trials = 0;
-				var Element = this.Owner.FB3DOM.GetElementByAddr(BaseTo);
-				while (Trials < 10 && Element.IsBlock()){ // 30px should be enough
-					Y = Y - 3; // We believe 3px is nice, no need to jump 1px cause no elements are so small
-					var NewBaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-					Trials++;
-					if (NewBaseTo && NewBaseTo.length > 1) {
-						var NewElement = this.Owner.FB3DOM.GetElementByAddr(NewBaseTo);
-						if (!NewElement.IsBlock()) {
-							BaseTo = NewBaseTo;
-							Element = NewElement;
-						}
-					}
-				}
-			}
-
-			this.Range.To = BaseTo;
-			this.GetDataFromText();
-			return true;
 		}
 
 		public RoundClone(ToBlock: boolean): IBookmark {
@@ -487,7 +474,7 @@ module FB3Bookmarks {
 		private RoundToWordLVLDn(Adress: FB3Reader.IPosition) {
 			var Block = this.Owner.FB3DOM.GetElementByAddr(Adress);
 			var PosInBlock = Adress[Adress.length - 1];
-			while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
+			while (Block.Parent && !Block.TagName) {
 				Block = Block.Parent;
 				PosInBlock = Adress[Adress.length - 1];
 				Adress.pop();
@@ -511,7 +498,7 @@ module FB3Bookmarks {
 			//if (PosInBlock < Block.Childs.length - 2) {
 			//	PosInBlock++;
 			//}
-			if (PosInBlock > Block.Childs.length - 2)
+			if (PosInBlock && PosInBlock > Block.Childs.length - 2)
 				PosInBlock = Block.Childs.length - 2;
 			while (PosInBlock > 0 && !Block.Childs[PosInBlock-1].Childs && !Block.Childs[PosInBlock-1].text.match(/\s$/)) {
 				PosInBlock--;
@@ -551,17 +538,22 @@ module FB3Bookmarks {
 			InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, ''); // remove all note links
 			InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
 			// Then we extract plain text
-			this.Title = InnerHTML.replace(/<[^>]+>|\u00AD/gi, '').substr(0, 50).replace(/\s+\S*$/, '');
+			this.Title = this.prepareTitle(InnerHTML.replace(/<[^>]+>|\u00AD/gi, '')).replace(/\s+\S*$/, '');
 			this.RawText = InnerHTML.replace(/(\s\n\r)+/gi, ' ');
+			this.RawText = this.RawText.replace(/<\/div>/gi, '</div> '); // stupid workaround
 			this.RawText = this.RawText.replace(/<(\/)?strong[^>]*>/gi, '[$1b]');
 			this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
 			this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
 			this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
 			this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
 			this.Note[0] = this.Raw2FB2(this.RawText);
+			if (this.RawText == "" && InnerHTML.match(/img/i)) {
+				// if someone have bookmark with img only
+				this.Note[0] = "<p>" + this.Owner.Reader.Site.ViewText.Print('BOOKMARK_IMAGE_PREVIEW_TEXT') + "</p>";
+			}
 			// todo - should fill this.Extract with something equal|close to raw fb2 fragment
 			this.XStart = this.Owner.FB3DOM.GetXPathFromPos(this.Range.From.slice(0));
-			this.XEnd = this.Owner.FB3DOM.GetXPathFromPos(this.Range.To.slice(0));
+			this.XEnd = this.Owner.FB3DOM.GetXPathFromPos(this.Range.To.slice(0), true);
 		}
 
 		private Raw2FB2(RawText: string): string {
@@ -594,7 +586,8 @@ module FB3Bookmarks {
 		private InitSyncXPathWithDOM(): void {
 			this.XPathMappingReady = false;
 			if (!this.Owner.FB3DOM.DataChunks) { // No info on chunks yet, keep waiting
-				setTimeout(() => this.InitSyncXPathWithDOM(), 10);
+				clearTimeout(this.InitSyncXPathWithDOMTimeout);
+				this.InitSyncXPathWithDOMTimeout = setTimeout(() => this.InitSyncXPathWithDOM(), 10);
 				return;
 			}
 			this.RequiredChunks = this.ChunksRequired();
@@ -618,7 +611,8 @@ module FB3Bookmarks {
 			for (var I = 0; I < this.RequiredChunks.length; I++) {
 				if (this.Owner.FB3DOM.DataChunks[this.RequiredChunks[I]].loaded != 2) {
 					// There is at least one chunk still being loaded - we will return later
-					setTimeout(() => this.DoSyncXPathWithDOM(), 10);
+					clearTimeout(this.DoSyncXPathWithDOMTimeout);
+					this.DoSyncXPathWithDOMTimeout = setTimeout(() => this.DoSyncXPathWithDOM(), 10);
 					return;
 				}
 			}
@@ -653,13 +647,13 @@ module FB3Bookmarks {
 
 		public PublicXML(): string {
 			return '<Selection group="' + this.Group + '" ' +
-				(this.Class ? 'class="' + this.Class + '" ' : '') +
-				(this.Title ? 'title="' + this.Title + '" ' : '') +
+				(this.Class ? 'class="' + this.prepareClass(this.Class) + '" ' : '') +
+				(this.Title ? 'title="' + this.prepareTitle(this.Title) + '" ' : '') +
 				'id="' + this.ID + '" ' +
 				'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
 				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
 				'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' +
-				this.GetPercent() + '>' +
+				this.MakePercent() + '>' +
 				this.GetNote() + this.GetExtract() +
 			'</Selection>';
 		}
@@ -709,9 +703,39 @@ module FB3Bookmarks {
 
 		private parseTitle(): void {
 			if (this.Title == '' || this.Title == null) {
-				if (this.Group == 1) this.Title = 'Закладка';
-				else if (this.Group == 3 || this.Group == 5) this.Title = 'Заметка';
+				// if Title empty, set new title group
+				if (this.Group == 1) {
+					this.Title = this.Owner.Reader.Site.ViewText.Print('BOOKMARK_EMPTY_TYPE_1_TEXT');
+				} else if (this.Group == 3 || this.Group == 5) {
+					this.Title = this.Owner.Reader.Site.ViewText.Print('BOOKMARK_EMPTY_TYPE_3_TEXT');
+				}
+			} else {
+				//  this.Title = this.prepareTitle(this.Title);
+				this.Title = this.Title; // i believe server data!
 			}
+		}
+
+		private prepareTitle(str: string): string {
+			return this.prepareAnything(str, this.TitleLenLimit);
+		}
+		private prepareClass(str: string): string {
+			if (str.length < 1) {
+				return 'default';
+			}
+			return this.prepareAnything(str, this.ClassLenLimit);
+		}
+		private prepareAnything(str: string, len: number): string {
+			return str.substr(0, len);
+		}
+		private MakePercent(): string {
+			if (this.Group != 0) return '';
+			var percent = Math.round(this.Owner.Reader.CurPosPercent());
+			if (percent > 100) {
+				percent = 100;
+			} else if (percent < 0) {
+				percent = 0;
+			}
+			return ' percent="' + percent + '"';
 		}
 
 		private parseXMLNote(el) {
@@ -729,7 +753,11 @@ module FB3Bookmarks {
 				if (child.childNodes.length && child.childNodes[0].nodeName != '#text') {
 					res += this.parseXMLNote(child);
 				} else {
+					if (child.childNodes.length) {
 					res += child.childNodes[0].nodeValue;
+					} else {
+						res += "";
+					}
 				}
 				res += "</" + child.tagName + ">";
 			}
@@ -767,10 +795,6 @@ module FB3Bookmarks {
 				}
 			}
 			return text;
-		}
-		private GetPercent(): string {
-			if (this.Group != 0) return '';
-			return ' percent="' + Math.round(this.Owner.Reader.CurPosPercent()) + '"';
 		}
 		private GetExtract(): string {
 			return this.Extract;

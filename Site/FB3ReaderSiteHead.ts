@@ -4,6 +4,7 @@ module FB3ReaderSite {
 	
 	// Mothership with all interfaces aboard - everybody will pick here
 	export interface IFB3ReaderSite {
+		ViewText: IViewText;
 		Progressor: ILoadProgress;
 		IdleThreadProgressor: ILoadProgress;
 		Canvas: HTMLElement;
@@ -19,9 +20,13 @@ module FB3ReaderSite {
 		StoreBookmarksHandler(timer: number);
 		AfterStoreBookmarks(): void;
 		BeforeBookmarksAction(): boolean;
-//		ZoomImg(obj): void;
+		ZoomImg(obj): void;
 		ZoomHTML(HTML: FB3DOM.InnerHTML): void;
 		HistoryHandler(Pos: FB3DOM.IXPath): void;
+		showTrialEnd(ID: string): string;
+		addTrialHandlers(): void;
+		PrepareHTML(HTMLString: string): string;
+		PatchNoteNode(Node: HTMLElement): HTMLElement;
 	}
 
 	// General-purpose interface for progress feedback
@@ -48,6 +53,13 @@ module FB3ReaderSite {
 		MaxPage: number;
 		Percent?: number;
 		Pos?: FB3DOM.IXPath;
+	}
+
+	export interface IViewText {
+		Print(Index: string): string;
+	}
+	export interface ITextArray {
+		[Index: string]: string;
 	}
 
 }

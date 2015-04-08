@@ -18,6 +18,7 @@ module FB3PPCache {
 		private CacheMarkupsList: IPageRenderInstructionsCacheEntry[];
 		private LastPageN: number;
 		private MarginsCache: any; // we are going to store a plain hash here for all "margined" elements
+		public Encrypt: boolean = true;
 
 		constructor() {
 			this.Reset();
@@ -47,7 +48,7 @@ module FB3PPCache {
 			// We are going to save no more than 50 cache entries
 			// We reuse slots on write request based on access time
 
-			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+			if (this.ChechStorageAvail()) {
 				// localStorage support required
 				if (!this.CacheMarkupsList) {
 					this.LoadOrFillEmptyData();
@@ -73,7 +74,8 @@ module FB3PPCache {
 					);
 				// Keep in mind - next line is really, really slow
 				var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
-				localStorage['FB3Reader1.0'] = LZString.compressToUTF16(uncompressdCacheData);
+				this.SaveData(this.EncodeData(uncompressdCacheData));
+
 			}//  else { no luck, no store - recreate from scratch } 
 		}
 
@@ -81,7 +83,7 @@ module FB3PPCache {
 			if (SkipCache) {
 				return;
 			}
-			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+			if (this.ChechStorageAvail()) {
 				if (!this.CacheMarkupsList) {
 					this.LoadOrFillEmptyData();
 				}
@@ -96,12 +98,22 @@ module FB3PPCache {
 			}
 		}
 
+		public LoadDataAsync(ArtID: string) { }
+
+		public ChechStorageAvail(): boolean {
+			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		private LoadOrFillEmptyData(): void {
-			var compressedCacheData = localStorage['FB3Reader1.0'];
+			var compressedCacheData = this.LoadData();
 			var DataInitDone = false;
 			if (compressedCacheData) {
 				try {
-					var cacheData = LZString.decompressFromUTF16(compressedCacheData);
+					var cacheData = this.DecodeData(compressedCacheData);
 					this.CacheMarkupsList = JSON.parse(cacheData);
 					DataInitDone = true;
 				} catch (e) { }
@@ -124,6 +136,39 @@ module FB3PPCache {
 
 		public GetMargin(XP: string): number {
 			return this.MarginsCache[XP];
+		}
+
+		public CheckIfKnown(From: FB3DOM.IXPath): number {
+			for (var I = 1; I < this.PagesPositionsCache.length; I++) {
+				if (FB3Reader.PosCompare(this.PagesPositionsCache[I].Range.From, From) === 0) {
+					return I;
+				}
+			}
+			return undefined;
+		}
+
+		private DecodeData(Data) {
+			if (this.Encrypt) {
+				return LZString.decompressFromUTF16(Data);
+			} else {
+				return Data;
+			}
+		}
+
+		private EncodeData(Data) {
+			if (this.Encrypt) {
+				return LZString.compressToUTF16(Data);
+			} else {
+				return Data;
+			}
+		}
+
+		public LoadData(): string {
+			return localStorage['FB3Reader1.0'];
+		}
+
+		public SaveData(Data: string): void {
+			localStorage['FB3Reader1.0'] = Data;
 		}
 
 	}

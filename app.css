@@ -154,10 +154,10 @@ table.contextmenu td {
     padding: 5px 7px;
 }
 
-/*.my_selec_3_default {
+.my_selec_3_default {
     background-color:black;
     color: white;
-}*/
+}
 
 span.my_selec_1_default, strong.my_selec_1_default, em.my_selec_1_default {
     background-color:red;
@@ -278,6 +278,9 @@ div.FB2readerPage div.footnote {
     font-size: 80%;
 /*    overflow: auto;*/
 
+}
+div.FB2readerPage div.overfloatednote {
+  overflow: auto;
 }
 
 .FB2readerPage img.tag_image {

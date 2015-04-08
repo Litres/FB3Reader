@@ -13,6 +13,7 @@ var start: number;
 var LocalArtID = 178297;
 var Temp = 0;
 var LitresLocalBookmarks = new LocalBookmarks.LocalBookmarksClass(LocalArtID.toString());
+var aldebaran_or4 = false;
 
 window.onload = () => {
 
@@ -21,14 +22,14 @@ window.onload = () => {
 	document.getElementById('reader').addEventListener('touchend', TapEnd, false);
 
 //	var ArtID = '178297';
-	var Version = '1.1';
+	var Version = '1.2';
 	var UUID = 'd4e7833a-51c6-102c-9c5b-e8b0b7836b8f';
 	var SID = GetSID();
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
 	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(), ArtID2URL);
 	AFB3PPCache = new FB3PPCache.PPCache();
-	var AReaderDOM = new FB3DOM.DOM(AReaderSite.Alert, AReaderSite.Progressor, DataProvider, AFB3PPCache);
+	var AReaderDOM = new FB3DOM.DOM(AReaderSite, AReaderSite.Progressor, DataProvider, AFB3PPCache);
 	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID,
 		LitresLocalBookmarks.GetCurrentArtBookmarks());
 	BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
@@ -108,31 +109,14 @@ function TapEnd(e) {
 	}
 }
 
-function MouseMove(Evt: MouseEvent) {
-	if (NativeNote && !MenuShown && NativeNote.Group == 3 && !DialogShown) {
-		var newNote = NativeNote.RoundClone(false);
-		var X = Evt.clientX;
-		var Y = Evt.clientY;
-		// hack for touch-based devices
-		if (!isRelativeToViewport()) X += window.pageXOffset, Y += window.pageYOffset;
-
-		if (!newNote.ExtendToXY(X, Y, false)) {
-			return undefined;
-		} else {
-			NativeNote.Detach();
-			NativeNote = newNote;
-			BookmarksProcessor.AddBookmark(NativeNote);
-			AFB3Reader.Redraw();
-		}
-	}
-}
-
+var StartElPos: FB3Reader.IPosition;
 function InitNote(NoteType: string) {
 	if (NoteType == 'note') {
 		MarkupProgress = 'selectstart';
 		NativeNote.Group = 3;
 	} else {
 		RoundedNote = undefined;
+		UpdateRange(StartElPos, StartElPos);
 		NativeNote = NativeNote.RoundClone(true);
 		NativeNote.Group = 1;
 		(<HTMLInputElement> document.getElementById('wholepara')).disabled = true;
@@ -143,10 +127,44 @@ function InitNote(NoteType: string) {
 	HideMenu();
 }
 
+var Coords: any = false;
+function MouseMove(Evt: MouseEvent) {
+	if (NativeNote && NativeNote.Group == 3 && !MenuShown && !DialogShown) {
+		var X = Evt.clientX;
+		var Y = Evt.clientY;
+		// hack for touch-based devices
+		if (!isRelativeToViewport()) X += window.pageXOffset, Y += window.pageYOffset;
+		var CurrCoords = { X: X, Y: Y };
+		if (Coords) {
+			CurrCoords = Coords;
+		}
+		Coords = false;
+		var CurrentElPos: FB3Reader.IPosition = AFB3Reader.ElementAtXY(CurrCoords.X, CurrCoords.Y);
+		if (CurrentElPos && CurrentElPos.length && StartElPos && StartElPos.length) {
+			if (FB3Reader.PosCompare(CurrentElPos, StartElPos) < 0) {
+				UpdateRange(CurrentElPos, StartElPos);
+			} else {
+				UpdateRange(StartElPos, CurrentElPos);
+			}
+			// logic - remove old one, create new, add new
+			var NewNote: FB3Bookmarks.IBookmark = NativeNote.RoundClone(false);
+			NewNote.TemporaryState = 1;
+			NativeNote.Detach();
+			NativeNote = NewNote;
+			BookmarksProcessor.AddBookmark(NativeNote);
+			AFB3Reader.RedrawVisible();
+		}
+	}
+}
+
+function UpdateRange(StartPos: FB3Reader.IPosition, EndPos: FB3Reader.IPosition) {
+	NativeNote.Range.From = StartPos;
+	NativeNote.Range.To = EndPos;
+}
+
 function FinishNote():void {
 	NativeNote.Detach();
 	HideMenu();
-	NativeNote.Group = 3;
 	ShowDialog(NativeNote);
 }
 
@@ -161,30 +179,37 @@ function CancelNote(NoDestroy: boolean) {
 }
 
 var MenuShown: string;
-function ShowMenu(e: MouseEvent) {
+function MakeNewNote() {
 	if (NativeNote) {
 		NativeNote.Detach();
 	}
-	HideDialog();
 	if (!NativeNote) {
 		NativeNote = new FB3Bookmarks.Bookmark(BookmarksProcessor);
 	}
+	NativeNote.TemporaryState = 1;
+}
+function ShowMenu(e: MouseEvent) {
+	HideDialog();
+	MakeNewNote();
 	var X = e.clientX;
 	var Y = e.clientY;
 	// hack for touch-based devices
 	if (!isRelativeToViewport()) X += window.pageXOffset, Y += window.pageYOffset;
+	Coords = { X: X, Y: Y };
+
+	StartElPos = AFB3Reader.ElementAtXY(Coords.X, Coords.Y);
 
 	if (MarkupProgress == 'selectstart') {
 		MenuShown = 'SelectEnd';
-		if (!NativeNote.ExtendToXY(X, Y, false)) {
-			return undefined;
-		}
+//		if (!NativeNote.ExtendToXY(X, Y, false)) {
+//			return undefined;
+//		}
 	} else {
-		MenuShown = 'SelectStart'; 
-		if (!NativeNote.InitFromXY(X, Y, false)) {
-			NativeNote = undefined;
-			return undefined;
-		}
+		MenuShown = 'SelectStart';
+//		if (!NativeNote.InitFromXY(X, Y, false)) {
+//			NativeNote = undefined;
+//			return undefined;
+//		}
 	}
 
 	var posx = X + (3 + window.pageXOffset) + 'px'; //Left Position of Mouse Pointer
@@ -335,6 +360,7 @@ function CloseBookmarksList(): void {
 function DropBookmark(I: number): void {
 	AFB3Reader.Bookmarks.Bookmarks[I].Detach();
 	ManageBookmarks();
+	AFB3Reader.Redraw();
 }
 
 function Save() {
@@ -345,6 +371,10 @@ function Save() {
 function Load() {
 	console.log('load button clicked');
 	BookmarksProcessor.ReLoad();
+}
+
+function RefreshVisible() {
+	AFB3Reader.RedrawVisible();
 }
 
 function PrepareCSS() {

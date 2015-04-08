@@ -2,6 +2,7 @@
 
 module FB3PPCache {
 	export interface IFB3PPCache {
+		Encrypt: boolean;
 		Set(I: number, Instr: FB3Reader.IPageRenderInstruction): void;
 		Get(I: number): FB3Reader.IPageRenderInstruction;
 		Save(Key: string): void;
@@ -11,6 +12,11 @@ module FB3PPCache {
 		Reset(): void;
 		Length(): number;
 		LastPage(LastPageN?:number): number;
+		CheckIfKnown(From: FB3DOM.IXPath): number;
+		LoadData(): string;
+		LoadDataAsync(ArtID: string);
+		SaveData(Data: string): void;
+		ChechStorageAvail(): boolean;
 	}
 
 }

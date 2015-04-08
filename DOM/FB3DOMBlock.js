@@ -7,7 +7,8 @@ var __extends = this.__extends || function (d, b) {
 };
 var FB3DOM;
 (function (FB3DOM) {
-    FB3DOM.MaxFootnoteHeight = 0.75;
+    FB3DOM.MaxFootnoteHeight = 0.5;
+    FB3DOM.ExtLinkTarget = '_blank'; // may be set to '_top'
     var TagMapper = {
         poem: 'div',
         stanza: 'div',
@@ -23,7 +24,8 @@ var FB3DOM;
         style: 'span',
         footnote: 'div',
         nobr: 'span',
-        image: 'img'
+        image: 'img',
+        trialPurchase: 'div'
     };
     FB3DOM.BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author|empty-line)$/;
     var TagSkipDoublePadding = {
@@ -35,19 +37,22 @@ var FB3DOM;
         cite: 1
     };
     // FixMe - separate class for (at least) 'a' required, see if-else hacks in GetInitTag below
-    function TagClassFactory(Data, Parent, ID, NodeN, Chars, IsFootnote) {
+    function TagClassFactory(Data, Parent, ID, NodeN, Chars, IsFootnote, DOM) {
         var Kid;
         if (typeof Data === "string") {
             if (Parent.Data.f) {
                 Data = Data.replace(/[\[\]\{\}\(\)]+/g, '');
             }
-            Kid = new FB3Text(Data, Parent, ID, NodeN, Chars, IsFootnote);
+            Kid = new FB3Text(DOM, Data, Parent, ID, NodeN, Chars, IsFootnote);
         }
         else if (Data.t == 'image') {
-            Kid = new FB3ImgTag(Data, Parent, ID, IsFootnote);
+            Kid = new FB3ImgTag(DOM, Data, Parent, ID, IsFootnote);
+        }
+        else if (Data.t == 'trialPurchase') {
+            Kid = new FB3PurchaseTag(DOM, Data, Parent, ID, IsFootnote);
         }
         else {
-            Kid = new FB3Tag(Data, Parent, ID, IsFootnote);
+            Kid = new FB3Tag(DOM, Data, Parent, ID, IsFootnote);
         }
         return Kid;
     }
@@ -68,13 +73,14 @@ var FB3DOM;
     // Each DOM-node holds xpath-adress of self as an array
     // Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited
     var FB3Text = (function () {
-        function FB3Text(text, Parent, ID, NodeN, Chars, IsFootnote) {
+        function FB3Text(DOM, text, Parent, ID, NodeN, Chars, IsFootnote) {
+            this.DOM = DOM;
             this.text = text;
             this.Parent = Parent;
             this.ID = ID;
             this.IsFootnote = IsFootnote;
-            this.Chars = this.text.replace('\u00AD', '&shy;').length;
-            //			this.text = this.text.replace('\u00AD', '&shy;')
+            this.Chars = this.text.replace(/\u00AD|&shy;/, '').length;
+            //			this.text = this.text.replace(/\u00AD|&shy;/, '')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
             if (Parent && Parent.XPath) {
                 this.XPath = Parent.XPath.slice(0);
@@ -134,6 +140,9 @@ var FB3DOM;
             }
             var ThisNodeSelections = new Array();
             var EffectiveXPath = this.XPath.slice(0);
+            if (EffectiveXPath.length == 0) {
+                return '';
+            }
             for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
                 if (Bookmarks[Bookmark].Group == 0) {
                     continue;
@@ -147,7 +156,7 @@ var FB3DOM;
                 }
                 // We are not fully in deal, but some of our kids will be surely affected, so we leave
                 // record in Bookmarks for them
-                if (HowIsStart == 1 || HowisEnd == 1) {
+                if (HowIsStart == 1 || HowisEnd == 1 || HowisEnd == 0 && HowIsStart < 0 && !this.Childs) {
                     continue;
                 }
                 // Our tag is directly targeted or is fully within of the selection
@@ -170,8 +179,9 @@ var FB3DOM;
     FB3DOM.FB3Text = FB3Text;
     var FB3Tag = (function (_super) {
         __extends(FB3Tag, _super);
-        function FB3Tag(Data, Parent, ID, IsFootnote) {
-            _super.call(this, '', Parent, ID, 1, 0, IsFootnote);
+        function FB3Tag(DOM, Data, Parent, ID, IsFootnote) {
+            _super.call(this, DOM, '', Parent, ID, 1, 0, IsFootnote);
+            this.DOM = DOM;
             this.Data = Data;
             if (Data === null)
                 return;
@@ -186,7 +196,7 @@ var FB3DOM;
             var Base = 0;
             if (Data.f) {
                 Base++;
-                var NKid = new FB3Tag(Data.f, this, Base, true);
+                var NKid = new FB3Tag(this.DOM, Data.f, this, Base, true);
                 this.Childs.push(NKid);
                 this.Chars += NKid.Chars;
             }
@@ -201,7 +211,7 @@ var FB3DOM;
                         NodeN++;
                     }
                     PrevItmType = ItmType;
-                    var Kid = TagClassFactory(Itm, this, I + Base, NodeN, Chars, IsFootnote);
+                    var Kid = TagClassFactory(Itm, this, I + Base, NodeN, Chars, IsFootnote, this.DOM);
                     if (ItmType == 'text') {
                         Chars += Kid.Chars;
                     }
@@ -346,11 +356,11 @@ var FB3DOM;
             }
             var InlineStyle = this.InlineStyle();
             var Out = ['<'];
-            if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr) {
+            if (this.TagName == 'a' && this.Data.hr) {
                 Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
             }
-            else if (this.TagName == 'a' && !this.IsFootnote && this.Data.href) {
-                Out.push('a href="' + this.Data.href + '" target="_top"');
+            else if (this.TagName == 'a' && this.Data.href) {
+                Out.push('a href="' + this.Data.href + '" target="' + FB3DOM.ExtLinkTarget + '"');
             }
             else {
                 Out.push(this.HTMLTagName());
@@ -416,5 +426,18 @@ var FB3DOM;
         return FB3ImgTag;
     })(FB3Tag);
     FB3DOM.FB3ImgTag = FB3ImgTag;
+    var FB3PurchaseTag = (function (_super) {
+        __extends(FB3PurchaseTag, _super);
+        function FB3PurchaseTag() {
+            _super.apply(this, arguments);
+        }
+        FB3PurchaseTag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
+            var Out = ['<div class="fit_to_page" id ="n_' + IDPrefix + this.XPID + '">'];
+            Out.push(this.DOM.Site.showTrialEnd('n_' + IDPrefix + this.XPID));
+            return Out;
+        };
+        return FB3PurchaseTag;
+    })(FB3Tag);
+    FB3DOM.FB3PurchaseTag = FB3PurchaseTag;
 })(FB3DOM || (FB3DOM = {}));
 //# sourceMappingURL=FB3DOMBlock.js.map

@@ -2,6 +2,7 @@
 /// <reference path="../plugins/moment.d.ts" />
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
+    FB3Bookmarks.ActiveXXMLHttp = true;
     var LitResBookmarksProcessor = (function () {
         function LitResBookmarksProcessor(FB3DOM, LitresSID, LitresLocalXML) {
             this.FB3DOM = FB3DOM;
@@ -14,18 +15,24 @@ var FB3Bookmarks;
             this.AddBookmark(new Bookmark(this));
             this.Bookmarks[0].DateTime = 0; // Newly created curpos bookmark is older than any real one
             this.WaitForData = false;
+            this.Host = '/';
+            //// local testing part start
+            this.Host = 'http://www.litres.ru/';
+            //			this.aldebaran = true;
+            //// local testing part end
             if (document.all && !window.atob && window.XDomainRequest && this.aldebaran) {
+                // IE8-IE9 cant do cross-domain ajax properly (IE7 i think cant do it at all)
+                // this workaround send empty clean request, no params, no session, no cookies
+                // answer must be text/plain
                 this.XMLHttp = new XDomainRequest(); // IE9 =< fix
                 this.xhrIE9 = true;
             }
-            else if (window.ActiveXObject) {
+            else if (window.ActiveXObject && FB3Bookmarks.ActiveXXMLHttp) {
                 this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
             }
             else {
                 this.XMLHttp = new XMLHttpRequest();
             }
-            this.Host = '/';
-            this.Host = 'http://www.litres.ru/'; // TODO: replace
             this.SID = LitresSID;
             this.SaveAuto = false;
             this.LocalXML = LitresLocalXML;
@@ -101,31 +108,26 @@ var FB3Bookmarks;
                     this.WaitedToRemapBookmarks++;
                 }
             }
+            this.CheckWaitedSync();
+        };
+        LitResBookmarksProcessor.prototype.OnChildBookmarkSync = function () {
+            this.WaitedToRemapBookmarks--;
+            this.CheckWaitedSync();
+        };
+        LitResBookmarksProcessor.prototype.CheckWaitedSync = function () {
             if (!this.WaitedToRemapBookmarks) {
                 this.WaitForData = false;
                 if (this.LoadEndCallback) {
                     this.LoadEndCallback(this);
                 }
-            }
-        };
-        LitResBookmarksProcessor.prototype.OnChildBookmarkSync = function () {
-            this.WaitedToRemapBookmarks--;
-            if (!this.WaitedToRemapBookmarks) {
-                this.WaitForData = false;
-                if (this.LoadEndCallback) {
-                    this.LoadEndCallback(this);
+                if (this.ReadyCallback) {
+                    this.ReadyCallback();
                 }
             }
         };
         LitResBookmarksProcessor.prototype.ParseXML = function (XML) {
             // todo some xml-parsing upon data receive here to make pretty JS-bookmarks from ugly XML
-            var Rows;
-            if (typeof XML.querySelectorAll === 'undefined') {
-                Rows = XML.getElementsByTagName('Selection');
-            }
-            else {
-                Rows = XML.querySelectorAll('Selection');
-            }
+            var Rows = XML.querySelectorAll('Selection');
             this.LoadDateTime = moment().unix();
             if (XML.documentElement.getAttribute('lock-id')) {
                 this.LockID = XML.documentElement.getAttribute('lock-id');
@@ -173,7 +175,9 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.ReLoad = function (SaveAutoState) {
             var _this = this;
             var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
+            TemporaryNotes.Host = this.Host;
             TemporaryNotes.Reader = this.Reader;
+            // TemporaryNotes.ReadyCallback = this.ReadyCallback;
             TemporaryNotes.aldebaran = this.aldebaran;
             TemporaryNotes.Bookmarks[0].Group = -1;
             this.SaveAuto = SaveAutoState;
@@ -235,10 +239,16 @@ var FB3Bookmarks;
                     AnyUpdates = true;
                 }
             }
+            if (this.ReadyCallback) {
+                this.ReadyCallback();
+            }
             if (!this.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
                 // Newer position from server
                 this.Bookmarks[0].SkipUpdateDatetime = true;
                 this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
+                if (AnyUpdates && FB3Reader.PosCompare(this.Bookmarks[0].Range.From, TemporaryNotes.Bookmarks[0].Range.From) == 0) {
+                    this.Reader.Redraw();
+                }
             }
             else if (AnyUpdates) {
                 // Updated bookmarks data from server - we should redraw the page in case there are new notes
@@ -264,17 +274,38 @@ var FB3Bookmarks;
         LitResBookmarksProcessor.prototype.MakeStoreXML = function () {
             var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' + 'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
             if (this.Bookmarks.length) {
+                // TODO: check if this 2 lines needed
                 this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
                 this.Bookmarks[0].XEnd = this.Bookmarks[0].XStart.slice(0);
                 XML += this.Bookmarks[0].PublicXML();
                 for (var j = 1; j < this.Bookmarks.length; j++) {
-                    if (this.Bookmarks[j].TemporaryState)
+                    if (this.Bookmarks[j].TemporaryState) {
                         continue;
+                    }
                     XML += this.Bookmarks[j].PublicXML();
                 }
             }
             XML += '</FictionBookMarkup>';
             return XML;
+        };
+        LitResBookmarksProcessor.prototype.MakeStoreXMLAsync = function (Callback) {
+            var _this = this;
+            if (this.Bookmarks.length) {
+                for (var j = 0; j < this.Bookmarks.length; j++) {
+                    if (this.Bookmarks[j].TemporaryState) {
+                        continue;
+                    }
+                    if (!this.Bookmarks[j].XPathMappingReady) {
+                        clearTimeout(this.MakeStoreXMLAsyncTimeout);
+                        this.MakeStoreXMLAsyncTimeout = setTimeout(function () { return _this.MakeStoreXMLAsync(Callback); }, 10);
+                        return;
+                    }
+                }
+                return Callback(this.MakeStoreXML());
+            }
+            else {
+                return undefined;
+            }
         };
         LitResBookmarksProcessor.prototype.SendNotesRequest = function (URL, Type, Data) {
             var _this = this;
@@ -293,14 +324,14 @@ var FB3Bookmarks;
         };
         LitResBookmarksProcessor.prototype.XMLHTTPResponse = function () {
             if (this.XMLHttp.readyState == 4 && this.XMLHttp.status == 200) {
-                this.XMLHTTPResponseCallback(this.XMLHttp.responseXML);
+                var xml = this.MakeXMLFromString(this.XMLHttp.responseText);
+                this.XMLHTTPResponseCallback(xml);
             }
             // TODO: add error handler
         };
         LitResBookmarksProcessor.prototype.XMLHTTPIE9Response = function () {
             if (this.XMLHttp.responseText && this.XMLHttp.responseText != '') {
-                var parser = new DOMParser();
-                var xml = parser.parseFromString(this.XMLHttp.responseText, 'text/xml');
+                var xml = this.MakeXMLFromString(this.XMLHttp.responseText);
                 this.XMLHTTPResponseCallback(xml);
             }
             // TODO: add error handler
@@ -313,10 +344,17 @@ var FB3Bookmarks;
             var NotesInRange = [];
             for (var j = 1; j < this.Bookmarks.length; j++) {
                 if (Type === undefined || this.Bookmarks[j].Group == Type) {
+                    var BRangeTo = this.Bookmarks[j].Range.To;
+                    if (this.Bookmarks[j].Group == 1 && this.Bookmarks[j].XPathMappingReady) {
+                        // we need this workaround to fix bookmark end point Range
+                        // we cant check [}] without this
+                        // dont think this is best fix
+                        BRangeTo.push(this.Reader.FB3DOM.Childs[this.Bookmarks[j].Range.To[0]].Childs.length);
+                    }
                     var BStart2RStart = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.From);
-                    var BEnd2REnd = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.To);
+                    var BEnd2REnd = FB3Reader.PosCompare(BRangeTo, Range.To);
                     var BStart2REnd = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.To);
-                    var BEnd2RStart = FB3Reader.PosCompare(this.Bookmarks[j].Range.To, Range.From);
+                    var BEnd2RStart = FB3Reader.PosCompare(BRangeTo, Range.From);
                     if ((BStart2RStart >= 0 && BStart2REnd <= 0) || (BEnd2RStart >= 0 && BEnd2REnd <= 0) || (BStart2RStart < 0 && BEnd2REnd > 0)) {
                         NotesInRange.push(this.Bookmarks[j]);
                     }
@@ -331,6 +369,8 @@ var FB3Bookmarks;
         function Bookmark(Owner) {
             this.Owner = Owner;
             this.NotePreviewLimit = 140;
+            this.TitleLenLimit = 100;
+            this.ClassLenLimit = 30;
             this.ID = this.MakeSelectionID();
             this.Group = 0;
             this.Class = 'default';
@@ -346,61 +386,6 @@ var FB3Bookmarks;
             this.SkipUpdateDatetime = false;
             this.Extract = '';
         }
-        Bookmark.prototype.InitFromXY = function (X, Y, AllowBlock) {
-            var StartAddr = this.Owner.Reader.ElementAtXY(X, Y);
-            if (StartAddr) {
-                var NewElement = this.Owner.FB3DOM.GetElementByAddr(StartAddr);
-                if (NewElement.IsBlock()) {
-                    return false;
-                }
-                else {
-                    return this.InitFromPosition(StartAddr);
-                }
-            }
-        };
-        Bookmark.prototype.InitFromXPath = function (XPath) {
-            return this.InitFromPosition(this.Owner.FB3DOM.GetAddrByXPath(XPath));
-        };
-        Bookmark.prototype.InitFromRange = function (Range) {
-            var Element = this.Owner.FB3DOM.GetElementByAddr(Range.From);
-            return this.InitFromPosition(Element.Position());
-        };
-        Bookmark.prototype.InitFromPosition = function (Position) {
-            if (Position) {
-                this.Range.From = Position.slice(0);
-                this.Range.To = Position;
-                this.GetDataFromText();
-                return true;
-            }
-            else {
-                return undefined;
-            }
-        };
-        Bookmark.prototype.ExtendToXY = function (X, Y, AllowBlock) {
-            var BaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-            if (!BaseTo || BaseTo.length < 1)
-                return false;
-            // To catch gap between lines we may go up to the nearest non-block element
-            if (!AllowBlock) {
-                var Trials = 0;
-                var Element = this.Owner.FB3DOM.GetElementByAddr(BaseTo);
-                while (Trials < 10 && Element.IsBlock()) {
-                    Y = Y - 3; // We believe 3px is nice, no need to jump 1px cause no elements are so small
-                    var NewBaseTo = this.Owner.Reader.ElementAtXY(X, Y);
-                    Trials++;
-                    if (NewBaseTo && NewBaseTo.length > 1) {
-                        var NewElement = this.Owner.FB3DOM.GetElementByAddr(NewBaseTo);
-                        if (!NewElement.IsBlock()) {
-                            BaseTo = NewBaseTo;
-                            Element = NewElement;
-                        }
-                    }
-                }
-            }
-            this.Range.To = BaseTo;
-            this.GetDataFromText();
-            return true;
-        };
         Bookmark.prototype.RoundClone = function (ToBlock) {
             var Clone = new Bookmark(this.Owner);
             Clone.Range = FB3Reader.RangeClone(this.Range);
@@ -424,7 +409,7 @@ var FB3Bookmarks;
         Bookmark.prototype.RoundToWordLVLDn = function (Adress) {
             var Block = this.Owner.FB3DOM.GetElementByAddr(Adress);
             var PosInBlock = Adress[Adress.length - 1];
-            while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
+            while (Block.Parent && !Block.TagName) {
                 Block = Block.Parent;
                 PosInBlock = Adress[Adress.length - 1];
                 Adress.pop();
@@ -448,7 +433,7 @@ var FB3Bookmarks;
             //if (PosInBlock < Block.Childs.length - 2) {
             //	PosInBlock++;
             //}
-            if (PosInBlock > Block.Childs.length - 2)
+            if (PosInBlock && PosInBlock > Block.Childs.length - 2)
                 PosInBlock = Block.Childs.length - 2;
             while (PosInBlock > 0 && !Block.Childs[PosInBlock - 1].Childs && !Block.Childs[PosInBlock - 1].text.match(/\s$/)) {
                 PosInBlock--;
@@ -486,17 +471,22 @@ var FB3Bookmarks;
             InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, ''); // remove all note links
             InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
             // Then we extract plain text
-            this.Title = InnerHTML.replace(/<[^>]+>|\u00AD/gi, '').substr(0, 50).replace(/\s+\S*$/, '');
+            this.Title = this.prepareTitle(InnerHTML.replace(/<[^>]+>|\u00AD/gi, '')).replace(/\s+\S*$/, '');
             this.RawText = InnerHTML.replace(/(\s\n\r)+/gi, ' ');
+            this.RawText = this.RawText.replace(/<\/div>/gi, '</div> '); // stupid workaround
             this.RawText = this.RawText.replace(/<(\/)?strong[^>]*>/gi, '[$1b]');
             this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
             this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
             this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
             this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
             this.Note[0] = this.Raw2FB2(this.RawText);
+            if (this.RawText == "" && InnerHTML.match(/img/i)) {
+                // if someone have bookmark with img only
+                this.Note[0] = "<p>" + this.Owner.Reader.Site.ViewText.Print('BOOKMARK_IMAGE_PREVIEW_TEXT') + "</p>";
+            }
             // todo - should fill this.Extract with something equal|close to raw fb2 fragment
             this.XStart = this.Owner.FB3DOM.GetXPathFromPos(this.Range.From.slice(0));
-            this.XEnd = this.Owner.FB3DOM.GetXPathFromPos(this.Range.To.slice(0));
+            this.XEnd = this.Owner.FB3DOM.GetXPathFromPos(this.Range.To.slice(0), true);
         };
         Bookmark.prototype.Raw2FB2 = function (RawText) {
             RawText = RawText.replace(/\[(\/)?b[^\]]*\]/gi, '<$1strong>');
@@ -528,7 +518,8 @@ var FB3Bookmarks;
             var _this = this;
             this.XPathMappingReady = false;
             if (!this.Owner.FB3DOM.DataChunks) {
-                setTimeout(function () { return _this.InitSyncXPathWithDOM(); }, 10);
+                clearTimeout(this.InitSyncXPathWithDOMTimeout);
+                this.InitSyncXPathWithDOMTimeout = setTimeout(function () { return _this.InitSyncXPathWithDOM(); }, 10);
                 return;
             }
             this.RequiredChunks = this.ChunksRequired();
@@ -551,7 +542,8 @@ var FB3Bookmarks;
             for (var I = 0; I < this.RequiredChunks.length; I++) {
                 if (this.Owner.FB3DOM.DataChunks[this.RequiredChunks[I]].loaded != 2) {
                     // There is at least one chunk still being loaded - we will return later
-                    setTimeout(function () { return _this.DoSyncXPathWithDOM(); }, 10);
+                    clearTimeout(this.DoSyncXPathWithDOMTimeout);
+                    this.DoSyncXPathWithDOMTimeout = setTimeout(function () { return _this.DoSyncXPathWithDOM(); }, 10);
                     return;
                 }
             }
@@ -582,7 +574,7 @@ var FB3Bookmarks;
             return Result;
         };
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.Class + '" ' : '') + (this.Title ? 'title="' + this.Title + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' + this.GetPercent() + '>' + this.GetNote() + this.GetExtract() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.prepareClass(this.Class) + '" ' : '') + (this.Title ? 'title="' + this.prepareTitle(this.Title) + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' + this.MakePercent() + '>' + this.GetNote() + this.GetExtract() + '</Selection>';
         };
         Bookmark.prototype.ParseXML = function (XML) {
             this.Group = parseInt(XML.getAttribute('group'));
@@ -626,11 +618,42 @@ var FB3Bookmarks;
         };
         Bookmark.prototype.parseTitle = function () {
             if (this.Title == '' || this.Title == null) {
-                if (this.Group == 1)
-                    this.Title = 'Закладка';
-                else if (this.Group == 3 || this.Group == 5)
-                    this.Title = 'Заметка';
+                // if Title empty, set new title group
+                if (this.Group == 1) {
+                    this.Title = this.Owner.Reader.Site.ViewText.Print('BOOKMARK_EMPTY_TYPE_1_TEXT');
+                }
+                else if (this.Group == 3 || this.Group == 5) {
+                    this.Title = this.Owner.Reader.Site.ViewText.Print('BOOKMARK_EMPTY_TYPE_3_TEXT');
+                }
             }
+            else {
+                //  this.Title = this.prepareTitle(this.Title);
+                this.Title = this.Title; // i believe server data!
+            }
+        };
+        Bookmark.prototype.prepareTitle = function (str) {
+            return this.prepareAnything(str, this.TitleLenLimit);
+        };
+        Bookmark.prototype.prepareClass = function (str) {
+            if (str.length < 1) {
+                return 'default';
+            }
+            return this.prepareAnything(str, this.ClassLenLimit);
+        };
+        Bookmark.prototype.prepareAnything = function (str, len) {
+            return str.substr(0, len);
+        };
+        Bookmark.prototype.MakePercent = function () {
+            if (this.Group != 0)
+                return '';
+            var percent = Math.round(this.Owner.Reader.CurPosPercent());
+            if (percent > 100) {
+                percent = 100;
+            }
+            else if (percent < 0) {
+                percent = 0;
+            }
+            return ' percent="' + percent + '"';
         };
         Bookmark.prototype.parseXMLNote = function (el) {
             var res = '';
@@ -648,7 +671,12 @@ var FB3Bookmarks;
                     res += this.parseXMLNote(child);
                 }
                 else {
-                    res += child.childNodes[0].nodeValue;
+                    if (child.childNodes.length) {
+                        res += child.childNodes[0].nodeValue;
+                    }
+                    else {
+                        res += "";
+                    }
                 }
                 res += "</" + child.tagName + ">";
             }
@@ -685,11 +713,6 @@ var FB3Bookmarks;
                 }
             }
             return text;
-        };
-        Bookmark.prototype.GetPercent = function () {
-            if (this.Group != 0)
-                return '';
-            return ' percent="' + Math.round(this.Owner.Reader.CurPosPercent()) + '"';
         };
         Bookmark.prototype.GetExtract = function () {
             return this.Extract;

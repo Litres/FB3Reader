@@ -83,6 +83,7 @@ var FB3Reader;
             this.Version = Version;
             this.PagesPositionsCache = PagesPositionsCache;
             // Basic class init
+            this.RedrawState = false;
             this.Destroy = false;
             this.HyphON = true;
             this.NColumns = 2;
@@ -106,6 +107,9 @@ var FB3Reader;
                         Percent: this.CurPosPercent(),
                         Pos: this.CurStartPos
                     });
+                }
+                else {
+                    this.RedrawState = false;
                 }
             }
         };
@@ -140,10 +144,12 @@ var FB3Reader;
             });
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;
-            if (this.Bookmarks.Bookmarks.length > 1) {
+            if (this.Bookmarks.Bookmarks.length > 1 || DateTime) {
+                // when we have DateTime we need to merge local bookmark with server bookmark
                 this.Bookmarks.ReLoad();
             }
             else {
+                // we have initial bookmark with dummy data, we can override it
                 this.Bookmarks.Load(function () {
                     _this.Bookmarks.ApplyPosition();
                 });
@@ -297,9 +303,10 @@ var FB3Reader;
         };
         Reader.prototype.TOC = function () {
             var PatchedTOC = this.CloneTOCNodes(this.FB3DOM.TOC);
-            this.PatchToc(PatchedTOC, this.CurStartPos, 0);
+            var CurrentRange = { From: this.CurStartPos, To: this.CurStartPos };
+            this.PatchToc(PatchedTOC, CurrentRange, 0);
             for (var I = 0; I < this.Bookmarks.Bookmarks.length; I++) {
-                this.PatchToc(PatchedTOC, this.Bookmarks.Bookmarks[I].Range.From, this.Bookmarks.Bookmarks[I].Group);
+                this.PatchToc(PatchedTOC, this.Bookmarks.Bookmarks[I].Range, this.Bookmarks.Bookmarks[I].Group);
             }
             return PatchedTOC;
         };
@@ -318,27 +325,36 @@ var FB3Reader;
             }
             return NewTOC;
         };
-        Reader.prototype.PatchToc = function (TOC, Pos, Group) {
+        Reader.prototype.PatchToc = function (TOC, Range, Group) {
             for (var I = 0; I < TOC.length; I++) {
-                var StartCmp = PosCompare([TOC[I].s], Pos);
-                var EndComp = PosCompare([TOC[I].e], Pos);
-                if (StartCmp == 0 || StartCmp < 0 && EndComp > 0 && !TOC[I].c || StartCmp > 0) {
-                    if (!TOC[I].bookmarks) {
-                        TOC[I].bookmarks = {};
-                    }
-                    if (TOC[I].bookmarks['g' + Group]) {
-                        TOC[I].bookmarks['g' + Group]++;
-                    }
-                    else {
-                        TOC[I].bookmarks['g' + Group] = 1;
-                    }
-                    return;
+                if (!TOC[I].t || TOC[I].t == '') {
+                    continue;
                 }
-                else if (StartCmp <= 0 && EndComp >= 0 && TOC[I].c) {
-                    this.PatchToc(TOC[I].c, Pos, Group);
-                    return;
+                if (TOC[I].c && this.PatchToc(TOC[I].c, Range, Group)) {
+                    return true;
+                }
+                else {
+                    var StartCmp = PosCompare(Range.From, [TOC[I].s]);
+                    var EndComp = PosCompare(Range.To, [TOC[I].e]);
+                    if (StartCmp >= 0 && EndComp <= 1) {
+                        TOC[I] = this.PatchTocRow(TOC[I], Group);
+                        return true;
+                    }
                 }
             }
+            return false;
+        };
+        Reader.prototype.PatchTocRow = function (TOC, Group) {
+            if (!TOC.bookmarks) {
+                TOC.bookmarks = {};
+            }
+            if (TOC.bookmarks['g' + Group]) {
+                TOC.bookmarks['g' + Group]++;
+            }
+            else {
+                TOC.bookmarks['g' + Group] = 1;
+            }
+            return TOC;
         };
         Reader.prototype.ResetCache = function () {
             this.IdleAction = 'load_page';
@@ -436,6 +452,7 @@ var FB3Reader;
                 }
             }
             else {
+                // Ouch, we are out of the ladder, this makes things a bit complicated
                 // First wee seek forward NColimns times to see if the page wee want to show is rendered. If not - we will wait untill it is
                 var PageToView = this.Pages[this.CurVisiblePage];
                 for (var I = 0; I < this.NColumns; I++) {
@@ -453,16 +470,29 @@ var FB3Reader;
                     else {
                         var From = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
                         FB3ReaderPage.To2From(From);
-                        this.GoToOpenPosition(From);
+                        var PageN = this.PagesPositionsCache.CheckIfKnown(From);
+                        if (PageN) {
+                            this.GoTOPage(PageN);
+                        }
+                        else {
+                            this.GoToOpenPosition(From);
+                        }
                     }
                 }
                 else {
-                    this.SetStartPos(PageToView.RenderInstr.Range.From);
-                    this.PutBlockIntoView(PageToView.ID - 1);
-                    this._CanvasReadyCallback();
+                    // If we are walking the grass, and find for ourselves exactly at the level of
+                    // the ledder step, we jump in!
+                    var PageN = this.PagesPositionsCache.CheckIfKnown(PageToView.RenderInstr.Range.From);
+                    if (PageN) {
+                        this.GoTOPage(PageN);
+                    }
+                    else {
+                        this.SetStartPos(PageToView.RenderInstr.Range.From);
+                        this.PutBlockIntoView(PageToView.ID - 1);
+                        this._CanvasReadyCallback();
+                    }
                 }
             }
-            return;
         };
         Reader.prototype.PageBackward = function () {
             clearTimeout(this.MoveTimeoutID);
@@ -557,28 +587,39 @@ var FB3Reader;
         };
         Reader.prototype.ElementAtXY = function (X, Y) {
             var Node = this.Site.elementFromPoint(X, Y);
+            var MisteryPointChanger = 3;
             if (!Node) {
                 return undefined; // Do not know how would this happen, just in case
             }
             if (!Node.id.match(/n(_\d+)+/)) {
                 return undefined; // This is some wrong element with wrong ID, must be an error
             }
-            if (!Node.nodeName.match(/span/i)) {
+            if (!Node.nodeName.match(/span|img/i)) {
                 var ElRect = GetElementRect(Node);
                 // too bad, this is a block, we have to search for it's text
                 var MayShift = Node.scrollWidth;
-                var NewX = X + 3;
-                while (NewX < ElRect.right && (!Node || !Node.nodeName.match(/span/i) || !Node.id.match(/n(_\d+)+/))) {
-                    NewX = NewX + 3;
+                var NewX = X + MisteryPointChanger;
+                while (NewX < ElRect.right && this.CheckElementAtXY(Node)) {
+                    NewX = NewX + MisteryPointChanger;
                     Node = this.Site.elementFromPoint(NewX, Y);
                 }
-                NewX = X - 3;
-                while (NewX > ElRect.left && (!Node || !Node.nodeName.match(/span/i) || !Node.id.match(/n(_\d+)+/))) {
-                    NewX = NewX - 3;
+                NewX = X - MisteryPointChanger;
+                while (NewX > ElRect.left && this.CheckElementAtXY(Node)) {
+                    NewX = NewX - MisteryPointChanger;
                     Node = this.Site.elementFromPoint(NewX, Y);
+                }
+                var NewY = Y + MisteryPointChanger;
+                while (NewY < ElRect.bottom && this.CheckElementAtXY(Node)) {
+                    NewY = NewY + MisteryPointChanger;
+                    Node = this.Site.elementFromPoint(X, NewY);
+                }
+                NewY = Y - MisteryPointChanger;
+                while (NewY > ElRect.top && this.CheckElementAtXY(Node)) {
+                    NewY = NewY - MisteryPointChanger;
+                    Node = this.Site.elementFromPoint(X, NewY);
                 }
             }
-            if (!Node || !Node.nodeName.match(/span/i) || !Node.id.match(/n(_\d+)+/)) {
+            if (this.CheckElementAtXY(Node)) {
                 return undefined;
             }
             var Addr = Node.id.split('_');
@@ -586,6 +627,9 @@ var FB3Reader;
             Addr.shift();
             FB3ReaderPage.NumericArray(Addr);
             return Addr;
+        };
+        Reader.prototype.CheckElementAtXY = function (Node) {
+            return !Node || !Node.nodeName.match(/span|img/i) || !Node.id.match(/n(_\d+)+/);
         };
         Reader.prototype.GetElementXY = function (Node) {
             var Elem;
@@ -698,7 +742,7 @@ var FB3Reader;
             this.PagesPositionsCache.Load(this.FullKey());
         };
         Reader.prototype.FullKey = function () {
-            return this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.Version + ':' + this.BookStyleNotes + ':' + this.Site.Key;
+            return this.ArtID + ':' + this.BackgroundRenderFrame.ViewPortW + ':' + this.CanvasW + ':' + this.CanvasH + ':' + this.Version + ':' + this.BookStyleNotes + ':' + this.HyphON + ':' + this.Site.Key;
         };
         Reader.prototype.IdleOn = function () {
             var _this = this;
@@ -754,8 +798,18 @@ var FB3Reader;
                 return undefined;
             }
             var Range = RangeClone(this.Pages[this.CurVisiblePage].RenderInstr.Range);
+            Range = this.PatchRangeTo(Range);
             if (this.NColumns > 1) {
                 Range.To = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To.slice(0);
+            }
+            return Range;
+        };
+        Reader.prototype.PatchRangeTo = function (Range) {
+            // Sometimes RenderInstr.Range To point to the [6] while From points to [6,4], this
+            // means we need the WHOLE element after [6,4]. That's not what a caller of
+            // GetVisibleRange would expect, so we convert our internal form to usable one
+            if (Range.From[0] == Range.To[0] && Range.To.length == 1 && Range.From.length > 1) {
+                Range.To.push(this.FB3DOM.Childs[Range.To[0]].Childs.length);
             }
             return Range;
         };

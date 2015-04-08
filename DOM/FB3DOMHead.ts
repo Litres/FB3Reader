@@ -98,7 +98,7 @@ module FB3DOM {
 	export interface IFB3DOM extends IFB3Block{
 		Ready: boolean;
 		Progressor: FB3ReaderSite.ILoadProgress;
-		Alert: FB3ReaderSite.IAlert;
+		Site: FB3ReaderSite.IFB3ReaderSite;
 		DataProvider: FB3DataProvider.IJsonLoaderFactory;
 		TOC: ITOC[];
 		DataChunks: IDataDisposition[];
@@ -118,7 +118,7 @@ module FB3DOM {
 			Callback: IDOMTextReadyCallback): void;
 		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
 		GetAddrByXPath(XPath: IXPath): FB3Reader.IPosition;
-		GetXPathFromPos(Position: FB3Reader.IPosition): IXPath;
+		GetXPathFromPos(Position: FB3Reader.IPosition, End?:boolean): IXPath;
 		OnChunkLoaded(Data: IJSONBlock[], CustomData?: any): void;
 		ChunkUrl(N: number): string;
 		LoadChunks(MissingChunks: number[], Callback: IChunkLoadedCallback): void; // Sets the chunks to be loaded

@@ -50,7 +50,14 @@ module FB3ReaderPage {
 		PrevPageBreaker: boolean;
 		NoMoreFootnotesHere: boolean;
 		FalloutElementN: number;
-		SplitHistory: { I: number; Element: HTMLElement; Limit: number }[];
+		SplitHistory: {
+			I: number;
+			Element: HTMLElement;
+			Limit: number;
+			GoodHeight: number;
+			LastOffsetShift: number;
+			LastOffsetParent: Element;
+		}[];
 		ForceFitBlock: boolean;
 		BTreeModeOn: boolean;
 		BTreeLastOK: number;
@@ -108,7 +115,7 @@ module FB3ReaderPage {
 
 	function IsNodeUnbreakable(Node: HTMLElement): boolean {
 
-		if (Node.nodeName.match(/^(h\d|a)$/i)) {
+		if (Node.nodeName.match(/^(h\d|a|su[bp])$/i)) {
 			return true;
 		}
 
@@ -347,6 +354,7 @@ module FB3ReaderPage {
 		PatchExtraLargeFootnote(Node: HTMLElement): void {
 			if (Node.scrollHeight > this.Element.Height * FB3DOM.MaxFootnoteHeight) {
 				Node.style.height = (this.Element.Height * FB3DOM.MaxFootnoteHeight).toFixed(0) + 'px';
+				Node = this.Site.PatchNoteNode(Node);
 			}
 		}
 
@@ -356,14 +364,14 @@ module FB3ReaderPage {
 				// this is some outdated request, we have newer orders since then - so we just ignore this
 				return;
 			}
-			this.Element.Node.innerHTML = PageData.Body.join('');
+			this.Element.Node.innerHTML = this.Site.PrepareHTML(PageData.Body.join(''));
 
 			this.PatchUnbreakableContent();
 
 			var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
 			if (HasFootnotes) {
-				this.NotesElement.Node.innerHTML = '<div class="NotesLine"></div>' +
-					PageData.FootNotes.join('');
+				this.NotesElement.Node.innerHTML = this.Site.PrepareHTML('<div class="NotesLine"></div>' +
+					PageData.FootNotes.join(''));
 				this.NotesElement.Node.style.display = 'block';
 				var NotesNodes = this.NotesElement.Node.children.length
 				for (var I = 0; I < this.NotesElement.Node.children.length; I++) {
@@ -465,10 +473,25 @@ module FB3ReaderPage {
 
 
 		private AddHandlers() {
-			var links = this.Element.Node.querySelectorAll('a');
-			if (links.length) {
-				for (var j = 0; j < links.length; j++) {
-					links[j].addEventListener('click', (t) => {
+			this.DoAddLinkHandlers(this.Element.Node.querySelectorAll('a'));
+			this.DoAddLinkHandlers(this.NotesElement.Node.querySelectorAll('a'));
+			var zoom = this.Element.Node.querySelectorAll('.zoom_block');
+			if (zoom.length) {
+				for (var j = 0; j < zoom.length; j++) {
+					zoom[j].addEventListener('click', (t) => {
+						var obj = <HTMLElement> ((t.currentTarget) ? t.currentTarget : t.srcElement);
+						var ID = obj.id.replace(/^zb/, '');
+						this.FBReader.Site.ZoomHTML(this.Site.getElementById(ID).outerHTML);
+					}, false);
+				}
+			}
+			this.Site.addTrialHandlers();
+		}
+
+		private DoAddLinkHandlers(Links: NodeList) {
+			if (Links.length) {
+				for (var j = 0; j < Links.length; j++) {
+					Links[j].addEventListener('click', (t) => {
 						var obj = (t.currentTarget) ? t.currentTarget : t.srcElement;
 						var href = (<HTMLElement> obj).getAttribute('data-href');
 						if (href == undefined) {
@@ -483,16 +506,6 @@ module FB3ReaderPage {
 						}
 						this.FBReader.Site.HistoryHandler(this.FBReader.CurStartPos);
 						this.FBReader.GoTO(newPos);
-					}, false);
-				}
-			}
-			var zoom = this.Element.Node.querySelectorAll('.zoom_block');
-			if (zoom.length) {
-				for (var j = 0; j < zoom.length; j++) {
-					zoom[j].addEventListener('click', (t) => {
-						var obj = <HTMLElement> ((t.currentTarget) ? t.currentTarget : t.srcElement);
-						var ID = obj.id.replace(/^zb/, '');
-						this.FBReader.Site.ZoomHTML(this.Site.getElementById(ID).outerHTML);
 					}, false);
 				}
 			}
@@ -624,6 +637,7 @@ module FB3ReaderPage {
 			this.RenderInstr.NotesHeight = FallOut.NotesHeight;
 
 
+			this.JumpOnLadder(FallOut,this.RenderInstr.CacheAs);
 			this.PageN = this.RenderInstr.CacheAs;
 			if (this.PageN !== undefined) {
 				this.FBReader.StoreCachedPage(this.RenderInstr);
@@ -687,6 +701,7 @@ module FB3ReaderPage {
 					this.PagesToRender[this.QuickFallautState.QuickFallout].Range = NextPageRange;
 					if (this.PagesToRender[this.QuickFallautState.QuickFallout].CacheAs !== undefined) {
 						this.FBReader.StoreCachedPage(this.PagesToRender[this.QuickFallautState.QuickFallout]);
+						this.JumpOnLadder(FallOut, this.PagesToRender[this.QuickFallautState.QuickFallout].CacheAs);
 					}
 					if (FallOut.EndReached && this.QuickFallautState.QuickFallout < this.PagesToRender.length - 1) {
 						this.QuickFallautState.QuickFallout++;
@@ -715,6 +730,21 @@ module FB3ReaderPage {
 			if (!this.PagesToRender.length || !this.ID) {
 				// Get back to idle processing if we are done or we are in idle mode already
 				this.FBReader.IdleOn();
+			}
+		}
+
+		private JumpOnLadder(FallOut: IFallOut, PageN:number) {
+			// We are making background render - let's check if the visible page is off-ladder
+			// and is equal to our current page. if so we set our visible page PageN, so it will no longer
+			// be on the grass
+			if (!this.Next
+				&& PageN
+				&& ((PageN - 1) % this.FBReader.NColumns == 0) // Only jump in for the first page in multicolumn view
+				&& this.FBReader.CurStartPage === undefined
+				&& this.FBReader.CurStartPos) {
+				if (FB3Reader.PosCompare(FallOut.FallOut, this.FBReader.CurStartPos) == 0) {
+					this.FBReader.CurStartPage = PageN + 1; // Why +1? Donno, but somehow it works
+				}
 			}
 		}
 
@@ -839,7 +869,7 @@ module FB3ReaderPage {
 				var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : this.FalloutState.FootnotesAddonCollected;
 				if ((ChildBot + FootnotesHeightNow <= this.FalloutState.Limit) && !this.FalloutState.PrevPageBreaker
 					|| this.FalloutState.ForceFitBlock				// For sime reason we have to fit this to the page
-					|| Child.className.match(/\btag_empty-line\b/)	// empty-line always fits, see FB3DOM.GetHTML for similar hack
+					|| !this.FalloutState.BTreeModeOn && Child.className.match(/\btag_empty-line\b/)	// empty-line always fits, see FB3DOM.GetHTML for similar hack
 					) { // Page is still not filled
 					this.FalloutState.ForceDenyElementBreaking = false;
 					this.FalloutState.ForceFitBlock = false;
@@ -892,6 +922,9 @@ module FB3ReaderPage {
 						this.FalloutState.ForceFitBlock = true;
 						this.FalloutState.PrevPageBreaker = false;
 						this.FalloutState.BTreeModeOn = false;
+						this.FalloutState.LastOffsetShift = Fallback.LastOffsetShift;
+						this.FalloutState.GoodHeight = Fallback.GoodHeight;
+						this.FalloutState.LastOffsetParent = Fallback.LastOffsetParent;
 					}
 				} else {
 					// If we are in BTree Mode we save nothing exept BTreeLastFail. Just pretend like this fail have never happend
@@ -939,7 +972,13 @@ module FB3ReaderPage {
 
 					this.FalloutState.LastOffsetParent = OffsetParent;
 					
-					this.FalloutState.SplitHistory.push({ I: this.FalloutState.I, Element: this.FalloutState.Element, Limit: this.FalloutState.Limit });
+					this.FalloutState.SplitHistory.push({
+						I: this.FalloutState.I,
+						Element: this.FalloutState.Element,
+						Limit: this.FalloutState.Limit,
+						GoodHeight: this.FalloutState.GoodHeight,
+						LastOffsetShift: this.FalloutState.LastOffsetShift,
+						LastOffsetParent: this.FalloutState.LastOffsetParent});
 					this.FalloutState.Element = Child;
 					this.FalloutState.ChildsCount = (!this.FalloutState.ForceDenyElementBreaking && IsNodeUnbreakable(this.FalloutState.Element)) ? 0 : this.FalloutState.Element.children.length;
 					if (!this.FalloutState.PrevPageBreaker && this.FalloutState.ChildsCount == 0 && FootnotesAddon > this.FalloutState.FootnotesAddonCollected && this.FalloutState.LastLineBreakerParent) {
@@ -1036,7 +1075,9 @@ module FB3ReaderPage {
 							MarginAlready = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom'));
 						}
 						ExactNewMargin = MarginAlready + MissingPixels;
+						if (this.RenderInstr.CacheAs !== undefined) {
 						this.FBReader.PagesPositionsCache.SetMargin(XPID, ExactNewMargin);
+					}
 					}
 					Element.style.marginBottom = ExactNewMargin + 'px';
 				}

@@ -77,11 +77,11 @@ module FB3DOM {
 		public XPID: string;
 		public Bookmarks: FB3Bookmarks.IBookmarks[];
 		
-		constructor(public Alert: FB3ReaderSite.IAlert,
+		constructor(public Site: FB3ReaderSite.IFB3ReaderSite,
 			public Progressor: FB3ReaderSite.ILoadProgress,
 			public DataProvider: FB3DataProvider.IJsonLoaderFactory,
 			public PagesPositionsCache: FB3PPCache.IFB3PPCache) {
-			super(null, null, 0);
+			super(null, null, null, 0);
 			this.ActiveRequests = [];
 			this.Ready = false;
 			this.XPID = '';
@@ -106,6 +106,7 @@ module FB3DOM {
 		}
 
 		private AfterHeaderLoaded(Data: any):void {
+			Data = Data.length ? Data[0] : Data; // hack for winjs app
 			this.TOC = Data.Body;
 			this.DataChunks = Data.Parts;
 			this.MetaData = Data.Meta;
@@ -186,10 +187,16 @@ module FB3DOM {
 			}
 		}
 
-		public GetXPathFromPos(Position: FB3Reader.IPosition): FB3DOM.IXPath {
+		public GetXPathFromPos(Position: FB3Reader.IPosition, End?:boolean): FB3DOM.IXPath {
 			var Element = this.GetElementByAddr(Position);
 			if (Element) {
-				return Element.XPath;
+				var XPath = Element.XPath.slice(0);
+				if (End && Element.text && XPath[XPath.length - 1].match && XPath[XPath.length - 1].match(/^\.\d+$/)) {
+					var EndChar = XPath[XPath.length - 1].replace('.', '') * 1
+						+ Element.text.replace(/\u00AD|&shy;|\s$/g,'').length - 1; // First char already counted in number
+					XPath[XPath.length - 1] = '.' + EndChar;
+				}
+				return XPath;
 			} else {
 				return undefined;
 			}
@@ -213,7 +220,7 @@ module FB3DOM {
 			var LoadedChunk: number = CustomData.ChunkN;
 			var Shift = this.DataChunks[LoadedChunk].s;
 			for (var I = 0; I < Data.length; I++) {
-				this.Childs[I + Shift] = TagClassFactory(Data[I], this, I + Shift, 0, 0, false); //new FB3Tag(Data[I], this, I + Shift);
+				this.Childs[I + Shift] = TagClassFactory(Data[I], this, I + Shift, 0, 0, false, this); //new FB3Tag(Data[I], this, I + Shift);
 			}
 			this.DataChunks[LoadedChunk].loaded = 2;
 

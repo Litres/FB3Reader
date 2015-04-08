@@ -7,6 +7,7 @@ module LocalBookmarks {
 		private storageVal: string;
 		private LZState: boolean;
 		private CurPos: any[];
+		private DateTime: number;
 		constructor(private ArtID: string) {
 			this.LocalBookmarks = [];
 			this.local = window.localStorage;
@@ -14,9 +15,15 @@ module LocalBookmarks {
 			this.LZState = true; // for testing only, default = true
 			this.GetBookmarks();
 			this.CurPos = [0];
+			this.DateTime = 0;
 			var FoundBookmark;
 			if (FoundBookmark = this.GetBookmarkByArt(this.ArtID)) {
+				if (FoundBookmark.CurPos) {
 				this.CurPos = FoundBookmark.CurPos;
+			}
+				if (FoundBookmark.DateTime) {
+					this.DateTime = FoundBookmark.DateTime;
+				}
 			}
 		}
 
@@ -31,9 +38,8 @@ module LocalBookmarks {
 		public GetBookmarks(): void {
 			var bookmarksXML = this.local.getItem(this.storageVal);
 			if (bookmarksXML) {
-				if (this.LZState)
-					var cacheData = LZString.decompressFromUTF16(bookmarksXML);
-				this.LocalBookmarks = JSON.parse(this.LZState ? cacheData : bookmarksXML);
+				var cacheData = this.DecodeData(bookmarksXML);
+				this.LocalBookmarks = JSON.parse(cacheData);
 			}
 		}
 		public StoreBookmarks(XMLString: string): void {
@@ -43,7 +49,8 @@ module LocalBookmarks {
 			var localBookmarksTmp = {
 				ArtID: this.ArtID,
 				Cache: XMLString,
-				CurPos: this.CurPos
+				CurPos: this.CurPos,
+				DateTime: this.DateTime
 			};
 			for (var j = 0; j < this.LocalBookmarks.length; j++) {
 				if (this.LocalBookmarks[j].ArtID == this.ArtID) {
@@ -52,9 +59,8 @@ module LocalBookmarks {
 			}
 			this.LocalBookmarks.push(localBookmarksTmp);
 			var BookmarksString = JSON.stringify(this.LocalBookmarks);
-			if (this.LZState)
-				var cacheData = LZString.compressToUTF16(BookmarksString);
-			this.local.setItem(this.storageVal, this.LZState ? cacheData : BookmarksString);
+			var cacheData = this.EncodeData(BookmarksString);
+			this.local.setItem(this.storageVal, cacheData);
 		}
 		public GetCurrentArtBookmarks(): string {
 			var FoundBookmark;
@@ -69,6 +75,26 @@ module LocalBookmarks {
 		}
 		public GetCurrentPosition(): any[] {
 			return this.CurPos;
+		}
+		public SetCurrentDateTime(value: number) {
+			this.DateTime = value;
+		}
+		public GetCurrentDateTime(): number {
+			return this.DateTime;
+		}
+		private EncodeData(Data: string): string {
+			if (this.LZState) {
+				return LZString.compressToUTF16(Data);
+			} else {
+				return Data;
+			}
+		}
+		private DecodeData(Data: string): string {
+			if (this.LZState) {
+				return LZString.decompressFromUTF16(Data);
+			} else {
+				return Data;
+			}
 		}
 	}
 }

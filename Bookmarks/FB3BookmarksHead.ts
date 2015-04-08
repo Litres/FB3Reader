@@ -21,15 +21,10 @@ module FB3Bookmarks {
 		Group: number;
 		Class?: string;
 		Title?: string;
-		Note?: InnerFB2[];
-		RawText: string;
+		Note?: InnerFB2[]; // [0] - raw text, [1] - note comment typed by user
+		RawText: string; // or4 uses it for text preview
 		XPathMappingReady: boolean; // For server-loaded bookmarks, used to watch fb2xpath -> internal xpath mapping progress
 		ClassName(): string;		// css class name for selections of this type
-		InitFromXY(X: number, Y: number, AllowBlock: boolean): boolean;
-		InitFromXPath(XPath: FB3DOM.IXPath): boolean;
-		InitFromRange(Range: FB3DOM.IRange): boolean;
-		InitFromPosition(Position: FB3Reader.IPosition): boolean;
-		ExtendToXY(X: number, Y: number, AllowBlock: boolean): boolean;
 		RoundClone(ToBlock: boolean): IBookmark;// clones itself and expand range to capture block-level elements
 		Detach(): void; // removes itself from the parent.
 		RemapWithDOM(Callback: IBookmarkSyncCallback): void;
@@ -39,9 +34,11 @@ module FB3Bookmarks {
 	}
 
 	export interface IBookmarks {
+		Host: string;
 		Ready: boolean;
 		LockID?: string;
 		LoadDateTime: number;
+		ReadyCallback: IBookmarkSyncCallback;
 		FB3DOM: FB3DOM.IFB3DOM;
 		Reader: FB3Reader.IFBReader;
 		Bookmarks: IBookmark[];
@@ -56,6 +53,8 @@ module FB3Bookmarks {
 		Store(): void;
 		GetBookmarksInRange(Type?:number, Range?: FB3DOM.IRange): IBookmark[];
 		MakeStoreXML(): string;
+		MakeStoreXMLAsync(Callback): string;	// sometimes we need this when we dont have cached chunks
+																					// this will fix that problem
 	}
 
 }

@@ -2,7 +2,8 @@
 
 module FB3DOM {
 
-	export var MaxFootnoteHeight = 0.75;
+	export var MaxFootnoteHeight = 0.5;
+	export var ExtLinkTarget = '_blank'; // may be set to '_top'
 	var TagMapper = {
 		poem: 'div',
 		stanza: 'div',
@@ -19,6 +20,7 @@ module FB3DOM {
 		footnote: 'div',
 		nobr: 'span',
 		image: 'img',
+		trialPurchase: 'div'
 	};
 	export var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author|empty-line)$/;
 	var TagSkipDoublePadding = {
@@ -32,17 +34,19 @@ module FB3DOM {
 
 	// FixMe - separate class for (at least) 'a' required, see if-else hacks in GetInitTag below
 	export function TagClassFactory(Data: IJSONBlock, Parent: IFB3Block,
-		ID: number, NodeN: number, Chars: number, IsFootnote: boolean): IFB3Block {
+		ID: number, NodeN: number, Chars: number, IsFootnote: boolean, DOM: IFB3DOM): IFB3Block {
 		var Kid: IFB3Block;
 		if (typeof Data === "string") {
 			if (Parent.Data.f) {
 				Data = (<any> Data).replace(/[\[\]\{\}\(\)]+/g, '');
 			}
-			Kid = new FB3Text((<any> Data), Parent, ID, NodeN, Chars, IsFootnote);
+			Kid = new FB3Text(DOM, (<any> Data), Parent, ID, NodeN, Chars, IsFootnote);
 		} else if (Data.t == 'image') {
-			Kid = new FB3ImgTag(Data, Parent, ID, IsFootnote);
+			Kid = new FB3ImgTag(DOM, Data, Parent, ID, IsFootnote);
+		} else if (Data.t == 'trialPurchase') {
+			Kid = new FB3PurchaseTag(DOM, Data, Parent, ID, IsFootnote);
 		} else {
-			Kid = new FB3Tag(Data, Parent, ID, IsFootnote);
+			Kid = new FB3Tag(DOM, Data, Parent, ID, IsFootnote);
 		}
 		return Kid;
 	}
@@ -72,14 +76,15 @@ module FB3DOM {
 		public XPath: any[];
 		public TagName: string;
 
-		constructor(public text: string,
+		constructor(public DOM: IFB3DOM,
+			public text: string,
 			public Parent: IFB3Block,
 			public ID: number,
 			NodeN: number,
 			Chars: number,
 			public IsFootnote: boolean) {
-			this.Chars = this.text.replace('\u00AD', '&shy;').length;
-			//			this.text = this.text.replace('\u00AD', '&shy;')
+			this.Chars = this.text.replace(/\u00AD|&shy;/, '').length;
+			//			this.text = this.text.replace(/\u00AD|&shy;/, '')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 			if (Parent && Parent.XPath) {
 				this.XPath = Parent.XPath.slice(0);
@@ -144,6 +149,7 @@ module FB3DOM {
 			var ThisNodeSelections: string[] = new Array();
 
 			var EffectiveXPath = this.XPath.slice(0);
+			if (EffectiveXPath.length == 0) { return '' }
 
 			for (var Bookmark = Bookmarks.length - 1; Bookmark >= 0; Bookmark--) {
 
@@ -162,7 +168,7 @@ module FB3DOM {
 
 				// We are not fully in deal, but some of our kids will be surely affected, so we leave
 				// record in Bookmarks for them
-				if (HowIsStart == 1 || HowisEnd == 1) {
+				if (HowIsStart == 1 || HowisEnd == 1 || HowisEnd == 0 && HowIsStart < 0 && !this.Childs) {
 					continue;
 				}
 
@@ -241,8 +247,8 @@ module FB3DOM {
 			(this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
 		}
 
-		constructor(public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean) {
-			super('', Parent, ID, 1, 0, IsFootnote);
+		constructor(public DOM: IFB3DOM, public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean) {
+			super(DOM, '', Parent, ID, 1, 0, IsFootnote);
 			if (Data === null) return;
 
 			this.TagName = Data.t;
@@ -257,7 +263,7 @@ module FB3DOM {
 			var Base = 0;
 			if (Data.f) {
 				Base++;
-				var NKid = new FB3Tag(Data.f, this, Base, true);
+				var NKid = new FB3Tag(this.DOM, Data.f, this, Base, true);
 				this.Childs.push(NKid);
 				this.Chars += NKid.Chars;
 			}
@@ -272,7 +278,7 @@ module FB3DOM {
 						NodeN++;
 					}
 					PrevItmType = ItmType;
-					var Kid = TagClassFactory(Itm, <IFB3Block> this, I + Base, NodeN, Chars, IsFootnote);
+					var Kid = TagClassFactory(Itm, <IFB3Block> this, I + Base, NodeN, Chars, IsFootnote, this.DOM);
 					if (ItmType == 'text') {
 						Chars += Kid.Chars;
 					} else {
@@ -383,10 +389,10 @@ module FB3DOM {
 
 			var Out: string[] = ['<'];
 
-			if (this.TagName == 'a' && !this.IsFootnote && this.Data.hr){
+			if (this.TagName == 'a' && this.Data.hr){
 				Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
-			} else if (this.TagName == 'a' && !this.IsFootnote && this.Data.href) {
-				Out.push('a href="' + this.Data.href + '" target="_top"');
+			} else if (this.TagName == 'a' && this.Data.href) {
+				Out.push('a href="' + this.Data.href + '" target="' + ExtLinkTarget + '"');
 			} else {
 				Out.push(this.HTMLTagName());
 			}
@@ -447,6 +453,13 @@ module FB3DOM {
 			}
 
 			return ' style="' + InlineStyle + '"';
+		}
+	}
+	export class FB3PurchaseTag extends FB3Tag implements IFB3Block {
+		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+			var Out: string[] = ['<div class="fit_to_page" id ="n_' + IDPrefix + this.XPID + '">'];
+			Out.push(this.DOM.Site.showTrialEnd('n_' + IDPrefix + this.XPID));
+			return Out;
 		}
 	}
 }

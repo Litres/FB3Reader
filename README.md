@@ -30,3 +30,4 @@ Contacts
 ---------
 * gu@litres.ru - Dmitry Gribov, project owner
 * denis@litres.ru - Denis Kovalkov. Just in case
+* samik3k@gmail.com - Alexander Sokolov. Just a coder

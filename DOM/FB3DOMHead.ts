@@ -5,8 +5,8 @@ module FB3DOM {
 	export interface IXPath extends Array<any> { }
 	export interface InnerHTML extends String {};
 	export interface IRange {
-		From: FB3Reader.IPosition;
-		To: FB3Reader.IPosition;
+		From: FB3ReaderAbstractClasses.IPosition;
+		To: FB3ReaderAbstractClasses.IPosition;
 	}
 	export interface IPageContainer {
 		Body: InnerHTML[];
@@ -89,7 +89,7 @@ module FB3DOM {
 			ViewPortH: number,
 			PageData: IPageContainer,
 			Bookmarks: FB3Bookmarks.IBookmark[]);
-		Position(): FB3Reader.IPosition;
+		Position(): FB3ReaderAbstractClasses.IPosition;
 		IsBlock(): boolean;
 	}
 
@@ -116,9 +116,9 @@ module FB3DOM {
 			ViewPortW: number,
 			ViewPortH: number,
 			Callback: IDOMTextReadyCallback): void;
-		GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block;
-		GetAddrByXPath(XPath: IXPath): FB3Reader.IPosition;
-		GetXPathFromPos(Position: FB3Reader.IPosition, End?:boolean): IXPath;
+		GetElementByAddr(Position: FB3ReaderAbstractClasses.IPosition): IFB3Block;
+		GetAddrByXPath(XPath: IXPath): FB3ReaderAbstractClasses.IPosition;
+		GetXPathFromPos(Position: FB3ReaderAbstractClasses.IPosition, End?:boolean): IXPath;
 		OnChunkLoaded(Data: IJSONBlock[], CustomData?: any): void;
 		ChunkUrl(N: number): string;
 		LoadChunks(MissingChunks: number[], Callback: IChunkLoadedCallback): void; // Sets the chunks to be loaded

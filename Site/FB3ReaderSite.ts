@@ -2,7 +2,7 @@
 
 module FB3ReaderSite {
 
-	export class ExampleSite implements IFB3ReaderSite {
+    export class ExampleSite implements IFB3ReaderSite {
 		public ViewText: IViewText;
 		public Progressor: ILoadProgress;
 		public IdleThreadProgressor:ILoadProgress;

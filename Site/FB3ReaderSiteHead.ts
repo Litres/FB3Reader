@@ -1,7 +1,7 @@
 /// <reference path="../FB3ReaderHeaders.ts" />
 
 module FB3ReaderSite {
-	
+
 	// Mothership with all interfaces aboard - everybody will pick here
 	export interface IFB3ReaderSite {
 		ViewText: IViewText;

@@ -60,7 +60,8 @@ var LocalBookmarks;
             var FoundBookmark;
             if (FoundBookmark = this.GetBookmarkByArt(this.ArtID)) {
                 return FoundBookmark.Cache;
-            } else {
+            }
+            else {
                 return null;
             }
         };
@@ -79,14 +80,16 @@ var LocalBookmarks;
         LocalBookmarksClass.prototype.EncodeData = function (Data) {
             if (this.LZState) {
                 return LZString.compressToUTF16(Data);
-            } else {
+            }
+            else {
                 return Data;
             }
         };
         LocalBookmarksClass.prototype.DecodeData = function (Data) {
             if (this.LZState) {
                 return LZString.decompressFromUTF16(Data);
-            } else {
+            }
+            else {
                 return Data;
             }
         };

@@ -16,7 +16,6 @@ var LitresLocalBookmarks = new LocalBookmarks.LocalBookmarksClass(LocalArtID.toS
 var aldebaran_or4 = false;
 
 window.onload = () => {
-
 	document.getElementById('reader').addEventListener('touchstart', TapStart, false);
 	document.getElementById('reader').addEventListener('touchmove', TapMove, false);
 	document.getElementById('reader').addEventListener('touchend', TapEnd, false);
@@ -45,7 +44,7 @@ window.onload = () => {
 	start = new Date().getTime();
 };
 
-function ArtID2URL(ArtID: string, Chunk?: string): string {
+function ArtID2URL(Chunk?: string): string {
 	var OutURL = '/DataProvider/AjaxExample/' + LocalArtID+'.';
 	if (Chunk == null) {
 		OutURL += 'toc.js';

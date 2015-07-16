@@ -5,7 +5,7 @@ module FB3DataProvider {
 		(Data: any, CustomData?: any): void;
 	}
 	export interface IArtID2URL {
-		(ArtID: string, Chunk?: string): string;
+		(Chunk?: string): string;
 	}
 
 	export interface IJsonLoaderFactory {

@@ -39,7 +39,7 @@ window.onload = function () {
     //	ShowPosition();
     start = new Date().getTime();
 };
-function ArtID2URL(ArtID, Chunk) {
+function ArtID2URL(Chunk) {
     var OutURL = '/DataProvider/AjaxExample/' + LocalArtID + '.';
     if (Chunk == null) {
         OutURL += 'toc.js';

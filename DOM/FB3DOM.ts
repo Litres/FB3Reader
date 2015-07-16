@@ -146,7 +146,7 @@ module FB3DOM {
 		}
 
 		public ArtID2URL(Chunk?: string): string {
-			return this.DataProvider.ArtID2URL(this.ArtID, Chunk);
+			return this.DataProvider.ArtID2URL(Chunk);
 		}
 
 		public GetElementByAddr(Position: FB3ReaderAbstractClasses.IPosition): IFB3Block {

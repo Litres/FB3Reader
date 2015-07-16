@@ -1,7 +1,7 @@
 /// <reference path="../plugins/lz-string.d.ts" />
 
 module LocalBookmarks {
-	export class LocalBookmarksClass {
+    export class LocalBookmarksClass {
 		private local;
 		private LocalBookmarks;
 		private storageVal: string;

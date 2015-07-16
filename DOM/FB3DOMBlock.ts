@@ -127,7 +127,7 @@ module FB3DOM {
 			}
 		}
 
-		public Position(): FB3Reader.IPosition {
+		public Position(): FB3ReaderAbstractClasses.IPosition {
 			var Node:IFB3Block = this;
 			var Result = new Array();
 			while (Node.Parent) {
@@ -316,7 +316,7 @@ module FB3DOM {
 		public GetCloseTag(Range: IRange): string {
 			return '</' + this.HTMLTagName() + '>';
 		}
-		private CutTop(Path: FB3Reader.IPosition): boolean {
+		private CutTop(Path: FB3ReaderAbstractClasses.IPosition): boolean {
 			for (var I = 0; I <= Path.length; I++) {
 				if (Path[I]) return true;
 			}

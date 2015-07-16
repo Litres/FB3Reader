@@ -149,7 +149,7 @@ module FB3DOM {
 			return this.DataProvider.ArtID2URL(this.ArtID, Chunk);
 		}
 
-		public GetElementByAddr(Position: FB3Reader.IPosition): IFB3Block {
+		public GetElementByAddr(Position: FB3ReaderAbstractClasses.IPosition): IFB3Block {
 			var ResponcibleNode: IFB3Block = this;
 			Position = Position.slice(0);
 			while (Position.length && ResponcibleNode.Childs && ResponcibleNode.Childs[Position[0]]) {
@@ -157,7 +157,7 @@ module FB3DOM {
 			}
 			return ResponcibleNode;
 		}
-		public GetAddrByXPath(XPath: FB3DOM.IXPath): FB3Reader.IPosition {
+		public GetAddrByXPath(XPath: FB3DOM.IXPath): FB3ReaderAbstractClasses.IPosition {
 			var Node: IFB3Block = this;
 			var I = 0;
 			while (I < Node.Childs.length) {
@@ -187,7 +187,7 @@ module FB3DOM {
 			}
 		}
 
-		public GetXPathFromPos(Position: FB3Reader.IPosition, End?:boolean): FB3DOM.IXPath {
+		public GetXPathFromPos(Position: FB3ReaderAbstractClasses.IPosition, End?:boolean): FB3DOM.IXPath {
 			var Element = this.GetElementByAddr(Position);
 			if (Element) {
 				var XPath = Element.XPath.slice(0);

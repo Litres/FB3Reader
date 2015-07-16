@@ -17,7 +17,6 @@ window.onload = function () {
     document.getElementById('reader').addEventListener('touchstart', TapStart, false);
     document.getElementById('reader').addEventListener('touchmove', TapMove, false);
     document.getElementById('reader').addEventListener('touchend', TapEnd, false);
-    //	var ArtID = '178297';
     var Version = '1.2';
     var UUID = 'd4e7833a-51c6-102c-9c5b-e8b0b7836b8f';
     var SID = GetSID();
@@ -285,7 +284,8 @@ function Toc2Div(TOCS) {
             Out += '>';
         }
         if (TOC.t) {
-            Out += '<a href = "javascript:GoToc(' + TOC.s + ')" > ' + TOC.t + '</a>';
+            Out += '<a href = "javascript:GoToc(' + TOC.s + ')" > '
+                + TOC.t + '</a>';
         }
         if (TOC.c) {
             for (var I = 0; I < TOC.c.length; I++) {
@@ -301,7 +301,10 @@ function GoToc(S) {
     CloseBookmarksList();
 }
 function Bookmark2Div(Bookmark) {
-    return '<div class="bookmarkdiv"><div style="float:right"><a href="javascript:DropBookmark(' + Bookmark.N + ')">[X]</a></div><a href="javascript:ShowBookmark(' + Bookmark.N + ')">' + Bookmark.Title + '</a></div>';
+    return '<div class="bookmarkdiv"><div style="float:right"><a href="javascript:DropBookmark('
+        + Bookmark.N + ')">[X]</a></div><a href="javascript:ShowBookmark('
+        + Bookmark.N + ')">'
+        + Bookmark.Title + '</a></div>';
 }
 function ShowBookmark(N) {
     AFB3Reader.GoTO(AFB3Reader.Bookmarks.Bookmarks[N].Range.From);
@@ -403,8 +406,7 @@ function changecss(theClass, element, value) {
                         }
                     }
                 }
-                catch (err) {
-                }
+                catch (err) { }
             }
         }
     }

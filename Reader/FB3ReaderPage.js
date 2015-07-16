@@ -92,7 +92,9 @@ var FB3ReaderPage;
         };
         ReaderPage.prototype.GetInitHTML = function (ID) {
             this.ID = ID;
-            return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns + ' FB2readerPage"><div class="FBReaderContentDiv" id="FB3ReaderColumn' + this.ID + '"><p id="FB3ReaderParaSize' + this.ID + '"><span id="FB3ReaderSpanSize' + this.ID + '">&#160; </span><span>&#160;<br/>&#160;<br/>&#160;</span></p></div><div class="FBReaderNotesDiv" id="FB3ReaderNotes' + this.ID + '">&#160;</div></div>';
+            return '<div class="FB2readerCell' + this.ColumnN + 'of' + this.FBReader.NColumns +
+                ' FB2readerPage"><div class="FBReaderContentDiv" id="FB3ReaderColumn' + this.ID +
+                '"><p id="FB3ReaderParaSize' + this.ID + '"><span id="FB3ReaderSpanSize' + this.ID + '">&#160; </span><span>&#160;<br/>&#160;<br/>&#160;</span></p></div><div class="FBReaderNotesDiv" id="FB3ReaderNotes' + this.ID + '">&#160;</div></div>';
         };
         ReaderPage.prototype.FillElementData = function (ID) {
             var Element = this.Site.getElementById(ID);
@@ -103,16 +105,24 @@ var FB3ReaderPage;
             var MarginLeft;
             var MarginRight;
             if (document.all) {
-                MarginTop = HardcoreParseInt(Element.currentStyle.marginTop) + HardcoreParseInt(Element.currentStyle.paddingTop);
-                MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom) + HardcoreParseInt(Element.currentStyle.paddingBottom);
-                MarginLeft = HardcoreParseInt(Element.currentStyle.marginTop) + HardcoreParseInt(Element.currentStyle.paddingLeft);
-                MarginRight = HardcoreParseInt(Element.currentStyle.marginRight) + HardcoreParseInt(Element.currentStyle.paddingRight);
+                MarginTop = HardcoreParseInt(Element.currentStyle.marginTop)
+                    + HardcoreParseInt(Element.currentStyle.paddingTop);
+                MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom)
+                    + HardcoreParseInt(Element.currentStyle.paddingBottom);
+                MarginLeft = HardcoreParseInt(Element.currentStyle.marginTop)
+                    + HardcoreParseInt(Element.currentStyle.paddingLeft);
+                MarginRight = HardcoreParseInt(Element.currentStyle.marginRight)
+                    + HardcoreParseInt(Element.currentStyle.paddingRight);
             }
             else {
-                MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
-                MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
-                MarginLeft = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-left')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-left'));
-                MarginRight = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-right')) + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-right'));
+                MarginTop = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-top'))
+                    + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-top'));
+                MarginBottom = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom'))
+                    + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-bottom'));
+                MarginLeft = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-left'))
+                    + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-left'));
+                MarginRight = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-right'))
+                    + parseInt(getComputedStyle(Element, '').getPropertyValue('padding-right'));
             }
             return {
                 Node: Element,
@@ -239,7 +249,8 @@ var FB3ReaderPage;
             this.PatchUnbreakableContent();
             var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
             if (HasFootnotes) {
-                this.NotesElement.Node.innerHTML = this.Site.PrepareHTML('<div class="NotesLine"></div>' + PageData.FootNotes.join(''));
+                this.NotesElement.Node.innerHTML = this.Site.PrepareHTML('<div class="NotesLine"></div>' +
+                    PageData.FootNotes.join(''));
                 this.NotesElement.Node.style.display = 'block';
                 var NotesNodes = this.NotesElement.Node.children.length;
                 for (var I = 0; I < this.NotesElement.Node.children.length; I++) {
@@ -296,7 +307,9 @@ var FB3ReaderPage;
                         }
                     }
                 }
-                if (ElWidth > this.ViewPortW || IsNodeUnbreakable(KidToCrop) && KidToCrop.scrollHeight > this.ViewPortH) {
+                if (ElWidth > this.ViewPortW ||
+                    IsNodeUnbreakable(KidToCrop)
+                        && KidToCrop.scrollHeight > this.ViewPortH) {
                     this.CropNodeToViewport(KidToCrop);
                 }
             }
@@ -314,8 +327,11 @@ var FB3ReaderPage;
             // we must preserve this
             Node.style.marginBottom = '';
             var MoveToCenter = NewW < this.ViewPortW - 1 ? Math.floor((this.ViewPortW - NewW) / 2) : 0;
-            var BtnHTML = '<span class="span-zoom" id="zbs' + BaseID + '">' + '<button class="zoom_block" id="zb' + BaseID + '">' + 'Zoom ' + BaseID + '</button></span>';
-            var ContainerDivs = BtnHTML + '<div id="n0' + BaseID + '" style ="height:' + BaseElementH + 'px;width:' + BaseElementW + 'px;left:' + MoveToCenter + 'px;">' + '<div id="n1' + BaseID + '" style="transform: scale(' + Ratio + ');top:-' + HShift + 'px;left:-' + WShift + 'px; position:relative;">';
+            var BtnHTML = '<span class="span-zoom" id="zbs' + BaseID + '">' +
+                '<button class="zoom_block" id="zb' + BaseID + '">' +
+                'Zoom ' + BaseID + '</button></span>';
+            var ContainerDivs = BtnHTML + '<div id="n0' + BaseID + '" style ="height:' + BaseElementH + 'px;width:' + BaseElementW + 'px;left:' + MoveToCenter + 'px;">'
+                + '<div id="n1' + BaseID + '" style="transform: scale(' + Ratio + ');top:-' + HShift + 'px;left:-' + WShift + 'px; position:relative;">';
             var HTML = ContainerDivs + Node.outerHTML + '</div></div>';
             var NewNode = document.createElement('div');
             NewNode.style.height = NewH + 'px';
@@ -370,7 +386,9 @@ var FB3ReaderPage;
             this.Element.Node.style.height = (this.RenderInstr.Height - this.Element.MarginBottom - this.Element.MarginTop - 1) + 'px';
             if (this.RenderInstr.NotesHeight) {
                 this.NotesElement.Node.style.height = (this.RenderInstr.NotesHeight) + 'px';
-                this.NotesElement.Node.style.top = (this.Element.Height - this.RenderInstr.NotesHeight - this.NotesElement.MarginBottom) + 'px';
+                this.NotesElement.Node.style.top = (this.Element.Height
+                    - this.RenderInstr.NotesHeight
+                    - this.NotesElement.MarginBottom) + 'px';
             }
             else {
                 this.NotesElement.Node.style.display = 'none';
@@ -388,16 +406,23 @@ var FB3ReaderPage;
                 }
                 //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
                 clearTimeout(this.RenderMoreTimeoutApply);
-                this.RenderMoreTimeoutApply = setTimeout(function () {
-                    _this.Next.DrawInit(_this.PagesToRender);
-                    _this.RenderMoreTimeoutApply = 0;
-                }, FB3ReaderPage.SemiSleepTimeout);
+                this.RenderMoreTimeoutApply = setTimeout(function () { _this.Next.DrawInit(_this.PagesToRender); _this.RenderMoreTimeoutApply = 0; }, FB3ReaderPage.SemiSleepTimeout);
                 // This page is clearly the last visible by absolute number
-                if (this.PageN + 1 == this.FBReader.CurStartPage + this.FBReader.NColumns || this.PageN === undefined && this.FBReader.CurStartPage === undefined && this.ID == this.FBReader.CurVisiblePage + this.FBReader.NColumns - 1) {
+                if (this.PageN + 1 == this.FBReader.CurStartPage + this.FBReader.NColumns
+                    ||
+                        // or, if we walk over the grass this it the relative last page
+                        this.PageN === undefined
+                            && this.FBReader.CurStartPage === undefined
+                            && this.ID == this.FBReader.CurVisiblePage + this.FBReader.NColumns - 1) {
                     this.FBReader._CanvasReadyCallback();
                 }
             }
-            else if (this.Next && (this.FBReader.CurVisiblePage + this.FBReader.NColumns == this.ID || !this.PagesToRender.length && this.FBReader.CurVisiblePage >= this.ID - 1 && this.FBReader.CurVisiblePage < this.ID + this.FBReader.NColumns)) {
+            else if (this.Next
+                && (this.FBReader.CurVisiblePage + this.FBReader.NColumns == this.ID
+                    ||
+                        !this.PagesToRender.length && this.FBReader.CurVisiblePage >= this.ID - 1
+                            && this.FBReader.CurVisiblePage < this.ID + this.FBReader.NColumns // last page, if it's empty, may not fire ApplyPageMetrics
+                )) {
                 // Looks like the end of the text
                 this.FBReader._CanvasReadyCallback();
             }
@@ -441,7 +466,9 @@ var FB3ReaderPage;
             // We can have not enough content to fill the page. Sometimes we will refill it,
             // but sometimes (doc end or we only 
             if (!FallOut.EndReached) {
-                var EndRiched = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e < FallOut.FallOut[0] || FallOut.FallOut.length == 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0];
+                var EndRiched = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e < FallOut.FallOut[0]
+                    ||
+                        FallOut.FallOut.length == 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0];
                 if (!EndRiched) {
                     // Ups, our page is incomplete - have to retry filling it. Take more data now
                     //var BasePrerender = this.PrerenderBlocks;
@@ -489,7 +516,8 @@ var FB3ReaderPage;
             if (!FallOut.DenyForwardScan && FB3ReaderPage.EnableForwardScan && LastChild && !PageCorrupt && FallOut.EndReached) {
                 this.QuickFallautState.CollectedHeight = FallOut.Height;
                 this.QuickFallautState.CollectedNotesHeight = FallOut.NotesHeight;
-                var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
+                var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
+                    - this.Element.MarginTop - this.Element.MarginBottom;
                 this.QuickFallautState.RealPageSize = LastChild.offsetTop + LastChild.scrollHeight;
                 if (this.QuickFallautState.RealPageSize > TestHeight && this.PagesToRender.length) {
                     this.QuickFallautState.QuickFallout = 0;
@@ -516,7 +544,8 @@ var FB3ReaderPage;
         ReaderPage.prototype.FalloutConsumeNext = function (FallOut) {
             var _this = this;
             //console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
-            if (FallOut.EndReached || FallOut.FallOut[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e && !this.Next) {
+            if (FallOut.EndReached
+                || FallOut.FallOut[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e && !this.Next) {
                 var NextPageRange = {};
                 NextPageRange.From = this.QuickFallautState.PrevTo.slice(0);
                 // We check if we had any progress at all. If not - we rely on FalloutConsumeFirst to handle this and just abort this page scan
@@ -538,8 +567,10 @@ var FB3ReaderPage;
                     }
                     if (FallOut.EndReached && this.QuickFallautState.QuickFallout < this.PagesToRender.length - 1) {
                         this.QuickFallautState.QuickFallout++;
-                        var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height - this.Element.MarginTop - this.Element.MarginBottom;
-                        if (this.QuickFallautState.RealPageSize > TestHeight || this.WholeRangeToRender.To[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+                        var TestHeight = this.QuickFallautState.CollectedHeight + this.Element.Height
+                            - this.Element.MarginTop - this.Element.MarginBottom;
+                        if (this.QuickFallautState.RealPageSize > TestHeight
+                            || this.WholeRangeToRender.To[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                             this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
                             //this.FallOut();
                             //							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
@@ -567,7 +598,11 @@ var FB3ReaderPage;
             // We are making background render - let's check if the visible page is off-ladder
             // and is equal to our current page. if so we set our visible page PageN, so it will no longer
             // be on the grass
-            if (!this.Next && PageN && ((PageN - 1) % this.FBReader.NColumns == 0) && this.FBReader.CurStartPage === undefined && this.FBReader.CurStartPos) {
+            if (!this.Next
+                && PageN
+                && ((PageN - 1) % this.FBReader.NColumns == 0) // Only jump in for the first page in multicolumn view
+                && this.FBReader.CurStartPage === undefined
+                && this.FBReader.CurStartPos) {
                 if (FB3Reader.PosCompare(FallOut.FallOut, this.FBReader.CurStartPos) == 0) {
                     this.FBReader.CurStartPage = PageN + 1; // Why +1? Donno, but somehow it works
                 }
@@ -685,7 +720,10 @@ var FB3ReaderPage;
                     FootnotesAddon += this.NotesElement.MarginTop - this.FalloutState.NotesShift;
                 }
                 var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : this.FalloutState.FootnotesAddonCollected;
-                if ((ChildBot + FootnotesHeightNow <= this.FalloutState.Limit) && !this.FalloutState.PrevPageBreaker || this.FalloutState.ForceFitBlock || !this.FalloutState.BTreeModeOn && Child.className.match(/\btag_empty-line\b/)) {
+                if ((ChildBot + FootnotesHeightNow <= this.FalloutState.Limit) && !this.FalloutState.PrevPageBreaker
+                    || this.FalloutState.ForceFitBlock // For sime reason we have to fit this to the page
+                    || !this.FalloutState.BTreeModeOn && Child.className.match(/\btag_empty-line\b/) // empty-line always fits, see FB3DOM.GetHTML for similar hack
+                ) {
                     this.FalloutState.ForceDenyElementBreaking = false;
                     this.FalloutState.ForceFitBlock = false;
                     this.FalloutState.FitAnythingAtAll = true;
@@ -699,11 +737,15 @@ var FB3ReaderPage;
                         this.FalloutState.LastFullLinePosition = ChildBot;
                     }
                     this.FalloutState.BTreeLastOK = this.FalloutState.I;
-                    if (this.FalloutState.I == 0 && this.FalloutState.SplitHistory.length == 1 && Child.tagName.match(/span/i)) {
+                    if (this.FalloutState.I == 0 && this.FalloutState.SplitHistory.length == 1
+                        && Child.tagName.match(/span/i)) {
                         // This is 1-st level node under block level, we want to know it's line height
                         this.FalloutState.ThisBlockLineShift = Child.offsetTop;
                     }
-                    if (this.FalloutState.I == 0 && this.FalloutState.NoMoreFootnotesHere && this.FalloutState.ChildsCount > 7 && !this.FalloutState.BTreeModeOn) {
+                    if (this.FalloutState.I == 0 &&
+                        this.FalloutState.NoMoreFootnotesHere &&
+                        this.FalloutState.ChildsCount > 7 &&
+                        !this.FalloutState.BTreeModeOn) {
                         // In fact we could work with Footnotes as well, but it's a bit dedicated, perhaps return to it later on
                         this.FalloutState.BTreeModeOn = true;
                         this.FalloutState.BTreeLastFail = this.FalloutState.ChildsCount;
@@ -789,8 +831,7 @@ var FB3ReaderPage;
                         Limit: this.FalloutState.Limit,
                         GoodHeight: this.FalloutState.GoodHeight,
                         LastOffsetShift: this.FalloutState.LastOffsetShift,
-                        LastOffsetParent: this.FalloutState.LastOffsetParent
-                    });
+                        LastOffsetParent: this.FalloutState.LastOffsetParent });
                     this.FalloutState.Element = Child;
                     this.FalloutState.ChildsCount = (!this.FalloutState.ForceDenyElementBreaking && IsNodeUnbreakable(this.FalloutState.Element)) ? 0 : this.FalloutState.Element.children.length;
                     if (!this.FalloutState.PrevPageBreaker && this.FalloutState.ChildsCount == 0 && FootnotesAddon > this.FalloutState.FootnotesAddonCollected && this.FalloutState.LastLineBreakerParent) {
@@ -903,7 +944,8 @@ var FB3ReaderPage;
         };
         ReaderPage.prototype.GetLineHeight = function () {
             var ParaData = this.FillElementData('FB3ReaderParaSize' + this.ID);
-            if (ParaData.MarginBottom > 0 || ParaData.MarginTop > 0) {
+            if (ParaData.MarginBottom > 0
+                || ParaData.MarginTop > 0) {
                 return 0;
             }
             var RealLineHeight = ParaData.Node.offsetHeight / 3; // Browser may have 110% zoom so we can not trust CSS line-height we provide!

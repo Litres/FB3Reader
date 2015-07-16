@@ -5,6 +5,14 @@ module FB3DataProvider {
 	interface IJSonLoadedCallbackWrap {
 		(ID: number, Data: any, CustomData?: any): void;
 	}
+	interface iWindow {
+		XDomainRequest?: any;
+		atob: any;
+		XMLHttpRequest: any;
+		ActiveXObject: any;
+		JSON: JSON;
+	}
+	declare var window: iWindow;
 
 	export function zeroPad(num, places): string {
 		var zero = places - num.toString().length + 1;
@@ -34,10 +42,6 @@ module FB3DataProvider {
 			this.ActiveRequests = {};
 		}
 	}
-
-	interface AJWindow extends Window { JSON: JSON; XMLHttpRequest: XMLHttpRequest; ActiveXObject: any}
-	declare var window: AJWindow;
-
 
 	class AjaxLoader {
 		private Req: XMLHttpRequest;
@@ -126,7 +130,7 @@ module FB3DataProvider {
 		private HttpRequest(): XMLHttpRequest {
 			var ref = null;
 			if (document.all && !window.atob && (<any> window).XDomainRequest && aldebaran_or4) {
-				ref = new XDomainRequest(); // IE9 =< fix
+				ref = new window.XDomainRequest(); // IE9 =< fix
 				this.xhrIE9 = true;
 			} else if (window.XMLHttpRequest) {
 				ref = new XMLHttpRequest();

@@ -8,8 +8,9 @@ module FB3Bookmarks {
   interface iWindow extends Window {
 		ActiveXObject: any;
 		DOMParser: any;
+		XDomainRequest: any;
 	}
-  declare var window: iWindow;
+	declare var window: iWindow;
 
 	interface IXMLHTTPResponseCallback { (Data: XMLDocument): void; }
 
@@ -36,7 +37,7 @@ module FB3Bookmarks {
 		private xhrIE9: boolean;
 		private MakeStoreXMLAsyncTimeout: number;
 		public aldebaran: boolean; // stupid hack
-		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string, LitresLocalXML?: string) {
+		constructor(public FB3DOM: FB3DOM.IFB3DOM, private ArtID: string, LitresSID?: string, LitresLocalXML?: string) {
 			this.xhrIE9 = false;
 			this.Ready = false;
 			// this.FB3DOM.Bookmarks.push(this);
@@ -55,7 +56,7 @@ module FB3Bookmarks {
 				// IE8-IE9 cant do cross-domain ajax properly (IE7 i think cant do it at all)
 				// this workaround send empty clean request, no params, no session, no cookies
 				// answer must be text/plain
-				this.XMLHttp = new XDomainRequest(); // IE9 =< fix
+				this.XMLHttp = new window.XDomainRequest(); // IE9 =< fix
 				this.xhrIE9 = true;
 			} else if (window.ActiveXObject && ActiveXXMLHttp) {
 				this.XMLHttp = new window.ActiveXObject("Microsoft.XMLHTTP");
@@ -295,7 +296,7 @@ module FB3Bookmarks {
 		}
 
 		private MakeLoadURL(): string {
-			var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.Reader.ArtID +
+			var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.ArtID +
 				(this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
 			return URL;
 		}
@@ -471,7 +472,7 @@ module FB3Bookmarks {
 			// this.Owner.Store();
 		}
 
-		private RoundToWordLVLDn(Adress: FB3Reader.IPosition) {
+		private RoundToWordLVLDn(Adress: FB3ReaderAbstractClasses.IPosition) {
 			var Block = this.Owner.FB3DOM.GetElementByAddr(Adress);
 			var PosInBlock = Adress[Adress.length - 1];
 			while (Block.Parent && !Block.TagName) {
@@ -484,7 +485,7 @@ module FB3Bookmarks {
 			}
 			Adress.push(PosInBlock);
 		}
-		private RoundToWordLVLUp(Adress: FB3Reader.IPosition) {
+		private RoundToWordLVLUp(Adress: FB3ReaderAbstractClasses.IPosition) {
 			var Block = this.Owner.FB3DOM.GetElementByAddr(Adress);
 			if (Block.IsBlock()) {
 				return;
@@ -506,14 +507,14 @@ module FB3Bookmarks {
 			Adress.push(PosInBlock);
 		}
 
-		private RoundToBlockLVLUp(Adress: FB3Reader.IPosition) {
+		private RoundToBlockLVLUp(Adress: FB3ReaderAbstractClasses.IPosition) {
 			var Block = this.Owner.FB3DOM.GetElementByAddr(Adress);
 			while (Block.Parent && (!Block.TagName || !Block.IsBlock())) {
 				Block = Block.Parent;
 				Adress.pop();
 			}
 		}
-		private RoundToBlockLVLDn(Adress: FB3Reader.IPosition) {
+		private RoundToBlockLVLDn(Adress: FB3ReaderAbstractClasses.IPosition) {
 			this.RoundToBlockLVLUp(Adress);
 			var Block = this.Owner.FB3DOM.GetElementByAddr(Adress);
 			if (Block.TagName && Block.IsBlock()) {

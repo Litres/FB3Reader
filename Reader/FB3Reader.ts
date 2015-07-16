@@ -95,14 +95,13 @@ module FB3Reader {
 	export class Reader implements IFBReader {
 		public HyphON: boolean;
 		public BookStyleNotes: boolean;
-		public TextPercent: number; 
 		public NColumns: number;
 		public CacheForward: number;
 		public CacheBackward: number;
-		public CurStartPos: IPosition;
+		public CurStartPos: FB3ReaderAbstractClasses.IPosition;
 		public CurStartPage: number;
 		public BookStyleNotesTemporaryOff: boolean;
-		public CanvasReadyCallback: ICanvasReadyCallback;
+		public CanvasReadyCallback: FB3ReaderAbstractClasses.ICanvasReadyCallback;
 		public IsIE: boolean;
 		public Destroy: boolean;
 		public LineHeight: number;
@@ -142,7 +141,7 @@ module FB3Reader {
 		}
 		}
 
-		private SetStartPos(NewPos: IPosition): void {
+		private SetStartPos(NewPos: FB3ReaderAbstractClasses.IPosition): void {
 			if (this.RedrawState) {
 				this.RedrawState = false;
 				return;
@@ -181,7 +180,7 @@ module FB3Reader {
 			this.IdleOff();
 		}
 
-		public Init(StartFrom: IPosition, DateTime?: number): void {
+		public Init(StartFrom: FB3ReaderAbstractClasses.IPosition, DateTime?: number): void {
 			this.PrepareCanvas();
 			this.Bookmarks.LoadFromCache();
 			this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
@@ -209,7 +208,7 @@ module FB3Reader {
 			this.PutBlockIntoView(0);
 		}
 
-		public GoTO(NewPos: IPosition, Force?: boolean) {
+		public GoTO(NewPos: FB3ReaderAbstractClasses.IPosition, Force?: boolean) {
 			if (!NewPos || NewPos.length == 0) {
 				this.Site.Alert('Bad adress targeted');
 				return;
@@ -325,7 +324,7 @@ module FB3Reader {
 			}
 		}
 
-		public GoToOpenPosition(NewPos: IPosition): void {
+		public GoToOpenPosition(NewPos: FB3ReaderAbstractClasses.IPosition): void {
 			clearTimeout(this.MoveTimeoutID);
 
 			if (NewPos[0] > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
@@ -425,7 +424,7 @@ module FB3Reader {
 			this.PagesPositionsCache.Reset();
 		}
 
-		public GetCachedPage(NewPos: IPosition): number {
+		public GetCachedPage(NewPos: FB3ReaderAbstractClasses.IPosition): number {
 			for (var I = this.PagesPositionsCache.Length() - 1; I >= 0; I--) {
 				var Pos = this.PagesPositionsCache.Get(I).Range;
 				if (PosCompare(Pos.To, NewPos) >= -1
@@ -653,7 +652,7 @@ module FB3Reader {
 			return Percent * 100;
 		}
 
-		public ElementAtXY(X: number, Y: number): IPosition {
+		public ElementAtXY(X: number, Y: number):FB3ReaderAbstractClasses.IPosition {
 			var Node = <HTMLElement> this.Site.elementFromPoint(X, Y);
 			var MisteryPointChanger = 3;
 
@@ -696,7 +695,7 @@ module FB3Reader {
 				return undefined;
 			}
 
-			var Addr: IPosition = <IPosition> <any> Node.id.split('_');
+			var Addr: FB3ReaderAbstractClasses.IPosition = <FB3ReaderAbstractClasses.IPosition> <any> Node.id.split('_');
 			Addr.shift();
 			Addr.shift();
 			FB3ReaderPage.NumericArray(Addr);
@@ -707,7 +706,7 @@ module FB3Reader {
 			return !Node || !Node.nodeName.match(/span|img/i) || !Node.id.match(/n(_\d+)+/);
 		}
 
-		private GetElementXY(Node: FB3DOM.IFB3Block): IDimensions {
+		private GetElementXY(Node: FB3DOM.IFB3Block): FB3ReaderAbstractClasses.IDimensions {
 			var Elem: HTMLElement;
 			for (var J = this.CurVisiblePage; J <= this.CurVisiblePage + this.NColumns; J++) {
 				Elem = this.Site.getElementById('n_' + J + '_' + Node.XPID);
@@ -719,7 +718,7 @@ module FB3Reader {
 				return undefined;
 			}
 			var ElemDim = Elem.getBoundingClientRect();
-			var Dimensions: IDimensions = { Start: { X: ElemDim.left.toFixed(0), Y: '0' },
+			var Dimensions: FB3ReaderAbstractClasses.IDimensions = { Start: { X: ElemDim.left.toFixed(0), Y: '0' },
 				End: { X: '0', Y: '0'},
 				LineHeight: '0' };
 			if (Elem.className.match('skip_childs') != null) {
@@ -737,7 +736,7 @@ module FB3Reader {
 			return Dimensions;
 		}
 
-		public GetElementXYByPosition(Position: IPosition): IDimensions {
+		public GetElementXYByPosition(Position: FB3ReaderAbstractClasses.IPosition): FB3ReaderAbstractClasses.IDimensions {
 			var ResponcibleNode: FB3DOM.IFB3Block = this.FB3DOM.GetElementByAddr(Position);
 			return this.GetElementXY(ResponcibleNode);
 		}

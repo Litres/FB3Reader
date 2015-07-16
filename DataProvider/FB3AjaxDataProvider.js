@@ -49,8 +49,7 @@ var FB3DataProvider;
                 this.Req.addEventListener("abort", function (e) { return _this.onTransferAborted(e); }, false);
             }
             catch (e) {
-                this.Req.onprogress = function () {
-                };
+                this.Req.onprogress = function () { };
                 this.Req.onerror = function (e) { return _this.onTransferFailed(e); };
                 this.Req.ontimeout = function (e) { return _this.onTransferAborted(e); };
             }
@@ -117,7 +116,7 @@ var FB3DataProvider;
         AjaxLoader.prototype.HttpRequest = function () {
             var ref = null;
             if (document.all && !window.atob && window.XDomainRequest && aldebaran_or4) {
-                ref = new XDomainRequest(); // IE9 =< fix
+                ref = new window.XDomainRequest(); // IE9 =< fix
                 this.xhrIE9 = true;
             }
             else if (window.XMLHttpRequest) {

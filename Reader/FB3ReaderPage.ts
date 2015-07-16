@@ -20,7 +20,7 @@ module FB3ReaderPage {
 		MarginRight: number;
 	}
 	interface IFallOut {
-		FallOut: FB3Reader.IPosition; // Agress of the first element to not fit the page
+		FallOut: FB3ReaderAbstractClasses.IPosition; // Agress of the first element to not fit the page
 		Height: number;								// Height of the page we've examined
 		NotesHeight: number;					// Height for the notes block
 		FalloutElementN: number;			// Last root element to fully fit the page - skipped during future lookup
@@ -85,7 +85,7 @@ module FB3ReaderPage {
 			Range.To[0]--;
 		}
 	}
-	export function To2From(From: FB3Reader.IPosition): void {
+	export function To2From(From: FB3ReaderAbstractClasses.IPosition): void {
 		if (From.length == 1) {
 			From[0]++;
 		}
@@ -206,7 +206,7 @@ module FB3ReaderPage {
 		}
 
 		private FillElementData(ID: string): ElementDesc {
-			var Element = <HTMLDivElement> this.Site.getElementById(ID);
+			var Element = <any> this.Site.getElementById(ID);
 			var Width = Element.offsetWidth;
 			var Height = Element.parentElement.offsetHeight;
 			var MarginTop; var MarginBottom;
@@ -403,7 +403,7 @@ module FB3ReaderPage {
 		PatchUnbreakableContent() {
 			var NodesCount = this.Element.Node.children.length;
 			for (var I = 0; I < NodesCount; I++) {
-				var KidToCrop = <HTMLElement> this.Element.Node.children[I];
+				var KidToCrop = <any> this.Element.Node.children[I];
 				var ElWidth = Math.min(KidToCrop.scrollWidth, KidToCrop.clientWidth);
 				if (ElWidth > this.ViewPortW + 1) {
 					var LeftMargin;
@@ -1070,7 +1070,7 @@ module FB3ReaderPage {
 						var MissingPixels = (LinesFit + 1) * this.FBReader.LineHeight - ChildBot + Baseline;
 						var MarginAlready = 0;
 						if (document.all) {
-							MarginAlready = HardcoreParseInt(Element.currentStyle.marginBottom)
+							MarginAlready = HardcoreParseInt((<any> Element).currentStyle.marginBottom)
 						} else {
 							MarginAlready = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom'));
 						}

@@ -21,7 +21,6 @@ window.onload = () => {
 	document.getElementById('reader').addEventListener('touchmove', TapMove, false);
 	document.getElementById('reader').addEventListener('touchend', TapEnd, false);
 
-//	var ArtID = '178297';
 	var Version = '1.2';
 	var UUID = 'd4e7833a-51c6-102c-9c5b-e8b0b7836b8f';
 	var SID = GetSID();
@@ -109,7 +108,7 @@ function TapEnd(e) {
 	}
 }
 
-var StartElPos: FB3Reader.IPosition;
+var StartElPos: FB3ReaderAbstractClasses.IPosition;
 function InitNote(NoteType: string) {
 	if (NoteType == 'note') {
 		MarkupProgress = 'selectstart';
@@ -139,7 +138,7 @@ function MouseMove(Evt: MouseEvent) {
 			CurrCoords = Coords;
 		}
 		Coords = false;
-		var CurrentElPos: FB3Reader.IPosition = AFB3Reader.ElementAtXY(CurrCoords.X, CurrCoords.Y);
+		var CurrentElPos: FB3ReaderAbstractClasses.IPosition = AFB3Reader.ElementAtXY(CurrCoords.X, CurrCoords.Y);
 		if (CurrentElPos && CurrentElPos.length && StartElPos && StartElPos.length) {
 			if (FB3Reader.PosCompare(CurrentElPos, StartElPos) < 0) {
 				UpdateRange(CurrentElPos, StartElPos);
@@ -157,7 +156,7 @@ function MouseMove(Evt: MouseEvent) {
 	}
 }
 
-function UpdateRange(StartPos: FB3Reader.IPosition, EndPos: FB3Reader.IPosition) {
+function UpdateRange(StartPos: FB3ReaderAbstractClasses.IPosition, EndPos: FB3ReaderAbstractClasses.IPosition) {
 	NativeNote.Range.From = StartPos;
 	NativeNote.Range.To = EndPos;
 }
@@ -253,7 +252,7 @@ function ShowDialog(Bookmark: FB3Bookmarks.IBookmark) {
 	(<HTMLInputElement> document.getElementById('notetitle')).value = DialogBookmark.Title;
 	(<HTMLInputElement> document.getElementById('notedescr')).value = DialogBookmark.RawText;
 	(<HTMLSelectElement> document.getElementById('notetype')).value = DialogBookmark.Group.toString();
-	document.getElementById('notedescr').disabled = DialogBookmark.Group == 1 ? true : false;
+	(<HTMLSelectElement> document.getElementById('notedescr')).disabled = DialogBookmark.Group == 1 ? true : false;
 	document.getElementById('sellwhole').style.display = Bookmark.ID?'none':'block';
 	document.getElementById('notedialog').style.display = 'block';
 	DialogShown = true;
@@ -415,7 +414,7 @@ function isRelativeToViewport() {
   return relativeToViewport = !document.elementFromPoint(x, y)
 }
 
-function GoXPath(NewPos: FB3Reader.IPosition): void {
+function GoXPath(NewPos: FB3ReaderAbstractClasses.IPosition): void {
 	AFB3Reader.GoTO(NewPos);
 }
 

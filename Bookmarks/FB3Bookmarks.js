@@ -4,8 +4,9 @@ var FB3Bookmarks;
 (function (FB3Bookmarks) {
     FB3Bookmarks.ActiveXXMLHttp = true;
     var LitResBookmarksProcessor = (function () {
-        function LitResBookmarksProcessor(FB3DOM, LitresSID, LitresLocalXML) {
+        function LitResBookmarksProcessor(FB3DOM, ArtID, LitresSID, LitresLocalXML) {
             this.FB3DOM = FB3DOM;
+            this.ArtID = ArtID;
             this.xhrIE9 = false;
             this.Ready = false;
             // this.FB3DOM.Bookmarks.push(this);
@@ -24,7 +25,7 @@ var FB3Bookmarks;
                 // IE8-IE9 cant do cross-domain ajax properly (IE7 i think cant do it at all)
                 // this workaround send empty clean request, no params, no session, no cookies
                 // answer must be text/plain
-                this.XMLHttp = new XDomainRequest(); // IE9 =< fix
+                this.XMLHttp = new window.XDomainRequest(); // IE9 =< fix
                 this.xhrIE9 = true;
             }
             else if (window.ActiveXObject && FB3Bookmarks.ActiveXXMLHttp) {
@@ -133,6 +134,7 @@ var FB3Bookmarks;
                 this.LockID = XML.documentElement.getAttribute('lock-id');
             }
             if (Rows.length) {
+                // console.log('we have selection');
                 for (var j = 0; j < Rows.length; j++) {
                     var NewBookmark = new Bookmark(this);
                     NewBookmark.ParseXML(Rows[j]);
@@ -246,7 +248,8 @@ var FB3Bookmarks;
                 // Newer position from server
                 this.Bookmarks[0].SkipUpdateDatetime = true;
                 this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
-                if (AnyUpdates && FB3Reader.PosCompare(this.Bookmarks[0].Range.From, TemporaryNotes.Bookmarks[0].Range.From) == 0) {
+                if (AnyUpdates &&
+                    FB3Reader.PosCompare(this.Bookmarks[0].Range.From, TemporaryNotes.Bookmarks[0].Range.From) == 0) {
                     this.Reader.Redraw();
                 }
             }
@@ -261,18 +264,21 @@ var FB3Bookmarks;
             }
         };
         LitResBookmarksProcessor.prototype.MakeLoadURL = function () {
-            var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.Reader.ArtID + (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
+            var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.ArtID +
+                (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
             return URL;
         };
         LitResBookmarksProcessor.prototype.MakeStoreURL = function () {
             return this.Host + 'pages/catalit_store_bookmarks/';
         };
         LitResBookmarksProcessor.prototype.MakeStoreData = function (XML) {
-            var Data = 'uuid=' + this.FB3DOM.MetaData.UUID + '&data=' + encodeURIComponent(XML) + '&lock_id=' + encodeURIComponent(this.LockID) + '&sid=' + this.SID + '&r=' + Math.random();
+            var Data = 'uuid=' + this.FB3DOM.MetaData.UUID + '&data=' + encodeURIComponent(XML) +
+                '&lock_id=' + encodeURIComponent(this.LockID) + '&sid=' + this.SID + '&r=' + Math.random();
             return Data;
         };
         LitResBookmarksProcessor.prototype.MakeStoreXML = function () {
-            var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' + 'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
+            var XML = '<FictionBookMarkup xmlns="http://www.gribuser.ru/xml/fictionbook/2.0/markup" ' +
+                'xmlns:fb="http://www.gribuser.ru/xml/fictionbook/2.0" lock-id="' + this.LockID + '">';
             if (this.Bookmarks.length) {
                 // TODO: check if this 2 lines needed
                 this.Bookmarks[0].XStart = this.FB3DOM.GetXPathFromPos(this.Bookmarks[0].Range.From);
@@ -355,7 +361,10 @@ var FB3Bookmarks;
                     var BEnd2REnd = FB3Reader.PosCompare(BRangeTo, Range.To);
                     var BStart2REnd = FB3Reader.PosCompare(this.Bookmarks[j].Range.From, Range.To);
                     var BEnd2RStart = FB3Reader.PosCompare(BRangeTo, Range.From);
-                    if ((BStart2RStart >= 0 && BStart2REnd <= 0) || (BEnd2RStart >= 0 && BEnd2REnd <= 0) || (BStart2RStart < 0 && BEnd2REnd > 0)) {
+                    if ((BStart2RStart >= 0 && BStart2REnd <= 0) ||
+                        (BEnd2RStart >= 0 && BEnd2REnd <= 0) ||
+                        (BStart2RStart < 0 && BEnd2REnd > 0) // {[]} Bookmark covers the whole range
+                    ) {
                         NotesInRange.push(this.Bookmarks[j]);
                     }
                 }
@@ -524,6 +533,7 @@ var FB3Bookmarks;
             }
             this.RequiredChunks = this.ChunksRequired();
             var ChunksToLoad = new Array();
+            // First we check, if some of required chunks are not set to be loaded yet
             for (var I = 0; I < this.RequiredChunks.length; I++) {
                 if (!this.Owner.FB3DOM.DataChunks[this.RequiredChunks[I]].loaded) {
                     ChunksToLoad.push(this.RequiredChunks[I]);
@@ -574,7 +584,16 @@ var FB3Bookmarks;
             return Result;
         };
         Bookmark.prototype.PublicXML = function () {
-            return '<Selection group="' + this.Group + '" ' + (this.Class ? 'class="' + this.prepareClass(this.Class) + '" ' : '') + (this.Title ? 'title="' + this.prepareTitle(this.Title) + '" ' : '') + 'id="' + this.ID + '" ' + 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' + 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' + 'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' + this.MakePercent() + '>' + this.GetNote() + this.GetExtract() + '</Selection>';
+            return '<Selection group="' + this.Group + '" ' +
+                (this.Class ? 'class="' + this.prepareClass(this.Class) + '" ' : '') +
+                (this.Title ? 'title="' + this.prepareTitle(this.Title) + '" ' : '') +
+                'id="' + this.ID + '" ' +
+                'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
+                'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
+                'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' +
+                this.MakePercent() + '>' +
+                this.GetNote() + this.GetExtract() +
+                '</Selection>';
         };
         Bookmark.prototype.ParseXML = function (XML) {
             this.Group = parseInt(XML.getAttribute('group'));
@@ -595,7 +614,10 @@ var FB3Bookmarks;
                     NoteHTML = this.parseXMLNote(tmpNote);
                 }
                 // this.Note = NoteHTML.replace(/<p\s[^>]+>/g, '<p>');
-                this.Note[j] = NoteHTML.replace(/<(\/)?[fb:]+/ig, '<$1').replace(/(\sxmlns(:fb)?.[^>]+)/ig, '').replace(/<p\/>/ig, '<p></p>');
+                this.Note[j] = NoteHTML
+                    .replace(/<(\/)?[fb:]+/ig, '<$1')
+                    .replace(/(\sxmlns(:fb)?.[^>]+)/ig, '')
+                    .replace(/<p\/>/ig, '<p></p>');
                 if (this.Note[j] == '<p>') {
                     this.Note[j] = '<p></p>';
                 }
@@ -716,7 +738,10 @@ var FB3Bookmarks;
         };
         Bookmark.prototype.GetExtract = function () {
             return this.Extract;
-            return '<Extract ' + this.GetRawText() + 'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' + this.ExtractNode() + '</Extract>';
+            return '<Extract ' +
+                this.GetRawText() +
+                'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
+                this.ExtractNode() + '</Extract>';
         };
         Bookmark.prototype.ExtractNode = function () {
             // TODO: fill with code

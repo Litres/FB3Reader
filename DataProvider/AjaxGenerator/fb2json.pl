@@ -47,7 +47,7 @@ sub SplitString{
 	$NeedHyph *= 1;
 	my $SRC = $Esc = EscString($Esc);
 	if ($NeedHyph){
-		$Esc = $HyphCache{$SRC} || XPortal::Hyphenate::HyphString($Esc);
+		$Esc = $HyphCache{$SRC} || Hyphenate::HyphString($Esc);
 	}
 	$Esc =~ s/\s+/ ","/g;
 	$Esc =~ s/($LineBreakChars+)(?!")/$1","/g;
@@ -97,7 +97,7 @@ sub HypheNOBR {
 	my ($Word, $NOBRCharSeq) = @_;
 
 #	$Word = EscString($Word);
-	my $Esc = $HyphCache{$Word} || XPortal::Hyphenate::HyphString($Word);
+	my $Esc = $HyphCache{$Word} || Hyphenate::HyphString($Word);
 
 	unless ($Esc =~ s/\xAD?([^\xAD]+)$/<nobr>$1/s) {
 		$Esc = '<nobr>'.$Esc;

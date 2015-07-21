@@ -1,7 +1,11 @@
 #!/usr/bin/perl
 use strict;
-use XPortal::Hyphenate; # HyphString used, may remove and replace with something
-use XPortal::Settings;  # TMPPath used, you can use your path and remove this
+use Hyphenate; # HyphString used, may remove and replace with something
+
+my $TMPPath = '/tmp';
+
+#use XPortal::Settings;  # TMPPath used, you can use your path and remove this
+#$TMPPath = $XPortal::Settings::TMPPath;
 
 use strict;
 use XML::LibXSLT;
@@ -77,7 +81,7 @@ if (-f $XML) {
 	$XMLData =~ s/([\s>])([^\s<>]+)(<a\s+[^>]*?type="note"[^>]*?>[^<]{1,10}<\/a>[,\.\?"'“”«»‘’;:\)…\/]?)/$1.HypheNOBR($2,$3)/ges;
 	$XMLData =~ s/(\S)(<\/$Styles>)(\s+)/$1 $2/gi;
 
-	$TmpXML = $XPortal::Settings::TMPPath . "/". $$ . "_" . basename($XML) . ".xml";
+	$TmpXML = $TMPPath . "/". $$ . "_" . basename($XML) . ".xml";
 
 	open TMPXML, ">", $TmpXML or die "Cannot open tmp file $TmpXML";
 	print TMPXML Encode::encode_utf8($XMLData);

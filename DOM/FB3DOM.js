@@ -114,7 +114,7 @@ var FB3DOM;
             this.ArtID = ArtID;
             this.Childs = new Array();
             this.Progressor.HourglassOn(this, true, 'Loading meta...');
-            this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), function (Data) { return _this.AfterHeaderLoaded(Data); }, this.Progressor);
+            this.DataProvider.Request(this.DataProvider.ArtID2URL(), function (Data) { return _this.AfterHeaderLoaded(Data); }, this.Progressor);
             this.Progressor.HourglassOff(this);
         };
         DOM.prototype.GetHTMLAsync = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback) {

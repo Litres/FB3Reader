@@ -121,7 +121,7 @@ module FB3DOM {
 			this.ArtID = ArtID;
 			this.Childs = new Array();
 			this.Progressor.HourglassOn(this, true, 'Loading meta...');
-			this.DataProvider.Request(this.DataProvider.ArtID2URL(ArtID), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
+			this.DataProvider.Request(this.DataProvider.ArtID2URL(), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, Callback: IDOMTextReadyCallback): void {

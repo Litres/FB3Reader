@@ -26,6 +26,11 @@ my $XML = $ARGV[0];
 my $XSL = $ARGV[1];
 my $MetaXSL = $ARGV[2];
 my $Out = $ARGV[3];
+my $Version = $ARGV[4];
+
+$Version = 1 if $Version =~/[\D\.]/;
+
+$Version="1.$Version" unless $Version=~/^\d+\.\d+$/;
 
 #my $XML = 'C:/Work/FictionHub/tmp/Vyigotskiyi_vyi_L._Psihologiya_Iskusstva.fb2';
 #my $XSL = 'C:/Work/FictionHub/xsl/convert/FB2_2_json.xsl';
@@ -33,7 +38,7 @@ my $Out = $ARGV[3];
 #my $Out = 'C:\Work\FictionHub\cgi\static\out.html';
 
 unless ($Out){
-	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <meta-stylesheet.xsl> </etc/out/>\n";
+	print "fb2json converter. Usage:\nfb2json.pl <srcfile.fb2> <stylesheet.xsl> <meta-stylesheet.xsl> </etc/out/> [doc.version]\n";
 	exit(0);
 }
 
@@ -49,7 +54,7 @@ sub SplitString{
 	if ($NeedHyph){
 		$Esc = $HyphCache{$SRC} || Hyphenate::HyphString($Esc);
 	}
-	$Esc =~ s/\s+/ ","/g;
+	$Esc =~ s/[ \t]+/ ","/g;
 	$Esc =~ s/($LineBreakChars+)(?!")/$1","/g;
 	$Esc =~ s/("|^) ","/$1 /g;
 	$Esc =~ s/"",|,""|","$//g;
@@ -63,7 +68,7 @@ sub SplitString{
 
 sub EscString{
 	my $Esc=shift || return;
-	$Esc = Encode::decode_utf8($Esc." "); # Hack to get live string from LibXML
+	$Esc = DecodeUtf8($Esc." "); # Hack to get live string from LibXML
 	$Esc =~ s/(["\\])/\\$1/g;
 	$Esc =~ s/\r?\n\r?/ /g;
 	$Esc =~ s/ $//;
@@ -75,7 +80,7 @@ if (-f $XML) {
 	use File::Basename;
 
 	open XML, $XML or die "Cannot open file $XML";
-	my $XMLData = Encode::decode_utf8(join '', (<XML>));
+	my $XMLData = DecodeUtf8(join '', (<XML>));
 	close XML;
 
 	$XMLData =~ s/([\s>])([^\s<>]+)(<a\s+[^>]*?type="note"[^>]*?>[^<]{1,10}<\/a>[,\.\?"'“”«»‘’;:\)…\/]?)/$1.HypheNOBR($2,$3)/ges;
@@ -102,6 +107,7 @@ sub HypheNOBR {
 	unless ($Esc =~ s/\xAD?([^\xAD]+)$/<nobr>$1/s) {
 		$Esc = '<nobr>'.$Esc;
 	}
+	$Esc =~ s/\xAD//gis;
 
 	return $Esc . $NOBRCharSeq . '</nobr>';
 }
@@ -154,7 +160,7 @@ for my $Line (@JSonArr) {
 		$PageStack += $1;
 		if ($Line =~ s/\{type:"semiblock",/{/){
 			$NoCut++;
-			if ($Line =~ /",i:"(\w+)"/){
+			if ($Line =~ /,i:"(\w+)"/){
 				$HrefHash{ $1 } = $BlockN;
 			}
 		} else {
@@ -220,6 +226,8 @@ if (@DataToWrite){
 }
 
 PatchFiles();
+
+$JSonMeta =~ s/",version:"1\.0",Authors:\[/",version:"$Version",Authors:[/;
 
 open $OutFile, ">:utf8",$Out."toc.js";
 print $OutFile "{$JSonMeta,\nBody: [";
@@ -389,4 +397,11 @@ sub GetImgW{
 sub GetImgH{
 	my $Img = CanonizeName(shift);
 	return $DocumentImages{$Img}->[2];
+}
+sub DecodeUtf8 {
+	my $Out = shift;
+	unless (Encode::is_utf8($Out)) {
+		$Out = Encode::decode_utf8($Out);
+	}
+	return $Out;
 }

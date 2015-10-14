@@ -9,7 +9,7 @@ var AFB3Reader;
 var AFB3PPCache;
 var BookmarksProcessor;
 var start;
-var LocalArtID = 178297;
+var LocalArtID = 11668997;
 var Temp = 0;
 var LitresLocalBookmarks = new LocalBookmarks.LocalBookmarksClass(LocalArtID.toString());
 var aldebaran_or4 = false;
@@ -18,7 +18,7 @@ window.onload = function () {
     document.getElementById('reader').addEventListener('touchmove', TapMove, false);
     document.getElementById('reader').addEventListener('touchend', TapEnd, false);
     var Version = '1.2';
-    var UUID = 'd4e7833a-51c6-102c-9c5b-e8b0b7836b8f';
+    var UUID = '43e7a504-33d4-4f37-b715-410342955f1f';
     var SID = GetSID();
     var Canvas = document.getElementById('reader');
     var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
@@ -337,6 +337,12 @@ function Load() {
 }
 function RefreshVisible() {
     AFB3Reader.RedrawVisible();
+}
+function ClearCache() {
+    if (FB3PPCache.CheckStorageAvail()) {
+        localStorage.clear();
+    }
+    RefreshVisible();
 }
 function PrepareCSS() {
     var Columns = parseInt(document.getElementById('columns').value);

@@ -1,5 +1,5 @@
 /// <reference path="FB3DOMHead.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
@@ -410,9 +410,7 @@ var FB3DOM;
             return Out;
         };
         FB3ImgTag.prototype.HTMLTagName = function () {
-            // FixMe - uncomment this when new json generation finished for all books.
-            //			return this.Data.op ? 'div' : 'span';
-            return 'div'; // Only div may have fixed width|height
+            return this.Data.op ? 'div' : 'span';
         };
         FB3ImgTag.prototype.InlineStyle = function () {
             // top-level block elements, we want to align it to greed vertically

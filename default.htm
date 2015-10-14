@@ -27,7 +27,7 @@
     <div id="reader" onmousedown="HideAll();"
         onmousemove="MouseMove(event)"
         onmouseup="HideAll();"
-        oncontextmenu="ShowMenu(event);return false;">Loading…</div>
+        oncontextmenu="ShowMenu(event);return false;" class="readerStyles">Loading…</div>
     <div>
         <input type="button" value="&lt;&lt; Page back" onclick="Pagebackward()"/>&#160;&#160;
         <input type="text" id="gotopercent" value="0" style="width:2em;"/><input type="button" value="GoTO %" onclick="GoToPercent()"/>
@@ -37,6 +37,7 @@
         &#160;&#160;<input type="button" value="Save" onclick="Save()" />
         &#160;&#160;<input type="button" value="Load" onclick="Load()" />
         &#160;&#160;<input type="button" value="Refresh" onclick="RefreshVisible()" />
+        &#160;&#160;<input type="button" value="Clear Cache" onclick="ClearCache()" />
     </div>
     <div style="float:left;margin-right:1em;">
         <b>Visual apearence</b>

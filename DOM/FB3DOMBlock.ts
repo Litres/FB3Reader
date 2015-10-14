@@ -438,9 +438,7 @@ module FB3DOM {
 			return Out;
 		}
 		public HTMLTagName(): string{
-			// FixMe - uncomment this when new json generation finished for all books.
-//			return this.Data.op ? 'div' : 'span';
-			return 'div'; // Only div may have fixed width|height
+			return this.Data.op ? 'div' : 'span';
 		}
 		public InlineStyle(): string {
 			// top-level block elements, we want to align it to greed vertically

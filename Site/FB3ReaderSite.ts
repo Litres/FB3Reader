@@ -56,6 +56,7 @@ module FB3ReaderSite {
 			return HTMLString;
 		}
 		public PatchNoteNode(Node: HTMLElement): HTMLElement {
+			Node.style.overflow = 'auto';
 			Node.className += ' overfloatednote';
 			return Node;
 		}

@@ -28,7 +28,7 @@ var FB3ReaderPage;
     }
     FB3ReaderPage.NumericArray = NumericArray;
     function HardcoreParseInt(Input) {
-        Input.replace(/\D/g, '');
+        Input = Input.replace(/\D/g, '');
         if (Input == '')
             Input = '0';
         return parseInt(Input);
@@ -109,7 +109,7 @@ var FB3ReaderPage;
                     + HardcoreParseInt(Element.currentStyle.paddingTop);
                 MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom)
                     + HardcoreParseInt(Element.currentStyle.paddingBottom);
-                MarginLeft = HardcoreParseInt(Element.currentStyle.marginTop)
+                MarginLeft = HardcoreParseInt(Element.currentStyle.marginLeft)
                     + HardcoreParseInt(Element.currentStyle.paddingLeft);
                 MarginRight = HardcoreParseInt(Element.currentStyle.marginRight)
                     + HardcoreParseInt(Element.currentStyle.paddingRight);
@@ -220,7 +220,9 @@ var FB3ReaderPage;
         };
         // Take a poind and add PrerenderBlocks of blocks to it
         ReaderPage.prototype.DefaultRangeApply = function (RenderInstr) {
-            var FragmentEnd = RenderInstr.Start[0] + this.PrerenderBlocks;
+            // TODO: fix, we have something bad with RenderInstr.Start
+            // hub ticket #52217
+            var FragmentEnd = RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
             if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                 FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
             }
@@ -353,6 +355,7 @@ var FB3ReaderPage;
                         var obj = ((t.currentTarget) ? t.currentTarget : t.srcElement);
                         var ID = obj.id.replace(/^zb/, '');
                         _this.FBReader.Site.ZoomHTML(_this.Site.getElementById(ID).outerHTML);
+                        obj.blur();
                     }, false);
                 }
             }
@@ -549,7 +552,7 @@ var FB3ReaderPage;
                 var NextPageRange = {};
                 NextPageRange.From = this.QuickFallautState.PrevTo.slice(0);
                 // We check if we had any progress at all. If not - we rely on FalloutConsumeFirst to handle this and just abort this page scan
-                if (FB3Reader.PosCompare(FallOut.FallOut, NextPageRange.From) != 0) {
+                if (FallOut.FitAnythingAtAll) {
                     this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
                     NextPageRange.To = FallOut.FallOut.slice(0);
                     // No need to ignore "hanging" element - there is no hanging element at the end of the book

@@ -2,7 +2,23 @@
 /// <reference path="../plugins/lz-string.d.ts" />
 var FB3PPCache;
 (function (FB3PPCache) {
+    function CheckStorageAvail() {
+        if (FB3PPCache.LocalStorage !== undefined) {
+            return FB3PPCache.LocalStorage;
+        }
+        try {
+            window.localStorage['working'] = 'true';
+            FB3PPCache.LocalStorage = true;
+            window.localStorage.removeItem('working');
+        }
+        catch (e) {
+            FB3PPCache.LocalStorage = false;
+        }
+        return FB3PPCache.LocalStorage;
+    }
+    FB3PPCache.CheckStorageAvail = CheckStorageAvail;
     FB3PPCache.MaxCacheRecords = 15;
+    FB3PPCache.LocalStorage; // global for window.localStorage check
     var SkipCache = false; // For debug purposes
     var PPCache = (function () {
         function PPCache() {
@@ -29,7 +45,7 @@ var FB3PPCache;
             }
             // We are going to save no more than 50 cache entries
             // We reuse slots on write request based on access time
-            if (this.ChechStorageAvail()) {
+            if (FB3PPCache.CheckStorageAvail()) {
                 // localStorage support required
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
@@ -60,7 +76,7 @@ var FB3PPCache;
             if (SkipCache) {
                 return;
             }
-            if (this.ChechStorageAvail()) {
+            if (FB3PPCache.CheckStorageAvail()) {
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
                 }
@@ -75,14 +91,6 @@ var FB3PPCache;
             }
         };
         PPCache.prototype.LoadDataAsync = function (ArtID) { };
-        PPCache.prototype.ChechStorageAvail = function () {
-            if (typeof (Storage) !== "undefined" && localStorage && JSON) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        };
         PPCache.prototype.LoadOrFillEmptyData = function () {
             var compressedCacheData = this.LoadData();
             var DataInitDone = false;

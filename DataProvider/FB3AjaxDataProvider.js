@@ -134,6 +134,7 @@ var FB3DataProvider;
             return undefined;
         };
         AjaxLoader.prototype.parseJSON = function (data) {
+            data = data.replace(/^\n/, ''); // aldebaran json workaround
             // Borrowed bits from JQuery & http://json.org/json2.js
             if (data === undefined || data == '') {
                 return null;

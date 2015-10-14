@@ -100,7 +100,7 @@ module FB3ReaderPage {
 
 
 	function HardcoreParseInt(Input: string): number {
-		Input.replace(/\D/g, '');
+		Input = Input.replace(/\D/g, '');
 		if (Input == '')
 			Input = '0';
 		return parseInt(Input);
@@ -216,7 +216,7 @@ module FB3ReaderPage {
 				+ HardcoreParseInt(Element.currentStyle.paddingTop);
 				MarginBottom = HardcoreParseInt(Element.currentStyle.marginBottom)
 				+ HardcoreParseInt(Element.currentStyle.paddingBottom);
-				MarginLeft = HardcoreParseInt(Element.currentStyle.marginTop)
+				MarginLeft = HardcoreParseInt(Element.currentStyle.marginLeft)
 				+ HardcoreParseInt(Element.currentStyle.paddingLeft);
 				MarginRight = HardcoreParseInt(Element.currentStyle.marginRight)
 				+ HardcoreParseInt(Element.currentStyle.paddingRight);
@@ -337,7 +337,9 @@ module FB3ReaderPage {
 
 		// Take a poind and add PrerenderBlocks of blocks to it
 		DefaultRangeApply(RenderInstr: FB3Reader.IPageRenderInstruction) {
-			var FragmentEnd = RenderInstr.Start[0] + this.PrerenderBlocks;
+			// TODO: fix, we have something bad with RenderInstr.Start
+			// hub ticket #52217
+			var FragmentEnd = RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
 			if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
 				FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
 			}
@@ -482,6 +484,7 @@ module FB3ReaderPage {
 						var obj = <HTMLElement> ((t.currentTarget) ? t.currentTarget : t.srcElement);
 						var ID = obj.id.replace(/^zb/, '');
 						this.FBReader.Site.ZoomHTML(this.Site.getElementById(ID).outerHTML);
+						obj.blur();
 					}, false);
 				}
 			}
@@ -685,7 +688,7 @@ module FB3ReaderPage {
 				NextPageRange.From = this.QuickFallautState.PrevTo.slice(0);
 
 				// We check if we had any progress at all. If not - we rely on FalloutConsumeFirst to handle this and just abort this page scan
-				if (FB3Reader.PosCompare(FallOut.FallOut, NextPageRange.From) != 0) {
+				if (FallOut.FitAnythingAtAll) {
 					this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
 					NextPageRange.To = FallOut.FallOut.slice(0);
 

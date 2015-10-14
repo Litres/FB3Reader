@@ -1,4 +1,5 @@
 /// <reference path="../plugins/lz-string.d.ts" />
+/// <reference path="../PagesPositionsCache/PPCache.ts" />
 var LocalBookmarks;
 (function (LocalBookmarks) {
     var LocalBookmarksClass = (function () {
@@ -30,6 +31,9 @@ var LocalBookmarks;
             return null;
         };
         LocalBookmarksClass.prototype.GetBookmarks = function () {
+            if (!FB3PPCache.CheckStorageAvail()) {
+                return;
+            }
             var bookmarksXML = this.local.getItem(this.storageVal);
             if (bookmarksXML) {
                 var cacheData = this.DecodeData(bookmarksXML);
@@ -37,6 +41,9 @@ var LocalBookmarks;
             }
         };
         LocalBookmarksClass.prototype.StoreBookmarks = function (XMLString) {
+            if (!FB3PPCache.CheckStorageAvail()) {
+                return;
+            }
             if (this.LocalBookmarks.length >= 10) {
                 this.LocalBookmarks.shift();
             }
@@ -57,6 +64,9 @@ var LocalBookmarks;
             this.local.setItem(this.storageVal, cacheData);
         };
         LocalBookmarksClass.prototype.GetCurrentArtBookmarks = function () {
+            if (!FB3PPCache.CheckStorageAvail()) {
+                return;
+            }
             var FoundBookmark;
             if (FoundBookmark = this.GetBookmarkByArt(this.ArtID)) {
                 return FoundBookmark.Cache;

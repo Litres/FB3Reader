@@ -50,6 +50,7 @@ var FB3ReaderSite;
             return HTMLString;
         };
         ExampleSite.prototype.PatchNoteNode = function (Node) {
+            Node.style.overflow = 'auto';
             Node.className += ' overfloatednote';
             return Node;
         };
@@ -116,9 +117,9 @@ var FB3ReaderSite;
     var ViewText = (function () {
         function ViewText() {
             this.TextArray = {
-                'BOOKMARK_IMAGE_PREVIEW_TEXT': 'Изображение',
-                'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Закладка',
-                'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Заметка'
+                'BOOKMARK_IMAGE_PREVIEW_TEXT': '�����������',
+                'BOOKMARK_EMPTY_TYPE_1_TEXT': '��������',
+                'BOOKMARK_EMPTY_TYPE_3_TEXT': '�������'
             };
         }
         ViewText.prototype.Print = function (Index) {

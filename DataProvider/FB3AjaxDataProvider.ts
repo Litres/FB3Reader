@@ -146,6 +146,7 @@ module FB3DataProvider {
 			return undefined;
 		}
 		private parseJSON(data: string): Object {
+			data = data.replace(/^\n/, ''); // aldebaran json workaround
 			// Borrowed bits from JQuery & http://json.org/json2.js
 			if (data === undefined || data =='') { return null; }
 

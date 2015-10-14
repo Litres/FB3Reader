@@ -1,6 +1,9 @@
 /// <reference path="../FB3ReaderHeaders.ts" />
 
 module FB3PPCache {
+	export var MaxCacheRecords: number;
+	export var LocalStorage: boolean;
+
 	export interface IFB3PPCache {
 		Encrypt: boolean;
 		Set(I: number, Instr: FB3Reader.IPageRenderInstruction): void;
@@ -16,7 +19,6 @@ module FB3PPCache {
 		LoadData(): string;
 		LoadDataAsync(ArtID: string);
 		SaveData(Data: string): void;
-		ChechStorageAvail(): boolean;
 	}
 
 }

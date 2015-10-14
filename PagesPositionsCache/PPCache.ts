@@ -2,8 +2,24 @@
 /// <reference path="../plugins/lz-string.d.ts" />
 
 module FB3PPCache {
-	export var MaxCacheRecords = 15;
-	var SkipCache = false; // For debug purposes
+	export function CheckStorageAvail(): boolean {
+		if (FB3PPCache.LocalStorage !== undefined) {
+			return FB3PPCache.LocalStorage;
+		}
+		try {
+			window.localStorage['working'] = 'true';
+			FB3PPCache.LocalStorage = true;
+			window.localStorage.removeItem('working');
+		} catch (e) {
+			FB3PPCache.LocalStorage = false;
+		}
+		return FB3PPCache.LocalStorage;
+	}
+
+	export var MaxCacheRecords: number = 15;
+	export var LocalStorage: boolean; // global for window.localStorage check
+
+	var SkipCache: boolean = false; // For debug purposes
 
 	interface IPageRenderInstructionsCacheEntry {
 		Time: Date;
@@ -48,7 +64,7 @@ module FB3PPCache {
 			// We are going to save no more than 50 cache entries
 			// We reuse slots on write request based on access time
 
-			if (this.ChechStorageAvail()) {
+			if (FB3PPCache.CheckStorageAvail()) {
 				// localStorage support required
 				if (!this.CacheMarkupsList) {
 					this.LoadOrFillEmptyData();
@@ -83,7 +99,7 @@ module FB3PPCache {
 			if (SkipCache) {
 				return;
 			}
-			if (this.ChechStorageAvail()) {
+			if (FB3PPCache.CheckStorageAvail()) {
 				if (!this.CacheMarkupsList) {
 					this.LoadOrFillEmptyData();
 				}
@@ -99,14 +115,6 @@ module FB3PPCache {
 		}
 
 		public LoadDataAsync(ArtID: string) { }
-
-		public ChechStorageAvail(): boolean {
-			if (typeof (Storage) !== "undefined" && localStorage && JSON) {
-				return true;
-			} else {
-				return false;
-			}
-		}
 
 		private LoadOrFillEmptyData(): void {
 			var compressedCacheData = this.LoadData();

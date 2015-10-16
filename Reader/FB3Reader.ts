@@ -709,7 +709,7 @@ module FB3Reader {
 		private GetElementXY(Node: FB3DOM.IFB3Block): FB3ReaderAbstractClasses.IDimensions {
 			var Elem: HTMLElement;
 			for (var J = this.CurVisiblePage; J <= this.CurVisiblePage + this.NColumns; J++) {
-				Elem = this.Site.getElementById('n_' + J + '_' + Node.XPID);
+				Elem = this.Site.getElementById('n_' + this.Pages[this.CurVisiblePage + this.NColumns - 1].ID + '_' + Node.XPID);
 				if (Elem) {
 					break;
 				}
@@ -718,9 +718,17 @@ module FB3Reader {
 				return undefined;
 			}
 			var ElemDim = Elem.getBoundingClientRect();
-			var Dimensions: FB3ReaderAbstractClasses.IDimensions = { Start: { X: ElemDim.left.toFixed(0), Y: '0' },
-				End: { X: '0', Y: '0'},
-				LineHeight: '0' };
+			var Dimensions: FB3ReaderAbstractClasses.IDimensions = {
+				Start: {
+					X: ElemDim.left.toFixed(0),
+					Y: '0'
+				},
+				End: {
+					X: '0',
+					Y: '0'
+				},
+				LineHeight: '0'
+			};
 			if (Elem.className.match('skip_childs') != null) {
 				var ChildDim = Elem.querySelector('span').getBoundingClientRect();
 				Dimensions.LineHeight = ChildDim.height.toFixed(0);

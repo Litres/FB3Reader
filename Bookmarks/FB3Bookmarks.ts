@@ -211,7 +211,7 @@ module FB3Bookmarks {
 		}
 
 		public ReLoad(SaveAutoState?: boolean) {
-			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
+			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.ArtID, this.SID);
 			TemporaryNotes.Host = this.Host;
 			TemporaryNotes.Reader = this.Reader;
 			// TemporaryNotes.ReadyCallback = this.ReadyCallback;

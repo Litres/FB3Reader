@@ -416,7 +416,7 @@ var FB3ReaderPage;
                         // or, if we walk over the grass this it the relative last page
                         this.PageN === undefined
                             && this.FBReader.CurStartPage === undefined
-                            && this.ID == this.FBReader.CurVisiblePage + this.FBReader.NColumns - 1) {
+                            && this.ID == this.FBReader.CurVisiblePage + this.FBReader.NColumns) {
                     this.FBReader._CanvasReadyCallback();
                 }
             }

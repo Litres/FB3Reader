@@ -7,6 +7,9 @@ var FB3Bookmarks;
         function LitResBookmarksProcessor(FB3DOM, ArtID, LitresSID, LitresLocalXML) {
             this.FB3DOM = FB3DOM;
             this.ArtID = ArtID;
+            if (LitresSID) {
+                this.SID = LitresSID;
+            }
             this.xhrIE9 = false;
             this.Ready = false;
             // this.FB3DOM.Bookmarks.push(this);
@@ -34,7 +37,6 @@ var FB3Bookmarks;
             else {
                 this.XMLHttp = new XMLHttpRequest();
             }
-            this.SID = LitresSID;
             this.SaveAuto = false;
             this.LocalXML = LitresLocalXML;
         }

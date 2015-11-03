@@ -38,6 +38,9 @@ module FB3Bookmarks {
 		private MakeStoreXMLAsyncTimeout: number;
 		public aldebaran: boolean; // stupid hack
 		constructor(public FB3DOM: FB3DOM.IFB3DOM, private ArtID: string, LitresSID?: string, LitresLocalXML?: string) {
+			if (LitresSID) {
+				this.SID = LitresSID;
+			}
 			this.xhrIE9 = false;
 			this.Ready = false;
 			// this.FB3DOM.Bookmarks.push(this);
@@ -63,7 +66,6 @@ module FB3Bookmarks {
 			} else {
 				this.XMLHttp = new XMLHttpRequest();
 			}
-			this.SID = LitresSID;
 			this.SaveAuto = false;
 			this.LocalXML = LitresLocalXML;
 		}

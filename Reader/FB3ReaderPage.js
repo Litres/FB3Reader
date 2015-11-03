@@ -799,7 +799,7 @@ var FB3ReaderPage;
                         this.FalloutState.NoMoreFootnotesHere = true;
                     }
                     var CurShift = Child.offsetTop;
-                    if (this.FalloutState.SplitHistory.length && Child.innerHTML.match(/^(\u00AD|&shy;)/)) {
+                    if (this.FalloutState.SplitHistory.length && Child.innerHTML.match(/(\u00AD|&shy;)/)) {
                         // the reason for this is that soft hyph on the last line makes the hanging element
                         // twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
                         // first we will try to select next node in the hope it's placed right.

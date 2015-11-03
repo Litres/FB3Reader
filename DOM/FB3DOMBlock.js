@@ -116,7 +116,7 @@ var FB3DOM;
             }
             else {
                 if (OutStr.match(/\u00AD/)) {
-                    OutStr = OutStr + '<span></span>';
+                    OutStr = '<span></span>' + OutStr + '<span></span>';
                 }
                 TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
             }

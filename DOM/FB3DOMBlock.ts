@@ -121,7 +121,7 @@ module FB3DOM {
 					.replace('</span>', OutStr.replace(/\u00AD/, '') + '</span>');
 			} else {
 				if (OutStr.match(/\u00AD/)) {
-					OutStr = OutStr + '<span></span>';
+					OutStr = '<span></span>' + OutStr + '<span></span>';
 				}
 				TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
 			}

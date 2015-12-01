@@ -2,7 +2,7 @@
 
 module FB3DOM {
 
-	export var MaxFootnoteHeight = 0.5;
+	export var MaxFootnoteHeight: number = 0.5;
 	export var ExtLinkTarget = '_blank'; // may be set to '_top'
 	var TagMapper = {
 		poem: 'div',
@@ -22,7 +22,7 @@ module FB3DOM {
 		image: 'img',
 		trialPurchase: 'div'
 	};
-	export var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author|empty-line)$/;
+	export var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
 	var TagSkipDoublePadding = {
 		title: 1,
 		subtitle: 1,

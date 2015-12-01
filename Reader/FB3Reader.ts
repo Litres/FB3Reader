@@ -636,7 +636,7 @@ module FB3Reader {
 		private GoToXPathFinal(): void {
 			var XP = this.XPToJump;
 			this.XPToJump = undefined; // clean it before the async monster comes!
-			this.GoToOpenPosition(this.FB3DOM.GetAddrByXPath(this.XPToJump));
+			this.GoTO(this.FB3DOM.GetAddrByXPath(XP));
 		}
 
 		public CurPosPercent(): number {
@@ -708,8 +708,8 @@ module FB3Reader {
 
 		private GetElementXY(Node: FB3DOM.IFB3Block): FB3ReaderAbstractClasses.IDimensions {
 			var Elem: HTMLElement;
-			for (var J = this.CurVisiblePage; J <= this.CurVisiblePage + this.NColumns; J++) {
-				Elem = this.Site.getElementById('n_' + this.Pages[this.CurVisiblePage + this.NColumns - 1].ID + '_' + Node.XPID);
+			for (var J = this.CurVisiblePage + this.NColumns; J >= this.CurVisiblePage; J--) {
+				Elem = this.Site.getElementById('n_' + (J + 1) + '_' + Node.XPID);
 				if (Elem) {
 					break;
 				}

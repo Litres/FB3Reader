@@ -573,7 +573,7 @@ var FB3Reader;
         Reader.prototype.GoToXPathFinal = function () {
             var XP = this.XPToJump;
             this.XPToJump = undefined; // clean it before the async monster comes!
-            this.GoToOpenPosition(this.FB3DOM.GetAddrByXPath(this.XPToJump));
+            this.GoTO(this.FB3DOM.GetAddrByXPath(XP));
         };
         Reader.prototype.CurPosPercent = function () {
             if (!this.FB3DOM.TOC) {
@@ -636,8 +636,8 @@ var FB3Reader;
         };
         Reader.prototype.GetElementXY = function (Node) {
             var Elem;
-            for (var J = this.CurVisiblePage; J <= this.CurVisiblePage + this.NColumns; J++) {
-                Elem = this.Site.getElementById('n_' + this.Pages[this.CurVisiblePage + this.NColumns - 1].ID + '_' + Node.XPID);
+            for (var J = this.CurVisiblePage + this.NColumns; J >= this.CurVisiblePage; J--) {
+                Elem = this.Site.getElementById('n_' + (J + 1) + '_' + Node.XPID);
                 if (Elem) {
                     break;
                 }

@@ -27,10 +27,13 @@ module FB3ReaderSite {
 		addTrialHandlers(): void;
 		PrepareHTML(HTMLString: string): string;
 		PatchNoteNode(Node: HTMLElement): HTMLElement;
+		OnBookmarksSync(NewBookmark: FB3Bookmarks.IBookmark,
+										OldBookmark: FB3Bookmarks.IBookmark): void;
 	}
 
 	// General-purpose interface for progress feedback
 	export interface ILoadProgress {
+		Progresses: any;
 		HourglassOn(Owner: any, LockUI?: boolean, Message?: string): void;
 		Progress(Owner: any, Progress: number): void; // Progress vary 0 - 100, means percent
 		HourglassOff(Owner: any): void;

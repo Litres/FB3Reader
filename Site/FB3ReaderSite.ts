@@ -60,11 +60,16 @@ module FB3ReaderSite {
 			Node.className += ' overfloatednote';
 			return Node;
 		}
+		public OnBookmarksSync(NewBookmark: FB3Bookmarks.IBookmark,
+													 OldBookmark: FB3Bookmarks.IBookmark
+			): void {
+			AFB3Reader.GoTO(NewBookmark.Range.From);
+		}
 	}
 
 	export class ExampleProgressor implements ILoadProgress {
 		private Hourglasses: any;
-		private Progresses: any;
+		public Progresses: any;
 		public Alert(Message: string): void {
 			document.getElementById(this.AlertSpan).innerHTML = Message;
 			//			window.alert(Message);

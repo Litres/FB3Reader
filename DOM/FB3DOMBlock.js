@@ -27,7 +27,7 @@ var FB3DOM;
         image: 'img',
         trialPurchase: 'div'
     };
-    FB3DOM.BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|v|t[dh]|subtitle|text-author|empty-line)$/;
+    FB3DOM.BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
     var TagSkipDoublePadding = {
         title: 1,
         subtitle: 1,

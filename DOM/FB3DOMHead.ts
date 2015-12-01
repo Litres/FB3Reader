@@ -2,6 +2,7 @@
 
 module FB3DOM {
 
+	export var MaxFootnoteHeight: number;
 	export interface IXPath extends Array<any> { }
 	export interface InnerHTML extends String {};
 	export interface IRange {

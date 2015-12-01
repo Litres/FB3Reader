@@ -54,6 +54,9 @@ var FB3ReaderSite;
             Node.className += ' overfloatednote';
             return Node;
         };
+        ExampleSite.prototype.OnBookmarksSync = function (NewBookmark, OldBookmark) {
+            AFB3Reader.GoTO(NewBookmark.Range.From);
+        };
         return ExampleSite;
     })();
     FB3ReaderSite.ExampleSite = ExampleSite;

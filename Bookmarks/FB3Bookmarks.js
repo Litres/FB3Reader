@@ -249,7 +249,8 @@ var FB3Bookmarks;
             if (!this.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
                 // Newer position from server
                 this.Bookmarks[0].SkipUpdateDatetime = true;
-                this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
+                this.OnBookmarksSync(TemporaryNotes.Bookmarks[0], this.Bookmarks.slice(0)[0]);
+                // this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
                 if (AnyUpdates &&
                     FB3Reader.PosCompare(this.Bookmarks[0].Range.From, TemporaryNotes.Bookmarks[0].Range.From) == 0) {
                     this.Reader.Redraw();
@@ -372,6 +373,9 @@ var FB3Bookmarks;
                 }
             }
             return NotesInRange;
+        };
+        LitResBookmarksProcessor.prototype.OnBookmarksSync = function (NewBookmark, OldBookmark) {
+            this.Reader.Site.OnBookmarksSync(NewBookmark, OldBookmark);
         };
         return LitResBookmarksProcessor;
     })();

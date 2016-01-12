@@ -20,7 +20,7 @@ use JSON::PP;
 my $FBURI='http://www.gribuser.ru/xml/fictionbook/2.0';
 my $PartLimit = 10000;
 my $Styles=qr/a|style|strong|emphasis|sub|sup|strikethrough|code/;
-my $LineBreakChars = qr/[\-\/]/;
+my $LineBreakChars = qr/[\-\/…\?\!\}\|–—]/;
 
 my $XML = $ARGV[0];
 my $XSL = $ARGV[1];
@@ -55,7 +55,7 @@ sub SplitString{
 		$Esc = $HyphCache{$SRC} || Hyphenate::HyphString($Esc);
 	}
 	$Esc =~ s/[ \t]+/ ","/g;
-	$Esc =~ s/($LineBreakChars+)(?!")/$1","/g;
+	$Esc =~ s/($LineBreakChars)(?!")/$1","/g;
 	$Esc =~ s/("|^) ","/$1 /g;
 	$Esc =~ s/"",|,""|","$//g;
 	if ($NeedHyph){
@@ -158,6 +158,9 @@ my $NoCut=0;
 for my $Line (@JSonArr) {
 	if ($Line =~ s/\{chars:(\d+)\,/{/){
 		$PageStack += $1;
+		# Rude hack to compact obvious things a bit - we believe our device is at
+		# least 10 chars wide, so why would we keep all this hyphs at line's start?
+		while ($Line =~ s/(\{t:"p",xp:\[[^]]+\],c:\[")([^"]{1,10})","\xAD?/$1$2/g){}
 		if ($Line =~ s/\{type:"semiblock",/{/){
 			$NoCut++;
 			if ($Line =~ /,i:"(\w+)"/){

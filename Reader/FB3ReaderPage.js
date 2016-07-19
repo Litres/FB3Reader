@@ -859,26 +859,22 @@ var FB3ReaderPage;
                 }
             }
             var Addr;
-            if (this.FalloutState.EndReached) {
-                if (this.FalloutState.Element != this.Element.Node) {
-                    var ID = '';
-                    if (this.FalloutState.Element.id) {
-                        ID = this.FalloutState.Element.id;
-                    }
-                    else if (this.FalloutState.Element.parentElement.id) {
-                        ID = this.FalloutState.Element.id;
-                    }
-                    else if (this.FalloutState.Element.children.length && this.FalloutState.Element.children[0].id) {
-                        ID = this.FalloutState.Element.children[0].id;
-                    }
-                    Addr = ID.split('_');
+            if (this.FalloutState.EndReached && this.FalloutState.Element != this.Element.Node) {
+                var ID = '';
+                if (this.FalloutState.Element.id) {
+                    ID = this.FalloutState.Element.id;
                 }
-                else {
-                    // Special case: we have exact match for the page with a little bottom margin hanging, still consider it OK
-                    Addr = Child.id.split('_');
+                else if (this.FalloutState.Element.parentElement.id) {
+                    ID = this.FalloutState.Element.id;
                 }
+                else if (this.FalloutState.Element.children.length && this.FalloutState.Element.children[0].id) {
+                    ID = this.FalloutState.Element.children[0].id;
+                }
+                Addr = ID.split('_');
             }
             else {
+                // Special case: we have exact match for the page with a little bottom margin hanging, still consider it OK
+                // or just neverending page
                 Addr = Child.id.split('_');
                 this.FalloutState.GoodHeight = this.Element.Node.scrollHeight;
             }
@@ -962,7 +958,7 @@ var FB3ReaderPage;
             }
         };
         return ReaderPage;
-    })();
+    }());
     FB3ReaderPage.ReaderPage = ReaderPage;
 })(FB3ReaderPage || (FB3ReaderPage = {}));
 //# sourceMappingURL=FB3ReaderPage.js.map

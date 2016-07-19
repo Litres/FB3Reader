@@ -104,7 +104,7 @@ var LocalBookmarks;
             }
         };
         return LocalBookmarksClass;
-    })();
+    }());
     LocalBookmarks.LocalBookmarksClass = LocalBookmarksClass;
 })(LocalBookmarks || (LocalBookmarks = {}));
 //# sourceMappingURL=LocalBookmarks.js.map

@@ -2,8 +2,7 @@
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var FB3DOM;
 (function (FB3DOM) {
@@ -176,7 +175,7 @@ var FB3DOM;
             }
         };
         return FB3Text;
-    })();
+    }());
     FB3DOM.FB3Text = FB3Text;
     var FB3Tag = (function (_super) {
         __extends(FB3Tag, _super);
@@ -384,7 +383,7 @@ var FB3DOM;
             return Out;
         };
         return FB3Tag;
-    })(FB3Text);
+    }(FB3Text));
     FB3DOM.FB3Tag = FB3Tag;
     var FB3ImgTag = (function (_super) {
         __extends(FB3ImgTag, _super);
@@ -424,7 +423,7 @@ var FB3DOM;
             return ' style="' + InlineStyle + '"';
         };
         return FB3ImgTag;
-    })(FB3Tag);
+    }(FB3Tag));
     FB3DOM.FB3ImgTag = FB3ImgTag;
     var FB3PurchaseTag = (function (_super) {
         __extends(FB3PurchaseTag, _super);
@@ -437,7 +436,7 @@ var FB3DOM;
             return Out;
         };
         return FB3PurchaseTag;
-    })(FB3Tag);
+    }(FB3Tag));
     FB3DOM.FB3PurchaseTag = FB3PurchaseTag;
 })(FB3DOM || (FB3DOM = {}));
 //# sourceMappingURL=FB3DOMBlock.js.map

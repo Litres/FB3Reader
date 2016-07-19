@@ -18,7 +18,6 @@ var FB3PPCache;
     }
     FB3PPCache.CheckStorageAvail = CheckStorageAvail;
     FB3PPCache.MaxCacheRecords = 15;
-    FB3PPCache.LocalStorage; // global for window.localStorage check
     var SkipCache = false; // For debug purposes
     var PPCache = (function () {
         function PPCache() {
@@ -151,7 +150,7 @@ var FB3PPCache;
             localStorage['FB3Reader1.0'] = Data;
         };
         return PPCache;
-    })();
+    }());
     FB3PPCache.PPCache = PPCache;
 })(FB3PPCache || (FB3PPCache = {}));
 //# sourceMappingURL=PPCache.js.map

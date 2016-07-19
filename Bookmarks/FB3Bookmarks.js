@@ -378,7 +378,7 @@ var FB3Bookmarks;
             this.Reader.Site.OnBookmarksSync(NewBookmark, OldBookmark);
         };
         return LitResBookmarksProcessor;
-    })();
+    }());
     FB3Bookmarks.LitResBookmarksProcessor = LitResBookmarksProcessor;
     var Bookmark = (function () {
         function Bookmark(Owner) {
@@ -787,7 +787,7 @@ var FB3Bookmarks;
             }
         };
         return Bookmark;
-    })();
+    }());
     FB3Bookmarks.Bookmark = Bookmark;
 })(FB3Bookmarks || (FB3Bookmarks = {}));
 //# sourceMappingURL=FB3Bookmarks.js.map

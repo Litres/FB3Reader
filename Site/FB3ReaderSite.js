@@ -58,7 +58,7 @@ var FB3ReaderSite;
             AFB3Reader.GoTO(NewBookmark.Range.From);
         };
         return ExampleSite;
-    })();
+    }());
     FB3ReaderSite.ExampleSite = ExampleSite;
     var ExampleProgressor = (function () {
         function ExampleProgressor(AlertSpan, MessSpan, ProgressSpan) {
@@ -115,21 +115,21 @@ var FB3ReaderSite;
             this.Progress(Owner, this.Progresses[Owner]);
         };
         return ExampleProgressor;
-    })();
+    }());
     FB3ReaderSite.ExampleProgressor = ExampleProgressor;
     var ViewText = (function () {
         function ViewText() {
             this.TextArray = {
-                'BOOKMARK_IMAGE_PREVIEW_TEXT': '�����������',
-                'BOOKMARK_EMPTY_TYPE_1_TEXT': '��������',
-                'BOOKMARK_EMPTY_TYPE_3_TEXT': '�������'
+                'BOOKMARK_IMAGE_PREVIEW_TEXT': 'Изображение',
+                'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Закладка',
+                'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Заметка'
             };
         }
         ViewText.prototype.Print = function (Index) {
             return this.TextArray[Index];
         };
         return ViewText;
-    })();
+    }());
     FB3ReaderSite.ViewText = ViewText;
 })(FB3ReaderSite || (FB3ReaderSite = {}));
 //# sourceMappingURL=FB3ReaderSite.js.map

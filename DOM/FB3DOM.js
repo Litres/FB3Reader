@@ -3,8 +3,7 @@
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var FB3DOM;
 (function (FB3DOM_1) {
@@ -60,7 +59,7 @@ var FB3DOM;
             this.OnGetDone = null;
         };
         return AsyncLoadConsumer;
-    })();
+    }());
     ;
     var PageContainer = (function () {
         function PageContainer() {
@@ -68,7 +67,7 @@ var FB3DOM;
             this.FootNotes = new Array();
         }
         return PageContainer;
-    })();
+    }());
     FB3DOM_1.PageContainer = PageContainer;
     var DOM = (function (_super) {
         __extends(DOM, _super);
@@ -240,7 +239,7 @@ var FB3DOM;
             return undefined; // In case we have out-of-field pointer - define it implicitly
         };
         return DOM;
-    })(FB3DOM_1.FB3Tag);
+    }(FB3DOM_1.FB3Tag));
     FB3DOM_1.DOM = DOM;
 })(FB3DOM || (FB3DOM = {}));
 //# sourceMappingURL=FB3DOM.js.map

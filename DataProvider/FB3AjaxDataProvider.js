@@ -30,7 +30,7 @@ var FB3DataProvider;
             this.ActiveRequests = {};
         };
         return AJAXDataProvider;
-    })();
+    }());
     FB3DataProvider.AJAXDataProvider = AJAXDataProvider;
     var AjaxLoader = (function () {
         function AjaxLoader(URL, Callback, Progressor, ID, CustomData) {
@@ -157,6 +157,6 @@ var FB3DataProvider;
             return Data;
         };
         return AjaxLoader;
-    })();
+    }());
 })(FB3DataProvider || (FB3DataProvider = {}));
 //# sourceMappingURL=FB3AjaxDataProvider.js.map

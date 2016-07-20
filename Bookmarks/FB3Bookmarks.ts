@@ -10,7 +10,7 @@ module FB3Bookmarks {
 		DOMParser: any;
 		XDomainRequest: any;
 	}
-	declare var window: iWindow;
+  declare var window: iWindow;
 
 	interface IXMLHTTPResponseCallback { (Data: XMLDocument): void; }
 
@@ -354,11 +354,11 @@ module FB3Bookmarks {
 			if (this.xhrIE9) {
 				this.XMLHttp.onload = () => this.XMLHTTPIE9Response();
 			} else {
-			this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
+				this.XMLHttp.onreadystatechange = () => this.XMLHTTPResponse();
 			}
 			this.XMLHttp.open(Type, URL, true);
 			if (!this.xhrIE9) {
-			this.XMLHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+				this.XMLHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 			}
 			this.XMLHttp.send(Data);
 		}
@@ -401,7 +401,7 @@ module FB3Bookmarks {
 						(BEnd2RStart >= 0 && BEnd2REnd <= 0) ||		// [}]  Bookmark end in range
 						(BStart2RStart < 0 && BEnd2REnd > 0)		// {[]} Bookmark covers the whole range
 						) {
-						NotesInRange.push(this.Bookmarks[j]);
+							NotesInRange.push(this.Bookmarks[j]);
 					}
 				}
 			}
@@ -762,7 +762,7 @@ module FB3Bookmarks {
 					res += this.parseXMLNote(child);
 				} else {
 					if (child.childNodes.length) {
-					res += child.childNodes[0].nodeValue;
+						res += child.childNodes[0].nodeValue;
 					} else {
 						res += "";
 					}
@@ -806,10 +806,10 @@ module FB3Bookmarks {
 		}
 		private GetExtract(): string {
 			return this.Extract;
-			return '<Extract ' +
-				this.GetRawText() +
-				'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
-				this.ExtractNode() + '</Extract>';
+			//return '<Extract ' +
+			//	this.GetRawText() +
+			//	'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
+			//	this.ExtractNode() + '</Extract>';
 		}
 		private ExtractNode(): string {
 			// TODO: fill with code

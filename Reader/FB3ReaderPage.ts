@@ -21,10 +21,10 @@ module FB3ReaderPage {
 	}
 	interface IFallOut {
 		FallOut: FB3ReaderAbstractClasses.IPosition; // Agress of the first element to not fit the page
-		Height: number;								// Height of the page we've examined
-		NotesHeight: number;					// Height for the notes block
-		FalloutElementN: number;			// Last root element to fully fit the page - skipped during future lookup
-		EndReached: boolean;					// False if there were not enough text to fill the page
+		Height: number;					// Height of the page we've examined
+		NotesHeight: number;			// Height for the notes block
+		FalloutElementN: number;		// Last root element to fully fit the page - skipped during future lookup
+		EndReached: boolean;			// False if there were not enough text to fill the page
 		DenyForwardScan: boolean;		// If we had items to breake forward scan, we start from the blank page
 		FitAnythingAtAll: boolean;		// If (for some reason) we were unable to fit ANYTHUNG - engine should know
 	}
@@ -253,8 +253,8 @@ module FB3ReaderPage {
 			this.ParentElement.style.top = '-100000px';
 		}
 
-		SetPending(PagesToRender: FB3Reader.IPageRenderInstruction[]): void {
-			var PageToPend = this;
+    SetPending(PagesToRender: FB3Reader.IPageRenderInstruction[]): void {
+      var PageToPend = <FB3ReaderPage.ReaderPage> this;
 			for (var I = 0; I < PagesToRender.length; I++) {
 				PageToPend.Pending = true;
 				PageToPend = PageToPend.Next;
@@ -612,7 +612,7 @@ module FB3ReaderPage {
 					//this.PrerenderBlocks = BasePrerender;
 					return;
 				} else if (this.Next) { // Unless this is prerender frrame, otherwase no need to bother
-					var NP = this;
+                    var NP = <FB3ReaderPage.ReaderPage> this;
 					for (var I = 0; I < this.PagesToRender.length; I++) {
 						NP = NP.Next;
 						NP.CleanPage();
@@ -624,7 +624,7 @@ module FB3ReaderPage {
 				this.RenderInstr.Range = {
 					From: this.RenderInstr.Start.splice(0),
 					To: FallOut.FallOut.slice(0)
-				};
+                };
 			} else {
 				this.RenderInstr.Range = {
 					From: this.RenderInstr.Start.splice(0),
@@ -955,7 +955,7 @@ module FB3ReaderPage {
 							CurShift = (<HTMLElement> this.FalloutState.Element.children[this.FalloutState.I + 1]).offsetTop;
 						} else {
 							// No luck, we will make some reasonable assumptions by dividing node height by 2
-							CurShift += Math.floor(Math.max(SH, OH) / 2) + this.FalloutState.ThisBlockLineShift; 
+							CurShift += Math.floor(Math.max(SH, OH) / 2) + this.FalloutState.ThisBlockLineShift;
 						}
 					}
 
@@ -976,7 +976,7 @@ module FB3ReaderPage {
 					this.FalloutState.GoodHeight += ApplyShift;
 
 					this.FalloutState.LastOffsetParent = OffsetParent;
-					
+
 					this.FalloutState.SplitHistory.push({
 						I: this.FalloutState.I,
 						Element: this.FalloutState.Element,
@@ -1078,8 +1078,8 @@ module FB3ReaderPage {
 						}
 						ExactNewMargin = MarginAlready + MissingPixels;
 						if (this.RenderInstr.CacheAs !== undefined) {
-						this.FBReader.PagesPositionsCache.SetMargin(XPID, ExactNewMargin);
-					}
+							this.FBReader.PagesPositionsCache.SetMargin(XPID, ExactNewMargin);
+						}
 					}
 					Element.style.marginBottom = ExactNewMargin + 'px';
 				}

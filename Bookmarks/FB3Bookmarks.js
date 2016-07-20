@@ -21,7 +21,7 @@ var FB3Bookmarks;
             this.WaitForData = false;
             this.Host = '/';
             //// local testing part start
-            this.Host = 'http://www.litres.ru/';
+            //			this.Host = 'http://www.litres.ru/';
             //			this.aldebaran = true;
             //// local testing part end
             if (document.all && !window.atob && window.XDomainRequest && this.aldebaran) {
@@ -744,10 +744,10 @@ var FB3Bookmarks;
         };
         Bookmark.prototype.GetExtract = function () {
             return this.Extract;
-            return '<Extract ' +
-                this.GetRawText() +
-                'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
-                this.ExtractNode() + '</Extract>';
+            //return '<Extract ' +
+            //	this.GetRawText() +
+            //	'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
+            //	this.ExtractNode() + '</Extract>';
         };
         Bookmark.prototype.ExtractNode = function () {
             // TODO: fill with code

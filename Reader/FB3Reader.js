@@ -83,6 +83,7 @@ var FB3Reader;
             this.Version = Version;
             this.PagesPositionsCache = PagesPositionsCache;
             // Basic class init
+            this.GoTOByProgressBar = false;
             this.RedrawState = false;
             this.Destroy = false;
             this.HyphON = true;
@@ -105,12 +106,14 @@ var FB3Reader;
                         CurPage: this.CurStartPage,
                         MaxPage: this.PagesPositionsCache.LastPage(),
                         Percent: this.CurPosPercent(),
-                        Pos: this.CurStartPos
+                        Pos: this.CurStartPos,
+                        TurnByProgressBar: this.GoTOByProgressBar
                     });
                 }
                 else {
                     this.RedrawState = false;
                 }
+                this.GoTOByProgressBar = false;
             }
         };
         Reader.prototype.SetStartPos = function (NewPos) {
@@ -533,7 +536,10 @@ var FB3Reader;
         *
         * @param Percent The target percentage to navigate to.
         */
-        Reader.prototype.GoToPercent = function (Percent) {
+        Reader.prototype.GoToPercent = function (Percent, ProgressBar) {
+            if (ProgressBar) {
+                this.GoTOByProgressBar = true;
+            }
             if (this.IsFullyInCache()) {
                 var totalPages = this.PagesPositionsCache.Length();
                 var newPage = Math.round(totalPages * Percent / 100);

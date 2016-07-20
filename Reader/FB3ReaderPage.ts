@@ -69,6 +69,7 @@ module FB3ReaderPage {
 		UnconfirmedShift: number;
 		DenyForwardScan: boolean;
 		FitAnythingAtAll: boolean;
+		PrevNodeTagName: string;		// previous node tag name
 	}
 
 	interface IQuickFallautState {
@@ -106,11 +107,8 @@ module FB3ReaderPage {
 		return parseInt(Input);
 	}
 
-	function PageBreakBefore(Node: HTMLElement): boolean {
-		return Node.nodeName.toLowerCase().match(PageBreakRegexp) ? true : false;
-	}
-	function PageBreakAfter(Node: HTMLElement): boolean {
-		return false; // todo
+	function PageBreakBefore(TagName: string, PrevTagName: string): boolean {
+		return TagName.match(PageBreakRegexp) && PrevTagName.match(PageBreakRegexp) == null ? true : false;
 	}
 
 	function IsNodeUnbreakable(Node: HTMLElement): boolean {
@@ -805,6 +803,8 @@ module FB3ReaderPage {
 			this.FalloutState.UnconfirmedShift = 0;
 			this.FalloutState.DenyForwardScan = false;
 			this.FalloutState.FitAnythingAtAll = false;
+
+			this.FalloutState.PrevNodeTagName = 'undef';
 		}
 
 		// Hand mage CSS3 tabs. I thouth it would take more than this
@@ -830,7 +830,10 @@ module FB3ReaderPage {
 					this.FalloutState.I++;
 					continue;
 				}
-				this.FalloutState.PrevPageBreaker = this.FalloutState.PrevPageBreaker || !this.FalloutState.ForceDenyElementBreaking && PageBreakBefore(Child);
+				var ChildTagName = Child.nodeName.toLocaleLowerCase();
+				this.FalloutState.PrevPageBreaker = this.FalloutState.PrevPageBreaker ||
+					!this.FalloutState.ForceDenyElementBreaking && PageBreakBefore(ChildTagName, this.FalloutState.PrevNodeTagName);
+				this.FalloutState.PrevNodeTagName = ChildTagName;
 				var SH = Child.scrollHeight;
 				if (Child.style.overflow.match(/hidden/)) {
 					// For cropped element scrollHeight returns un-cropped size (at least in webkit)

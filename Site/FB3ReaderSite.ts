@@ -60,10 +60,8 @@ module FB3ReaderSite {
 			Node.className += ' overfloatednote';
 			return Node;
 		}
-		public OnBookmarksSync(NewBookmark: FB3Bookmarks.IBookmark,
-													 OldBookmark: FB3Bookmarks.IBookmark
-			): void {
-			AFB3Reader.GoTO(NewBookmark.Range.From);
+		public OnBookmarksSync(ActualBookmarks: FB3Bookmarks.IBookmarks, PrevBookmarks: FB3Bookmarks.IBookmarks): void {
+			AFB3Reader.GoTO(ActualBookmarks.Bookmarks[0].Range.From);
 		}
 	}
 

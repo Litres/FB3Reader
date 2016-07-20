@@ -43,7 +43,7 @@ module FB3Reader {
 		AfterCanvasResize(): void;
 		PageForward(): void;
 		PageBackward(): void;
-		GoToPercent(Percent: number): void;
+		GoToPercent(Percent: number, ProgressBar?: boolean): void;
 		IdleOn(): void;
 		IdleOff(): void;
 		CurPosPercent(): number;

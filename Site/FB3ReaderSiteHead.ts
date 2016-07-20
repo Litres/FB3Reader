@@ -27,8 +27,7 @@ module FB3ReaderSite {
 		addTrialHandlers(): void;
 		PrepareHTML(HTMLString: string): string;
 		PatchNoteNode(Node: HTMLElement): HTMLElement;
-		OnBookmarksSync(NewBookmark: FB3Bookmarks.IBookmark,
-										OldBookmark: FB3Bookmarks.IBookmark): void;
+		OnBookmarksSync(ActualBookmarks: FB3Bookmarks.IBookmarks, PrevBookmarks: FB3Bookmarks.IBookmarks): void;
 	}
 
 	// General-purpose interface for progress feedback
@@ -56,6 +55,7 @@ module FB3ReaderSite {
 		MaxPage: number;
 		Percent?: number;
 		Pos?: FB3DOM.IXPath;
+		TurnByProgressBar?: boolean;
 	}
 
 	export interface IViewText {

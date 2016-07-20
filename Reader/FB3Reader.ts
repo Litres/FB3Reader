@@ -124,6 +124,7 @@ module FB3Reader {
 		private CachingDone: any;
 
 		private RedrawState: boolean; // stupid workaround to fix AfterTurnPageDone fire
+		private GoTOByProgressBar: boolean; // if someone used progressbar slider to change position, it will be true
 
 		public _CanvasReadyCallback(){
 			if (this.CanvasReadyCallback) {
@@ -133,11 +134,13 @@ module FB3Reader {
 					CurPage: this.CurStartPage,
 					MaxPage: this.PagesPositionsCache.LastPage(),
 					Percent: this.CurPosPercent(),
-					Pos: this.CurStartPos
+						Pos: this.CurStartPos,
+						TurnByProgressBar: this.GoTOByProgressBar
 				});
 				} else {
 					this.RedrawState = false;
 			}
+				this.GoTOByProgressBar = false;
 		}
 		}
 
@@ -164,6 +167,7 @@ module FB3Reader {
 			public PagesPositionsCache: FB3PPCache.IFB3PPCache) {
 
 			// Basic class init
+			this.GoTOByProgressBar = false;
 			this.RedrawState = false;
 			this.Destroy = false;
 			this.HyphON = true;
@@ -597,7 +601,10 @@ module FB3Reader {
         *
         * @param Percent The target percentage to navigate to.
         */
-        public GoToPercent(Percent: number): void {
+		public GoToPercent(Percent: number, ProgressBar?: boolean): void {
+			if (ProgressBar) {
+				this.GoTOByProgressBar = true;
+			}
             if (this.IsFullyInCache()) {
                 var totalPages = this.PagesPositionsCache.Length();
                 var newPage = Math.round(totalPages * Percent / 100);
@@ -607,8 +614,7 @@ module FB3Reader {
                     newPage = totalPages - 1; // If there are 233 pages, then the last available one is 232.
                 }
                 this.GoTOPage(newPage);
-            }
-            else {
+			} else {
                 var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
                 this.GoTO([BlockN]);
             }

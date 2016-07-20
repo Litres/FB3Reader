@@ -54,8 +54,8 @@ var FB3ReaderSite;
             Node.className += ' overfloatednote';
             return Node;
         };
-        ExampleSite.prototype.OnBookmarksSync = function (NewBookmark, OldBookmark) {
-            AFB3Reader.GoTO(NewBookmark.Range.From);
+        ExampleSite.prototype.OnBookmarksSync = function (ActualBookmarks, PrevBookmarks) {
+            AFB3Reader.GoTO(ActualBookmarks.Bookmarks[0].Range.From);
         };
         return ExampleSite;
     }());
@@ -120,9 +120,9 @@ var FB3ReaderSite;
     var ViewText = (function () {
         function ViewText() {
             this.TextArray = {
-                'BOOKMARK_IMAGE_PREVIEW_TEXT': 'Изображение',
-                'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Закладка',
-                'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Заметка'
+                'BOOKMARK_IMAGE_PREVIEW_TEXT': '�����������',
+                'BOOKMARK_EMPTY_TYPE_1_TEXT': '��������',
+                'BOOKMARK_EMPTY_TYPE_3_TEXT': '�������'
             };
         }
         ViewText.prototype.Print = function (Index) {

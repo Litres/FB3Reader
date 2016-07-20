@@ -281,7 +281,7 @@ module FB3Bookmarks {
 			if (!this.Bookmarks[0].NotSavedYet && this.Bookmarks[0].DateTime < TemporaryNotes.Bookmarks[0].DateTime) {
 				// Newer position from server
 				this.Bookmarks[0].SkipUpdateDatetime = true;
-				this.OnBookmarksSync(TemporaryNotes.Bookmarks[0], this.Bookmarks.slice(0)[0]);
+				this.OnBookmarksSync(TemporaryNotes, this);
 				// this.Reader.GoTO(TemporaryNotes.Bookmarks[0].Range.From);
 				if (AnyUpdates &&
 					FB3Reader.PosCompare(this.Bookmarks[0].Range.From, TemporaryNotes.Bookmarks[0].Range.From) == 0) {
@@ -408,8 +408,8 @@ module FB3Bookmarks {
 			return NotesInRange;
 		}
 
-		private OnBookmarksSync(NewBookmark: IBookmark, OldBookmark: IBookmark): void {
-			this.Reader.Site.OnBookmarksSync(NewBookmark, OldBookmark);
+		private OnBookmarksSync(ActualBookmarks: IBookmarks, PrevBookmarks: IBookmarks): void {
+			this.Reader.Site.OnBookmarksSync(ActualBookmarks, PrevBookmarks);
 		}
 	}
 

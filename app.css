@@ -28,7 +28,7 @@
     /*font-family: 'Arial', sans-serif;*/
 }
 #reader {
-    height:800px;
+    height:100%;
     width:100%;
 }
 
@@ -67,7 +67,6 @@ div.FB2readerPage div.footnote {
 
 .FBReaderNotesDiv {
     padding: 0;
-    margin-top: 10px;
     margin-right: 0.5em;
     margin-left: 10px;
     overflow: hidden;
@@ -82,7 +81,6 @@ div.FB2readerPage p.footnote {
 
 .FBReaderNotesDiv {
     border-top: 1px dotted #ffff5d;
-    margin-bottom: 6px;
 }
 
 .FBReaderNotesDiv h2,
@@ -154,23 +152,9 @@ table.contextmenu td {
     padding: 5px 7px;
 }
 
-.my_selec_3_default {
-    background-color:black;
-    color: white;
-}
-
 span.my_selec_1_default, strong.my_selec_1_default, em.my_selec_1_default {
     background-color:red;
     color: white;
-}
-p.my_selec_1_default, div.my_selec_1_default {
-    border-left: 3px solid blue; 
-    padding-left: 5px !important;
-    margin-left: -7px !important;
-    margin-right: -3px !important;
-    padding-right: 3px !important;
-/*    background-color: #004d93;
-    color:yellow; */
 }
 
 .footnote_clickable {
@@ -287,6 +271,97 @@ div.FB2readerPage div.overfloatednote {
     position: relative;
 }
 
+sub, sup {
+    white-space:nowrap;
+}
+
 
 /* engine-required CSS END */
 
+
+/*
+    just some css stylization from production
+    typography, nice looking text & etc
+*/
+div.FB2readerPage p { text-indent:2em; }
+.FBReaderNotesDiv { border-top-color:#000; }
+div.FB2readerPage div.FBReaderContentDiv { padding:20px; }
+.readerStyles .tag_title { text-align:left; padding:0 0 1em; }
+.readerStyles .tag_subtitle { text-align:center; }
+.readerStyles h1 { font-weight:normal; font-size:160%; line-height:120%; }
+.readerStyles h2 { font-weight:normal; font-size:140%; line-height:120%; }
+.readerStyles h3 { font-weight:bold; font-size:120%; line-height:120%; }
+.readerStyles h3 > * { font-weight:bold; }
+.readerStyles h4 { font-weight:bold; font-size:100%; line-height:130%; }
+.readerStyles h4 > * { font-weight:bold; }
+.readerStyles h5 { font-weight:bold; font-size:100%; line-height:130%; padding:1em 0; }
+.readerStyles h5 > * { font-weight:bold; }
+.readerStyles h6 { font-weight:bold; font-size:100%; line-height:130%; padding:1em 0; }
+.readerStyles h6 > * { font-weight:bold; }
+
+.readerStyles sup { font-size:50%; line-height:normal; vertical-align:text-top; }
+.readerStyles sub { font-size:50%; line-height:normal; vertical-align:text-bottom; }
+.readerStyles strikethrough { text-decoration:line-through; }
+.readerStyles .tag_emphasis, .readerStyles .tag_emphasis strong { font-style:italic; }
+.readerStyles strong, .readerStyles strong > * { font-weight:bold; }
+
+/* bookmarks */
+p.my_selec_1_default,
+div.my_selec_1_default,
+img.my_selec_1_default,
+em.my_selec_1_default,
+.tag_title.my_selec_1_default,
+.tag_subtitle.my_selec_1_default,
+.tag_epigraph.my_selec_1_default,
+.tag_cite.my_selec_1_default,
+.tag_annotation.my_selec_1_default,
+.tag_text-author.my_selec_1_default {
+  border-left:3px solid #ff501a;
+  margin-left:-7px !important;
+  margin-right:-3px !important;
+  padding-left:4px !important;
+  padding-right:3px !important;
+}
+
+.readerStyles .FBReaderContentDiv > .tag_title div.my_selec_1_default,
+.readerStyles .FBReaderContentDiv > .tag_subtitle div.my_selec_1_default {
+  margin-left:0 !important; margin-right:0 !important;
+  padding-left:0 !important; padding-right:0 !important;
+  border-left:0 !important;
+}
+
+/* selections */
+span.my_selec_3_default, .my_selec_3_default span { background-color:#96a6a6; color:#000; }
+img.my_selec_3_default, .my_selec_3_default img { background-color:#96a6a6; opacity:0.6; }
+
+hr.tag_empty-line { border:0; outline:0; margin:0; padding:0 0 1em; }
+.readerStyles .tag_annotation,
+.readerStyles .tag_cite { padding:1em; }
+.readerStyles .tag_image-center { text-align:center; text-indent:0; }
+.readerStyles .tag_image-center > span { display:inline-block; position:relative; }
+.readerStyles div.footnote { font-size:inherit; }
+.readerStyles .FBReaderNotesDiv { padding-top:0; border-top:0 none; }
+.readerStyles .NotesLine { width:50%; height:1px; background:#676767; position:absolute; top:0; }
+.readerStyles .FBReaderNotesDiv p.footnote { display:block; }
+.readerStyles .FBReaderNotesDiv .tag_title.footnote + p.footnote { display:inline; }
+.readerStyles .tag_footnote { padding-top:3px; }
+.readerStyles .fit_to_page p { text-indent:0; font-size:80%; width:80%; margin-left:10%; line-height:130%;
+  margin-top:0.3em; }
+.readerStyles .tag_cite { text-align:left !important; }
+.readerStyles .overfloatednote { border-bottom:1px dashed gray; }
+.readerStyles .tag_stanza { padding-bottom:1em; }
+.readerStyles .tag_text-author { text-align:right; margin:0.2em 0 0 20%; }
+.readerStyles .tag_poem { display:inline-block; float:left; padding:1em 1em 1em 4em; min-width:40%; }
+.readerStyles .FBReaderContentDiv * { clear:both; }
+.readerStyles .tag_poem .tag_text-author { font-size:90%; }
+.readerStyles .tag_poem p { text-indent:0; }
+
+.readerStyles .tag_epigraph { display:inline-block; float:right; padding:1em 0; font-size:90%; width:60%; }
+.readerStyles .tag_epigraph p { text-indent:0; }
+.readerStyles .tag_epigraph .tag_text-author { margin-left:3em; }
+
+@media screen and (max-width:800px) {
+  .readerStyles .tag_epigraph { width:auto; margin-left:3em; }
+}
+
+.readerStyles .skip_double { padding-top:0; }

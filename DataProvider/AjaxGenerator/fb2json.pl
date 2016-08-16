@@ -55,8 +55,8 @@ sub SplitString{
 		$Esc = $HyphCache{$SRC} || Hyphenate::HyphString($Esc);
 	}
 	$Esc =~ s/[ \t]+/ ","/g;
-	$Esc =~ s/($LineBreakChars)(?!")/$1","/g;
-	$Esc =~ s/("|^) ","/$1 /g;
+	$Esc =~ s/($LineBreakChars)(?![ "])/$1","/g;
+#	$Esc =~ s/("|^) ","/$1 /g; - never uncoment thus, leading spoacec bring death!
 	$Esc =~ s/"",|,""|","$//g;
 	if ($NeedHyph){
 		$HyphCache{$SRC} = $Esc;

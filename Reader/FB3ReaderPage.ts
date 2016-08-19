@@ -253,8 +253,8 @@ module FB3ReaderPage {
 			this.ParentElement.style.top = '-100000px';
 		}
 
-    SetPending(PagesToRender: FB3Reader.IPageRenderInstruction[]): void {
-      var PageToPend = <FB3ReaderPage.ReaderPage> this;
+        SetPending(PagesToRender: FB3Reader.IPageRenderInstruction[]): void {
+            var PageToPend = <FB3ReaderPage.ReaderPage> this;
 			for (var I = 0; I < PagesToRender.length; I++) {
 				PageToPend.Pending = true;
 				PageToPend = PageToPend.Next;
@@ -947,9 +947,10 @@ module FB3ReaderPage {
 					}
 					var CurShift: number = Child.offsetTop;
 
-					if (this.FalloutState.SplitHistory.length && Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;)/)) {
-						// the reason for this is that soft hyph on the last line makes the hanging element
-						// twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
+          if (this.FalloutState.SplitHistory.length && Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;)/)) {
+					  // the reason for this is that soft hyph (or space?) on the last line makes the hanging element
+            // Perhaps this ahould look like Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;| .)/) - should check later
+					  // twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
 						// first we will try to select next node in the hope it's placed right.
 						if (this.FalloutState.Element.children[this.FalloutState.I + 1]) {
 							CurShift = (<HTMLElement> this.FalloutState.Element.children[this.FalloutState.I + 1]).offsetTop;

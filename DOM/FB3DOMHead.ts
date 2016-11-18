@@ -16,7 +16,7 @@ module FB3DOM {
 	export interface IDOMTextReadyCallback { (PageData: IPageContainer): void; }
 	export interface IChunkLoadedCallback { (): void }
 
-	export interface ITOC {				// Compact notation as we plan to transfer this over network, why create overload
+	export interface ITOC { // Compact notation as we plan to transfer this over the network, why create an overload
 		t?: string;	// title
 		s: number;	// start root node N
 		e: number;	// end root node (including, use [0,-1] Pointer to get last block)

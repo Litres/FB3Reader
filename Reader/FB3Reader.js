@@ -530,12 +530,12 @@ var FB3Reader;
             }
         };
         /**
-        * Navigates to the specific percentage taking into account current cache
-        * status, namely whether we already know total number of pages or not.
-        * If not, block-wise navigation will be used instead of a page-wise.
-        *
-        * @param Percent The target percentage to navigate to.
-        */
+            * Navigates to the specific percentage taking into account current cache
+            * status, namely whether we already know total number of pages or not.
+            * If not, block-wise navigation will be used instead of a page-wise.
+            *
+            * @param Percent The target percentage to navigate to.
+            */
         Reader.prototype.GoToPercent = function (Percent, ProgressBar) {
             if (ProgressBar) {
                 this.GoTOByProgressBar = true;
@@ -557,12 +557,12 @@ var FB3Reader;
             }
         };
         /**
-        * Navigates to the specific point within base FB2 targeting scheme.
-        * First resolves external xpath to internal (asyncroneous operation),
-        * then fires GoToOpenPosition()
-        *
-        * @XP external xpath to jump to
-        */
+            * Navigates to the specific point within base FB2 targeting scheme.
+            * First resolves external xpath to internal (asyncroneous operation),
+            * then fires GoToOpenPosition()
+            *
+            * @XP external xpath to jump to
+            */
         Reader.prototype.GoToXPath = function (XP) {
             var _this = this;
             var TargetChunk = this.FB3DOM.XPChunk(XP);
@@ -745,9 +745,9 @@ var FB3Reader;
             }
         };
         /**
-        * Returns a value indicating whether book's content has
-        * already been fully loaded into cache or not.
-        */
+            * Returns a value indicating whether book's content has
+            * already been fully loaded into cache or not.
+            */
         Reader.prototype.IsFullyInCache = function () {
             var pageToPrerender = this.FirstUncashedPage();
             return this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= pageToPrerender.Start[0];

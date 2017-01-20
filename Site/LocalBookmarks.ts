@@ -2,7 +2,7 @@
 /// <reference path="../PagesPositionsCache/PPCache.ts" />
 
 module LocalBookmarks {
-    export class LocalBookmarksClass {
+	export class LocalBookmarksClass {
 		private local;
 		private LocalBookmarks;
 		private storageVal: string;
@@ -20,14 +20,13 @@ module LocalBookmarks {
 			var FoundBookmark;
 			if (FoundBookmark = this.GetBookmarkByArt(this.ArtID)) {
 				if (FoundBookmark.CurPos) {
-				this.CurPos = FoundBookmark.CurPos;
-			}
+					this.CurPos = FoundBookmark.CurPos;
+				}
 				if (FoundBookmark.DateTime) {
 					this.DateTime = FoundBookmark.DateTime;
 				}
 			}
 		}
-
 		private GetBookmarkByArt(ArtID: string) {
 			for (var j = 0; j < this.LocalBookmarks.length; j++) {
 				if (this.LocalBookmarks[j].ArtID == ArtID) {

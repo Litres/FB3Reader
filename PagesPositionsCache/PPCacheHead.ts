@@ -14,7 +14,7 @@ module FB3PPCache {
 		GetMargin(XP: string): number;
 		Reset(): void;
 		Length(): number;
-		LastPage(LastPageN?:number): number;
+		LastPage(LastPageN?: number): number;
 		CheckIfKnown(From: FB3DOM.IXPath): number;
 		LoadData(): string;
 		LoadDataAsync(ArtID: string);

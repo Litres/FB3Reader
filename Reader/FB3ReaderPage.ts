@@ -947,10 +947,10 @@ module FB3ReaderPage {
 					}
 					var CurShift: number = Child.offsetTop;
 
-          if (this.FalloutState.SplitHistory.length && Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;)/)) {
-					  // the reason for this is that soft hyph (or space?) on the last line makes the hanging element
-            // Perhaps this ahould look like Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;| .)/) - should check later
-					  // twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
+					if (this.FalloutState.SplitHistory.length && Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;)/)) {
+						// the reason for this is that soft hyph (or space?) on the last line makes the hanging element
+						// Perhaps this ahould look like Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;| .)/) - should check later
+						// twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
 						// first we will try to select next node in the hope it's placed right.
 						if (this.FalloutState.Element.children[this.FalloutState.I + 1]) {
 							CurShift = (<HTMLElement> this.FalloutState.Element.children[this.FalloutState.I + 1]).offsetTop;

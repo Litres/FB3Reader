@@ -72,16 +72,17 @@ var FB3DOM;
     var DOM = (function (_super) {
         __extends(DOM, _super);
         function DOM(Site, Progressor, DataProvider, PagesPositionsCache) {
-            _super.call(this, null, null, null, 0);
-            this.Site = Site;
-            this.Progressor = Progressor;
-            this.DataProvider = DataProvider;
-            this.PagesPositionsCache = PagesPositionsCache;
-            this.ActiveRequests = [];
-            this.Ready = false;
-            this.XPID = '';
-            this.XPath = new Array();
-            this.Bookmarks = new Array();
+            var _this = _super.call(this, null, null, null, 0) || this;
+            _this.Site = Site;
+            _this.Progressor = Progressor;
+            _this.DataProvider = DataProvider;
+            _this.PagesPositionsCache = PagesPositionsCache;
+            _this.ActiveRequests = [];
+            _this.Ready = false;
+            _this.XPID = '';
+            _this.XPath = new Array();
+            _this.Bookmarks = new Array();
+            return _this;
         }
         DOM.prototype.Reset = function () {
             for (var I = 0; I < this.ActiveRequests.length; I++) {

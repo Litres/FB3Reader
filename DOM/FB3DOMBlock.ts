@@ -51,7 +51,6 @@ module FB3DOM {
 		return Kid;
 	}
 
-
 	export function XPathCompare(Pos1: any[], Pos2: any[]): number {
 		// todo - this function is a hack around xpath ".05' endings, whould be done some better way
 		if (Pos1.length && Pos1[Pos1.length - 1].match && Pos1[Pos1.length - 1].match(/\.\d/)) {
@@ -91,7 +90,7 @@ module FB3DOM {
 				this.XPath.push(NodeN);
 				this.XPath.push('.' + Chars);
 			}
-		}
+		}	
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {
 			var OutStr = this.text;
 			if (Range.To[0]) {

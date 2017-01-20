@@ -180,25 +180,25 @@ var FB3DOM;
     var FB3Tag = (function (_super) {
         __extends(FB3Tag, _super);
         function FB3Tag(DOM, Data, Parent, ID, IsFootnote) {
-            _super.call(this, DOM, '', Parent, ID, 1, 0, IsFootnote);
-            this.DOM = DOM;
-            this.Data = Data;
+            var _this = _super.call(this, DOM, '', Parent, ID, 1, 0, IsFootnote) || this;
+            _this.DOM = DOM;
+            _this.Data = Data;
             if (Data === null)
-                return;
-            this.TagName = Data.t;
+                return _this;
+            _this.TagName = Data.t;
             if (Data.xp) {
-                this.XPath = this.Data.xp;
+                _this.XPath = _this.Data.xp;
             }
             else {
-                this.XPath = null;
+                _this.XPath = null;
             }
-            this.Childs = new Array();
+            _this.Childs = new Array();
             var Base = 0;
             if (Data.f) {
                 Base++;
-                var NKid = new FB3Tag(this.DOM, Data.f, this, Base, true);
-                this.Childs.push(NKid);
-                this.Chars += NKid.Chars;
+                var NKid = new FB3Tag(_this.DOM, Data.f, _this, Base, true);
+                _this.Childs.push(NKid);
+                _this.Chars += NKid.Chars;
             }
             if (Data.c) {
                 var NodeN = 0; // For text nodes in the mixed content we need it's invisible-node number
@@ -211,17 +211,18 @@ var FB3DOM;
                         NodeN++;
                     }
                     PrevItmType = ItmType;
-                    var Kid = TagClassFactory(Itm, this, I + Base, NodeN, Chars, IsFootnote, this.DOM);
+                    var Kid = TagClassFactory(Itm, _this, I + Base, NodeN, Chars, IsFootnote, _this.DOM);
                     if (ItmType == 'text') {
                         Chars += Kid.Chars;
                     }
                     else {
                         Chars = 0;
                     }
-                    this.Childs.push(Kid);
-                    this.Chars += Kid.Chars;
+                    _this.Childs.push(Kid);
+                    _this.Chars += Kid.Chars;
                 }
             }
+            return _this;
         }
         FB3Tag.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
             // If someone asks for impossible - just ignore it. May happend when someone tries to go over the end
@@ -388,7 +389,7 @@ var FB3DOM;
     var FB3ImgTag = (function (_super) {
         __extends(FB3ImgTag, _super);
         function FB3ImgTag() {
-            _super.apply(this, arguments);
+            return _super.apply(this, arguments) || this;
         }
         FB3ImgTag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var ElementClasses = this.ElementClasses();
@@ -428,7 +429,7 @@ var FB3DOM;
     var FB3PurchaseTag = (function (_super) {
         __extends(FB3PurchaseTag, _super);
         function FB3PurchaseTag() {
-            _super.apply(this, arguments);
+            return _super.apply(this, arguments) || this;
         }
         FB3PurchaseTag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var Out = ['<div class="fit_to_page" id ="n_' + IDPrefix + this.XPID + '">'];

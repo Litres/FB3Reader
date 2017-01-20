@@ -2,7 +2,7 @@
 
 module FB3ReaderSite {
 
-    export class ExampleSite implements IFB3ReaderSite {
+	export class ExampleSite implements IFB3ReaderSite {
 		public ViewText: IViewText;
 		public Progressor: ILoadProgress;
 		public IdleThreadProgressor:ILoadProgress;
@@ -48,7 +48,6 @@ module FB3ReaderSite {
 			// show full-scale contents of the element
 			alert(HTML);
 		}
-
 		public HistoryHandler(Pos: FB3DOM.IXPath): void {}
 		public showTrialEnd(ID: string): string { return ''; }
 		public addTrialHandlers(): void { }
@@ -69,12 +68,12 @@ module FB3ReaderSite {
 		private Hourglasses: any;
 		public Progresses: any;
 		public Alert(Message: string): void {
-			document.getElementById(this.AlertSpan).innerHTML = Message;
+//			document.getElementById(this.AlertSpan).innerHTML = Message;
 			//			window.alert(Message);
 		}
 		HourglassOn(Owner: any, LockUI?: boolean, Message?: string): void {
 			this.Hourglasses[Owner.toString()] = 1;
-			document.getElementById(this.MessSpan).innerHTML = Message;
+//			document.getElementById(this.MessSpan).innerHTML = Message;
 //			document.body.style.cursor = 'wait';
 		}
 		Progress(Owner: any, Progress: number): void {
@@ -86,7 +85,7 @@ module FB3ReaderSite {
 				OverallProgress = this.Progresses[ProgressInst];
 			}
 			OverallProgress = OverallProgress / N;
-			document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
+//			document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
 		}
 		HourglassOff(Owner: any): void {
 			this.Hourglasses[Owner] = 0;

@@ -69,12 +69,12 @@ var FB3ReaderSite;
             this.Progresses = {};
         }
         ExampleProgressor.prototype.Alert = function (Message) {
-            document.getElementById(this.AlertSpan).innerHTML = Message;
+            //			document.getElementById(this.AlertSpan).innerHTML = Message;
             //			window.alert(Message);
         };
         ExampleProgressor.prototype.HourglassOn = function (Owner, LockUI, Message) {
             this.Hourglasses[Owner.toString()] = 1;
-            document.getElementById(this.MessSpan).innerHTML = Message;
+            //			document.getElementById(this.MessSpan).innerHTML = Message;
             //			document.body.style.cursor = 'wait';
         };
         ExampleProgressor.prototype.Progress = function (Owner, Progress) {
@@ -86,7 +86,7 @@ var FB3ReaderSite;
                 OverallProgress = this.Progresses[ProgressInst];
             }
             OverallProgress = OverallProgress / N;
-            document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
+            //			document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
         };
         ExampleProgressor.prototype.HourglassOff = function (Owner) {
             this.Hourglasses[Owner] = 0;

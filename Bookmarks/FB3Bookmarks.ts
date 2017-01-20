@@ -52,7 +52,7 @@ module FB3Bookmarks {
 			this.WaitForData = false;
 			this.Host = '/';
 			//// local testing part start
-			this.Host = 'http://www.litres.ru/';
+//			this.Host = 'http://www.litres.ru/';
 //			this.aldebaran = true;
 			//// local testing part end
 			if (document.all && !window.atob && (<any> window).XDomainRequest && this.aldebaran) {

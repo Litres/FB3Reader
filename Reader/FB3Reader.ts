@@ -130,18 +130,18 @@ module FB3Reader {
 			if (this.CanvasReadyCallback) {
 				this.CanvasReadyCallback(this.GetVisibleRange());
 				if (!this.RedrawState) {
-				this.Site.AfterTurnPageDone({
-					CurPage: this.CurStartPage,
-					MaxPage: this.PagesPositionsCache.LastPage(),
-					Percent: this.CurPosPercent(),
+					this.Site.AfterTurnPageDone({
+						CurPage: this.CurStartPage,
+						MaxPage: this.PagesPositionsCache.LastPage(),
+						Percent: this.CurPosPercent(),
 						Pos: this.CurStartPos,
 						TurnByProgressBar: this.GoTOByProgressBar
-				});
+					});
 				} else {
 					this.RedrawState = false;
-			}
+				}
 				this.GoTOByProgressBar = false;
-		}
+			}
 		}
 
 		private SetStartPos(NewPos: FB3ReaderAbstractClasses.IPosition): void {
@@ -365,8 +365,7 @@ module FB3Reader {
 			this.Pages[this.CurVisiblePage].DrawInit(NewInstr);
 		}
 
-
-		public TOC():FB3DOM.ITOC[] {
+		public TOC(): FB3DOM.ITOC[] {
 			var PatchedTOC = this.CloneTOCNodes(this.FB3DOM.TOC);
 			var CurrentRange = { From: this.CurStartPos, To: this.CurStartPos };
 			this.PatchToc(PatchedTOC, CurrentRange, 0);
@@ -395,10 +394,10 @@ module FB3Reader {
 			for (var I = 0; I < TOC.length; I++) {
 				if (!TOC[I].t || TOC[I].t == '') {
 					continue;
-					}
+				}
 				if (TOC[I].c && this.PatchToc(TOC[I].c, Range, Group)) {
 					return true;
-					} else {
+				} else {
 					var StartCmp = PosCompare(Range.From, [TOC[I].s]);
 					var EndComp = PosCompare(Range.To, [TOC[I].e]);
 					if (StartCmp >= 0 && EndComp <= 1) {
@@ -438,7 +437,6 @@ module FB3Reader {
 			}
 			return undefined;
 		}
-
 
 		public StoreCachedPage(Range: IPageRenderInstruction) {
 			this.PagesPositionsCache.Set(Range.CacheAs, PRIClone(Range));
@@ -547,8 +545,8 @@ module FB3Reader {
 						if (PageN) {
 							this.GoTOPage(PageN);
 						} else {
-						this.GoToOpenPosition(From);
-					}
+							this.GoToOpenPosition(From);
+						}
 					}
 				} else {
 					// If we are walking the grass, and find for ourselves exactly at the level of
@@ -556,13 +554,13 @@ module FB3Reader {
 					var PageN = this.PagesPositionsCache.CheckIfKnown(PageToView.RenderInstr.Range.From);
 					if (PageN) {
 						this.GoTOPage(PageN);
-				} else {
-					this.SetStartPos(PageToView.RenderInstr.Range.From);
-					this.PutBlockIntoView(PageToView.ID - 1);
-					this._CanvasReadyCallback();
+					} else {
+						this.SetStartPos(PageToView.RenderInstr.Range.From);
+						this.PutBlockIntoView(PageToView.ID - 1);
+						this._CanvasReadyCallback();
+					}
 				}
 			}
-		}
 		}
 		public PageBackward(): void {
 			clearTimeout(this.MoveTimeoutID);
@@ -594,39 +592,39 @@ module FB3Reader {
 			}
 		}
 
-        /** 
-        * Navigates to the specific percentage taking into account current cache
-        * status, namely whether we already know total number of pages or not.
-        * If not, block-wise navigation will be used instead of a page-wise.
-        *
-        * @param Percent The target percentage to navigate to.
-        */
+		/**
+			* Navigates to the specific percentage taking into account current cache
+			* status, namely whether we already know total number of pages or not.
+			* If not, block-wise navigation will be used instead of a page-wise.
+			*
+			* @param Percent The target percentage to navigate to.
+			*/
 		public GoToPercent(Percent: number, ProgressBar?: boolean): void {
 			if (ProgressBar) {
 				this.GoTOByProgressBar = true;
 			}
-            if (this.IsFullyInCache()) {
-                var totalPages = this.PagesPositionsCache.Length();
-                var newPage = Math.round(totalPages * Percent / 100);
-                if (newPage < 0) {
-                    newPage = 0;
-                } else if (newPage >= totalPages) {                    
-                    newPage = totalPages - 1; // If there are 233 pages, then the last available one is 232.
-                }
-                this.GoTOPage(newPage);
+			if (this.IsFullyInCache()) {
+				var totalPages = this.PagesPositionsCache.Length();
+				var newPage = Math.round(totalPages * Percent / 100);
+				if (newPage < 0) {
+					newPage = 0;
+				} else if (newPage >= totalPages) {
+					newPage = totalPages - 1; // If there are 233 pages, then the last available one is 232.
+				}
+				this.GoTOPage(newPage);
 			} else {
-                var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
-                this.GoTO([BlockN]);
-            }
+				var BlockN = Math.round(this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * Percent / 100);
+				this.GoTO([BlockN]);
+			}
 		}
 
-        /** 
-        * Navigates to the specific point within base FB2 targeting scheme.
-        * First resolves external xpath to internal (asyncroneous operation),
-        * then fires GoToOpenPosition()
-        *
-        * @XP external xpath to jump to
-        */
+		/**
+			* Navigates to the specific point within base FB2 targeting scheme.
+			* First resolves external xpath to internal (asyncroneous operation),
+			* then fires GoToOpenPosition()
+			*
+			* @XP external xpath to jump to
+			*/
 		public GoToXPath(XP: FB3DOM.IXPath): void {
 			var TargetChunk = this.FB3DOM.XPChunk(XP);
 			if (!this.XPToJump) {
@@ -665,7 +663,6 @@ module FB3Reader {
 			if (!Node) {
 				return undefined; // Do not know how would this happen, just in case
 			}
-
 
 			if (!Node.id.match(/n(_\d+)+/)) {
 				return undefined; // This is some wrong element with wrong ID, must be an error
@@ -825,14 +822,14 @@ module FB3Reader {
 			}
 		}
 
-        /** 
-        * Returns a value indicating whether book's content has 
-        * already been fully loaded into cache or not.
-        */
-        private IsFullyInCache(): boolean {
-            var pageToPrerender = this.FirstUncashedPage();
-            return this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= pageToPrerender.Start[0];
-        }
+		/**
+			* Returns a value indicating whether book's content has
+			* already been fully loaded into cache or not.
+			*/
+		private IsFullyInCache(): boolean {
+			var pageToPrerender = this.FirstUncashedPage();
+			return this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= pageToPrerender.Start[0];
+		}
 
 		private SaveCache() {
 			if (!this.CachingDone[this.FullKey()]) {

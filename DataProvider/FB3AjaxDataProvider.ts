@@ -54,11 +54,11 @@ module FB3DataProvider {
 			) {
 				this.xhrIE9 = false;
 				this.Progressor.HourglassOn(this, false, 'Loading ' + this.URL);
-			this.Req = this.HttpRequest();
-			try { // Old IE with it's internals does not support this
-				this.Req.addEventListener("progress", (e: ProgressEvent) => this.onUpdateProgress(e), false);
-				this.Req.addEventListener("error", (e: ProgressEvent) => this.onTransferFailed(e), false);
-				this.Req.addEventListener("abort", (e: ProgressEvent) => this.onTransferAborted(e), false);
+				this.Req = this.HttpRequest();
+				try { // Old IE with it's internals does not support this
+					this.Req.addEventListener("progress", (e: ProgressEvent) => this.onUpdateProgress(e), false);
+					this.Req.addEventListener("error", (e: ProgressEvent) => this.onTransferFailed(e), false);
+					this.Req.addEventListener("abort", (e: ProgressEvent) => this.onTransferAborted(e), false);
 				} catch (e) {
 					this.Req.onprogress = function () {};
 					this.Req.onerror = (e: any) => this.onTransferFailed(e);
@@ -70,9 +70,9 @@ module FB3DataProvider {
 					this.Req.onload = () => this.onTransferIE9Complete();
 					setTimeout(() => this.Req.send(null), '200');
 				} else {
-			this.Req.onreadystatechange = () => this.onTransferComplete();
-			this.Req.send(null);
-		}
+					this.Req.onreadystatechange = () => this.onTransferComplete();
+					this.Req.send(null);
+				}
 		}
 
 		public onTransferComplete() {

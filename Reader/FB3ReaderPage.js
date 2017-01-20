@@ -1,11 +1,14 @@
+/// <reference path="FB3ReaderHead.ts" />
+/// <reference path="FB3Reader.ts" />
 var FB3ReaderPage;
 (function (FB3ReaderPage) {
     FB3ReaderPage.PageBreakRegexp = /^h[1-4]/;
-    FB3ReaderPage.BreakIterationEvery = 50;
-    FB3ReaderPage.SemiSleepTimeout = 20;
+    FB3ReaderPage.BreakIterationEvery = 50; // every ## miliseconds script will process user input
+    FB3ReaderPage.SemiSleepTimeout = 20; // time for SetTimeout. You can rise it to let the browser more time for garbage collection
     FB3ReaderPage.PrerenderBlocks = 6;
-    FB3ReaderPage.EnableForwardScan = true;
-    var FallCalls = 0;
+    FB3ReaderPage.EnableForwardScan = true; // AI to not set InnerHTML several times but scan one page instead
+    var FallCalls = 0; // debug
+    // hanging para extermination - we need inline to hang for hyph to work, but no reason for block to hang
     function CropTo(Range) {
         if (Range.To.length == 1 && Range.To[0] > Range.From[0]) {
             Range.To[0]--;
@@ -40,6 +43,12 @@ var FB3ReaderPage;
         if (Node.className.match(/\btag_(nobr|image)\b/)) {
             return true;
         }
+        //var Chld1 = Node.children[0];
+        //if (Chld1) {
+        //	if (Chld1.nodeName.match(/^h\d$/i)) {
+        //		return true;
+        //	}
+        //}
         if (Node.className.match(/\bfit_to_page\b/)) {
             return true;
         }
@@ -71,6 +80,8 @@ var FB3ReaderPage;
             }
         };
         ReaderPage.prototype.Hide = function () {
+            // It's breaking apart here somehow :(
+            //			return;
             if (this.Visible) {
                 this.ParentElement.style.top = '100000px';
                 this.Visible = false;
@@ -146,6 +157,7 @@ var FB3ReaderPage;
             if (this.FBReader.Destroy) {
                 return;
             }
+            //console.log(this.ID, 'DrawInit');
             if (PagesToRender.length == 0)
                 return;
             this.Ready = false;
@@ -162,9 +174,24 @@ var FB3ReaderPage;
                     From: this.RenderInstr.Range.From.slice(0),
                     To: this.RenderInstr.Range.To.slice(0)
                 };
+                //  As we host hyphen in the NEXT element(damn webkit) and a hyphen has it's width,
+                //  we always need to have one more inline - element to make sure the element without
+                //  a hyphen(and thus enormously narrow) will not be left on the page as a last element,
+                //  while it should fall down being too wide with hyphen attached Like this:
+                //  Wrong:                                            Right:
+                //  |aaa bb-|                                         |aaa bb-|
+                //  |bb cccc|                                         |bb cccc|
+                //  |d eeeee|<if page cut here - error>               |d  eee-| << this hyphen fits ok, next will not
+                //  |-ee    |<< this hyphen must be the               |eeee   | << this tail bring excess part down
+                //              6-th char, so "eeeee" would NOT fit
+                // With IE it's even worse as IE renders soft hyps randomly, it may break asdasd-asdadsad
+                // where asdasdasdads-ad would fit. So it's not enough to only have "asdasd-as",
+                // we have to have the whole word in place to render always the same way in IE
                 if (this.WholeRangeToRender.To.length > 1) {
                     var RangeNodeTo = this.FB3DOM.GetElementByAddr(this.WholeRangeToRender.To);
                     if (RangeNodeTo.ArtID) {
+                        // GetElementByAddr returned FB3DOM, DOM must have not being loaded yet
+                        // we suplty force last element to fully load - just in case
                         this.WholeRangeToRender.To.pop();
                     }
                     else if (RangeNodeTo.text) {
@@ -181,14 +208,17 @@ var FB3ReaderPage;
             else {
                 if (!this.RenderInstr.Start) {
                     this.RenderInstr.Start = [0];
-                }
+                } // Start point defined
                 this.WholeRangeToRender = this.DefaultRangeApply(this.RenderInstr);
             }
             this.ActialRequest++;
             var ReqID = this.ActialRequest;
             this.FB3DOM.GetHTMLAsync(this.FBReader.HyphON, this.FBReader.BookStyleNotes, this.WholeRangeToRender, this.ID + '_', this.ViewPortW, this.ViewPortH, function (PageData) { return _this.DrawEnd(PageData, ReqID); });
         };
+        // Take a poind and add PrerenderBlocks of blocks to it
         ReaderPage.prototype.DefaultRangeApply = function (RenderInstr) {
+            // TODO: fix, we have something bad with RenderInstr.Start
+            // hub ticket #52217
             var FragmentEnd = RenderInstr.Start[0] * 1 + this.PrerenderBlocks;
             if (FragmentEnd > this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                 FragmentEnd = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e;
@@ -209,7 +239,9 @@ var FB3ReaderPage;
         };
         ReaderPage.prototype.DrawEnd = function (PageData, ReqID) {
             var _this = this;
+            //console.log(this.ID, 'DrawEnd');
             if (ReqID != null && ReqID != this.ActialRequest) {
+                // this is some outdated request, we have newer orders since then - so we just ignore this
                 return;
             }
             this.Element.Node.innerHTML = this.Site.PrepareHTML(PageData.Body.join(''));
@@ -224,13 +256,16 @@ var FB3ReaderPage;
                     this.PatchExtraLargeFootnote(this.NotesElement.Node.children[I]);
                 }
             }
+            //			this.NotesElement.Node.style.display = PageData.FootNotes.length ? 'block' : 'none';
             if (!this.RenderInstr.Range) {
                 this.QuickFallautState.CollectedHeight = 0;
                 this.InitFalloutState(this.Element.Height - this.Element.MarginBottom, 0, HasFootnotes, false);
                 this.ThreadsRunning++;
+                //				console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
                 clearTimeout(this.RenderBreakerTimeout);
                 this.RenderBreakerTimeout = setTimeout(function () {
                     _this.ThreadsRunning--;
+                    //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
                     _this.RenderBreakerTimeout = 0;
                     _this.FallOut();
                 }, FB3ReaderPage.SemiSleepTimeout);
@@ -260,6 +295,7 @@ var FB3ReaderPage;
                         ElWidth += LeftMargin;
                     }
                 }
+                // Hack for internal wide-width block, mostly images but others as well
                 if (!KidToCrop.tagName.match(/^p$/i) && this.ViewPortW - ElWidth <= 1) {
                     var IntDivs = KidToCrop.querySelectorAll('div');
                     for (var J = 0; J < IntDivs.length; J++) {
@@ -286,7 +322,8 @@ var FB3ReaderPage;
             var WShift = Math.floor((BaseElementW - NewW) / 2);
             var HShift = Math.floor((BaseElementH - NewH) / 2);
             var BaseID = Node.id;
-            var Native_Bottom_Margin = Node.style.marginBottom;
+            var Native_Bottom_Margin = Node.style.marginBottom; // This style produced by "AlignElementBottomLine" system,
+            // we must preserve this
             Node.style.marginBottom = '';
             var MoveToCenter = NewW < this.ViewPortW - 1 ? Math.floor((this.ViewPortW - NewW) / 2) : 0;
             var BtnHTML = '<span class="span-zoom" id="zbs' + BaseID + '">' +
@@ -360,15 +397,20 @@ var FB3ReaderPage;
             this.AddHandlers();
             this.Ready = true;
             this.Pending = false;
+            // We have a queue waiting and it is not a background renderer frame - then fire the next page fullfilment
             if (this.PagesToRender && this.PagesToRender.length && this.Next) {
+                // we fire setTimeout to let the browser draw the page before we render the next
                 if (!this.PagesToRender[0].Range && !this.PagesToRender[0].Start) {
                     this.PagesToRender[0].Start = this.RenderInstr.Range.To.slice(0);
                     To2From(this.PagesToRender[0].Start);
                 }
+                //				console.log(this.ID, FallCalls, 'ApplyPageMetrics setTimeout');
                 clearTimeout(this.RenderMoreTimeoutApply);
                 this.RenderMoreTimeoutApply = setTimeout(function () { _this.Next.DrawInit(_this.PagesToRender); _this.RenderMoreTimeoutApply = 0; }, FB3ReaderPage.SemiSleepTimeout);
+                // This page is clearly the last visible by absolute number
                 if (this.PageN + 1 == this.FBReader.CurStartPage + this.FBReader.NColumns
                     ||
+                        // or, if we walk over the grass this it the relative last page
                         this.PageN === undefined
                             && this.FBReader.CurStartPage === undefined
                             && this.ID == this.FBReader.CurVisiblePage + this.FBReader.NColumns) {
@@ -379,22 +421,31 @@ var FB3ReaderPage;
                 && (this.FBReader.CurVisiblePage + this.FBReader.NColumns == this.ID
                     ||
                         !this.PagesToRender.length && this.FBReader.CurVisiblePage >= this.ID - 1
-                            && this.FBReader.CurVisiblePage < this.ID + this.FBReader.NColumns)) {
+                            && this.FBReader.CurVisiblePage < this.ID + this.FBReader.NColumns // last page, if it's empty, may not fire ApplyPageMetrics
+                )) {
+                // Looks like the end of the text
                 this.FBReader._CanvasReadyCallback();
             }
         };
         ReaderPage.prototype.FalloutConsumeFirst = function (FallOut) {
             var _this = this;
+            //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeFirst');
             if (!FallOut.FitAnythingAtAll) {
+                //if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0
+                //	&& FallOut.FallOut[0] < this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
+                // It's too bad baby: text does not fit the page, not even a char
+                // Let's try to stripe book-style footnotes first (if they are ON) - this must clean up some space
                 if (this.FBReader.BookStyleNotes && this.FalloutState.HasFootnotes) {
                     this.FBReader.BookStyleNotes = false;
                     this.FBReader.BookStyleNotesTemporaryOff = true;
                     this.RenderInstr.Range = null;
                     this.NotesElement.Node.innerHTML = '';
                     this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+                    //					this.FBReader.IdleOff();
                     return;
                 }
                 else {
+                    // That's it - no way to recover. We die now, later we will make some fix here
                     this.FBReader.Site.Alert('We can not fit the text into the page!');
                     this.RenderInstr.Start = [this.RenderInstr.Start[0] + 1];
                     this.RenderInstr.Range = null;
@@ -412,14 +463,19 @@ var FB3ReaderPage;
                 this.FBReader.BookStyleNotesTemporaryOff = false;
                 PageCorrupt = true;
             }
+            // We can have not enough content to fill the page. Sometimes we will refill it,
+            // but sometimes (doc end or we only 
             if (!FallOut.EndReached) {
                 var EndRiched = this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e < FallOut.FallOut[0]
                     ||
                         FallOut.FallOut.length == 1 && this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e == FallOut.FallOut[0];
                 if (!EndRiched) {
+                    // Ups, our page is incomplete - have to retry filling it. Take more data now
+                    //var BasePrerender = this.PrerenderBlocks;
                     this.PrerenderBlocks += 2;
                     this.RenderInstr.Range = null;
                     this.DrawInit([this.RenderInstr].concat(this.PagesToRender));
+                    //this.PrerenderBlocks = BasePrerender;
                     return;
                 }
                 else if (this.Next) {
@@ -452,6 +508,10 @@ var FB3ReaderPage;
             if (this.PageN !== undefined) {
                 this.FBReader.StoreCachedPage(this.RenderInstr);
             }
+            // Ok, we have rendered the page nice. Now we can check, wether we have created
+            // a page long enough to fit the NEXT page. If so, we are going to estimate it's
+            // content to create next page(s) with EXACTLY the required html - this will
+            // speed up the render a lot
             var LastChild = this.Element.Node.children[this.Element.Node.children.length - 1];
             if (!FallOut.DenyForwardScan && FB3ReaderPage.EnableForwardScan && LastChild && !PageCorrupt && FallOut.EndReached) {
                 this.QuickFallautState.CollectedHeight = FallOut.Height;
@@ -462,15 +522,18 @@ var FB3ReaderPage;
                 if (this.QuickFallautState.RealPageSize > TestHeight && this.PagesToRender.length) {
                     this.QuickFallautState.QuickFallout = 0;
                     this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
+                    //					this.FallOut();
                     FallCalls++;
+                    //					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInit');
                     this.ThreadsRunning++;
                     clearTimeout(this.RenderBreakerTimeoutFallout);
                     this.RenderBreakerTimeoutFallout = setTimeout(function () {
                         _this.ThreadsRunning--;
+                        //						console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
                         _this.RenderBreakerTimeoutFallout = 0;
                         _this.FallOut();
                     }, FB3ReaderPage.SemiSleepTimeout);
-                    return;
+                    return; // should be here to make ApplyPageMetrics work
                 }
             }
             this.ApplyPageMetrics();
@@ -480,13 +543,16 @@ var FB3ReaderPage;
         };
         ReaderPage.prototype.FalloutConsumeNext = function (FallOut) {
             var _this = this;
+            //console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
             if (FallOut.EndReached
                 || FallOut.FallOut[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e && !this.Next) {
                 var NextPageRange = {};
                 NextPageRange.From = this.QuickFallautState.PrevTo.slice(0);
+                // We check if we had any progress at all. If not - we rely on FalloutConsumeFirst to handle this and just abort this page scan
                 if (FallOut.FitAnythingAtAll) {
                     this.QuickFallautState.PrevTo = FallOut.FallOut.slice(0);
                     NextPageRange.To = FallOut.FallOut.slice(0);
+                    // No need to ignore "hanging" element - there is no hanging element at the end of the book
                     if (FallOut.FallOut[0] < this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                         CropTo(NextPageRange);
                     }
@@ -506,13 +572,16 @@ var FB3ReaderPage;
                         if (this.QuickFallautState.RealPageSize > TestHeight
                             || this.WholeRangeToRender.To[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
                             this.InitFalloutState(TestHeight, this.QuickFallautState.CollectedNotesHeight, this.FalloutState.HasFootnotes, true, FallOut.FalloutElementN);
+                            //this.FallOut();
+                            //							console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextInit');
                             this.ThreadsRunning++;
                             clearTimeout(this.RenderMoreTimeout);
                             this.RenderMoreTimeout = setTimeout(function () {
                                 _this.ThreadsRunning--;
+                                //								console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeNextFire');
                                 _this.FallOut();
                             }, FB3ReaderPage.SemiSleepTimeout);
-                            return;
+                            return; // should be here to make ApplyPageMetrics work
                         }
                     }
                 }
@@ -521,17 +590,21 @@ var FB3ReaderPage;
                 this.ApplyPageMetrics();
             }
             if (!this.PagesToRender.length || !this.ID) {
+                // Get back to idle processing if we are done or we are in idle mode already
                 this.FBReader.IdleOn();
             }
         };
         ReaderPage.prototype.JumpOnLadder = function (FallOut, PageN) {
+            // We are making background render - let's check if the visible page is off-ladder
+            // and is equal to our current page. if so we set our visible page PageN, so it will no longer
+            // be on the grass
             if (!this.Next
                 && PageN
-                && ((PageN - 1) % this.FBReader.NColumns == 0)
+                && ((PageN - 1) % this.FBReader.NColumns == 0) // Only jump in for the first page in multicolumn view
                 && this.FBReader.CurStartPage === undefined
                 && this.FBReader.CurStartPos) {
                 if (FB3Reader.PosCompare(FallOut.FallOut, this.FBReader.CurStartPos) == 0) {
-                    this.FBReader.CurStartPage = PageN + 1;
+                    this.FBReader.CurStartPage = PageN + 1; // Why +1? Donno, but somehow it works
                 }
             }
         };
@@ -541,6 +614,7 @@ var FB3ReaderPage;
             clearTimeout(this.RenderMoreTimeoutFallout);
             clearTimeout(this.RenderBreakerTimeout);
             clearTimeout(this.RenderBreakerTimeoutFallout);
+            //			console.log('Reset ' + this.ID);
             this.PagesToRender = null;
             this.Pending = false;
             this.ActialRequest++;
@@ -565,6 +639,7 @@ var FB3ReaderPage;
             this.FalloutState.LastOffsetShift = null;
             this.FalloutState.EndReached = false;
             this.FalloutState.FootnotesAddonCollected = 0;
+            // To shift notes to the next page we may have to eliminale last line as a whole - so we keep track of it
             this.FalloutState.LastLineBreakerParent = null;
             this.FalloutState.LastLineBreakerPos = null;
             this.FalloutState.LastFullLinePosition = 0;
@@ -585,15 +660,19 @@ var FB3ReaderPage;
             this.FalloutState.FitAnythingAtAll = false;
             this.FalloutState.PrevNodeTagName = 'undef';
         };
+        // Hand mage CSS3 tabs. I thouth it would take more than this
         ReaderPage.prototype.FallOut = function () {
             var _this = this;
+            //console.log(this.ID, this.QuickFallautState.QuickFallout, 'Fallout');
             var IterationStartedAt = new Date().getTime();
             while (this.FalloutState.I < this.FalloutState.ChildsCount) {
                 if (FB3ReaderPage.BreakIterationEvery && new Date().getTime() - IterationStartedAt > FB3ReaderPage.BreakIterationEvery) {
+                    //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
                     this.ThreadsRunning++;
                     clearTimeout(this.RenderMoreTimeoutFallout);
                     this.RenderMoreTimeoutFallout = setTimeout(function () {
                         _this.ThreadsRunning--;
+                        //console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
                         _this.FallOut();
                         _this.RenderMoreTimeoutFallout = 0;
                     }, FB3ReaderPage.SemiSleepTimeout);
@@ -611,15 +690,19 @@ var FB3ReaderPage;
                 this.FalloutState.PrevNodeTagName = ChildTagName;
                 var SH = Child.scrollHeight;
                 if (Child.style.overflow.match(/hidden/)) {
+                    // For cropped element scrollHeight returns un-cropped size (at least in webkit)
                     SH = Child.offsetHeight;
                 }
                 var ChildBot;
+                // IE has both offsetHeight && scrollHeight always equal plus
+                // it gets offset * and scroll * values SLOW, sy why waste time?
                 if (!this.FBReader.IsIE) {
                     var OH = Child.offsetHeight;
                     SH = Math.max(SH, OH);
                 }
                 ChildBot = Child.offsetTop + SH;
                 if (!this.FalloutState.NoMoreFootnotesHere && this.FBReader.BookStyleNotes) {
+                    // Footnotes kind of expand element height - NoMoreFootnotesHere is for making things faster
                     if (Child.nodeName.match(/a/i) && Child.className.match(/\bfootnote_attached\b/)) {
                         var NoteElement = this.Site.getElementById('f' + Child.id);
                         if (NoteElement) {
@@ -642,8 +725,9 @@ var FB3ReaderPage;
                 }
                 var FootnotesHeightNow = FootnotesAddon ? FootnotesAddon : this.FalloutState.FootnotesAddonCollected;
                 if ((ChildBot + FootnotesHeightNow <= this.FalloutState.Limit) && !this.FalloutState.PrevPageBreaker
-                    || this.FalloutState.ForceFitBlock
-                    || !this.FalloutState.BTreeModeOn && Child.className.match(/\btag_empty-line\b/)) {
+                    || this.FalloutState.ForceFitBlock // For sime reason we have to fit this to the page
+                    || !this.FalloutState.BTreeModeOn && Child.className.match(/\btag_empty-line\b/) // empty-line always fits, see FB3DOM.GetHTML for similar hack
+                ) {
                     this.FalloutState.ForceDenyElementBreaking = false;
                     this.FalloutState.ForceFitBlock = false;
                     this.FalloutState.FitAnythingAtAll = true;
@@ -659,12 +743,14 @@ var FB3ReaderPage;
                     this.FalloutState.BTreeLastOK = this.FalloutState.I;
                     if (this.FalloutState.I == 0 && this.FalloutState.SplitHistory.length == 1
                         && Child.tagName.match(/span/i)) {
+                        // This is 1-st level node under block level, we want to know it's line height
                         this.FalloutState.ThisBlockLineShift = Child.offsetTop;
                     }
                     if (this.FalloutState.I == 0 &&
                         this.FalloutState.NoMoreFootnotesHere &&
                         this.FalloutState.ChildsCount > 7 &&
                         !this.FalloutState.BTreeModeOn) {
+                        // In fact we could work with Footnotes as well, but it's a bit dedicated, perhaps return to it later on
                         this.FalloutState.BTreeModeOn = true;
                         this.FalloutState.BTreeLastFail = this.FalloutState.ChildsCount;
                     }
@@ -675,11 +761,16 @@ var FB3ReaderPage;
                         this.FalloutState.I++;
                     }
                     this.FalloutState.UnconfirmedShift = 0;
+                    // We deal with top-level block element, we want it to have bottom margin
+                    // to align with our line-height
                     if (this.FBReader.LineHeight && !this.FalloutState.SplitHistory.length) {
                         this.FalloutState.ThisBlockLineShift = 0;
                         this.AlignElementBottomLine(ChildBot, this.FalloutState.Baseline, Child);
                     }
                     else if (this.FalloutState.I == this.FalloutState.ChildsCount && this.FalloutState.SplitHistory.length) {
+                        // Well, we could not fit the whole element, but all it's childs fit perfectly. Hopefully
+                        // the reason is the bottom margin/padding. So we assume the whole element fits and leave those
+                        // paddings hang below the visible page
                         var Fallback = this.FalloutState.SplitHistory.pop();
                         this.FalloutState.Element = Fallback.Element;
                         this.FalloutState.I = Fallback.I;
@@ -695,6 +786,7 @@ var FB3ReaderPage;
                     }
                 }
                 else {
+                    // If we are in BTree Mode we save nothing exept BTreeLastFail. Just pretend like this fail have never happend
                     if (this.FalloutState.BTreeModeOn) {
                         this.FalloutState.BTreeLastFail = this.FalloutState.I;
                         this.FalloutState.I = this.GuessNextElement();
@@ -709,10 +801,15 @@ var FB3ReaderPage;
                     }
                     var CurShift = Child.offsetTop;
                     if (this.FalloutState.SplitHistory.length && Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;)/)) {
+                        // the reason for this is that soft hyph (or space?) on the last line makes the hanging element
+                        // Perhaps this ahould look like Child.innerHTML.match(/^<span><\/span>(\u00AD|&shy;| .)/) - should check later
+                        // twice as hi and 100% wide. So we keep it in mind and shift the line hald the element size
+                        // first we will try to select next node in the hope it's placed right.
                         if (this.FalloutState.Element.children[this.FalloutState.I + 1]) {
                             CurShift = this.FalloutState.Element.children[this.FalloutState.I + 1].offsetTop;
                         }
                         else {
+                            // No luck, we will make some reasonable assumptions by dividing node height by 2
                             CurShift += Math.floor(Math.max(SH, OH) / 2) + this.FalloutState.ThisBlockLineShift;
                         }
                     }
@@ -739,16 +836,20 @@ var FB3ReaderPage;
                         Limit: this.FalloutState.Limit,
                         GoodHeight: this.FalloutState.GoodHeight,
                         LastOffsetShift: this.FalloutState.LastOffsetShift,
-                        LastOffsetParent: this.FalloutState.LastOffsetParent });
+                        LastOffsetParent: this.FalloutState.LastOffsetParent
+                    });
                     this.FalloutState.Element = Child;
                     this.FalloutState.ChildsCount = (!this.FalloutState.ForceDenyElementBreaking && IsNodeUnbreakable(this.FalloutState.Element)) ? 0 : this.FalloutState.Element.children.length;
                     if (!this.FalloutState.PrevPageBreaker && this.FalloutState.ChildsCount == 0 && FootnotesAddon > this.FalloutState.FootnotesAddonCollected && this.FalloutState.LastLineBreakerParent) {
+                        // So, it looks like we do not fit because of the footnote, not the falling out text itself.
+                        // Let's force page break on the previous line end - kind of time machine
                         this.FalloutState.I = this.FalloutState.LastLineBreakerPos;
                         this.FalloutState.Element = this.FalloutState.LastLineBreakerParent;
                         this.FalloutState.PrevPageBreaker = true;
                         this.FalloutState.ChildsCount = this.FalloutState.Element.children.length;
                         continue;
                     }
+                    // If we have nested non-block tags we should keep Limit - they all count from one point
                     if (this.FalloutState.ChildsCount) {
                         var FirstChild = this.FalloutState.Element.children[0];
                         if (FirstChild && FirstChild.offsetParent != OffsetParent) {
@@ -775,6 +876,8 @@ var FB3ReaderPage;
                 Addr = ID.split('_');
             }
             else {
+                // Special case: we have exact match for the page with a little bottom margin hanging, still consider it OK
+                // or just neverending page
                 Addr = Child.id.split('_');
                 this.FalloutState.GoodHeight = this.Element.Node.scrollHeight;
             }
@@ -798,9 +901,11 @@ var FB3ReaderPage;
                 FitAnythingAtAll: this.FalloutState.FitAnythingAtAll
             };
             if (this.FalloutState.QuickMode) {
+                //console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoNext');
                 this.FalloutConsumeNext(Result);
             }
             else {
+                //console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoFirst');
                 this.FalloutConsumeFirst(Result);
             }
         };
@@ -808,6 +913,8 @@ var FB3ReaderPage;
             var CurBottomLine = ChildBot - Baseline;
             var LinesFit = parseInt((CurBottomLine / this.FBReader.LineHeight));
             if (CurBottomLine / this.FBReader.LineHeight != LinesFit && Element.id) {
+                // Ok. this element has non-standard height, we align it's bottom line
+                // so that the next element will be aligned
                 var XPID = Element.id.replace(/[a-z0-9]+_\d+_/, '');
                 if (XPID) {
                     var ExactNewMargin = this.FBReader.PagesPositionsCache.GetMargin(XPID);
@@ -830,6 +937,7 @@ var FB3ReaderPage;
             }
         };
         ReaderPage.prototype.GuessNextElement = function () {
+            // we are going to be greedy optimists with ceil :) 
             var BTreePoint = Math.ceil(this.FalloutState.BTreeLastOK + (this.FalloutState.BTreeLastFail - this.FalloutState.BTreeLastOK) / 2);
             if (BTreePoint - this.FalloutState.BTreeLastOK < 2) {
                 this.FalloutState.BTreeModeOn = false;
@@ -842,8 +950,10 @@ var FB3ReaderPage;
                 || ParaData.MarginTop > 0) {
                 return 0;
             }
-            var RealLineHeight = ParaData.Node.offsetHeight / 3;
+            var RealLineHeight = ParaData.Node.offsetHeight / 3; // Browser may have 110% zoom so we can not trust CSS line-height we provide!
             if (RealLineHeight != parseInt(RealLineHeight)) {
+                // All this 110% in the browser may lead to mad things like 5+5=9, so we try
+                // to mage RUDE attempt to theck if we ever should mess with line-heights at all
                 return 0;
             }
             else {

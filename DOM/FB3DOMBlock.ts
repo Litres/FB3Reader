@@ -83,6 +83,7 @@ module FB3DOM {
 			Chars: number,
 			public IsFootnote: boolean) {
 			this.Chars = this.text.replace(/\u00AD|&shy;/, '').length;
+			this.text = this.EscapeHtml(this.text);
 			//			this.text = this.text.replace(/\u00AD|&shy;/, '')
 			this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
 			if (Parent && Parent.XPath) {
@@ -90,7 +91,19 @@ module FB3DOM {
 				this.XPath.push(NodeN);
 				this.XPath.push('.' + Chars);
 			}
-		}	
+		}
+		public EscapeHtml(text: string):string {
+			var Map: any = {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;'
+			};
+			function parseChar(txt:string):string {
+				return Map[txt]
+			}
+
+			return text.replace(/[&<>]/g,parseChar);
+		}		
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {
 			var OutStr = this.text;
 			if (Range.To[0]) {

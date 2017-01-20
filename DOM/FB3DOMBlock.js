@@ -79,6 +79,7 @@ var FB3DOM;
             this.ID = ID;
             this.IsFootnote = IsFootnote;
             this.Chars = this.text.replace(/\u00AD|&shy;/, '').length;
+            this.text = this.EscapeHtml(this.text);
             //			this.text = this.text.replace(/\u00AD|&shy;/, '')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
             if (Parent && Parent.XPath) {
@@ -87,6 +88,17 @@ var FB3DOM;
                 this.XPath.push('.' + Chars);
             }
         }
+        FB3Text.prototype.EscapeHtml = function (text) {
+            var Map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;'
+            };
+            function parseChar(txt) {
+                return Map[txt];
+            }
+            return text.replace(/[&<>]/g, parseChar);
+        };
         FB3Text.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
             var OutStr = this.text;
             if (Range.To[0]) {

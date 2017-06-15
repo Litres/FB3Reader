@@ -1,5 +1,3 @@
-/// <reference path="../plugins/lz-string.d.ts" />
-/// <reference path="../PagesPositionsCache/PPCache.ts" />
 var LocalBookmarks;
 (function (LocalBookmarks) {
     var LocalBookmarksClass = (function () {
@@ -8,7 +6,7 @@ var LocalBookmarks;
             this.LocalBookmarks = [];
             this.local = window.localStorage;
             this.storageVal = 'bookmarks';
-            this.LZState = true; // for testing only, default = true
+            this.LZState = true;
             this.GetBookmarks();
             this.CurPos = [0];
             this.DateTime = 0;

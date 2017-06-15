@@ -1,4 +1,3 @@
-/// <reference path="FB3DataProviderHead.ts" />
 var FB3DataProvider;
 (function (FB3DataProvider) {
     function zeroPad(num, places) {
@@ -65,7 +64,6 @@ var FB3DataProvider;
             }
         }
         AjaxLoader.prototype.onTransferComplete = function () {
-            //			try {
             if (this.Req.readyState != 4) {
                 this.Progressor.Tick(this);
             }
@@ -78,10 +76,6 @@ var FB3DataProvider;
                     this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
                 }
             }
-            //} catch (err) {
-            //	this.Progressor.HourglassOff(this);
-            //	this.Progressor.Alert('Failed to load "' + this.URL + '" (unknown error "' + err.description+'")');
-            //}
         };
         AjaxLoader.prototype.onTransferIE9Complete = function () {
             if (this.Req.responseText && this.Req.responseText != '') {
@@ -116,7 +110,7 @@ var FB3DataProvider;
         AjaxLoader.prototype.HttpRequest = function () {
             var ref = null;
             if (document.all && !window.atob && window.XDomainRequest && aldebaran_or4) {
-                ref = new window.XDomainRequest(); // IE9 =< fix
+                ref = new window.XDomainRequest();
                 this.xhrIE9 = true;
             }
             else if (window.XMLHttpRequest) {
@@ -134,25 +128,10 @@ var FB3DataProvider;
             return undefined;
         };
         AjaxLoader.prototype.parseJSON = function (data) {
-            data = data.replace(/^\n/, ''); // aldebaran json workaround
-            // Borrowed bits from JQuery & http://json.org/json2.js
+            data = data.replace(/^\n/, '');
             if (data === undefined || data == '') {
                 return null;
             }
-            // trim for IE
-            //data = data.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
-            // Attempt to parse using the native JSON parser first
-            //if (window.JSON && window.JSON.parse) {
-            //	return window.JSON.parse(data);
-            //}
-            // Make sure the incoming data is actual JSON
-            //if (/^[\],:{}\s]*$/.test(data.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
-            //	.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
-            //	.replace(/(?:^|:|,)(?:\s*\[)+/g, ""))) {
-            //	return (new Function("return " + data))();
-            //}
-            //this.Progressor.Alert("Invalid JSON");
-            // all shis safe and pretty stuff is nice, but I stick to simple
             var Data = (new Function("return " + data))();
             return Data;
         };

@@ -1,10 +1,13 @@
-/// <reference path="FB3DOMHead.ts" />
-/// <reference path="FB3DOMBlock.ts" />
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var FB3DOM;
 (function (FB3DOM_1) {
     var AsyncLoadConsumer = (function () {
@@ -99,14 +102,13 @@ var FB3DOM;
             return [1];
         };
         DOM.prototype.AfterHeaderLoaded = function (Data) {
-            Data = Data.length ? Data[0] : Data; // hack for winjs app
+            Data = Data.length ? Data[0] : Data;
             this.TOC = Data.Body;
             this.DataChunks = Data.Parts;
             this.MetaData = Data.Meta;
             this.Ready = true;
             this.OnDoneFunc(this);
         };
-        // Wondering why I make Init public? Because you can't inherite private methods, darling!
         DOM.prototype.Init = function (HyphOn, ArtID, OnDone) {
             var _this = this;
             this.HyphOn = HyphOn;
@@ -154,8 +156,6 @@ var FB3DOM;
                     if (PC == -10
                         || PC == 0
                         || PC == 1 && (!Node.Childs[I].Childs || !Node.Childs[I].Childs.length)) {
-                        // This node is the exact xpath or the xpath points a bit above,
-                        // we assume this is it. Or xpath is more detailed than we can sww with our DOM map
                         return Node.Childs[I].Position();
                     }
                     else if (PC == 1) {
@@ -170,7 +170,7 @@ var FB3DOM;
                 return Node.Position();
             }
             else {
-                return [0]; // that's some unreasonable xpath, we have no idea where it can be
+                return [0];
             }
         };
         DOM.prototype.GetXPathFromPos = function (Position, End) {
@@ -179,7 +179,7 @@ var FB3DOM;
                 var XPath = Element.XPath.slice(0);
                 if (End && Element.text && XPath[XPath.length - 1].match && XPath[XPath.length - 1].match(/^\.\d+$/)) {
                     var EndChar = XPath[XPath.length - 1].replace('.', '') * 1
-                        + Element.text.replace(/\u00AD|&shy;|\s$/g, '').length - 1; // First char already counted in number
+                        + Element.text.replace(/\u00AD|&shy;|\s$/g, '').length - 1;
                     XPath[XPath.length - 1] = '.' + EndChar;
                 }
                 return XPath;
@@ -190,7 +190,7 @@ var FB3DOM;
         };
         DOM.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData) {
             if (Range.From.length == 1 && this.Childs[Range.From[0]] && this.Childs[Range.From[0]].TagName == 'empty-line') {
-                Range.From[0]++; // We do not need empty-line at the start of the page,
+                Range.From[0]++;
             }
             var FullBookmarksList = new Array;
             for (var I = 0; I < this.Bookmarks.length; I++) {
@@ -202,7 +202,7 @@ var FB3DOM;
             var LoadedChunk = CustomData.ChunkN;
             var Shift = this.DataChunks[LoadedChunk].s;
             for (var I = 0; I < Data.length; I++) {
-                this.Childs[I + Shift] = FB3DOM_1.TagClassFactory(Data[I], this, I + Shift, 0, 0, false, this); //new FB3Tag(Data[I], this, I + Shift);
+                this.Childs[I + Shift] = FB3DOM_1.TagClassFactory(Data[I], this, I + Shift, 0, 0, false, this);
             }
             this.DataChunks[LoadedChunk].loaded = 2;
             var I = 0;
@@ -237,7 +237,7 @@ var FB3DOM;
                     return I;
                 }
             }
-            return undefined; // In case we have out-of-field pointer - define it implicitly
+            return undefined;
         };
         return DOM;
     }(FB3DOM_1.FB3Tag));

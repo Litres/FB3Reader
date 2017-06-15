@@ -1,15 +1,8 @@
-/// <reference path="FB3ReaderHead.ts" />
-/// <reference path="FB3ReaderPage.ts" />
 var FB3Reader;
 (function (FB3Reader) {
     FB3Reader.SaveCacheEveryNIterations = 30;
-    //	interface IDumbCallback { () }
-    // 0 on equal
-    // 1 if 1 past 2 on child level like [0,1,2] is past [0,1]
-    // 10 if Pos1 is PAST Pos2 on subling level like [0,1,2] is past [0,2,1]
-    // -1 and -10 are the cases where Pos2 is below Pos1 respectively
     function PosCompare(Pos1, Pos2) {
-        var Result = 0; // Positions are equal
+        var Result = 0;
         for (var I = 0; I < Math.min(Pos1.length, Pos2.length); I++) {
             if (Pos1[I] != Pos2[I]) {
                 Result = Pos1[I] * 1 > Pos2[I] * 1 ? 10 : -10;
@@ -41,11 +34,9 @@ var FB3Reader;
     function GetElementRect(elem) {
         var Dat;
         if (elem.getBoundingClientRect) {
-            // "правильный" вариант
             Dat = getOffsetRect(elem);
         }
         else {
-            // пусть работает хоть как-то
             Dat = getOffsetSum(elem);
         }
         Dat.right = Dat.left + elem.offsetWidth;
@@ -82,7 +73,6 @@ var FB3Reader;
             this.Bookmarks = Bookmarks;
             this.Version = Version;
             this.PagesPositionsCache = PagesPositionsCache;
-            // Basic class init
             this.GoTOByProgressBar = false;
             this.RedrawState = false;
             this.Destroy = false;
@@ -148,11 +138,9 @@ var FB3Reader;
             this.Bookmarks.FB3DOM = this.FB3DOM;
             this.Bookmarks.Reader = this;
             if (this.Bookmarks.Bookmarks.length > 1 || DateTime) {
-                // when we have DateTime we need to merge local bookmark with server bookmark
                 this.Bookmarks.ReLoad();
             }
             else {
-                // we have initial bookmark with dummy data, we can override it
                 this.Bookmarks.Load(function () {
                     _this.Bookmarks.ApplyPosition();
                 });
@@ -165,7 +153,7 @@ var FB3Reader;
                 return;
             }
             if (!Force && this.CurStartPos && PosCompare(this.CurStartPos, NewPos) == 0) {
-                return; // Already there
+                return;
             }
             clearTimeout(this.MoveTimeoutID);
             this.IdleOff();
@@ -182,25 +170,20 @@ var FB3Reader;
                 this.Site.NotePopup('Paging beyong the file end');
                 return;
             }
-            // Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
-            // set, NColumns per one. Let's see what start column we are going to deal with
             this.StopRenders();
             clearTimeout(this.MoveTimeoutID);
             var RealStartPage = Math.floor(Page / this.NColumns) * this.NColumns;
             var FirstPageNToRender;
             var FirstFrameToFill;
             var WeeHaveFoundReadyPage = false;
-            // First let's check if the page was ALREADY rendered, so we can show it right away
             var CallbackFired = false;
             this.CurStartPage = RealStartPage;
             this.SetStartPos(this.PagesPositionsCache.Get(Page).Range.From);
             for (var I = 0; I < this.Pages.length / this.NColumns; I++) {
                 var BasePage = I * this.NColumns;
-                // Page is rendered, that's just great - we first show what we have, then render the rest, if required
                 if (this.Pages[BasePage].Ready && this.Pages[BasePage].PageN == RealStartPage) {
                     this.PutBlockIntoView(BasePage);
                     WeeHaveFoundReadyPage = true;
-                    // Ok, now we at least see ONE page, first one, from the right set. Let's deal with others
                     var CrawlerCurrentPage = this.Pages[BasePage];
                     for (var J = 1; J < (this.CacheForward + 1) * this.NColumns; J++) {
                         if (CrawlerCurrentPage.ID == BasePage + this.NColumns) {
@@ -209,7 +192,6 @@ var FB3Reader;
                         }
                         CrawlerCurrentPage = CrawlerCurrentPage.Next;
                         if (!CrawlerCurrentPage.Ready || CrawlerCurrentPage.PageN != RealStartPage + J) {
-                            // Here it is - the page with the wrong content. We set up our re-render queue
                             FirstPageNToRender = RealStartPage + J;
                             FirstFrameToFill = CrawlerCurrentPage;
                             break;
@@ -222,11 +204,11 @@ var FB3Reader;
                 if (!CallbackFired) {
                     this._CanvasReadyCallback();
                 }
-                this.IdleOn(); // maybe we go to the same place several times? Anyway, quit!
+                this.IdleOn();
                 return;
             }
             else if (!WeeHaveFoundReadyPage) {
-                FirstPageNToRender = RealStartPage; // just as if we would during the application start
+                FirstPageNToRender = RealStartPage;
                 FirstFrameToFill = this.Pages[this.CurVisiblePage];
                 this.PutBlockIntoView(this.CurVisiblePage);
             }
@@ -236,7 +218,7 @@ var FB3Reader;
             for (var I = FirstPageNToRender; I < RealStartPage + (this.CacheForward + 1) * this.NColumns; I++) {
                 if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < I) {
                     if (I < RealStartPage + this.NColumns) {
-                        PageWeThinkAbout.CleanPage(); // We need some empty pages
+                        PageWeThinkAbout.CleanPage();
                     }
                     else {
                         break;
@@ -260,7 +242,7 @@ var FB3Reader;
                 PageWeThinkAbout = FirstFrameToFill.Next;
             }
             FirstFrameToFill.SetPending(NewInstr);
-            FirstFrameToFill.DrawInit(NewInstr); // IdleOn will fire after the DrawInit chain ends
+            FirstFrameToFill.DrawInit(NewInstr);
         };
         Reader.prototype.PutBlockIntoView = function (Page) {
             this.CurVisiblePage = Page;
@@ -285,7 +267,7 @@ var FB3Reader;
                 this.CurStartPage = 0;
             }
             else {
-                this.CurStartPage = undefined; // this means we are walking out of the ladder, right over the grass - this fact affects page turning greatly
+                this.CurStartPage = undefined;
             }
             this.SetStartPos(NewPos);
             this.StopRenders();
@@ -389,8 +371,8 @@ var FB3Reader;
                     InnerHTML += NewPage.GetInitHTML(I * this.NColumns + J + 1);
                 }
             }
-            this.Pages[this.Pages.length - 1].Next = this.Pages[0]; // Cycled canvas reuse
-            this.BackgroundRenderFrame = new FB3ReaderPage.ReaderPage(0, this.FB3DOM, this, null); // Meet the background page borders detector!
+            this.Pages[this.Pages.length - 1].Next = this.Pages[0];
+            this.BackgroundRenderFrame = new FB3ReaderPage.ReaderPage(0, this.FB3DOM, this, null);
             InnerHTML += this.BackgroundRenderFrame.GetInitHTML(0);
             InnerHTML += '</div>';
             this.Site.Canvas.innerHTML = InnerHTML;
@@ -413,7 +395,6 @@ var FB3Reader;
                 clearTimeout(this.OnResizeTimeout);
             }
             this.OnResizeTimeout = setTimeout(function () {
-                // This was a real resise
                 if (_this.CanvasW != _this.Site.Canvas.clientWidth ||
                     _this.CanvasH != _this.Site.Canvas.clientHeight) {
                     _this.Reset();
@@ -453,8 +434,6 @@ var FB3Reader;
                 }
             }
             else {
-                // Ouch, we are out of the ladder, this makes things a bit complicated
-                // First wee seek forward NColimns times to see if the page wee want to show is rendered. If not - we will wait untill it is
                 var PageToView = this.Pages[this.CurVisiblePage];
                 for (var I = 0; I < this.NColumns; I++) {
                     PageToView = PageToView.Next;
@@ -471,7 +450,7 @@ var FB3Reader;
                         || this.Pages[this.CurVisiblePage + this.NColumns]
                             && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr
                             && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
-                        return; // EOF reached, the book is over
+                        return;
                     }
                     else {
                         var From = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
@@ -486,8 +465,6 @@ var FB3Reader;
                     }
                 }
                 else {
-                    // If we are walking the grass, and find for ourselves exactly at the level of
-                    // the ledder step, we jump in!
                     var PageN = this.PagesPositionsCache.CheckIfKnown(PageToView.RenderInstr.Range.From);
                     if (PageN) {
                         this.GoTOPage(PageN);
@@ -508,10 +485,9 @@ var FB3Reader;
                 }
             }
             else {
-                // we will even have to get back to the ladder (and may be even wait until the ladder is ready, too bad)
                 var GotoPage = this.GetCachedPage(this.CurStartPos);
                 if (GotoPage != undefined) {
-                    this.GoTOPage(GotoPage); // If so - go to the ledder and never care of the rest
+                    this.GoTOPage(GotoPage);
                 }
                 else {
                     var ParaPerPage = 4;
@@ -529,13 +505,6 @@ var FB3Reader;
                 }
             }
         };
-        /**
-            * Navigates to the specific percentage taking into account current cache
-            * status, namely whether we already know total number of pages or not.
-            * If not, block-wise navigation will be used instead of a page-wise.
-            *
-            * @param Percent The target percentage to navigate to.
-            */
         Reader.prototype.GoToPercent = function (Percent, ProgressBar) {
             if (ProgressBar) {
                 this.GoTOByProgressBar = true;
@@ -547,7 +516,7 @@ var FB3Reader;
                     newPage = 0;
                 }
                 else if (newPage >= totalPages) {
-                    newPage = totalPages - 1; // If there are 233 pages, then the last available one is 232.
+                    newPage = totalPages - 1;
                 }
                 this.GoTOPage(newPage);
             }
@@ -556,13 +525,6 @@ var FB3Reader;
                 this.GoTO([BlockN]);
             }
         };
-        /**
-            * Navigates to the specific point within base FB2 targeting scheme.
-            * First resolves external xpath to internal (asyncroneous operation),
-            * then fires GoToOpenPosition()
-            *
-            * @XP external xpath to jump to
-            */
         Reader.prototype.GoToXPath = function (XP) {
             var _this = this;
             var TargetChunk = this.FB3DOM.XPChunk(XP);
@@ -578,7 +540,7 @@ var FB3Reader;
         };
         Reader.prototype.GoToXPathFinal = function () {
             var XP = this.XPToJump;
-            this.XPToJump = undefined; // clean it before the async monster comes!
+            this.XPToJump = undefined;
             this.GoTO(this.FB3DOM.GetAddrByXPath(XP));
         };
         Reader.prototype.CurPosPercent = function () {
@@ -598,14 +560,13 @@ var FB3Reader;
             var Node = this.Site.elementFromPoint(X, Y);
             var MisteryPointChanger = 3;
             if (!Node) {
-                return undefined; // Do not know how would this happen, just in case
+                return undefined;
             }
             if (!Node.id.match(/n(_\d+)+/)) {
-                return undefined; // This is some wrong element with wrong ID, must be an error
+                return undefined;
             }
             if (!Node.nodeName.match(/span|img/i)) {
                 var ElRect = GetElementRect(Node);
-                // too bad, this is a block, we have to search for it's text
                 var MayShift = Node.scrollWidth;
                 var NewX = X + MisteryPointChanger;
                 while (NewX < ElRect.right && this.CheckElementAtXY(Node)) {
@@ -690,14 +651,12 @@ var FB3Reader;
                         var PageToPrerender = this.FirstUncashedPage();
                         var NewPos = PageToPrerender.Start[0] / this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e * 100;
                         if (this.IsFullyInCache()) {
-                            // Caching done - we save results and stop idle processing
                             this.PagesPositionsCache.LastPage(this.PagesPositionsCache.Length() - 1);
                             this.IdleOff();
                             this.Site.IdleThreadProgressor.Progress(this, 100);
                             this.Site.IdleThreadProgressor.HourglassOff(this);
                             var end = new Date().getTime();
                             var time = end - start;
-                            //							alert('Execution time: ' + time);
                             this.Site.Alert('Tome taken: ' + time);
                             clearInterval(this.IdleTimeoutID);
                             this.SaveCache();
@@ -711,7 +670,6 @@ var FB3Reader;
                         else {
                             this.PagesPositionsCache.LastPage(0);
                             if (this.TicksFromSave > FB3Reader.SaveCacheEveryNIterations) {
-                                // We only save pages position cache once per 3% because it is SLOW like hell
                                 this.SaveCache();
                                 this.TicksFromSave = 0;
                             }
@@ -722,7 +680,6 @@ var FB3Reader;
                             this.Site.IdleThreadProgressor.Alert(this.PagesPositionsCache.Length().toFixed(0) + ' pages ready');
                         }
                         this.IdleAction = 'wait';
-                        // Kind of lightweight DrawInit here, it looks like copy-paste is reasonable here
                         this.BackgroundRenderFrame.RenderInstr = PageToPrerender;
                         for (var I = 0; I < 100; I++) {
                             this.BackgroundRenderFrame.PagesToRender[I] = { CacheAs: PageToPrerender.CacheAs + I + 1 };
@@ -744,10 +701,6 @@ var FB3Reader;
                 }
             }
         };
-        /**
-            * Returns a value indicating whether book's content has
-            * already been fully loaded into cache or not.
-            */
         Reader.prototype.IsFullyInCache = function () {
             var pageToPrerender = this.FirstUncashedPage();
             return this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e <= pageToPrerender.Start[0];
@@ -773,13 +726,12 @@ var FB3Reader;
         Reader.prototype.IdleOn = function () {
             var _this = this;
             if (!this.EnableBackgroundPreRender) {
-                return; // We do not want to prerender pages.
+                return;
             }
             clearInterval(this.IdleTimeoutID);
             this.IsIdle = true;
             this.Site.IdleThreadProgressor.HourglassOn(this);
             this.IdleGo();
-            // Looks like small delay prevents garbage collector from doing it's job - so we let it breath a bit
             this.IdleTimeoutID = setInterval(function () { _this.IdleGo(); }, 100);
         };
         Reader.prototype.IdleOff = function () {
@@ -829,9 +781,6 @@ var FB3Reader;
             return Range;
         };
         Reader.prototype.PatchRangeTo = function (Range) {
-            // Sometimes RenderInstr.Range To point to the [6] while From points to [6,4], this
-            // means we need the WHOLE element after [6,4]. That's not what a caller of
-            // GetVisibleRange would expect, so we convert our internal form to usable one
             if (Range.From[0] == Range.To[0] && Range.To.length == 1 && Range.From.length > 1) {
                 Range.To.push(this.FB3DOM.Childs[Range.To[0]].Childs.length);
             }

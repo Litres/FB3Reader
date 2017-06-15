@@ -1,4 +1,3 @@
-/// <reference path="FB3ReaderSiteHead.ts" />
 var FB3ReaderSite;
 (function (FB3ReaderSite) {
     var ExampleSite = (function () {
@@ -33,14 +32,8 @@ var FB3ReaderSite;
             return true;
         };
         ExampleSite.prototype.ZoomImg = function (obj) {
-            // obj
-            // 	data-path="" - src for real img
-            //	data-w="" - real img width
-            //	data-h="" - real img height
         };
         ExampleSite.prototype.ZoomHTML = function (HTML) {
-            // For zoomed down (for any reason) elements engine will call this to
-            // show full-scale contents of the element
             alert(HTML);
         };
         ExampleSite.prototype.HistoryHandler = function (Pos) { };
@@ -69,13 +62,9 @@ var FB3ReaderSite;
             this.Progresses = {};
         }
         ExampleProgressor.prototype.Alert = function (Message) {
-            //			document.getElementById(this.AlertSpan).innerHTML = Message;
-            //			window.alert(Message);
         };
         ExampleProgressor.prototype.HourglassOn = function (Owner, LockUI, Message) {
             this.Hourglasses[Owner.toString()] = 1;
-            //			document.getElementById(this.MessSpan).innerHTML = Message;
-            //			document.body.style.cursor = 'wait';
         };
         ExampleProgressor.prototype.Progress = function (Owner, Progress) {
             this.Progresses[Owner] = Progress;
@@ -86,7 +75,6 @@ var FB3ReaderSite;
                 OverallProgress = this.Progresses[ProgressInst];
             }
             OverallProgress = OverallProgress / N;
-            //			document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
         };
         ExampleProgressor.prototype.HourglassOff = function (Owner) {
             this.Hourglasses[Owner] = 0;

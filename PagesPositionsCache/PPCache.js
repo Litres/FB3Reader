@@ -1,5 +1,3 @@
-/// <reference path="PPCacheHead.ts" />
-/// <reference path="../plugins/lz-string.d.ts" />
 var FB3PPCache;
 (function (FB3PPCache) {
     function CheckStorageAvail() {
@@ -18,7 +16,7 @@ var FB3PPCache;
     }
     FB3PPCache.CheckStorageAvail = CheckStorageAvail;
     FB3PPCache.MaxCacheRecords = 15;
-    var SkipCache = false; // For debug purposes
+    var SkipCache = false;
     var PPCache = (function () {
         function PPCache() {
             this.Encrypt = true;
@@ -42,10 +40,7 @@ var FB3PPCache;
             if (SkipCache) {
                 return;
             }
-            // We are going to save no more than 50 cache entries
-            // We reuse slots on write request based on access time
             if (FB3PPCache.CheckStorageAvail()) {
-                // localStorage support required
                 if (!this.CacheMarkupsList) {
                     this.LoadOrFillEmptyData();
                 }
@@ -66,10 +61,9 @@ var FB3PPCache;
                     LastPage: this.LastPageN,
                     MarginsCache: this.MarginsCache
                 });
-                // Keep in mind - next line is really, really slow
                 var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
                 this.SaveData(this.EncodeData(uncompressdCacheData));
-            } //  else { no luck, no store - recreate from scratch } 
+            }
         };
         PPCache.prototype.Load = function (Key) {
             if (SkipCache) {

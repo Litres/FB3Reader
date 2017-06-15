@@ -1,11 +1,9 @@
 /// <reference path="Reader/FB3ReaderHead.ts" />
-/// <reference path="Site/FB3ReaderSiteHead.ts" />
-/// <reference path="Site/orHead.ts" />
-/// <reference path="Site/FullScreenHead.ts" />
 /// <reference path="DOM/FB3DOMHead.ts" />
 /// <reference path="DataProvider/FB3DataProviderHead.ts" />
 /// <reference path="Bookmarks/FB3BookmarksHead.ts" />
 /// <reference path="PagesPositionsCache/PPCacheHead.ts" />
+/// <reference path="Site/FB3ReaderSite.ts" />
 
 module FB3ReaderAbstractClasses {
 

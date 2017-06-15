@@ -1,10 +1,3 @@
-/// <reference path="Site/FB3ReaderSite.ts" />
-/// <reference path="Reader/FB3Reader.ts" />
-/// <reference path="DOM/FB3DOM.ts" />
-/// <reference path="DataProvider/FB3AjaxDataProvider.ts" />
-/// <reference path="Bookmarks/FB3Bookmarks.ts" />
-/// <reference path="PagesPositionsCache/PPCache.ts" />
-/// <reference path="Site/LocalBookmarks.ts" />
 var AFB3Reader;
 var AFB3PPCache;
 var BookmarksProcessor;
@@ -28,15 +21,13 @@ window.onload = function () {
     BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, LocalArtID.toString(), SID, LitresLocalBookmarks.GetCurrentArtBookmarks());
     BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
     AFB3Reader = new FB3Reader.Reader(UUID, true, AReaderSite, AReaderDOM, BookmarksProcessor, Version, AFB3PPCache);
-    AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
+    AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent));
     PrepareCSS();
     AFB3Reader.CanvasReadyCallback = function () {
         document.getElementById('REnderEnd').innerHTML = (Temp++).toString();
     };
     AFB3Reader.Init([4417]);
-    // AFB3Reader.Init(LitresLocalBookmarks.GetCurrentPosition()); // start from localBookmarks
     window.addEventListener('resize', function () { return AFB3Reader.AfterCanvasResize(); });
-    //	ShowPosition();
     start = new Date().getTime();
 };
 function ArtID2URL(Chunk) {
@@ -81,12 +72,10 @@ var DialogShown;
 var TouchMoving = false;
 var TouchData;
 function TapStart(e) {
-    //	e.preventDefault();
     TouchMoving = false;
     TouchData = e.touches[0];
 }
 function TapMove(e) {
-    //	e.preventDefault();
     TouchMoving = true;
 }
 function TapEnd(e) {
@@ -124,7 +113,6 @@ function MouseMove(Evt) {
     if (NativeNote && NativeNote.Group == 3 && !MenuShown && !DialogShown) {
         var X = Evt.clientX;
         var Y = Evt.clientY;
-        // hack for touch-based devices
         if (!isRelativeToViewport())
             X += window.pageXOffset, Y += window.pageYOffset;
         var CurrCoords = { X: X, Y: Y };
@@ -140,7 +128,6 @@ function MouseMove(Evt) {
             else {
                 UpdateRange(StartElPos, CurrentElPos);
             }
-            // logic - remove old one, create new, add new
             var NewNote = NativeNote.RoundClone(false);
             NewNote.TemporaryState = 1;
             NativeNote.Detach();
@@ -183,7 +170,6 @@ function ShowMenu(e) {
     MakeNewNote();
     var X = e.clientX;
     var Y = e.clientY;
-    // hack for touch-based devices
     if (!isRelativeToViewport())
         X += window.pageXOffset, Y += window.pageYOffset;
     Coords = { X: X, Y: Y };
@@ -194,8 +180,8 @@ function ShowMenu(e) {
     else {
         MenuShown = 'SelectStart';
     }
-    var posx = X + (3 + window.pageXOffset) + 'px'; //Left Position of Mouse Pointer
-    var posy = Y + (3 + window.pageYOffset) + 'px'; //Top Position of Mouse Pointer
+    var posx = X + (3 + window.pageXOffset) + 'px';
+    var posy = Y + (3 + window.pageYOffset) + 'px';
     document.getElementById(MenuShown).style.position = 'absolute';
     document.getElementById(MenuShown).style.display = 'inline';
     document.getElementById(MenuShown).style.left = posx;
@@ -350,7 +336,6 @@ function PrepareCSS() {
     var FontFace = document.getElementById('fontface').value;
     var FontSize = document.getElementById('fontsize').value;
     var Colors = document.getElementById('Colors').value.split('/');
-    // Colors does not mater for page size, AFB3Reader.NColumns already used internally
     AFB3Reader.Site.Key = Spacing + ':' + FontFace + ':' + FontSize;
     AFB3Reader.NColumns = Columns;
     changecss('#FB3ReaderHostDiv', 'line-height', Spacing);
@@ -363,7 +348,6 @@ function ApplyStyle() {
     PrepareCSS();
     AFB3Reader.Reset();
 }
-// https://github.com/moll/js-element-from-point/blob/master/index.js
 var relativeToViewport;
 function isRelativeToViewport() {
     if (relativeToViewport != null)
@@ -372,17 +356,12 @@ function isRelativeToViewport() {
     var y = window.pageYOffset ? window.pageYOffset + window.innerHeight - 1 : 0;
     if (!x && !y)
         return true;
-    // Test with a point larger than the viewport. If it returns an element,
-    // then that means elementFromPoint takes page coordinates.
     return relativeToViewport = !document.elementFromPoint(x, y);
 }
 function GoXPath(NewPos) {
     AFB3Reader.GoTO(NewPos);
 }
 function changecss(theClass, element, value) {
-    //Last Updated on July 4, 2011
-    //documentation for this script at
-    //http://www.shawnolson.net/a/503/altering-css-class-attributes-with-javascript.html
     var cssRules;
     var doc = document;
     for (var S = 0; S < doc.styleSheets.length; S++) {

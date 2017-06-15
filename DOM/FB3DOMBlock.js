@@ -1,13 +1,17 @@
-/// <reference path="FB3DOMHead.ts" />
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var FB3DOM;
 (function (FB3DOM) {
     FB3DOM.MaxFootnoteHeight = 0.5;
-    FB3DOM.ExtLinkTarget = '_blank'; // may be set to '_top'
+    FB3DOM.ExtLinkTarget = '_blank';
     var TagMapper = {
         poem: 'div',
         stanza: 'div',
@@ -35,7 +39,6 @@ var FB3DOM;
         annotation: 1,
         cite: 1
     };
-    // FixMe - separate class for (at least) 'a' required, see if-else hacks in GetInitTag below
     function TagClassFactory(Data, Parent, ID, NodeN, Chars, IsFootnote, DOM) {
         var Kid;
         if (typeof Data === "string") {
@@ -57,7 +60,6 @@ var FB3DOM;
     }
     FB3DOM.TagClassFactory = TagClassFactory;
     function XPathCompare(Pos1, Pos2) {
-        // todo - this function is a hack around xpath ".05' endings, whould be done some better way
         if (Pos1.length && Pos1[Pos1.length - 1].match && Pos1[Pos1.length - 1].match(/\.\d/)) {
             Pos1 = Pos1.slice(0);
             Pos1[Pos1.length - 1] = Pos1[Pos1.length - 1].replace(/\./, '');
@@ -69,8 +71,6 @@ var FB3DOM;
         return FB3Reader.PosCompare(Pos1, Pos2);
     }
     FB3DOM.XPathCompare = XPathCompare;
-    // Each DOM-node holds xpath-adress of self as an array
-    // Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited
     var FB3Text = (function () {
         function FB3Text(DOM, text, Parent, ID, NodeN, Chars, IsFootnote) {
             this.DOM = DOM;
@@ -80,7 +80,6 @@ var FB3DOM;
             this.IsFootnote = IsFootnote;
             this.Chars = this.text.replace(/\u00AD|&shy;/, '').length;
             this.text = this.EscapeHtml(this.text);
-            //			this.text = this.text.replace(/\u00AD|&shy;/, '')
             this.XPID = (Parent && Parent.XPID != '' ? Parent.XPID + '_' : '') + this.ID;
             if (Parent && Parent.XPath) {
                 this.XPath = Parent.XPath.slice(0);
@@ -144,8 +143,6 @@ var FB3DOM;
         FB3Text.prototype.ArtID2URL = function (Chunk) {
             return this.Parent.ArtID2URL(Chunk);
         };
-        // Filters Bookmarks the way it contains no items childs. Returns
-        // class names for current element CSS
         FB3Text.prototype.GetBookmarkClasses = function (Bookmarks) {
             if (!Bookmarks.length) {
                 return '';
@@ -161,20 +158,15 @@ var FB3DOM;
                 }
                 var HowIsStart = XPathCompare(Bookmarks[Bookmark].XStart, EffectiveXPath);
                 var HowisEnd = XPathCompare(Bookmarks[Bookmark].XEnd, EffectiveXPath);
-                // Start point as far beoung or end point is much before - no use for us or our children
                 if (HowIsStart == 10 || HowisEnd == -10) {
                     Bookmarks.splice(Bookmark, 1);
                     continue;
                 }
-                // We are not fully in deal, but some of our kids will be surely affected, so we leave
-                // record in Bookmarks for them
                 if (HowIsStart == 1 || HowisEnd == 1 || HowisEnd == 0 && HowIsStart < 0 && !this.Childs) {
                     continue;
                 }
-                // Our tag is directly targeted or is fully within of the selection
-                // In both cases we mark it as a whole and leave our kids alone
                 ThisNodeSelections.push(Bookmarks[Bookmark].ClassName());
-                Bookmarks.splice(Bookmark, 1); // No need to bother childs if this tag is FULLY selected
+                Bookmarks.splice(Bookmark, 1);
             }
             return ThisNodeSelections.join(' ');
         };
@@ -213,7 +205,7 @@ var FB3DOM;
                 _this.Chars += NKid.Chars;
             }
             if (Data.c) {
-                var NodeN = 0; // For text nodes in the mixed content we need it's invisible-node number
+                var NodeN = 0;
                 var PrevItmType = 'unknown';
                 var Chars = 0;
                 for (var I = 0; I < Data.c.length; I++) {
@@ -237,13 +229,11 @@ var FB3DOM;
             return _this;
         }
         FB3Tag.prototype.GetHTML = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks) {
-            // If someone asks for impossible - just ignore it. May happend when someone tries to go over the end
             if (Range.From[0] > this.Childs.length - 1) {
                 Range.From = [this.Childs.length - 1];
             }
-            // keep in mind after GetBookmarkClasses Bookmarks is cleaned of all unneeded bookmarks
             var ClassNames = '';
-            Range = FB3Reader.RangeClone(Range); // We are going to destroy it
+            Range = FB3Reader.RangeClone(Range);
             if (Bookmarks.length) {
                 ClassNames = this.GetBookmarkClasses(Bookmarks);
             }
@@ -261,11 +251,9 @@ var FB3DOM;
             if (To === undefined)
                 To = this.Childs.length - 1;
             if (To >= this.Childs.length) {
-                //				console.log('Invalid "To" on "GetHTML" call, element "' + this.XPID + '"');
                 To = this.Childs.length - 1;
             }
             if (From < 0 || From >= this.Childs.length) {
-                //				console.log('Invalid "From" on "GetHTML" call, element "' + this.XPID + '"');
                 From = 0;
             }
             From *= 1;
@@ -337,7 +325,6 @@ var FB3DOM;
             return ElementClasses;
         };
         FB3Tag.prototype.InlineStyle = function () {
-            // top-level block elements, we want to align it to greed vertically
             var InlineStyle = '';
             if (!this.Parent.Parent) {
                 var Margin = this.Parent.PagesPositionsCache.GetMargin(this.XPID);
@@ -364,7 +351,6 @@ var FB3DOM;
             if (this.CutTop(Range.From)) {
                 ElementClasses.push('cut_top');
             }
-            // FixMe - this is a weak detection, can't see last p in div splitted (see CutTop above, that's the right way)
             if (Range.To[0] < this.Childs.length - 1) {
                 ElementClasses.push('cut_bot');
             }
@@ -384,7 +370,6 @@ var FB3DOM;
             }
             Out.push(InlineStyle);
             if (this.IsFootnote) {
-                //				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
                 Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '" style="max-height: ' + (ViewPortH * FB3DOM.MaxFootnoteHeight).toFixed(0) + 'px">');
             }
             else if (this.Data.f && !BookStyleNotes) {
@@ -401,7 +386,7 @@ var FB3DOM;
     var FB3ImgTag = (function (_super) {
         __extends(FB3ImgTag, _super);
         function FB3ImgTag() {
-            return _super.apply(this, arguments) || this;
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         FB3ImgTag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var ElementClasses = this.ElementClasses();
@@ -411,7 +396,6 @@ var FB3DOM;
             ElementClasses.push('');
             var InlineStyle = this.InlineStyle();
             var Path = this.ArtID2URL(this.Data.s);
-            // This is kind of a hack, normally images a inline, but if we have op:1 this mians it's block-level one
             var TagName = this.HTMLTagName();
             var Out = ['<' + TagName + ' id="ii_' + IDPrefix + this.XPID + '"' + InlineStyle];
             if (ElementClasses.length) {
@@ -425,7 +409,6 @@ var FB3DOM;
             return this.Data.op ? 'div' : 'span';
         };
         FB3ImgTag.prototype.InlineStyle = function () {
-            // top-level block elements, we want to align it to greed vertically
             var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h + 'px;';
             if (!this.Parent.Parent) {
                 var Margin = this.Parent.PagesPositionsCache.GetMargin(this.XPID);
@@ -441,7 +424,7 @@ var FB3DOM;
     var FB3PurchaseTag = (function (_super) {
         __extends(FB3PurchaseTag, _super);
         function FB3PurchaseTag() {
-            return _super.apply(this, arguments) || this;
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         FB3PurchaseTag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var Out = ['<div class="fit_to_page" id ="n_' + IDPrefix + this.XPID + '">'];

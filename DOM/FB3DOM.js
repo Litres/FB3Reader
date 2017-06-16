@@ -68,6 +68,7 @@ var FB3DOM;
         function PageContainer() {
             this.Body = new Array();
             this.FootNotes = new Array();
+            this.BodyXML = new Array();
         }
         return PageContainer;
     }());
@@ -109,11 +110,10 @@ var FB3DOM;
             this.Ready = true;
             this.OnDoneFunc(this);
         };
-        DOM.prototype.Init = function (HyphOn, ArtID, OnDone) {
+        DOM.prototype.Init = function (HyphOn, OnDone) {
             var _this = this;
             this.HyphOn = HyphOn;
             this.OnDoneFunc = OnDone;
-            this.ArtID = ArtID;
             this.Childs = new Array();
             this.Progressor.HourglassOn(this, true, 'Loading meta...');
             this.DataProvider.Request(this.DataProvider.ArtID2URL(), function (Data) { return _this.AfterHeaderLoaded(Data); }, this.Progressor);
@@ -197,6 +197,9 @@ var FB3DOM;
                 FullBookmarksList = FullBookmarksList.concat(this.Bookmarks[I].Bookmarks);
             }
             _super.prototype.GetHTML.call(this, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, FullBookmarksList);
+        };
+        DOM.prototype.GetXML = function (Range, PageData) {
+            _super.prototype.GetXML.call(this, Range, PageData);
         };
         DOM.prototype.OnChunkLoaded = function (Data, CustomData) {
             var LoadedChunk = CustomData.ChunkN;

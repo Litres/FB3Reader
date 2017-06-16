@@ -2,9 +2,8 @@ var FB3Bookmarks;
 (function (FB3Bookmarks) {
     FB3Bookmarks.ActiveXXMLHttp = true;
     var LitResBookmarksProcessor = (function () {
-        function LitResBookmarksProcessor(FB3DOM, ArtID, LitresSID, LitresLocalXML) {
+        function LitResBookmarksProcessor(FB3DOM, LitresSID, LitresLocalXML) {
             this.FB3DOM = FB3DOM;
-            this.ArtID = ArtID;
             if (LitresSID) {
                 this.SID = LitresSID;
             }
@@ -162,7 +161,7 @@ var FB3Bookmarks;
         };
         LitResBookmarksProcessor.prototype.ReLoad = function (SaveAutoState) {
             var _this = this;
-            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.ArtID, this.SID);
+            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
             TemporaryNotes.Host = this.Host;
             TemporaryNotes.Reader = this.Reader;
             TemporaryNotes.aldebaran = this.aldebaran;
@@ -241,7 +240,7 @@ var FB3Bookmarks;
             }
         };
         LitResBookmarksProcessor.prototype.MakeLoadURL = function () {
-            var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.ArtID +
+            var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.FB3DOM.MetaData.UUID +
                 (this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
             return URL;
         };
@@ -350,6 +349,7 @@ var FB3Bookmarks;
     var Bookmark = (function () {
         function Bookmark(Owner) {
             this.Owner = Owner;
+            this.ExtractNodeText = "";
             this.NotePreviewLimit = 140;
             this.TitleLenLimit = 100;
             this.ClassLenLimit = 30;
@@ -443,19 +443,23 @@ var FB3Bookmarks;
         };
         Bookmark.prototype.GetDataFromText = function () {
             var PageData = new FB3DOM.PageContainer();
+            this.Owner.FB3DOM.GetXML(this.Range, PageData);
             this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, this.Range, '', 100, 100, PageData);
+            this.ExtractNodeText = PageData.BodyXML.join('');
             var InnerHTML = PageData.Body.join('');
             InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, '');
-            InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
+            InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b|\/?h\d\b)[^>]*>/, '');
             this.Title = this.prepareTitle(InnerHTML.replace(/<[^>]+>|\u00AD/gi, '')).replace(/\s+\S*$/, '');
             this.RawText = InnerHTML.replace(/(\s\n\r)+/gi, ' ');
             this.RawText = this.RawText.replace(/<\/div>/gi, '</div> ');
+            this.RawText = this.RawText.replace(/<\/h\d>/gi, '\n');
+            this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
             this.RawText = this.RawText.replace(/<(\/)?strong[^>]*>/gi, '[$1b]');
             this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
-            this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
-            this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
+            this.RawText = this.RawText.replace(/<[^>]+>|\u00AD/gi, '');
             this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
             this.Note[0] = this.Raw2FB2(this.RawText);
+            this.RawText = this.RawText.replace(/\[\/?[i,b]\]/gi, '');
             if (this.RawText == "" && InnerHTML.match(/img/i)) {
                 this.Note[0] = "<p>" + this.Owner.Reader.Site.ViewText.Print('BOOKMARK_IMAGE_PREVIEW_TEXT') + "</p>";
             }
@@ -693,10 +697,13 @@ var FB3Bookmarks;
             return text;
         };
         Bookmark.prototype.GetExtract = function () {
-            return this.Extract;
+            return '<Extract ' +
+                this.GetRawText() +
+                'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
+                this.ExtractNode() + '</Extract>';
         };
         Bookmark.prototype.ExtractNode = function () {
-            return '<p>or4</p>';
+            return this.ExtractNodeText;
         };
         Bookmark.prototype.GetRawText = function () {
             if (!this.RawText)

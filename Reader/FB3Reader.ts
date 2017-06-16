@@ -106,6 +106,7 @@ module FB3Reader {
 		public Destroy: boolean;
 		public LineHeight: number;
 		public CurVisiblePage: number;
+		public StartTime: number;
 
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: FB3ReaderPage.ReaderPage[];
@@ -158,7 +159,7 @@ module FB3Reader {
 			}
 		}
 
-		constructor(public ArtID: string,
+		constructor(
 			public EnableBackgroundPreRender: boolean,
 			public Site: FB3ReaderSite.IFB3ReaderSite,
 			public FB3DOM: FB3DOM.IFB3DOM,
@@ -185,31 +186,33 @@ module FB3Reader {
 		}
 
 		public Init(StartFrom: FB3ReaderAbstractClasses.IPosition, DateTime?: number): void {
-			this.PrepareCanvas();
-			this.Bookmarks.LoadFromCache();
-			this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
-			if (DateTime) {
-				this.Bookmarks.Bookmarks[0].DateTime = DateTime;
-			}
-			this.FB3DOM.Init(this.HyphON, this.ArtID, () => {
+
+
+			this.FB3DOM.Init(this.HyphON, () => {
+				this.Bookmarks.FB3DOM = this.FB3DOM;
+				this.Bookmarks.Reader = this;
 				this.Site.HeadersLoaded(this.FB3DOM.MetaData);
+				this.PrepareCanvas();
+				this.PutBlockIntoView(0);
+				this.Bookmarks.LoadFromCache();
+				this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
+				if (DateTime) {
+					this.Bookmarks.Bookmarks[0].DateTime = DateTime;
+				}
+				if (this.Bookmarks.Bookmarks.length > 1 || DateTime) {
+					// when we have DateTime we need to merge local bookmark with server bookmark
+					this.Bookmarks.ReLoad();
+				} else {
+					// we have initial bookmark with dummy data, we can override it
+					this.Bookmarks.Load(() => {
+						this.Bookmarks.ApplyPosition();
+					});
+				}
 				if (!this.Bookmarks.ApplyPosition()) {
 					this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
 					this.GoTO(StartFrom);
 				}
 			});
-			this.Bookmarks.FB3DOM = this.FB3DOM;
-			this.Bookmarks.Reader = this;
-			if (this.Bookmarks.Bookmarks.length > 1 || DateTime) {
-				// when we have DateTime we need to merge local bookmark with server bookmark
-				this.Bookmarks.ReLoad();
-			} else {
-				// we have initial bookmark with dummy data, we can override it
-				this.Bookmarks.Load(() => {
-					this.Bookmarks.ApplyPosition();
-				});
-			}
-			this.PutBlockIntoView(0);
 		}
 
 		public GoTO(NewPos: FB3ReaderAbstractClasses.IPosition, Force?: boolean) {
@@ -233,6 +236,8 @@ module FB3Reader {
 			if (this.PagesPositionsCache.LastPage() && Page > this.PagesPositionsCache.LastPage()) {
 				this.Site.NotePopup('Paging beyong the file end');
 				return;
+			}
+			if(this.PagesPositionsCache.LastPage() && Page == this.PagesPositionsCache.LastPage()) {
 			}
 			// Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
 			// set, NColumns per one. Let's see what start column we are going to deal with
@@ -446,7 +451,7 @@ module FB3Reader {
 
 		private PrepareCanvas() {
 			this.ResetCache();
-			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
+			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%;">';
 			this.Pages = new Array();
 			for (var I = 0; I < this.CacheBackward + this.CacheForward + 1; I++) { // Visible page + precached ones
 				for (var J = 0; J < this.NColumns; J++) {
@@ -513,6 +518,7 @@ module FB3Reader {
 			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
 				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) { // We know how many pages we have so we can check if the next one exists
 					this.GoTOPage(this.CurStartPage + this.NColumns);
+					console.log("PageN" + (this.CurStartPage + this.NColumns))
 				} else if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < this.CurStartPage + this.NColumns) {
 					return;
 				} else { // If cache is not yet ready - let's wait a bit.
@@ -547,6 +553,7 @@ module FB3Reader {
 						} else {
 							this.GoToOpenPosition(From);
 						}
+						console.log("PageN" + PageN)
 					}
 				} else {
 					// If we are walking the grass, and find for ourselves exactly at the level of
@@ -559,6 +566,7 @@ module FB3Reader {
 						this.PutBlockIntoView(PageToView.ID - 1);
 						this._CanvasReadyCallback();
 					}
+					console.log("PageN" + PageN)
 				}
 			}
 		}
@@ -765,7 +773,7 @@ module FB3Reader {
 							this.Site.IdleThreadProgressor.Progress(this, 100);
 							this.Site.IdleThreadProgressor.HourglassOff(this);
 							var end = new Date().getTime();
-							var time = end - start;
+							var time = end - this.StartTime;
 //							alert('Execution time: ' + time);
 							this.Site.Alert('Tome taken: ' + time);
 							clearInterval(this.IdleTimeoutID);
@@ -842,7 +850,7 @@ module FB3Reader {
 		}
 
 		private FullKey(): string {
-			return this.ArtID + ':' +
+			return this.FB3DOM.MetaData.UUID + ':' +
 				this.BackgroundRenderFrame.ViewPortW + ':' +
 				this.CanvasW + ':' +
 				this.CanvasH + ':' +

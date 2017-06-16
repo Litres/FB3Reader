@@ -22,6 +22,7 @@ module FB3DataProvider {
 		private ActiveRequests: any;
 		private CurrentRequestID: number;
 		private BaseURL: string;
+		public json_redirected:boolean;
 		constructor(public LitresURL: string, public ArtID2URL: IArtID2URL) {
 			this.BaseURL = LitresURL;
 			this.CurrentRequestID = 0;
@@ -30,7 +31,7 @@ module FB3DataProvider {
 		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
 			this.CurrentRequestID++;
 			this.ActiveRequests['req' + this.CurrentRequestID] = Callback;
-			new AjaxLoader(URL, (ID, Data: any, CustomData?: any) => this.CallbackWrap(ID, Data, CustomData), Progressor, this.CurrentRequestID, CustomData);
+			new AjaxLoader(URL, (ID, Data: any, CustomData?: any) => this.CallbackWrap(ID, Data, CustomData), Progressor, this.CurrentRequestID, CustomData,this.json_redirected);
 		}
 		private CallbackWrap(ID:number, Data: any, CustomData?: any): void {
 			var Func = this.ActiveRequests['req' + this.CurrentRequestID];
@@ -50,7 +51,8 @@ module FB3DataProvider {
 			private Callback: IJSonLoadedCallbackWrap,
 			private Progressor: FB3ReaderSite.ILoadProgress,
 			private ID: number,
-			public CustomData?: any
+			public CustomData?: any,
+			private json_redirected?: boolean
 			) {
 				this.xhrIE9 = false;
 				this.Progressor.HourglassOn(this, false, 'Loading ' + this.URL);
@@ -129,7 +131,7 @@ module FB3DataProvider {
 
 		private HttpRequest(): XMLHttpRequest {
 			var ref = null;
-			if (document.all && !window.atob && (<any> window).XDomainRequest && aldebaran_or4) {
+			if (document.all && !window.atob && (<any> window).XDomainRequest && this.json_redirected) {
 				ref = new window.XDomainRequest(); // IE9 =< fix
 				this.xhrIE9 = true;
 			} else if (window.XMLHttpRequest) {

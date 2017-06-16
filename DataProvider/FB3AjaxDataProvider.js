@@ -17,7 +17,7 @@ var FB3DataProvider;
             var _this = this;
             this.CurrentRequestID++;
             this.ActiveRequests['req' + this.CurrentRequestID] = Callback;
-            new AjaxLoader(URL, function (ID, Data, CustomData) { return _this.CallbackWrap(ID, Data, CustomData); }, Progressor, this.CurrentRequestID, CustomData);
+            new AjaxLoader(URL, function (ID, Data, CustomData) { return _this.CallbackWrap(ID, Data, CustomData); }, Progressor, this.CurrentRequestID, CustomData, this.json_redirected);
         };
         AJAXDataProvider.prototype.CallbackWrap = function (ID, Data, CustomData) {
             var Func = this.ActiveRequests['req' + this.CurrentRequestID];
@@ -32,13 +32,14 @@ var FB3DataProvider;
     }());
     FB3DataProvider.AJAXDataProvider = AJAXDataProvider;
     var AjaxLoader = (function () {
-        function AjaxLoader(URL, Callback, Progressor, ID, CustomData) {
+        function AjaxLoader(URL, Callback, Progressor, ID, CustomData, json_redirected) {
             var _this = this;
             this.URL = URL;
             this.Callback = Callback;
             this.Progressor = Progressor;
             this.ID = ID;
             this.CustomData = CustomData;
+            this.json_redirected = json_redirected;
             this.xhrIE9 = false;
             this.Progressor.HourglassOn(this, false, 'Loading ' + this.URL);
             this.Req = this.HttpRequest();
@@ -109,7 +110,7 @@ var FB3DataProvider;
         };
         AjaxLoader.prototype.HttpRequest = function () {
             var ref = null;
-            if (document.all && !window.atob && window.XDomainRequest && aldebaran_or4) {
+            if (document.all && !window.atob && window.XDomainRequest && this.json_redirected) {
                 ref = new window.XDomainRequest();
                 this.xhrIE9 = true;
             }

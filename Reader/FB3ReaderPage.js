@@ -40,6 +40,15 @@ var FB3ReaderPage;
         if (Node.className.match(/\btag_(nobr|image)\b/)) {
             return true;
         }
+        if (Node.childNodes.length && Node.childNodes.length == 1) {
+            var el = Node;
+            while (el && el.childNodes && el.childNodes[0]) {
+                el = el.childNodes[0];
+            }
+            if (el && el.className && el.className.match(/\btag_image\b/)) {
+                return true;
+            }
+        }
         if (Node.className.match(/\bfit_to_page\b/)) {
             return true;
         }
@@ -299,6 +308,7 @@ var FB3ReaderPage;
             NewNode.style.height = NewH + 'px';
             NewNode.style.overflow = 'hidden';
             NewNode.className = 'fit_to_page';
+            NewNode.style.width = "100%";
             NewNode.style.marginBottom = Native_Bottom_Margin;
             NewNode.id = 'nn' + BaseID;
             NewNode.innerHTML = HTML;
@@ -316,7 +326,7 @@ var FB3ReaderPage;
                         var ID = obj.id.replace(/^zb/, '');
                         _this.FBReader.Site.ZoomHTML(_this.Site.getElementById(ID).outerHTML);
                         obj.blur();
-                    }, false);
+                    }, true);
                 }
             }
             this.Site.addTrialHandlers();

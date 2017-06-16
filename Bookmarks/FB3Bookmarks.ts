@@ -37,7 +37,7 @@ module FB3Bookmarks {
 		private xhrIE9: boolean;
 		private MakeStoreXMLAsyncTimeout: number;
 		public aldebaran: boolean; // stupid hack
-		constructor(public FB3DOM: FB3DOM.IFB3DOM, private ArtID: string, LitresSID?: string, LitresLocalXML?: string) {
+		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string, LitresLocalXML?: string) {
 			if (LitresSID) {
 				this.SID = LitresSID;
 			}
@@ -52,8 +52,9 @@ module FB3Bookmarks {
 			this.WaitForData = false;
 			this.Host = '/';
 			//// local testing part start
-//			this.Host = 'http://www.litres.ru/';
-//			this.aldebaran = true;
+			//this.SID = "528k8b3l3rex5o4j5z522590dt0q3dac";			
+			//this.Host = 'https://www.litres.ru/';
+			//this.aldebaran = true;
 			//// local testing part end
 			if (document.all && !window.atob && (<any> window).XDomainRequest && this.aldebaran) {
 				// IE8-IE9 cant do cross-domain ajax properly (IE7 i think cant do it at all)
@@ -213,7 +214,7 @@ module FB3Bookmarks {
 		}
 
 		public ReLoad(SaveAutoState?: boolean) {
-			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.ArtID, this.SID);
+			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
 			TemporaryNotes.Host = this.Host;
 			TemporaryNotes.Reader = this.Reader;
 			// TemporaryNotes.ReadyCallback = this.ReadyCallback;
@@ -299,7 +300,7 @@ module FB3Bookmarks {
 		}
 
 		private MakeLoadURL(): string {
-			var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.ArtID +
+			var URL = this.Host + 'pages/catalit_load_bookmarks/?uuid=' + this.FB3DOM.MetaData.UUID +
 				(this.SaveAuto ? '&set_lock=1' : '') + '&sid=' + this.SID + '&r=' + Math.random();
 			return URL;
 		}
@@ -423,6 +424,7 @@ module FB3Bookmarks {
 		public Title: string;
 		public Note: InnerFB2[];
 		public RawText: string;
+		public ExtractNodeText: string = "";
 		public XPathMappingReady: boolean;
 		public N: number;
 		public DateTime: number;
@@ -540,21 +542,28 @@ module FB3Bookmarks {
 
 		private GetDataFromText() {
 			var PageData = new FB3DOM.PageContainer();
+			this.Owner.FB3DOM.GetXML( this.Range, PageData);			
 			this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, this.Range, '', 100, 100, PageData);
+			this.ExtractNodeText = PageData.BodyXML.join('');
 			// We first remove unknown characters
 			var InnerHTML = PageData.Body.join('');
 			InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, ''); // remove all note links
-			InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b)[^>]*>/, '');
+			InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b|\/?h\d\b)[^>]*>/, '');
 			// Then we extract plain text
 			this.Title = this.prepareTitle(InnerHTML.replace(/<[^>]+>|\u00AD/gi, '')).replace(/\s+\S*$/, '');
 			this.RawText = InnerHTML.replace(/(\s\n\r)+/gi, ' ');
 			this.RawText = this.RawText.replace(/<\/div>/gi, '</div> '); // stupid workaround
+			this.RawText = this.RawText.replace(/<\/h\d>/gi, '\n');
+			this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
 			this.RawText = this.RawText.replace(/<(\/)?strong[^>]*>/gi, '[$1b]');
 			this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
-			this.RawText = this.RawText.replace(/<\/p>/gi, '\n');
-			this.RawText = this.RawText.replace(/<\/?[^>]+>|\u00AD/gi, '');
+			this.RawText = this.RawText.replace(/<[^>]+>|\u00AD/gi, '');
 			this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
+
 			this.Note[0] = this.Raw2FB2(this.RawText);
+			
+			this.RawText = this.RawText.replace(/\[\/?[i,b]\]/gi, '');
+
 			if (this.RawText == "" && InnerHTML.match(/img/i)) {
 				// if someone have bookmark with img only
 				this.Note[0] = "<p>" + this.Owner.Reader.Site.ViewText.Print('BOOKMARK_IMAGE_PREVIEW_TEXT') + "</p>";
@@ -805,15 +814,14 @@ module FB3Bookmarks {
 			return text;
 		}
 		private GetExtract(): string {
-			return this.Extract;
-			//return '<Extract ' +
-			//	this.GetRawText() +
-			//	'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
-			//	this.ExtractNode() + '</Extract>';
+			//return this.Extract;
+			return '<Extract ' +
+				this.GetRawText() +
+				'original-location="fb2#xpointer(' + this.MakeExtractSelection() + ')">' +
+				this.ExtractNode() + '</Extract>';
 		}
 		private ExtractNode(): string {
-			// TODO: fill with code
-			return '<p>or4</p>';
+			return  this.ExtractNodeText;
 		}
 		private GetRawText(): string {
 			if (!this.RawText) return '';

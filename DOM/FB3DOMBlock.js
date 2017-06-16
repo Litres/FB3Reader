@@ -30,7 +30,7 @@ var FB3DOM;
         image: 'img',
         trialPurchase: 'div'
     };
-    FB3DOM.BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
+    FB3DOM.BlockLVLRegexp = /^(div|title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
     var TagSkipDoublePadding = {
         title: 1,
         subtitle: 1,
@@ -130,6 +130,17 @@ var FB3DOM;
                 }
                 TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
             }
+        };
+        FB3Text.prototype.GetXML = function (Range, PageData) {
+            var OutStr = this.text;
+            if (Range.To[0]) {
+                OutStr = OutStr.substr(0, Range.To[0]);
+            }
+            if (Range.From[0]) {
+                OutStr = OutStr.substr(Range.From[0]);
+            }
+            OutStr.replace(/\u00AD/g, '');
+            PageData.BodyXML.push(OutStr);
         };
         FB3Text.prototype.Position = function () {
             var Node = this;
@@ -270,6 +281,41 @@ var FB3DOM;
             }
             (this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
         };
+        FB3Tag.prototype.GetXML = function (Range, PageData) {
+            if (this.TagName) {
+                if (this.TagName == "footnote") {
+                    return;
+                }
+                PageData.BodyXML.push('<' + this.TagName + '>');
+                var CloseTag = '</' + this.TagName + '>';
+            }
+            var tRange = FB3Reader.RangeClone(Range);
+            var From = tRange.From.shift() || 0;
+            var To = tRange.To.shift();
+            if (To === undefined)
+                To = this.Childs.length - 1;
+            if (To >= this.Childs.length) {
+                To = this.Childs.length - 1;
+            }
+            if (From < 0 || From >= this.Childs.length) {
+                From = 0;
+            }
+            From *= 1;
+            To *= 1;
+            for (var I = From; I <= To; I++) {
+                var KidRange = { From: [], To: [] };
+                if (I == From) {
+                    KidRange.From = tRange.From;
+                }
+                if (I == To) {
+                    KidRange.To = tRange.To;
+                }
+                this.Childs[I].GetXML(KidRange, PageData);
+            }
+            if (CloseTag) {
+                PageData.BodyXML.push(CloseTag);
+            }
+        };
         FB3Tag.prototype.HTMLTagName = function () {
             if (this.Data.f) {
                 return 'a';
@@ -401,15 +447,26 @@ var FB3DOM;
             if (ElementClasses.length) {
                 Out.push(' class="' + ElementClasses.join(' ') + '"');
             }
-            Out.push('><img width = "' + this.Data.w + '" height = "' + this.Data.h + '" src = "' + Path + '" alt = "-"');
-            Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');
+            if (TagName != "span") {
+                Out.push('><img width = "' + this.Data.w + '" height = "' + this.Data.h + '" src = "' + Path + '" alt = "-"');
+                Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');
+            }
+            else {
+                Out.push("</span>");
+            }
             return Out;
         };
         FB3ImgTag.prototype.HTMLTagName = function () {
             return this.Data.op ? 'div' : 'span';
         };
         FB3ImgTag.prototype.InlineStyle = function () {
-            var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h + 'px;';
+            var display = "";
+            var backgroundImage = "";
+            if (this.HTMLTagName() == "span") {
+                display = "display: inline-block;";
+                backgroundImage = "background: url(" + this.ArtID2URL(this.Data.s) + ") no-repeat right center;background-size: contain;";
+            }
+            var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h + 'px;' + display + backgroundImage;
             if (!this.Parent.Parent) {
                 var Margin = this.Parent.PagesPositionsCache.GetMargin(this.XPID);
                 if (Margin) {

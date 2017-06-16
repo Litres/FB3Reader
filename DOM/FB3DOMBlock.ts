@@ -22,7 +22,7 @@ module FB3DOM {
 		image: 'img',
 		trialPurchase: 'div'
 	};
-	export var BlockLVLRegexp = /^(title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
+	export var BlockLVLRegexp = /^(div|title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
 	var TagSkipDoublePadding = {
 		title: 1,
 		subtitle: 1,
@@ -138,6 +138,17 @@ module FB3DOM {
 				TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
 			}
 		}
+		public GetXML(Range: IRange, PageData: IPageContainer) {
+			var OutStr = this.text;
+			if (Range.To[0]) {
+				OutStr = OutStr.substr(0, Range.To[0]);
+			}
+			if (Range.From[0]) {
+				OutStr = OutStr.substr(Range.From[0]);
+			}
+			OutStr.replace(/\u00AD/g,'');
+			PageData.BodyXML.push(OutStr);
+		}		
 
 		public Position(): FB3ReaderAbstractClasses.IPosition {
 			var Node:IFB3Block = this;
@@ -254,11 +265,54 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				this.Childs[I].GetHTML(HyphOn, BookStyleNotes, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
+				this.Childs[I].GetHTML(HyphOn, BookStyleNotes, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));			
+				
+				
 			}
 			(this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
 		}
+		public GetXML(Range: IRange, PageData: IPageContainer):void {
 
+			// keep in mind after GetBookmarkClasses Bookmarks is cleaned of all unneeded bookmarks
+			if(this.TagName) {
+				if(this.TagName == "footnote") {
+					return;
+				}
+				PageData.BodyXML.push('<' + this.TagName + '>');
+				var CloseTag = '</' + this.TagName + '>'//this.GetCloseTag(Range);				
+			}
+			var tRange = FB3Reader.RangeClone(Range);
+			var From = tRange.From.shift() || 0;
+			var To = tRange.To.shift();
+			if (To === undefined)
+				To = this.Childs.length - 1;
+			if (To >= this.Childs.length) {
+//				console.log('Invalid "To" on "GetXML" call, element "' + this.XPID + '"');
+				To = this.Childs.length - 1;
+			}
+			if (From < 0 || From >= this.Childs.length) {
+//				console.log('Invalid "From" on "GetXML" call, element "' + this.XPID + '"');
+				From = 0;
+			}
+
+			From *= 1;
+			To *= 1;
+			for (var I = From; I <= To; I++) {
+				var KidRange: IRange = {From:[] , To:[]};
+				if (I == From) {
+					KidRange.From = tRange.From;
+				}
+				if (I == To) {
+					KidRange.To = tRange.To;
+				}
+				this.Childs[I].GetXML(KidRange, PageData);
+			}
+			if(CloseTag) {
+				PageData.BodyXML.push(CloseTag);
+			}
+
+
+		}
 		constructor(public DOM: IFB3DOM, public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean) {
 			super(DOM, '', Parent, ID, 1, 0, IsFootnote);
 			if (Data === null) return;
@@ -440,21 +494,32 @@ module FB3DOM {
 			// This is kind of a hack, normally images a inline, but if we have op:1 this mians it's block-level one
 			var TagName = this.HTMLTagName();
 			var Out = ['<' + TagName + ' id="ii_' + IDPrefix + this.XPID + '"' + InlineStyle];
-
 			if (ElementClasses.length) {
 				Out.push(' class="' + ElementClasses.join(' ') + '"');
 			}
-			Out.push('><img width = "' + this.Data.w + '" height = "' + this.Data.h + '" src = "' + Path + '" alt = "-"');
+			if(TagName != "span") {
+				Out.push('><img width = "' + this.Data.w + '" height = "' + this.Data.h + '" src = "' + Path + '" alt = "-"');
 
-			Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');
+				Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');				
+			} else {
+				Out.push("</span>")
+			}
+
 			return Out;
 		}
 		public HTMLTagName(): string{
+			//return 'div'
 			return this.Data.op ? 'div' : 'span';
 		}
 		public InlineStyle(): string {
+			var display = ""
+			var backgroundImage = ""
+			if(this.HTMLTagName() == "span") {
+				display = "display: inline-block;";
+				backgroundImage = "background: url("+ this.ArtID2URL(this.Data.s) +") no-repeat right center;background-size: contain;"
+			}
 			// top-level block elements, we want to align it to greed vertically
-			var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h+'px;';
+			var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h+'px;' + display + backgroundImage;
 			if (!this.Parent.Parent) {
 				var Margin = (<IFB3DOM>this.Parent).PagesPositionsCache.GetMargin(this.XPID);
 				if (Margin) {

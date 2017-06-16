@@ -12,6 +12,7 @@ module FB3DOM {
 	export interface IPageContainer {
 		Body: InnerHTML[];
 		FootNotes: InnerHTML[];
+		BodyXML: string[];
 	}
 	export interface IDOMTextReadyCallback { (PageData: IPageContainer): void; }
 	export interface IChunkLoadedCallback { (): void }
@@ -90,6 +91,8 @@ module FB3DOM {
 			ViewPortH: number,
 			PageData: IPageContainer,
 			Bookmarks: FB3Bookmarks.IBookmark[]);
+		GetXML(Range: IRange,
+			PageData: IPageContainer);
 		Position(): FB3ReaderAbstractClasses.IPosition;
 		IsBlock(): boolean;
 	}
@@ -108,7 +111,6 @@ module FB3DOM {
 		ArtID2URL(Chunk?: string): string;
 		Bookmarks: FB3Bookmarks.IBookmarks[];
 		Init(HyphOn: boolean,
-			ArtID: string,
 			OnDone: IIFB3DOMReadyFunc);
 		GetHTMLAsync(HyphOn: boolean,
 			BookStyleNotes: boolean,
@@ -130,6 +132,8 @@ module FB3DOM {
 			ViewPortW: number,
 			ViewPortH: number,
 			PageData: IPageContainer);
+		GetXML(Range: IRange,
+			PageData: IPageContainer);		
 		XPChunk(X: IXPath): number;
 		Reset(): void; // Stop all callbacks (leaving some internal processing)
 

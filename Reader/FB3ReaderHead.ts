@@ -25,6 +25,7 @@ module FB3Reader {
 		PagesPositionsCache: FB3PPCache.IFB3PPCache;
 		CurVisiblePage: number;	// ID of the first page visible, shared for FB3ReaderPage only
 		Version: string;        // Used to verify cache compatibility with the current renderer
+		StartTime: number;  // Starttime when all elements are initialized
 
 		CanvasReadyCallback: FB3ReaderAbstractClasses.ICanvasReadyCallback; // fired when the page rendering complete
 

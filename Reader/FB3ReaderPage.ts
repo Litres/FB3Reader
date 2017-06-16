@@ -121,12 +121,19 @@ module FB3ReaderPage {
 			return true;
 		}
 
-		//var Chld1 = Node.children[0];
-		//if (Chld1) {
-		//	if (Chld1.nodeName.match(/^h\d$/i)) {
-		//		return true;
-		//	}
-		//}
+		if(Node.childNodes.length && Node.childNodes.length == 1) {
+			var el = <HTMLElement>Node;
+			while(el && el.childNodes && el.childNodes[0]) {
+				el = <HTMLElement>el.childNodes[0]
+			}
+			/*if(el && el.childNodes && el.childNodes[0]) {
+				el = <HTMLElement>el.childNodes[0]
+			}*/	
+			if(el && el.className && el.className.match(/\btag_image\b/)) {
+				return true;
+			}
+		}			
+
 		if (Node.className.match(/\bfit_to_page\b/)){
 			return true;
 		}
@@ -418,18 +425,21 @@ module FB3ReaderPage {
 				// Hack for internal wide-width block, mostly images but others as well
 				if (!KidToCrop.tagName.match(/^p$/i) && this.ViewPortW - ElWidth <= 1) {
 					var IntDivs = KidToCrop.querySelectorAll('div');
-					for (var J = 0; J < IntDivs.length; J++) {
-						var El = <HTMLElement> IntDivs[J];
-						var DivW = Math.min(El.scrollWidth, El.clientWidth);
-						if (DivW > ElWidth) {
-							ElWidth = DivW;
-						}
-					}
+						for (var J = 0; J < IntDivs.length; J++) {
+							var El = <HTMLElement> IntDivs[J];
+							var DivW = Math.min(El.scrollWidth, El.clientWidth);
+							if (DivW > ElWidth) {
+								ElWidth = DivW;
+							}
+						}						
+
 				}
 				if (ElWidth > this.ViewPortW ||
 					IsNodeUnbreakable(KidToCrop)
 					&& KidToCrop.scrollHeight > this.ViewPortH) {
-					this.CropNodeToViewport(KidToCrop);
+					this.CropNodeToViewport(KidToCrop);	
+					
+
 				}
 			}
 		}
@@ -455,12 +465,12 @@ module FB3ReaderPage {
 			var ContainerDivs = BtnHTML + '<div id="n0' + BaseID + '" style ="height:' + BaseElementH + 'px;width:' + BaseElementW + 'px;left:' + MoveToCenter + 'px;">'
 				+ '<div id="n1' + BaseID + '" style="transform: scale(' + Ratio + ');top:-' + HShift + 'px;left:-' + WShift+'px; position:relative;">';
 
-
 			var HTML = ContainerDivs + Node.outerHTML + '</div></div>';
 			var NewNode = document.createElement('div');
 			NewNode.style.height = NewH + 'px';
 			NewNode.style.overflow = 'hidden';
 			NewNode.className = 'fit_to_page';
+			NewNode.style.width = "100%";
 			NewNode.style.marginBottom = Native_Bottom_Margin;
 
 			NewNode.id = 'nn' + BaseID;
@@ -482,7 +492,7 @@ module FB3ReaderPage {
 						var ID = obj.id.replace(/^zb/, '');
 						this.FBReader.Site.ZoomHTML(this.Site.getElementById(ID).outerHTML);
 						obj.blur();
-					}, false);
+					}, true);
 				}
 			}
 			this.Site.addTrialHandlers();
@@ -1104,7 +1114,6 @@ module FB3ReaderPage {
 			}
 
 			var RealLineHeight: any = ParaData.Node.offsetHeight / 3; // Browser may have 110% zoom so we can not trust CSS line-height we provide!
-
 			if (RealLineHeight != parseInt(RealLineHeight)) {
 				// All this 110% in the browser may lead to mad things like 5+5=9, so we try
 				// to mage RUDE attempt to theck if we ever should mess with line-heights at all

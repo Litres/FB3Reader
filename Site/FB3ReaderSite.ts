@@ -122,9 +122,9 @@ module FB3ReaderSite {
 		private TextArray: ITextArray;
 		constructor() {
 			this.TextArray = {
-				'BOOKMARK_IMAGE_PREVIEW_TEXT': 'Изображение',
-				'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Закладка',
-				'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Заметка'
+				'BOOKMARK_IMAGE_PREVIEW_TEXT': 'РР·РѕР±СЂР°Р¶РµРЅРёРµ',
+				'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Р—Р°РєР»Р°РґРєР°',
+				'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Р—Р°РјРµС‚РєР°'
 			};
 		}
 		public Print(Index: string): string {

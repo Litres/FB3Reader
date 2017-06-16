@@ -108,9 +108,9 @@ var FB3ReaderSite;
     var ViewText = (function () {
         function ViewText() {
             this.TextArray = {
-                'BOOKMARK_IMAGE_PREVIEW_TEXT': '�����������',
-                'BOOKMARK_EMPTY_TYPE_1_TEXT': '��������',
-                'BOOKMARK_EMPTY_TYPE_3_TEXT': '�������'
+                'BOOKMARK_IMAGE_PREVIEW_TEXT': 'Изображение',
+                'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Закладка',
+                'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Заметка'
             };
         }
         ViewText.prototype.Print = function (Index) {

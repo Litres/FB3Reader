@@ -59,9 +59,11 @@ module FB3DOM {
 	export class PageContainer implements IPageContainer {
 		public Body: InnerHTML[];
 		public FootNotes: InnerHTML[];
+		public BodyXML: string[];
 		constructor () {
 			this.Body = new Array();
 			this.FootNotes = new Array();
+			this.BodyXML = new Array();	
 		}
 	}
 
@@ -73,10 +75,9 @@ module FB3DOM {
 		public MetaData: IMetaData;
 		public Ready: boolean;
 		private OnDoneFunc: any;
-		private ArtID: string;
 		public XPID: string;
 		public Bookmarks: FB3Bookmarks.IBookmarks[];
-		
+
 		constructor(public Site: FB3ReaderSite.IFB3ReaderSite,
 			public Progressor: FB3ReaderSite.ILoadProgress,
 			public DataProvider: FB3DataProvider.IJsonLoaderFactory,
@@ -115,17 +116,16 @@ module FB3DOM {
 		}
 
 		// Wondering why I make Init public? Because you can't inherite private methods, darling!
-		public Init(HyphOn: boolean, ArtID: string, OnDone: { (FB3DOM: IFB3DOM): void; }) {
+		public Init(HyphOn: boolean, OnDone: { (FB3DOM: IFB3DOM): void; }) {
 			this.HyphOn = HyphOn;
 			this.OnDoneFunc = OnDone;
-			this.ArtID = ArtID;
 			this.Childs = new Array();
 			this.Progressor.HourglassOn(this, true, 'Loading meta...');
 			this.DataProvider.Request(this.DataProvider.ArtID2URL(), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
 			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, Callback: IDOMTextReadyCallback): void {
-		
+
 			var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
 			if (MissingChunks.length == 0) {
 				var PageData = new PageContainer();
@@ -134,7 +134,7 @@ module FB3DOM {
 			} else {
 				this.ActiveRequests.push(new AsyncLoadConsumer(this, MissingChunks, Callback, undefined, HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH));
 			}
-			
+
 		}
 
 		public LoadChunks(MissingChunks: number[], Callback: IChunkLoadedCallback): void {
@@ -214,9 +214,12 @@ module FB3DOM {
 			super.GetHTML(HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData, FullBookmarksList);
 		}
 
+		public GetXML( Range: IRange, PageData: IPageContainer) {
+			super.GetXML(Range, PageData);
+		}
 
 		public OnChunkLoaded(Data: Array<IJSONBlock>, CustomData?: any):void {
-			
+
 			var LoadedChunk: number = CustomData.ChunkN;
 			var Shift = this.DataChunks[LoadedChunk].s;
 			for (var I = 0; I < Data.length; I++) {
@@ -232,7 +235,7 @@ module FB3DOM {
 					I++;
 				}
 			}
-			
+
 		}
 
 		private CheckRangeLoaded(From: number, To: number): number[] {
@@ -268,5 +271,3 @@ module FB3DOM {
 	}
 
 }
-
-

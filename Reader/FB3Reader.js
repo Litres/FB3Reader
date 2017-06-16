@@ -65,8 +65,7 @@ var FB3Reader;
         return { top: Math.round(top), left: Math.round(left) };
     }
     var Reader = (function () {
-        function Reader(ArtID, EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache) {
-            this.ArtID = ArtID;
+        function Reader(EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache) {
             this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
@@ -122,30 +121,30 @@ var FB3Reader;
         };
         Reader.prototype.Init = function (StartFrom, DateTime) {
             var _this = this;
-            this.PrepareCanvas();
-            this.Bookmarks.LoadFromCache();
-            this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
-            if (DateTime) {
-                this.Bookmarks.Bookmarks[0].DateTime = DateTime;
-            }
-            this.FB3DOM.Init(this.HyphON, this.ArtID, function () {
+            this.FB3DOM.Init(this.HyphON, function () {
+                _this.Bookmarks.FB3DOM = _this.FB3DOM;
+                _this.Bookmarks.Reader = _this;
                 _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
+                _this.PrepareCanvas();
+                _this.PutBlockIntoView(0);
+                _this.Bookmarks.LoadFromCache();
+                _this.Bookmarks.Bookmarks[0].Range.From = _this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
+                if (DateTime) {
+                    _this.Bookmarks.Bookmarks[0].DateTime = DateTime;
+                }
+                if (_this.Bookmarks.Bookmarks.length > 1 || DateTime) {
+                    _this.Bookmarks.ReLoad();
+                }
+                else {
+                    _this.Bookmarks.Load(function () {
+                        _this.Bookmarks.ApplyPosition();
+                    });
+                }
                 if (!_this.Bookmarks.ApplyPosition()) {
                     _this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
                     _this.GoTO(StartFrom);
                 }
             });
-            this.Bookmarks.FB3DOM = this.FB3DOM;
-            this.Bookmarks.Reader = this;
-            if (this.Bookmarks.Bookmarks.length > 1 || DateTime) {
-                this.Bookmarks.ReLoad();
-            }
-            else {
-                this.Bookmarks.Load(function () {
-                    _this.Bookmarks.ApplyPosition();
-                });
-            }
-            this.PutBlockIntoView(0);
         };
         Reader.prototype.GoTO = function (NewPos, Force) {
             if (!NewPos || NewPos.length == 0) {
@@ -169,6 +168,8 @@ var FB3Reader;
             if (this.PagesPositionsCache.LastPage() && Page > this.PagesPositionsCache.LastPage()) {
                 this.Site.NotePopup('Paging beyong the file end');
                 return;
+            }
+            if (this.PagesPositionsCache.LastPage() && Page == this.PagesPositionsCache.LastPage()) {
             }
             this.StopRenders();
             clearTimeout(this.MoveTimeoutID);
@@ -362,7 +363,7 @@ var FB3Reader;
         Reader.prototype.SearchForText = function (Text) { return null; };
         Reader.prototype.PrepareCanvas = function () {
             this.ResetCache();
-            var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%">';
+            var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%;">';
             this.Pages = new Array();
             for (var I = 0; I < this.CacheBackward + this.CacheForward + 1; I++) {
                 for (var J = 0; J < this.NColumns; J++) {
@@ -425,6 +426,7 @@ var FB3Reader;
             if (this.CurStartPage !== undefined) {
                 if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) {
                     this.GoTOPage(this.CurStartPage + this.NColumns);
+                    console.log("PageN" + (this.CurStartPage + this.NColumns));
                 }
                 else if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < this.CurStartPage + this.NColumns) {
                     return;
@@ -462,6 +464,7 @@ var FB3Reader;
                         else {
                             this.GoToOpenPosition(From);
                         }
+                        console.log("PageN" + PageN);
                     }
                 }
                 else {
@@ -474,6 +477,7 @@ var FB3Reader;
                         this.PutBlockIntoView(PageToView.ID - 1);
                         this._CanvasReadyCallback();
                     }
+                    console.log("PageN" + PageN);
                 }
             }
         };
@@ -656,7 +660,7 @@ var FB3Reader;
                             this.Site.IdleThreadProgressor.Progress(this, 100);
                             this.Site.IdleThreadProgressor.HourglassOff(this);
                             var end = new Date().getTime();
-                            var time = end - start;
+                            var time = end - this.StartTime;
                             this.Site.Alert('Tome taken: ' + time);
                             clearInterval(this.IdleTimeoutID);
                             this.SaveCache();
@@ -714,7 +718,7 @@ var FB3Reader;
             this.PagesPositionsCache.Load(this.FullKey());
         };
         Reader.prototype.FullKey = function () {
-            return this.ArtID + ':' +
+            return this.FB3DOM.MetaData.UUID + ':' +
                 this.BackgroundRenderFrame.ViewPortW + ':' +
                 this.CanvasW + ':' +
                 this.CanvasH + ':' +

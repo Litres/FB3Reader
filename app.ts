@@ -45,6 +45,7 @@ window.onload = () => {
 	window.addEventListener('resize', () => AFB3Reader.AfterCanvasResize());
 //	ShowPosition();
 	start = new Date().getTime();
+	AFB3Reader.StartTime = start;
 };
 
 function ArtID2URL(Chunk?: string): string {

@@ -29,6 +29,7 @@ window.onload = function () {
     AFB3Reader.Init([4417]);
     window.addEventListener('resize', function () { return AFB3Reader.AfterCanvasResize(); });
     start = new Date().getTime();
+    AFB3Reader.StartTime = start;
 };
 function ArtID2URL(Chunk) {
     var OutURL = 'DataProvider/AjaxExample/' + LocalArtID + '.';

@@ -17,13 +17,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="app.css" />
-    <Content Include="..\view\ts\BookmarksWindow.js" />
-    <Content Include="..\view\ts\BookmarksWindowHead.js" />
-    <Content Include="..\view\ts\ContextMenu.js" />
-    <Content Include="..\view\ts\ContextMenuHead.js" />
-    <Content Include="..\view\ts\SocialSharing.js" />
-    <Content Include="..\view\ts\SocialSharingHead.js" />
-    <Content Include="..\view\ts\viewHeaders.js" />
     <TypeScriptCompile Include="DataProvider\FB3AjaxDataProvider.ts" />
     <TypeScriptCompile Include="Bookmarks\FB3Bookmarks.ts" />
     <TypeScriptCompile Include="Bookmarks\FB3BookmarksHead.ts" />
@@ -44,31 +37,12 @@
     <TypeScriptCompile Include="Reader\FB3ReaderPage.ts" />
     <Content Include="Site\FB3ReaderSiteHead.ts" />
     <TypeScriptCompile Include="Site\LocalBookmarks.ts" />
-    <TypeScriptCompile Include="Site\or.ts" />
-    <TypeScriptCompile Include="Site\orHead.ts" />
-    <TypeScriptCompile Include="Site\UrlParser.ts" />
-    <TypeScriptCompile Include="..\view\ts\BookmarksWindow.ts" />
-    <TypeScriptCompile Include="..\view\ts\BookmarksWindowHead.ts" />
-    <TypeScriptCompile Include="..\view\ts\ContextMenu.ts" />
-    <TypeScriptCompile Include="..\view\ts\ContextMenuHead.ts" />
-    <TypeScriptCompile Include="..\view\ts\SocialSharing.ts" />
-    <TypeScriptCompile Include="..\view\ts\SocialSharingHead.ts" />
-    <TypeScriptCompile Include="..\view\ts\viewHeaders.ts" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\view\ts\BookmarksWindow.js.map" />
-    <Content Include="..\view\ts\BookmarksWindowHead.js.map" />
-    <Content Include="..\view\ts\ContextMenu.js.map" />
-    <Content Include="..\view\ts\ContextMenuHead.js.map" />
-    <Content Include="..\view\ts\SocialSharing.js.map" />
-    <Content Include="..\view\ts\SocialSharingHead.js.map" />
-    <Content Include="..\view\ts\viewHeaders.js.map" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

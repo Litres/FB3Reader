@@ -10,7 +10,7 @@ module FB3ReaderSite {
 		public NotePopup: INotePopup;
 		public Alert: IAlert;
 		public Key: string;
-		public CanStoreBookmark: boolean = false;
+		public FontSize: number = 16;
 		constructor(public Canvas: HTMLElement) {
 			this.ViewText = new ViewText();
 			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
@@ -22,8 +22,19 @@ module FB3ReaderSite {
 			return document.getElementById(elementId);
 		}
 		elementFromPoint(x: number, y: number): Element {
-			return document.elementFromPoint(x,y);
+			var ele = document.elementFromPoint(x,y);
+			if(ele.id.indexOf("wrapper") > -1 || ele.localName == "area" || ele.id.indexOf("empty") > -1) {
+				var eleWithWrap = getListElementFromPoint(x,y,1);
+				if(eleWithWrap && eleWithWrap[0]) {
+
+					return eleWithWrap[0]
+				}
+			}
+			return ele;
+
 		}
+
+
 		public HeadersLoaded(MetaData: FB3DOM.IMetaData) {}
 		public AfterTurnPageDone(Data: ITurnPageData) {
 			if (Data.CurPage) {
@@ -63,6 +74,10 @@ module FB3ReaderSite {
 		public OnBookmarksSync(ActualBookmarks: FB3Bookmarks.IBookmarks, PrevBookmarks: FB3Bookmarks.IBookmarks): void {
 			AFB3Reader.GoTO(ActualBookmarks.Bookmarks[0].Range.From);
 		}
+		public IsAuthorizeMode(Percent: number): boolean {
+			return false;
+		}
+		public AuthorizeIFrame: IFrame.IFrame;
 	}
 
 	export class ExampleProgressor implements ILoadProgress {

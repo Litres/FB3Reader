@@ -53,8 +53,11 @@ module FB3Bookmarks {
 		Store(): void;
 		GetBookmarksInRange(Type?:number, Range?: FB3DOM.IRange): IBookmark[];
 		MakeStoreXML(): string;
-		MakeStoreXMLAsync(Callback): string;	// sometimes we need this when we dont have cached chunks
-																					// this will fix that problem
+		// sometimes we need this when we dont have cached chunks
+		// this will fix that problem
+		MakeStoreXMLAsync(Callback): string;	
+		MakeBookmarkPublic(Bookmark: IBookmark, callback?: Function): void;
+		CreateBookmarkFromTemporary(Group: string, Bookmark: IBookmark, Title: string, callback?: Function): IBookmark
 	}
 
 }

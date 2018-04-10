@@ -88,6 +88,12 @@ var FB3Reader;
             this.IdleOff();
         }
         Reader.prototype._CanvasReadyCallback = function () {
+            this.RedrawInProgress = 0;
+            if (this.RedrawAgain > 0) {
+                this.RedrawAgain = 0;
+                this.RedrawVisible();
+                return;
+            }
             if (this.CanvasReadyCallback) {
                 this.CanvasReadyCallback(this.GetVisibleRange());
                 if (!this.RedrawState) {
@@ -167,9 +173,11 @@ var FB3Reader;
         Reader.prototype.GoTOPage = function (Page) {
             if (this.PagesPositionsCache.LastPage() && Page > this.PagesPositionsCache.LastPage()) {
                 this.Site.NotePopup('Paging beyong the file end');
+                finishFunction();
                 return;
             }
             if (this.PagesPositionsCache.LastPage() && Page == this.PagesPositionsCache.LastPage()) {
+                finishFunction();
             }
             this.StopRenders();
             clearTimeout(this.MoveTimeoutID);
@@ -295,6 +303,14 @@ var FB3Reader;
                 this.PatchToc(PatchedTOC, this.Bookmarks.Bookmarks[I].Range, this.Bookmarks.Bookmarks[I].Group);
             }
             return PatchedTOC;
+        };
+        Reader.prototype.HasFB3Fragment = function () {
+            var FullTOC = this.FB3DOM.GetFullTOC();
+            return typeof FullTOC['fb3-fragment'] === 'object';
+        };
+        Reader.prototype.GetFB3Fragment = function () {
+            var FullTOC = this.FB3DOM.GetFullTOC();
+            return FullTOC['fb3-fragment'];
         };
         Reader.prototype.CloneTOCNodes = function (TOC) {
             var NewTOC = new Array();
@@ -426,7 +442,6 @@ var FB3Reader;
             if (this.CurStartPage !== undefined) {
                 if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) {
                     this.GoTOPage(this.CurStartPage + this.NColumns);
-                    console.log("PageN" + (this.CurStartPage + this.NColumns));
                 }
                 else if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < this.CurStartPage + this.NColumns) {
                     return;
@@ -452,6 +467,7 @@ var FB3Reader;
                         || this.Pages[this.CurVisiblePage + this.NColumns]
                             && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr
                             && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
+                        finishFunction();
                         return;
                     }
                     else {
@@ -464,7 +480,6 @@ var FB3Reader;
                         else {
                             this.GoToOpenPosition(From);
                         }
-                        console.log("PageN" + PageN);
                     }
                 }
                 else {
@@ -477,7 +492,6 @@ var FB3Reader;
                         this.PutBlockIntoView(PageToView.ID - 1);
                         this._CanvasReadyCallback();
                     }
-                    console.log("PageN" + PageN);
                 }
             }
         };
@@ -749,6 +763,11 @@ var FB3Reader;
             this.GoTO(this.CurStartPos.slice(0), true);
         };
         Reader.prototype.RedrawVisible = function () {
+            if (this.RedrawInProgress > 0) {
+                this.RedrawAgain = 1;
+                return;
+            }
+            this.RedrawInProgress = 1;
             this.RedrawState = true;
             var NewInstr = new Array();
             for (var I = this.CurVisiblePage; I < this.CurVisiblePage + this.NColumns; I++) {

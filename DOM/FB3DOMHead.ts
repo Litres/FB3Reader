@@ -33,22 +33,37 @@ module FB3DOM {
 			g8?: number;	// 8 custom type #2
 			g9?: number;	// 9 other
 		};
+		cl: boolean; // partially clipped chapter (for trial book)
+		tcl: boolean; // entirely clipped chapter (for trial book)
+		fcp: boolean; // first character position in chapter 
 		c?: ITOC[];	// contents (subitems)
 	}
 	export interface IJSONBlock {	// Compact notation for the same reason
 		t: string;			// Tag name
 		xp?: number[];		// XPAth shurtcut for this node in the native XML
-		c?: any[];			// Child nodes/text for this tag (array)
+		c?: IJSONBlock[];	// Child nodes/text for this tag (array)
 		nc?: string;		// Native class name for the block
 		css?: string;		// Native CSS for the block
 		i?: string;			// FB/HTML ID (may be user as anchor target f.e.)
 		href?: string;		// Anchor
 		f?: any;			// Footnote contents
-		w?: number;			// image width
+		w?: number;			// image width (in pixels, image itself)
+		wth?: number;		// image width as requested in fb3 document
+		minw?: number;		// image minimal widthfrom in fb3 document
+		maxw?: number;		// image maximal widthfrom in fb3 document
 		h?: number;			// image height
 		s?: string;			// image src attribute
 		hr: number[];		// target internal xpath for internal hrefs
-		op: boolean;		// Is this node unbreakable, should it fit on ONE page, mo matter the cost?
+		op?: boolean;		// Is this node unbreakable, should it fit on ONE page, mo matter the cost?
+		fl?: string;		// Where to float the box? May be left|right|center|default
+		al?: string;		// Text-align May be left|right|center|justify
+		valn?: string;		// TD vertical align. top|middle|bottom
+		bnd?: string;		// ID of the element to float around
+		brd?: boolean;		// Border presence
+		csp?: number;		// colspan
+		rsp?: number;		// rowspan
+		att?: boolean;		// If true - note title may have autotext (default behaviour).
+							// Like [1] or * or **. Or leave text from the document if false
 	}
 
 	export interface IDataDisposition {
@@ -69,6 +84,11 @@ module FB3DOM {
 		First: string;
 		Last: string;
 		Middle: string;
+	}
+
+	export interface IFB3BlockRectangle {
+		Width: number;
+		Height: number;
 	}
 
 	export interface IFB3Block {
@@ -95,6 +115,7 @@ module FB3DOM {
 			PageData: IPageContainer);
 		Position(): FB3ReaderAbstractClasses.IPosition;
 		IsBlock(): boolean;
+		IsUnbreakable?: boolean;
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -136,7 +157,6 @@ module FB3DOM {
 			PageData: IPageContainer);		
 		XPChunk(X: IXPath): number;
 		Reset(): void; // Stop all callbacks (leaving some internal processing)
-
+		GetFullTOC(): object;
 	}
-
 }

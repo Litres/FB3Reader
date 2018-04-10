@@ -1,9 +1,15 @@
 ﻿/// <reference path="FB3DOMHead.ts" />
 
 module FB3DOM {
-
 	export var MaxFootnoteHeight: number = 0.5;
 	export var ExtLinkTarget = '_blank'; // may be set to '_top'
+	export const UNBREAKABLE_CSS_CLASS = 'fit_to_page'; // class for targeting unbreakable content
+	// Metrics for Arial font. 89 - width of "m", 100 - font size
+	export const EM_FONT_RATIO = 89 / 100;
+	// Metrics for Arial font. 57 - width of "x", 100 - font size
+	export const EX_FONT_RATIO = 57 / 100;
+	// Suppose 100px = 1 inch (25.4 mm) => 1px = 0.254 mm
+	export const PPI = 0.254;
 	var TagMapper = {
 		poem: 'div',
 		stanza: 'div',
@@ -20,8 +26,16 @@ module FB3DOM {
 		footnote: 'div',
 		nobr: 'span',
 		image: 'img',
-		trialPurchase: 'div'
+		trialPurchase: 'div',
+
+		// [94948] Add new tags
+		note: 'a',
+		br: 'hr',
+		strikethrough: 'strike',
+		underline: 'u',
+		spacing: 'span'
 	};
+
 	export var BlockLVLRegexp = /^(div|title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
 	var TagSkipDoublePadding = {
 		title: 1,
@@ -41,7 +55,8 @@ module FB3DOM {
 				Data = (<any> Data).replace(/[\[\]\{\}\(\)]+/g, '');
 			}
 			Kid = new FB3Text(DOM, (<any> Data), Parent, ID, NodeN, Chars, IsFootnote);
-		} else if (Data.t == 'image') {
+		// [94948] Add "img" tag
+		} else if (Data.t == 'image' || Data.t == 'img') {
 			Kid = new FB3ImgTag(DOM, Data, Parent, ID, IsFootnote);
 		} else if (Data.t == 'trialPurchase') {
 			Kid = new FB3PurchaseTag(DOM, Data, Parent, ID, IsFootnote);
@@ -103,7 +118,7 @@ module FB3DOM {
 			}
 
 			return text.replace(/[&<>]/g,parseChar);
-		}		
+		}
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {
 			var OutStr = this.text;
 			if (Range.To[0]) {
@@ -148,7 +163,7 @@ module FB3DOM {
 			}
 			OutStr.replace(/\u00AD/g,'');
 			PageData.BodyXML.push(OutStr);
-		}		
+		}
 
 		public Position(): FB3ReaderAbstractClasses.IPosition {
 			var Node:IFB3Block = this;
@@ -214,6 +229,8 @@ module FB3DOM {
 
 	export class FB3Tag extends FB3Text implements IFB3Block {
 		public TagName: string;
+		
+		readonly IsUnbreakable: boolean = false;
 
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]):void {
 
@@ -265,9 +282,9 @@ module FB3DOM {
 				if (I == To) {
 					KidRange.To = Range.To;
 				}
-				this.Childs[I].GetHTML(HyphOn, BookStyleNotes, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));			
-				
-				
+				this.Childs[I].GetHTML(HyphOn, BookStyleNotes, KidRange, IDPrefix, ViewPortW, ViewPortH, PageData, Bookmarks.slice(0));
+
+
 			}
 			(this.IsFootnote ? PageData.FootNotes : PageData.Body).push(CloseTag);
 		}
@@ -279,7 +296,7 @@ module FB3DOM {
 					return;
 				}
 				PageData.BodyXML.push('<' + this.TagName + '>');
-				var CloseTag = '</' + this.TagName + '>'//this.GetCloseTag(Range);				
+				var CloseTag = '</' + this.TagName + '>'//this.GetCloseTag(Range);
 			}
 			var tRange = FB3Reader.RangeClone(Range);
 			var From = tRange.From.shift() || 0;
@@ -354,6 +371,10 @@ module FB3DOM {
 					this.Chars += Kid.Chars;
 				}
 			}
+
+			if (Data.op) {
+				this.IsUnbreakable = true;
+			}
 		}
 
 		public HTMLTagName(): string {
@@ -396,6 +417,10 @@ module FB3DOM {
 				ElementClasses.push('skip_double');
 			}
 
+			if (this.IsUnbreakable) {
+				ElementClasses.push(FB3DOM.UNBREAKABLE_CSS_CLASS);
+			}
+
 			if (this.IsFootnote) {
 				ElementClasses.push('footnote')
 			}
@@ -406,13 +431,11 @@ module FB3DOM {
 			if (this.Data.nc) {
 				ElementClasses.push(this.Data.nc)
 			}
-			if (this.Data.op) {
-				ElementClasses.push('fit_to_page')
-			}
+
 			return ElementClasses
 		}
 
-		public InlineStyle(): string {
+		public InlineStyle(ViewPortW?: any, ViewportH?: any): string {
 			// top-level block elements, we want to align it to greed vertically
 			var InlineStyle = '';
 			if (!this.Parent.Parent) {
@@ -455,7 +478,8 @@ module FB3DOM {
 
 			var Out: string[] = ['<'];
 
-			if (this.TagName == 'a' && this.Data.hr){
+			/* [94948] Add note tag from tag mappper (note can only has hr attribute) */
+			if ((this.TagName == 'a' || this.TagName == 'note') && this.Data.hr){
 				Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
 			} else if (this.TagName == 'a' && this.Data.href) {
 				Out.push('a href="' + this.Data.href + '" target="' + ExtLinkTarget + '"');
@@ -480,6 +504,8 @@ module FB3DOM {
 		}
 	}
 	export class FB3ImgTag extends FB3Tag implements IFB3Block {
+		readonly IsUnbreakable: boolean = true;
+
 		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
 			var ElementClasses = this.ElementClasses();
 
@@ -488,19 +514,26 @@ module FB3DOM {
 			}
 			ElementClasses.push('');
 
-			var InlineStyle = this.InlineStyle();
+			var InlineStyle = this.InlineStyle(ViewPortW, ViewPortH);
 
 			var Path = this.ArtID2URL(this.Data.s);
 			// This is kind of a hack, normally images a inline, but if we have op:1 this mians it's block-level one
 			var TagName = this.HTMLTagName();
 			var Out = ['<' + TagName + ' id="ii_' + IDPrefix + this.XPID + '"' + InlineStyle];
+
+			const Rectangle: IFB3BlockRectangle = this.GetRectangleWithinBounds(
+				this.Data.w, this.Data.h,
+				this.Data.minw, this.Data.maxw, 
+				ViewPortW, ViewPortH
+			);
+
 			if (ElementClasses.length) {
 				Out.push(' class="' + ElementClasses.join(' ') + '"');
 			}
 			if(TagName != "span") {
-				Out.push('><img width = "' + this.Data.w + '" height = "' + this.Data.h + '" src = "' + Path + '" alt = "-"');
+				Out.push('><img width = "' + Rectangle.Width + '" height = "' + Rectangle.Height + '" src = "' + Path + '" alt = "-"');
 
-				Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');				
+				Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');
 			} else {
 				Out.push("</span>")
 			}
@@ -511,15 +544,22 @@ module FB3DOM {
 			//return 'div'
 			return this.Data.op ? 'div' : 'span';
 		}
-		public InlineStyle(): string {
+		public InlineStyle(ViewPortW, ViewPortH): string {
 			var display = ""
 			var backgroundImage = ""
 			if(this.HTMLTagName() == "span") {
 				display = "display: inline-block;";
 				backgroundImage = "background: url("+ this.ArtID2URL(this.Data.s) +") no-repeat right center;background-size: contain;"
 			}
+			
+			const Rectangle: IFB3BlockRectangle = this.GetRectangleWithinBounds(
+				this.Data.w, this.Data.h,
+				this.Data.minw, this.Data.maxw, 
+				ViewPortW, ViewPortH
+			);
+
 			// top-level block elements, we want to align it to greed vertically
-			var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h+'px;' + display + backgroundImage;
+			var InlineStyle = 'width:' + Rectangle.Width + 'px;height:' + Rectangle.Height + 'px;' + display + backgroundImage;
 			if (!this.Parent.Parent) {
 				var Margin = (<IFB3DOM>this.Parent).PagesPositionsCache.GetMargin(this.XPID);
 				if (Margin) {
@@ -529,10 +569,66 @@ module FB3DOM {
 
 			return ' style="' + InlineStyle + '"';
 		}
+		private GetRectangleWithinBounds(Width, Height, MinWidth, MaxWidth, ViewPortW, ViewPortH, preserveAspectRatio: boolean = true): IFB3BlockRectangle {
+			const NewWidth = this.GetValueWithinMinMax(Width, MinWidth, MaxWidth, ViewPortW);
+
+			return {
+				Width: NewWidth, 
+				Height: this.GetValueWithinMinMax(preserveAspectRatio ? NewWidth * Height / Width : Height)
+			};
+		}
+		private GetValueWithinMinMax(value, min?, max?, v?) {
+			const parsedMin = parseFloat(this.GetValueFromUnits(min || 0, v || value).toFixed(3));
+			const parsedMax = parseFloat(this.GetValueFromUnits(max || value, v || value).toFixed(3));
+
+			if (value > parsedMax) {
+				return parsedMax;
+			}
+
+			if (value < parsedMin) {
+				return parsedMin;
+			}
+
+			return parseFloat(value.toFixed(3));
+		}
+		private GetValueFromUnits(value: any, viewport): number {
+			const string = value.toString();
+
+			if (string.match(/\d+em/)) {
+				return this.GetValueFromEm(value);
+			}
+
+			if (string.match(/\d+ex/)) {
+				return this.GetValueFromEx(value);
+			}
+
+			if (string.match(/\d+mm/)) {
+				return this.GetValueFromMm(value);
+			}
+
+			if (string.match(/\d+%/)) {
+				return this.GetValueFromPercent(value, viewport);
+			}
+
+			return parseFloat(string);
+		}
+		private GetValueFromEm(value: string): number {
+			return parseFloat(value) * FB3DOM.EM_FONT_RATIO * this.DOM.Site.FontSize;
+		}
+		private GetValueFromEx(value: string): number {
+			return parseFloat(value) * FB3DOM.EX_FONT_RATIO * this.DOM.Site.FontSize;
+		}
+		private GetValueFromMm(value: string): number {
+			return parseFloat(value) / FB3DOM.PPI;
+		}
+		private GetValueFromPercent(value: string, viewport: number): number {
+			return parseFloat(value) * viewport / 100;
+		}
 	}
 	export class FB3PurchaseTag extends FB3Tag implements IFB3Block {
+		readonly IsUnbreakable: boolean = true;
 		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
-			var Out: string[] = ['<div class="fit_to_page" id ="n_' + IDPrefix + this.XPID + '">'];
+			var Out: string[] = ['<div class="' + FB3DOM.UNBREAKABLE_CSS_CLASS + '" id ="n_' + IDPrefix + this.XPID + '">'];
 			Out.push(this.DOM.Site.showTrialEnd('n_' + IDPrefix + this.XPID));
 			return Out;
 		}

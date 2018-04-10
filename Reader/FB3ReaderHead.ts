@@ -57,7 +57,10 @@ module FB3Reader {
 		RedrawVisible(): void; // light version of redraw, refresh only visible pages (boookmark selection)
 		GetVisibleRange(): FB3DOM.IRange;
 		PatchRangeTo(Range: FB3DOM.IRange): FB3DOM.IRange;
+		GetFB3Fragment(): object;
+		HasFB3Fragment(): boolean;
 
 		Destroy: boolean; // hack for apps, like win8, when we change page, abort all
+		RedrawInProgress: number;
 	}
 }

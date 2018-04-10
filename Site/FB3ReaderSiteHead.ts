@@ -9,13 +9,12 @@ module FB3ReaderSite {
 		NotePopup: INotePopup;
 		Alert: IAlert;
 		Key: string; // Settings key, like font size and name, user for cache srore/read
-		CanStoreBookmark: boolean; // maratory, can't save bookmarks
 		getElementById(elementId: string): HTMLElement;
 		elementFromPoint(x: number, y: number): Element;
 		HeadersLoaded(MetaData: FB3DOM.IMetaData): void; // when headers (Meta, toc and chunks info) loaded
 		AfterTurnPageDone(Data: ITurnPageData): void; // when first start, default position and bookmark position set
 		BookCacheDone(Data: ITurnPageData): void; // after full 100% book cache done
-		StoreBookmarksHandler(timer: number);
+		StoreBookmarksHandler(timer: number, callback?: Function);
 		AfterStoreBookmarks(): void;
 		BeforeBookmarksAction(): boolean;
 		ZoomImg(obj): void;
@@ -26,6 +25,9 @@ module FB3ReaderSite {
 		PrepareHTML(HTMLString: string): string;
 		PatchNoteNode(Node: HTMLElement): HTMLElement;
 		OnBookmarksSync(ActualBookmarks: FB3Bookmarks.IBookmarks, PrevBookmarks: FB3Bookmarks.IBookmarks): void;
+		IsAuthorizeMode(Percent: number): boolean;
+		AuthorizeIFrame: IFrame.IFrame;
+		FontSize: number
 	}
 
 	// General-purpose interface for progress feedback

@@ -4,7 +4,7 @@ var FB3ReaderSite;
         function ExampleSite(Canvas) {
             var _this = this;
             this.Canvas = Canvas;
-            this.CanStoreBookmark = false;
+            this.FontSize = 16;
             this.ViewText = new ViewText();
             this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
             this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
@@ -15,7 +15,14 @@ var FB3ReaderSite;
             return document.getElementById(elementId);
         };
         ExampleSite.prototype.elementFromPoint = function (x, y) {
-            return document.elementFromPoint(x, y);
+            var ele = document.elementFromPoint(x, y);
+            if (ele.id.indexOf("wrapper") > -1 || ele.localName == "area" || ele.id.indexOf("empty") > -1) {
+                var eleWithWrap = getListElementFromPoint(x, y, 1);
+                if (eleWithWrap && eleWithWrap[0]) {
+                    return eleWithWrap[0];
+                }
+            }
+            return ele;
         };
         ExampleSite.prototype.HeadersLoaded = function (MetaData) { };
         ExampleSite.prototype.AfterTurnPageDone = function (Data) {
@@ -49,6 +56,9 @@ var FB3ReaderSite;
         };
         ExampleSite.prototype.OnBookmarksSync = function (ActualBookmarks, PrevBookmarks) {
             AFB3Reader.GoTO(ActualBookmarks.Bookmarks[0].Range.From);
+        };
+        ExampleSite.prototype.IsAuthorizeMode = function (Percent) {
+            return false;
         };
         return ExampleSite;
     }());

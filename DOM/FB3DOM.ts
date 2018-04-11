@@ -70,6 +70,7 @@ module FB3DOM {
 	export class DOM extends FB3Tag implements IFB3DOM {
 		private HyphOn: boolean;
 		private ActiveRequests: AsyncLoadConsumer[];
+		private FullTOC: Object;
 		public TOC: ITOC[];
 		public DataChunks: IDataDisposition[];
 		public MetaData: IMetaData;
@@ -108,11 +109,16 @@ module FB3DOM {
 
 		private AfterHeaderLoaded(Data: any):void {
 			Data = Data.length ? Data[0] : Data; // hack for winjs app
+			this.FullTOC = Data;
 			this.TOC = Data.Body;
 			this.DataChunks = Data.Parts;
 			this.MetaData = Data.Meta;
 			this.Ready = true;
 			this.OnDoneFunc(this);
+		}
+
+		public GetFullTOC(): object {
+			return this.FullTOC;
 		}
 
 		// Wondering why I make Init public? Because you can't inherite private methods, darling!

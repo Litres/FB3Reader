@@ -1,5 +1,6 @@
 /// <reference path="FB3ReaderHead.ts" />
 /// <reference path="FB3Reader.ts" />
+/// <reference path="../DOM/FB3DOM.ts" />
 
 module FB3ReaderPage {
 	export var PageBreakRegexp = /^h[1-4]/;
@@ -111,6 +112,17 @@ module FB3ReaderPage {
 		return TagName.match(PageBreakRegexp) && PrevTagName.match(PageBreakRegexp) == null ? true : false;
 	}
 
+	function HasUnbreakableContent(Node: HTMLElement) {
+		const cls = FB3DOM.UNBREAKABLE_CSS_CLASS;
+		const regex = new RegExp(`\\b${cls}\\b`);
+
+		if (regex.test(Node.className) || Node.querySelector(`.${cls}`) !== null) {
+			return true;
+		}
+
+		return false;
+	}
+
 	function IsNodeUnbreakable(Node: HTMLElement): boolean {
 
 		if (Node.nodeName.match(/^(h\d|a|su[bp])$/i)) {
@@ -132,11 +144,12 @@ module FB3ReaderPage {
 			if(el && el.className && el.className.match(/\btag_image\b/)) {
 				return true;
 			}
-		}			
+		}
 
-		if (Node.className.match(/\bfit_to_page\b/)){
+		if (HasUnbreakableContent(Node)) {
 			return true;
 		}
+
 		if (Node.className.match('skip_childs') != null) {
 			return true;
 		}
@@ -272,7 +285,7 @@ module FB3ReaderPage {
 			if (this.FBReader.Destroy) {
 				return;
 			}
-			//console.log(this.ID, 'DrawInit');
+
 			if (PagesToRender.length == 0) return;
 			this.Ready = false;
 			this.Pending = true;
@@ -365,7 +378,6 @@ module FB3ReaderPage {
 		}
 
 		DrawEnd(PageData: FB3DOM.IPageContainer, ReqID?:number) {
-			//console.log(this.ID, 'DrawEnd');
 			if (ReqID != null && ReqID != this.ActialRequest) {
 				// this is some outdated request, we have newer orders since then - so we just ignore this
 				return;
@@ -399,10 +411,16 @@ module FB3ReaderPage {
 				}, SemiSleepTimeout);
 			} else {
 				this.PageN = this.RenderInstr.CacheAs;
-				this.ApplyPageMetrics();
-				if (!this.PagesToRender.length) {
-					this.FBReader.IdleOn();
-				}
+				this.ThreadsRunning++;
+				this.RenderBreakerTimeout = setTimeout(() => {
+					this.ApplyPageMetrics();
+					this.ThreadsRunning--;
+					//					console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeSecondInitFire');
+					this.RenderBreakerTimeout = 0;
+					if (!this.PagesToRender.length)	{
+						this.FBReader.IdleOn();
+					}
+				}, SemiSleepTimeout);
 			}
 		}
 
@@ -438,8 +456,6 @@ module FB3ReaderPage {
 					IsNodeUnbreakable(KidToCrop)
 					&& KidToCrop.scrollHeight > this.ViewPortH) {
 					this.CropNodeToViewport(KidToCrop);	
-					
-
 				}
 			}
 		}
@@ -469,7 +485,7 @@ module FB3ReaderPage {
 			var NewNode = document.createElement('div');
 			NewNode.style.height = NewH + 'px';
 			NewNode.style.overflow = 'hidden';
-			NewNode.className = 'fit_to_page';
+			NewNode.className = FB3DOM.UNBREAKABLE_CSS_CLASS;
 			NewNode.style.width = "100%";
 			NewNode.style.marginBottom = Native_Bottom_Margin;
 
@@ -572,7 +588,6 @@ module FB3ReaderPage {
 			}
 		}
 		private FalloutConsumeFirst(FallOut: IFallOut) {
-			//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FalloutConsumeFirst');
 			if (!FallOut.FitAnythingAtAll) {
 			//if (FB3Reader.PosCompare(FallOut.FallOut, this.RenderInstr.Start) == 0
 			//	&& FallOut.FallOut[0] < this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e) {
@@ -688,7 +703,6 @@ module FB3ReaderPage {
 		}
 		private FalloutConsumeNext(FallOut: IFallOut) {
 
-			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'FalloutConsumeNext');
 			if (FallOut.EndReached
 				|| FallOut.FallOut[0] >= this.FB3DOM.TOC[this.FB3DOM.TOC.length - 1].e && !this.Next) {
 				var NextPageRange = <FB3DOM.IRange> {};
@@ -819,16 +833,13 @@ module FB3ReaderPage {
 
 		// Hand mage CSS3 tabs. I thouth it would take more than this
 		private FallOut() {
-			//console.log(this.ID, this.QuickFallautState.QuickFallout, 'Fallout');
 			var IterationStartedAt = new Date().getTime();
 			while (this.FalloutState.I < this.FalloutState.ChildsCount) {
 				if (BreakIterationEvery && new Date().getTime() - IterationStartedAt > BreakIterationEvery) {
-					//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutInit');
 					this.ThreadsRunning++;
 					clearTimeout(this.RenderMoreTimeoutFallout);
 					this.RenderMoreTimeoutFallout = setTimeout(() => {
 						this.ThreadsRunning--;
-						//console.log(this.ID, FallCalls, this.ThreadsRunning, 'FallOutFire');
 						this.FallOut();
 						this.RenderMoreTimeoutFallout = 0;
 					}, SemiSleepTimeout);
@@ -1062,10 +1073,8 @@ module FB3ReaderPage {
 			};
 
 			if (this.FalloutState.QuickMode) {
-					//console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoNext');
 				this.FalloutConsumeNext(Result);
 			} else {
-					//console.log(this.ID, this.QuickFallautState.QuickFallout, 'GoFirst');
 				this.FalloutConsumeFirst(Result);
 			}
 		}

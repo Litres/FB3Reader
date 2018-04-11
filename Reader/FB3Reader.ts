@@ -125,9 +125,18 @@ module FB3Reader {
 		private CachingDone: any;
 
 		private RedrawState: boolean; // stupid workaround to fix AfterTurnPageDone fire
+		public RedrawInProgress: number;
+		private RedrawAgain: number;
 		private GoTOByProgressBar: boolean; // if someone used progressbar slider to change position, it will be true
 
-		public _CanvasReadyCallback(){
+		public _CanvasReadyCallback() {
+			this.RedrawInProgress = 0;
+			if (this.RedrawAgain > 0) {
+				this.RedrawAgain = 0
+				this.RedrawVisible();
+				return;
+			} 
+
 			if (this.CanvasReadyCallback) {
 				this.CanvasReadyCallback(this.GetVisibleRange());
 				if (!this.RedrawState) {
@@ -235,9 +244,11 @@ module FB3Reader {
 		public GoTOPage(Page: number): void {
 			if (this.PagesPositionsCache.LastPage() && Page > this.PagesPositionsCache.LastPage()) {
 				this.Site.NotePopup('Paging beyong the file end');
+				finishFunction();
 				return;
 			}
 			if(this.PagesPositionsCache.LastPage() && Page == this.PagesPositionsCache.LastPage()) {
+				finishFunction();
 			}
 			// Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
 			// set, NColumns per one. Let's see what start column we are going to deal with
@@ -380,6 +391,18 @@ module FB3Reader {
 			return PatchedTOC;
 		}
 
+		public HasFB3Fragment(): boolean {
+			const FullTOC = this.FB3DOM.GetFullTOC();
+
+			return typeof FullTOC['fb3-fragment'] === 'object';
+		}
+
+		public GetFB3Fragment(): object {
+			const FullTOC = this.FB3DOM.GetFullTOC();
+
+			return FullTOC['fb3-fragment'];
+		}
+
 		private CloneTOCNodes(TOC: FB3DOM.ITOC[]): FB3DOM.ITOC[]{
 			var NewTOC: FB3DOM.ITOC[] = new Array();
 			for (var I = 0; I < TOC.length; I++) {
@@ -518,7 +541,6 @@ module FB3Reader {
 			if (this.CurStartPage !== undefined) { // Wow, we are on the pre-rendered page, things are quite simple!
 				if (this.CurStartPage + this.NColumns < this.PagesPositionsCache.Length()) { // We know how many pages we have so we can check if the next one exists
 					this.GoTOPage(this.CurStartPage + this.NColumns);
-					console.log("PageN" + (this.CurStartPage + this.NColumns))
 				} else if (this.PagesPositionsCache.LastPage() && this.PagesPositionsCache.LastPage() < this.CurStartPage + this.NColumns) {
 					return;
 				} else { // If cache is not yet ready - let's wait a bit.
@@ -543,6 +565,7 @@ module FB3Reader {
 						|| this.Pages[this.CurVisiblePage + this.NColumns]
 							&& this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr
 							&& this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
+						finishFunction();
 						return; // EOF reached, the book is over
 					} else {
 						var From = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;
@@ -553,7 +576,6 @@ module FB3Reader {
 						} else {
 							this.GoToOpenPosition(From);
 						}
-						console.log("PageN" + PageN)
 					}
 				} else {
 					// If we are walking the grass, and find for ourselves exactly at the level of
@@ -566,7 +588,6 @@ module FB3Reader {
 						this.PutBlockIntoView(PageToView.ID - 1);
 						this._CanvasReadyCallback();
 					}
-					console.log("PageN" + PageN)
 				}
 			}
 		}
@@ -885,7 +906,13 @@ module FB3Reader {
 		}
 
 		public RedrawVisible(): void {
+			if(this.RedrawInProgress > 0) {
+				this.RedrawAgain = 1;
+				return;
+			}		
+			this.RedrawInProgress = 1;		
 			this.RedrawState = true;
+
 			var NewInstr: IPageRenderInstruction[] = new Array();
 			for (var I = this.CurVisiblePage; I < this.CurVisiblePage + this.NColumns; I++) {
 				if (this.Pages[I].RenderInstr) {

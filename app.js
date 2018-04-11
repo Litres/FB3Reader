@@ -397,4 +397,55 @@ function changecss(theClass, element, value) {
         }
     }
 }
+function getListElementFromPoint(x, y, depth) {
+    var ele = document.elementFromPoint(x, y);
+    if (ele.id.indexOf("wrapper") > -1 || ele.nodeName.toLowerCase() == "area" || ele.id.indexOf("empty") > -1) {
+        if (document.all && !window.atob) {
+            var filter = Array.prototype.filter, result = AFB3Reader.Site.Canvas.querySelectorAll('span, div, a, p, img'), elements = [];
+            if (!depth || depth > 1) {
+                elements = filter.call(result, function (node) {
+                    var pos = node.getBoundingClientRect();
+                    if (x > pos.left && x < pos.right && y > pos.top && y < pos.bottom) {
+                        return node;
+                    }
+                    return null;
+                });
+            }
+            else {
+                var sieve = Array.prototype.some;
+                sieve.call(AFB3Reader.Site.Canvas.querySelectorAll('span, img'), function (node) {
+                    var pos = node.getBoundingClientRect();
+                    if (x > pos.left && x < pos.right && y > pos.top && y < pos.bottom) {
+                        elements.push(node);
+                        return true;
+                    }
+                    return false;
+                });
+            }
+            elements.reverse();
+            return elements;
+        }
+        var elements = [], previousPointerEvents = [], current, i, d;
+        while ((current = document.elementFromPoint(x, y)) && elements.indexOf(current) === -1 && current != null) {
+            elements.push(current);
+            previousPointerEvents.push({
+                value: current.style.getPropertyValue('pointer-events'),
+                priority: current.style.getPropertyPriority('pointer-events')
+            });
+            current.style.setProperty('pointer-events', 'none', 'important');
+            if (depth && depth > 0 && elements.length > (depth + 1)) {
+                break;
+            }
+        }
+        for (i = previousPointerEvents.length; d = previousPointerEvents[--i];) {
+            elements[i].style.setProperty('pointer-events', d.value ? d.value : '', d.priority);
+        }
+        if (elements.length == 0) {
+            return null;
+        }
+        elements.shift();
+        elements.shift();
+        return elements;
+    }
+}
 //# sourceMappingURL=app.js.map

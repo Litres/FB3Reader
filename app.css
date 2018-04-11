@@ -12,7 +12,7 @@
       guessed analising it in the belief the next page will behave exactly
       as the first one does and so on. Background, symmetrical margins
       and all that - at your service
-    
+
 */
 .FBReaderContentDiv h1 {
     /*font-family: 'Times New Roman', serif;*/
@@ -30,6 +30,17 @@
 #reader {
     height:800px;
     width:100%;
+}
+
+#wrapper-reader,#empty-pixel {
+    width:100%;
+    height:100%;
+    cursor: text;
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    top: 0;
+    
 }
 
 div.FB2readerPage div.FBReaderContentDiv {
@@ -64,6 +75,10 @@ div.FB2readerPage div.footnote {
     font-size: 70%;
     clear:both;
 }
+
+div.FB2readerPage div.skip_double.footnote.tag_poem { position: fixed;padding-left: 0; }
+div.FB2readerPage div.footnote.tag_stanza {padding-bottom: 0px;}
+div.FB2readerPage div.footnote.tag_stanza p {font-size: 100%;}
 
 .FBReaderNotesDiv {
     padding: 0;
@@ -195,9 +210,7 @@ div.tocitm {
     text-indent:0;
     font-size: 80%;
     width:80%;
-    margin-left:10%;
     line-height: 130%;
-    margin-top: 0.3em;
 }
 .FBReaderContentDiv div.tag_image {
     display: block;

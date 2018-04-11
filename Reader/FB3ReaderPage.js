@@ -33,6 +33,14 @@ var FB3ReaderPage;
     function PageBreakBefore(TagName, PrevTagName) {
         return TagName.match(FB3ReaderPage.PageBreakRegexp) && PrevTagName.match(FB3ReaderPage.PageBreakRegexp) == null ? true : false;
     }
+    function HasUnbreakableContent(Node) {
+        var cls = FB3DOM.UNBREAKABLE_CSS_CLASS;
+        var regex = new RegExp("\\b" + cls + "\\b");
+        if (regex.test(Node.className) || Node.querySelector("." + cls) !== null) {
+            return true;
+        }
+        return false;
+    }
     function IsNodeUnbreakable(Node) {
         if (Node.nodeName.match(/^(h\d|a|su[bp])$/i)) {
             return true;
@@ -49,7 +57,7 @@ var FB3ReaderPage;
                 return true;
             }
         }
-        if (Node.className.match(/\bfit_to_page\b/)) {
+        if (HasUnbreakableContent(Node)) {
             return true;
         }
         if (Node.className.match('skip_childs') != null) {
@@ -246,10 +254,15 @@ var FB3ReaderPage;
             }
             else {
                 this.PageN = this.RenderInstr.CacheAs;
-                this.ApplyPageMetrics();
-                if (!this.PagesToRender.length) {
-                    this.FBReader.IdleOn();
-                }
+                this.ThreadsRunning++;
+                this.RenderBreakerTimeout = setTimeout(function () {
+                    _this.ApplyPageMetrics();
+                    _this.ThreadsRunning--;
+                    _this.RenderBreakerTimeout = 0;
+                    if (!_this.PagesToRender.length) {
+                        _this.FBReader.IdleOn();
+                    }
+                }, FB3ReaderPage.SemiSleepTimeout);
             }
         };
         ReaderPage.prototype.PatchUnbreakableContent = function () {
@@ -307,7 +320,7 @@ var FB3ReaderPage;
             var NewNode = document.createElement('div');
             NewNode.style.height = NewH + 'px';
             NewNode.style.overflow = 'hidden';
-            NewNode.className = 'fit_to_page';
+            NewNode.className = FB3DOM.UNBREAKABLE_CSS_CLASS;
             NewNode.style.width = "100%";
             NewNode.style.marginBottom = Native_Bottom_Margin;
             NewNode.id = 'nn' + BaseID;

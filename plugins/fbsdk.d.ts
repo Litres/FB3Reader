@@ -105,7 +105,7 @@ interface FBSDK{
 	api(path : string, method : string, params : Object, callback : (fbResponseObject : Object) => any) : Object;
 
 	/* This method is used to trigger different forms of Facebook created UI dialogs. */
-	ui(params : FBUIParams, handler : (fbResponseObject : Object) => any) : void;
+	ui(params : any, handler : (fbResponseObject : Object) => any) : void;
 
 	/* Allows you to determine if a user is logged in to Facebook and has authenticated your app */
 	getLoginStatus(handler : Function, force ?: Boolean) : void;

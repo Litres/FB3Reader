@@ -132,8 +132,6 @@ var FB3Bookmarks;
                     }
                 }
             }
-            else {
-            }
         };
         LitResBookmarksProcessor.prototype.Store = function () {
             this.ReLoad(true);
@@ -149,6 +147,46 @@ var FB3Bookmarks;
                 };
                 this.SendNotesRequest(URL, 'POST', Data);
             }
+        };
+        LitResBookmarksProcessor.prototype.MakeBookmarkPublic = function (Bookmark, callback) {
+            if (callback === void 0) { callback = function () { }; }
+            this.XMLHTTPResponseCallback = function () {
+                callback();
+            };
+            var URL = this.Host + "pages/ajax_empty2/", Data = "action=quote_make_public&q=" + Bookmark.ID;
+            this.SendNotesRequest(URL, 'POST', Data);
+        };
+        LitResBookmarksProcessor.prototype.CreateBookmarkFromTemporary = function (Group, Bookmark, Title, callback) {
+            var NewNote;
+            var titles = { 1: 'Закладка', 3: 'Заметка', 5: 'Заметка' };
+            switch (Group) {
+                case "1":
+                    NewNote = Bookmark.RoundClone(true);
+                    NewNote.Group = 1;
+                    break;
+                case "3":
+                case "5":
+                    NewNote = Bookmark.RoundClone(false);
+                    NewNote.Note[1] = Bookmark.Note[1];
+                    break;
+            }
+            if (Bookmark.TemporaryState) {
+                Bookmark.Detach();
+            }
+            Bookmark = undefined;
+            NewNote.Title = Title;
+            if (!NewNote.Title) {
+                NewNote.Title = titles[Group];
+            }
+            this.AddBookmark(NewNote);
+            if (Group == "1") {
+                this.Reader.Redraw();
+            }
+            else {
+                this.Reader.RedrawVisible();
+            }
+            this.Reader.Site.StoreBookmarksHandler(200, callback);
+            return NewNote;
         };
         LitResBookmarksProcessor.prototype.ApplyPosition = function () {
             if (!this.FB3DOM.Ready || this.WaitForData) {
@@ -172,7 +210,6 @@ var FB3Bookmarks;
         };
         LitResBookmarksProcessor.prototype.ReLoadComplete = function (TemporaryNotes) {
             var AnyUpdates = false;
-            this.Reader.Site.CanStoreBookmark = false;
             if (this.Bookmarks.length) {
                 var Found;
                 for (var i = 1; i < this.Bookmarks.length; i++) {
@@ -441,11 +478,17 @@ var FB3Bookmarks;
         Bookmark.prototype.ClassName = function () {
             return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class + ' ' + this.Owner.ClassPrefix + 'selectid_' + this.N;
         };
+        Bookmark.prototype.CleanExtractNode = function (Text) {
+            var CleanText;
+            CleanText = Text.replace(/<[^>]+>/gi, ' ');
+            CleanText = '<p>' + CleanText + '</p>';
+            return CleanText;
+        };
         Bookmark.prototype.GetDataFromText = function () {
             var PageData = new FB3DOM.PageContainer();
             this.Owner.FB3DOM.GetXML(this.Range, PageData);
             this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, this.Range, '', 100, 100, PageData);
-            this.ExtractNodeText = PageData.BodyXML.join('');
+            this.ExtractNodeText = this.CleanExtractNode(PageData.BodyXML.join(''));
             var InnerHTML = PageData.Body.join('');
             InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, '');
             InnerHTML = InnerHTML.replace(/<(?!\/?p\b|\/?strong\b|\/?em\b|\/?h\d\b)[^>]*>/, '');
@@ -458,6 +501,7 @@ var FB3Bookmarks;
             this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
             this.RawText = this.RawText.replace(/<[^>]+>|\u00AD/gi, '');
             this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
+            this.RawText = this.RawText.replace(/'|"/g, '');
             this.Note[0] = this.Raw2FB2(this.RawText);
             this.RawText = this.RawText.replace(/\[\/?[i,b]\]/gi, '');
             if (this.RawText == "" && InnerHTML.match(/img/i)) {
@@ -623,6 +667,7 @@ var FB3Bookmarks;
             return this.prepareAnything(str, this.ClassLenLimit);
         };
         Bookmark.prototype.prepareAnything = function (str, len) {
+            str = str.replace(/<|>/gi, '');
             return str.substr(0, len);
         };
         Bookmark.prototype.MakePercent = function () {

@@ -12,6 +12,10 @@ var FB3DOM;
 (function (FB3DOM) {
     FB3DOM.MaxFootnoteHeight = 0.5;
     FB3DOM.ExtLinkTarget = '_blank';
+    FB3DOM.UNBREAKABLE_CSS_CLASS = 'fit_to_page';
+    FB3DOM.EM_FONT_RATIO = 89 / 100;
+    FB3DOM.EX_FONT_RATIO = 57 / 100;
+    FB3DOM.PPI = 0.254;
     var TagMapper = {
         poem: 'div',
         stanza: 'div',
@@ -28,7 +32,12 @@ var FB3DOM;
         footnote: 'div',
         nobr: 'span',
         image: 'img',
-        trialPurchase: 'div'
+        trialPurchase: 'div',
+        note: 'a',
+        br: 'hr',
+        strikethrough: 'strike',
+        underline: 'u',
+        spacing: 'span'
     };
     FB3DOM.BlockLVLRegexp = /^(div|title|p|image|epigraph|poem|stanza|date|cite|v|t[dh]|subtitle|text-author|empty-line)$/;
     var TagSkipDoublePadding = {
@@ -47,7 +56,7 @@ var FB3DOM;
             }
             Kid = new FB3Text(DOM, Data, Parent, ID, NodeN, Chars, IsFootnote);
         }
-        else if (Data.t == 'image') {
+        else if (Data.t == 'image' || Data.t == 'img') {
             Kid = new FB3ImgTag(DOM, Data, Parent, ID, IsFootnote);
         }
         else if (Data.t == 'trialPurchase') {
@@ -198,6 +207,7 @@ var FB3DOM;
             var _this = _super.call(this, DOM, '', Parent, ID, 1, 0, IsFootnote) || this;
             _this.DOM = DOM;
             _this.Data = Data;
+            _this.IsUnbreakable = false;
             if (Data === null)
                 return _this;
             _this.TagName = Data.t;
@@ -236,6 +246,9 @@ var FB3DOM;
                     _this.Childs.push(Kid);
                     _this.Chars += Kid.Chars;
                 }
+            }
+            if (Data.op) {
+                _this.IsUnbreakable = true;
             }
             return _this;
         }
@@ -356,6 +369,9 @@ var FB3DOM;
             if (TagSkipDoublePadding[this.TagName] && this.CheckPrevTagName()) {
                 ElementClasses.push('skip_double');
             }
+            if (this.IsUnbreakable) {
+                ElementClasses.push(FB3DOM.UNBREAKABLE_CSS_CLASS);
+            }
             if (this.IsFootnote) {
                 ElementClasses.push('footnote');
             }
@@ -365,12 +381,9 @@ var FB3DOM;
             if (this.Data.nc) {
                 ElementClasses.push(this.Data.nc);
             }
-            if (this.Data.op) {
-                ElementClasses.push('fit_to_page');
-            }
             return ElementClasses;
         };
-        FB3Tag.prototype.InlineStyle = function () {
+        FB3Tag.prototype.InlineStyle = function (ViewPortW, ViewportH) {
             var InlineStyle = '';
             if (!this.Parent.Parent) {
                 var Margin = this.Parent.PagesPositionsCache.GetMargin(this.XPID);
@@ -402,7 +415,7 @@ var FB3DOM;
             }
             var InlineStyle = this.InlineStyle();
             var Out = ['<'];
-            if (this.TagName == 'a' && this.Data.hr) {
+            if ((this.TagName == 'a' || this.TagName == 'note') && this.Data.hr) {
                 Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
             }
             else if (this.TagName == 'a' && this.Data.href) {
@@ -432,7 +445,9 @@ var FB3DOM;
     var FB3ImgTag = (function (_super) {
         __extends(FB3ImgTag, _super);
         function FB3ImgTag() {
-            return _super !== null && _super.apply(this, arguments) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.IsUnbreakable = true;
+            return _this;
         }
         FB3ImgTag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
             var ElementClasses = this.ElementClasses();
@@ -440,15 +455,16 @@ var FB3DOM;
                 ElementClasses.push(MoreClasses);
             }
             ElementClasses.push('');
-            var InlineStyle = this.InlineStyle();
+            var InlineStyle = this.InlineStyle(ViewPortW, ViewPortH);
             var Path = this.ArtID2URL(this.Data.s);
             var TagName = this.HTMLTagName();
             var Out = ['<' + TagName + ' id="ii_' + IDPrefix + this.XPID + '"' + InlineStyle];
+            var Rectangle = this.GetRectangleWithinBounds(this.Data.w, this.Data.h, this.Data.minw, this.Data.maxw, ViewPortW, ViewPortH);
             if (ElementClasses.length) {
                 Out.push(' class="' + ElementClasses.join(' ') + '"');
             }
             if (TagName != "span") {
-                Out.push('><img width = "' + this.Data.w + '" height = "' + this.Data.h + '" src = "' + Path + '" alt = "-"');
+                Out.push('><img width = "' + Rectangle.Width + '" height = "' + Rectangle.Height + '" src = "' + Path + '" alt = "-"');
                 Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');
             }
             else {
@@ -459,14 +475,15 @@ var FB3DOM;
         FB3ImgTag.prototype.HTMLTagName = function () {
             return this.Data.op ? 'div' : 'span';
         };
-        FB3ImgTag.prototype.InlineStyle = function () {
+        FB3ImgTag.prototype.InlineStyle = function (ViewPortW, ViewPortH) {
             var display = "";
             var backgroundImage = "";
             if (this.HTMLTagName() == "span") {
                 display = "display: inline-block;";
                 backgroundImage = "background: url(" + this.ArtID2URL(this.Data.s) + ") no-repeat right center;background-size: contain;";
             }
-            var InlineStyle = 'width:' + this.Data.w + 'px;height:' + this.Data.h + 'px;' + display + backgroundImage;
+            var Rectangle = this.GetRectangleWithinBounds(this.Data.w, this.Data.h, this.Data.minw, this.Data.maxw, ViewPortW, ViewPortH);
+            var InlineStyle = 'width:' + Rectangle.Width + 'px;height:' + Rectangle.Height + 'px;' + display + backgroundImage;
             if (!this.Parent.Parent) {
                 var Margin = this.Parent.PagesPositionsCache.GetMargin(this.XPID);
                 if (Margin) {
@@ -475,16 +492,65 @@ var FB3DOM;
             }
             return ' style="' + InlineStyle + '"';
         };
+        FB3ImgTag.prototype.GetRectangleWithinBounds = function (Width, Height, MinWidth, MaxWidth, ViewPortW, ViewPortH, preserveAspectRatio) {
+            if (preserveAspectRatio === void 0) { preserveAspectRatio = true; }
+            var NewWidth = this.GetValueWithinMinMax(Width, MinWidth, MaxWidth, ViewPortW);
+            return {
+                Width: NewWidth,
+                Height: this.GetValueWithinMinMax(preserveAspectRatio ? NewWidth * Height / Width : Height)
+            };
+        };
+        FB3ImgTag.prototype.GetValueWithinMinMax = function (value, min, max, v) {
+            var parsedMin = parseFloat(this.GetValueFromUnits(min || 0, v || value).toFixed(3));
+            var parsedMax = parseFloat(this.GetValueFromUnits(max || value, v || value).toFixed(3));
+            if (value > parsedMax) {
+                return parsedMax;
+            }
+            if (value < parsedMin) {
+                return parsedMin;
+            }
+            return parseFloat(value.toFixed(3));
+        };
+        FB3ImgTag.prototype.GetValueFromUnits = function (value, viewport) {
+            var string = value.toString();
+            if (string.match(/\d+em/)) {
+                return this.GetValueFromEm(value);
+            }
+            if (string.match(/\d+ex/)) {
+                return this.GetValueFromEx(value);
+            }
+            if (string.match(/\d+mm/)) {
+                return this.GetValueFromMm(value);
+            }
+            if (string.match(/\d+%/)) {
+                return this.GetValueFromPercent(value, viewport);
+            }
+            return parseFloat(string);
+        };
+        FB3ImgTag.prototype.GetValueFromEm = function (value) {
+            return parseFloat(value) * FB3DOM.EM_FONT_RATIO * this.DOM.Site.FontSize;
+        };
+        FB3ImgTag.prototype.GetValueFromEx = function (value) {
+            return parseFloat(value) * FB3DOM.EX_FONT_RATIO * this.DOM.Site.FontSize;
+        };
+        FB3ImgTag.prototype.GetValueFromMm = function (value) {
+            return parseFloat(value) / FB3DOM.PPI;
+        };
+        FB3ImgTag.prototype.GetValueFromPercent = function (value, viewport) {
+            return parseFloat(value) * viewport / 100;
+        };
         return FB3ImgTag;
     }(FB3Tag));
     FB3DOM.FB3ImgTag = FB3ImgTag;
     var FB3PurchaseTag = (function (_super) {
         __extends(FB3PurchaseTag, _super);
         function FB3PurchaseTag() {
-            return _super !== null && _super.apply(this, arguments) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.IsUnbreakable = true;
+            return _this;
         }
         FB3PurchaseTag.prototype.GetInitTag = function (Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, MoreClasses) {
-            var Out = ['<div class="fit_to_page" id ="n_' + IDPrefix + this.XPID + '">'];
+            var Out = ['<div class="' + FB3DOM.UNBREAKABLE_CSS_CLASS + '" id ="n_' + IDPrefix + this.XPID + '">'];
             Out.push(this.DOM.Site.showTrialEnd('n_' + IDPrefix + this.XPID));
             return Out;
         };

@@ -171,7 +171,6 @@ module FB3Bookmarks {
 				this.LockID = XML.documentElement.getAttribute('lock-id');
 			}
 			if (Rows.length) {
-				// console.log('we have selection');
 				for (var j = 0; j < Rows.length; j++) {
 					var NewBookmark = new Bookmark(this);
 					NewBookmark.ParseXML(Rows[j]);
@@ -181,8 +180,6 @@ module FB3Bookmarks {
 						this.AddBookmark(NewBookmark);
 					}
 				}
-			} else {
-				// console.log('we dont have any selections on server');
 			}
 		}
 
@@ -200,6 +197,49 @@ module FB3Bookmarks {
 				};
 				this.SendNotesRequest(URL, 'POST', Data);
 			}
+		}
+
+		public MakeBookmarkPublic(Bookmark: IBookmark, callback: Function = () => {}): void {
+			this.XMLHTTPResponseCallback = () => {
+				callback();
+			};
+
+			var URL = `${this.Host}pages/ajax_empty2/`,
+				Data = `action=quote_make_public&q=${Bookmark.ID}`;
+
+			this.SendNotesRequest(URL, 'POST', Data);
+		}
+
+		public CreateBookmarkFromTemporary(Group: string, Bookmark: IBookmark, Title: string, callback?: Function): IBookmark {
+			var NewNote;
+			var titles = { 1: 'Закладка', 3: 'Заметка', 5: 'Заметка' };
+			switch (Group) {
+				case "1":
+					NewNote = Bookmark.RoundClone(true);
+					NewNote.Group = 1; // set selection Group, because default selection Group = 3
+					break;
+				case "3":
+				case "5":
+					NewNote = Bookmark.RoundClone(false);
+					NewNote.Note[1] = Bookmark.Note[1]; // if we have any user comment, just copy
+					break;
+			}
+			if (Bookmark.TemporaryState) {
+				Bookmark.Detach();
+			}
+			Bookmark = undefined;
+			NewNote.Title = Title;
+			if (!NewNote.Title) {
+				NewNote.Title = titles[Group];
+			}
+			this.AddBookmark(NewNote);
+			if (Group == "1") {
+				this.Reader.Redraw();
+			} else {
+				this.Reader.RedrawVisible();
+			}
+			this.Reader.Site.StoreBookmarksHandler(200, callback);
+			return NewNote;
 		}
 
 		public ApplyPosition(): boolean {
@@ -230,7 +270,6 @@ module FB3Bookmarks {
 			// keep in mind this.Bookmarks[0] is always here and is the current position,
 			// so we skip it on merge
 			var AnyUpdates = false;
-			this.Reader.Site.CanStoreBookmark = false; // TODO fix in future
 			if (this.Bookmarks.length) {
 				var Found;
 				for (var i = 1; i < this.Bookmarks.length; i++) { // delete old local bookmarks
@@ -540,11 +579,21 @@ module FB3Bookmarks {
 			return this.Owner.ClassPrefix + 'selec_' + this.Group + '_' + this.Class + ' ' + this.Owner.ClassPrefix + 'selectid_' + this.N;
 		}
 
+		private CleanExtractNode(Text: string): string {
+				var CleanText;
+				// For xsd check to comply, tags should be like: <subtitle><fb:emphasis>большого формата</fb:emphasis></subtitle>
+				// As workaround, now just simple clean up text from any tags at all				
+				CleanText = Text.replace(/<[^>]+>/gi, ' ');
+				CleanText = '<p>' + CleanText + '</p>';
+				return CleanText;
+		}
+
 		private GetDataFromText() {
 			var PageData = new FB3DOM.PageContainer();
 			this.Owner.FB3DOM.GetXML( this.Range, PageData);			
 			this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, this.Range, '', 100, 100, PageData);
-			this.ExtractNodeText = PageData.BodyXML.join('');
+			//this.ExtractNodeText = PageData.BodyXML.join('');
+			this.ExtractNodeText = this.CleanExtractNode(PageData.BodyXML.join(''));
 			// We first remove unknown characters
 			var InnerHTML = PageData.Body.join('');
 			InnerHTML = InnerHTML.replace(/<a (class="footnote|[^>]+data-href=").+?<\/a>/gi, ''); // remove all note links
@@ -559,6 +608,7 @@ module FB3Bookmarks {
 			this.RawText = this.RawText.replace(/<(\/)?em[^>]*>/gi, '[$1i]');
 			this.RawText = this.RawText.replace(/<[^>]+>|\u00AD/gi, '');
 			this.RawText = this.RawText.replace(/^\s+|\s+$/gi, '');
+			this.RawText = this.RawText.replace(/'|"/g, '');
 
 			this.Note[0] = this.Raw2FB2(this.RawText);
 			
@@ -729,6 +779,7 @@ module FB3Bookmarks {
 			} else {
 				//  this.Title = this.prepareTitle(this.Title);
 				this.Title = this.Title; // i believe server data!
+				//this.Title = this.Title.replace(/<|>/gi, '');
 			}
 		}
 
@@ -742,6 +793,7 @@ module FB3Bookmarks {
 			return this.prepareAnything(str, this.ClassLenLimit);
 		}
 		private prepareAnything(str: string, len: number): string {
+			str = str.replace(/<|>/gi, '');
 			return str.substr(0, len);
 		}
 		private MakePercent(): string {

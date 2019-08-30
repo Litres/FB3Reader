@@ -1,0 +1,917 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3e31ca26-9a0b-40aa-8ef3-d42a85ecc3ed" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.js" beforeDir="false" afterPath="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bookmarks/FB3BookmarksHead.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Bookmarks/FB3BookmarksHead.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOM/FB3DOM.js" beforeDir="false" afterPath="$PROJECT_DIR$/DOM/FB3DOM.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOM/FB3DOM.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/DOM/FB3DOM.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOM/FB3DOM.ts" beforeDir="false" afterPath="$PROJECT_DIR$/DOM/FB3DOM.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOM/FB3DOMBlock.js" beforeDir="false" afterPath="$PROJECT_DIR$/DOM/FB3DOMBlock.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOM/FB3DOMBlock.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/DOM/FB3DOMBlock.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOM/FB3DOMBlock.ts" beforeDir="false" afterPath="$PROJECT_DIR$/DOM/FB3DOMBlock.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOM/FB3DOMHead.ts" beforeDir="false" afterPath="$PROJECT_DIR$/DOM/FB3DOMHead.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.ts" beforeDir="false" afterPath="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DataProvider/FB3DataProviderHead.ts" beforeDir="false" afterPath="$PROJECT_DIR$/DataProvider/FB3DataProviderHead.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FB3ReaderHeaders.ts" beforeDir="false" afterPath="$PROJECT_DIR$/FB3ReaderHeaders.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PagesPositionsCache/PPCache.js" beforeDir="false" afterPath="$PROJECT_DIR$/PagesPositionsCache/PPCache.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PagesPositionsCache/PPCache.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/PagesPositionsCache/PPCache.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PagesPositionsCache/PPCache.ts" beforeDir="false" afterPath="$PROJECT_DIR$/PagesPositionsCache/PPCache.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PagesPositionsCache/PPCacheHead.ts" beforeDir="false" afterPath="$PROJECT_DIR$/PagesPositionsCache/PPCacheHead.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Reader/FB3Reader.js" beforeDir="false" afterPath="$PROJECT_DIR$/Reader/FB3Reader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Reader/FB3Reader.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/Reader/FB3Reader.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Reader/FB3Reader.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Reader/FB3Reader.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Reader/FB3ReaderHead.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Reader/FB3ReaderHead.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Reader/FB3ReaderPage.js" beforeDir="false" afterPath="$PROJECT_DIR$/Reader/FB3ReaderPage.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Reader/FB3ReaderPage.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/Reader/FB3ReaderPage.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Reader/FB3ReaderPage.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Reader/FB3ReaderPage.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Site/FB3ReaderSite.js" beforeDir="false" afterPath="$PROJECT_DIR$/Site/FB3ReaderSite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Site/FB3ReaderSite.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/Site/FB3ReaderSite.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Site/FB3ReaderSite.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Site/FB3ReaderSite.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Site/FB3ReaderSiteHead.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Site/FB3ReaderSiteHead.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Site/LocalBookmarks.js" beforeDir="false" afterPath="$PROJECT_DIR$/Site/LocalBookmarks.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Site/LocalBookmarks.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/Site/LocalBookmarks.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Site/LocalBookmarks.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Site/LocalBookmarks.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/app.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/default.htm" beforeDir="false" afterPath="$PROJECT_DIR$/default.htm" afterDir="false" />
+    </list>
+    <ignored path="$PROJECT_DIR$/.tmp/" />
+    <ignored path="$PROJECT_DIR$/temp/" />
+    <ignored path="$PROJECT_DIR$/tmp/" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="339">
+              <caret line="41" column="106" selection-start-line="41" selection-start-column="106" selection-end-line="41" selection-end-column="106" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+                <element signature="n#style#0;n#div#0;n#div#0;n#!!top" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/default.htm">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="330">
+              <caret line="22" column="50" selection-start-line="22" selection-start-column="50" selection-end-line="22" selection-end-column="50" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Site/LocalBookmarks.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="9" column="30" selection-start-line="9" selection-start-column="30" selection-end-line="9" selection-end-column="30" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MediaCache/MediaCache.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="210">
+              <caret line="74" column="37" lean-forward="true" selection-start-line="74" selection-start-column="37" selection-end-line="74" selection-end-column="37" />
+              <folding>
+                <element signature="n#MediaCache#0;n#FB3MediaCache#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/CatalitWeb/CatalitWeb.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret selection-end-column="14" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DOM/FB3DOM.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="289">
+              <caret line="47" column="44" selection-start-line="47" selection-start-column="44" selection-end-line="47" selection-end-column="44" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/TextCache/TextCache.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="129">
+              <caret line="221" column="9" selection-start-line="221" selection-start-column="9" selection-end-line="221" selection-end-column="9" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="49">
+              <caret line="23" column="33" selection-start-line="23" selection-start-column="17" selection-end-line="23" selection-end-column="33" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/DOM/FB3DOMBlock.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="543">
+              <caret line="799" column="30" selection-start-line="799" selection-start-column="30" selection-end-line="799" selection-end-column="30" />
+              <folding>
+                <element signature="e#216#258#0" />
+                <element signature="e#564#1004#0" />
+                <element signature="e#1160#1244#0" />
+                <element signature="n#!!block;n#GetParent#0;n#FB3DOM#0" />
+                <element signature="e#1336#1357#0" />
+                <element signature="e#1392#1415#0" />
+                <element signature="n#!!block;n#IsNote#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#IsFootnoteLink#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#IsLink#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#TagClassFactory#0;n#FB3DOM#0" />
+                <element signature="e#1983#2193#0" />
+                <element signature="e#2007#2070#0" />
+                <element signature="e#2241#2318#0" />
+                <element signature="e#2355#2437#0" />
+                <element signature="e#2461#2539#0" />
+                <element signature="e#2571#2657#0" />
+                <element signature="e#2681#2759#0" />
+                <element signature="e#2765#2839#0" />
+                <element signature="n#!!block;n#XPathCompare#0;n#FB3DOM#0" />
+                <element signature="e#3108#3206#0" />
+                <element signature="e#3296#3394#0" />
+                <element signature="n#Restriction#0;n#FB3DOM#0" />
+                <element signature="e#3519#5518#0" />
+                <element signature="e#3529#3769#0" />
+                <element signature="e#3580#3680#0" />
+                <element signature="e#3707#3764#0" />
+                <element signature="e#3779#4040#0" />
+                <element signature="e#3830#3930#0" />
+                <element signature="e#3957#4035#0" />
+                <element signature="e#4050#4838#0" />
+                <element signature="e#4101#4389#0" />
+                <element signature="e#4239#4290#0" />
+                <element signature="e#4416#4833#0" />
+                <element signature="e#4533#4598#0" />
+                <element signature="e#4637#4703#0" />
+                <element signature="e#4742#4804#0" />
+                <element signature="e#4848#5514#0" />
+                <element signature="e#4899#5193#0" />
+                <element signature="e#5044#5095#0" />
+                <element signature="e#5220#5509#0" />
+                <element signature="e#5399#5482#0" />
+                <element signature="e#5549#5639#0" />
+                <element signature="e#5558#5591#0" />
+                <element signature="e#5600#5635#0" />
+                <element signature="n#!!block;n#ToRoman#0;n#Restriction#0;n#FB3DOM#0" />
+                <element signature="e#5996#6099#0" />
+                <element signature="e#6034#6094#0" />
+                <element signature="n#!!block;n#Repeat#0;n#Restriction#0;n#FB3DOM#0" />
+                <element signature="e#6208#6236#0" />
+                <element signature="n#!!block;n#Increment#0;n#Restriction#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#Get#0;n#Restriction#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#constructor#0;n#Restriction#0;n#FB3DOM#0" />
+                <element signature="n#PageContainer#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#constructor#0;n#PageContainer#0;n#FB3DOM#0" />
+                <element signature="e#7058#7113#0" />
+                <element signature="n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#constructor#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#8109#8217#0" />
+                <element signature="n#!!block;n#EscapeHtml#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#8283#8340#0" />
+                <element signature="n#!!block;n#parseChar#0;n#!!block;n#EscapeHtml#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetHTML#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#8767#8834#0" />
+                <element signature="e#8992#9063#0" />
+                <element signature="e#9085#9135#0" />
+                <element signature="e#9158#9207#0" />
+                <element signature="e#9362#9412#0" />
+                <element signature="e#9578#9716#0" />
+                <element signature="e#9632#9672#0" />
+                <element signature="e#9678#9711#0" />
+                <element signature="e#9736#9790#0" />
+                <element signature="e#9835#9991#0" />
+                <element signature="e#9997#10251#0" />
+                <element signature="e#10031#10096#0" />
+                <element signature="e#10278#10436#0" />
+                <element signature="e#10331#10429#0" />
+                <element signature="n#!!block;n#GetXML#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#10547#10597#0" />
+                <element signature="e#10620#10669#0" />
+                <element signature="n#!!block;n#Position#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#10882#10941#0" />
+                <element signature="n#!!block;n#ArtID2URL#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#11057#11122#0" />
+                <element signature="n#!!block;n#GetBookmarkClasses#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#11498#12501#0" />
+                <element signature="e#11541#11603#0" />
+                <element signature="e#11898#11956#0" />
+                <element signature="e#11962#12048#0" />
+                <element signature="e#12178#12200#0" />
+                <element signature="e#12206#12273#0" />
+                <element signature="n#!!block;n#IsBlock#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#12635#12658#0" />
+                <element signature="e#12664#12688#0" />
+                <element signature="n#!!block;n#Fire#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="e#12742#12772#0" />
+                <element signature="n#!!block;n#InlineStyle#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#PaddingBottom#0;n#FB3Text#0;n#FB3DOM#0" />
+                <element signature="n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetHTML#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#13433#13482#0" />
+                <element signature="e#13545#13602#0" />
+                <element signature="e#13816#13875#0" />
+                <element signature="e#13919#14081#0" />
+                <element signature="e#13925#14037#0" />
+                <element signature="e#14258#14742#0" />
+                <element signature="e#14332#14398#0" />
+                <element signature="e#14421#14491#0" />
+                <element signature="e#14768#14835#0" />
+                <element signature="e#14841#14898#0" />
+                <element signature="e#14971#15002#0" />
+                <element signature="e#15163#15284#0" />
+                <element signature="e#15332#15436#0" />
+                <element signature="e#15500#15792#0" />
+                <element signature="e#15567#15607#0" />
+                <element signature="e#15625#15661#0" />
+                <element signature="n#!!block;n#GetXML#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#16047#16233#0" />
+                <element signature="e#16084#16104#0" />
+                <element signature="e#16441#16561#0" />
+                <element signature="e#16609#16712#0" />
+                <element signature="e#16776#16991#0" />
+                <element signature="e#16843#16884#0" />
+                <element signature="e#16902#16939#0" />
+                <element signature="e#17008#17051#0" />
+                <element signature="n#!!block;n#constructor#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#17332#17369#0" />
+                <element signature="e#17375#17404#0" />
+                <element signature="e#17450#17480#0" />
+                <element signature="e#17544#17685#0" />
+                <element signature="e#17701#18428#0" />
+                <element signature="e#17935#18423#0" />
+                <element signature="e#18080#18103#0" />
+                <element signature="e#18294#18328#0" />
+                <element signature="e#18334#18359#0" />
+                <element signature="e#18446#18481#0" />
+                <element signature="n#!!block;n#HTMLTagName#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#18586#18608#0" />
+                <element signature="e#18643#18685#0" />
+                <element signature="e#18736#18819#0" />
+                <element signature="e#18899#18923#0" />
+                <element signature="e#18929#18960#0" />
+                <element signature="n#!!block;n#CheckPrevTagName#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#19130#19154#0" />
+                <element signature="n#!!block;n#GetCloseTag#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#CutTop#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#19382#19418#0" />
+                <element signature="n#!!block;n#ElementClasses#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#19587#19633#0" />
+                <element signature="e#19662#19723#0" />
+                <element signature="e#19749#19791#0" />
+                <element signature="e#19814#19912#0" />
+                <element signature="e#19936#19981#0" />
+                <element signature="e#20053#20095#0" />
+                <element signature="e#20156#20210#0" />
+                <element signature="e#20232#20276#0" />
+                <element signature="n#!!block;n#InlineStyle#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#20492#20549#0" />
+                <element signature="e#20571#20627#0" />
+                <element signature="n#!!block;n#PaddingBottom#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#20734#20821#0" />
+                <element signature="n#!!block;n#GetInitTag#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#21060#21104#0" />
+                <element signature="e#21138#21180#0" />
+                <element signature="e#21341#21383#0" />
+                <element signature="e#21461#21537#0" />
+                <element signature="e#21584#21670#0" />
+                <element signature="e#21676#21716#0" />
+                <element signature="e#21748#21813#0" />
+                <element signature="e#21865#22147#0" />
+                <element signature="e#22189#22320#0" />
+                <element signature="e#22327#22430#0" />
+                <element signature="n#!!block;n#Fire#0;n#FB3Tag#0;n#FB3DOM#0" />
+                <element signature="e#22555#22698#0" />
+                <element signature="e#23006#23050#0" />
+                <element signature="e#23865#23930#0" />
+                <element signature="e#24149#24179#0" />
+                <element signature="n#!!block;n#HTMLTagName#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="e#24927#24977#0" />
+                <element signature="n#!!block;n#GetRectangleWithinBounds#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="e#25472#25596#0" />
+                <element signature="n#!!block;n#GetValueWithinMinMax#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="e#25869#25897#0" />
+                <element signature="e#25925#25953#0" />
+                <element signature="n#!!block;n#GetValueFromUnits#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="e#26126#26171#0" />
+                <element signature="e#26203#26248#0" />
+                <element signature="e#26280#26325#0" />
+                <element signature="e#26356#26416#0" />
+                <element signature="n#!!block;n#GetValueFromEm#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetValueFromEx#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetValueFromMm#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetValueFromPercent#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+                <element signature="n#FB3PurchaseTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetInitTag#0;n#FB3PurchaseTag#0;n#FB3DOM#0" />
+                <element signature="n#FB3FootnoteTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#constructor#0;n#FB3FootnoteTag#0;n#FB3DOM#0" />
+                <element signature="n#FB3NoteTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetInitTag#0;n#FB3NoteTag#0;n#FB3DOM#0" />
+                <element signature="e#27991#28035#0" />
+                <element signature="e#28217#28282#0" />
+                <element signature="n#!!block;n#Fire#0;n#FB3NoteTag#0;n#FB3DOM#0" />
+                <element signature="n#FB3FootnoteLinkTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetInitTag#0;n#FB3FootnoteLinkTag#0;n#FB3DOM#0" />
+                <element signature="e#28924#28976#0" />
+                <element signature="e#28998#29042#0" />
+                <element signature="e#29154#29219#0" />
+                <element signature="e#29286#29417#0" />
+                <element signature="e#29423#29526#0" />
+                <element signature="n#!!block;n#Fire#0;n#FB3FootnoteLinkTag#0;n#FB3DOM#0" />
+                <element signature="n#FB3LinkTag#0;n#FB3DOM#0" />
+                <element signature="n#!!block;n#GetInitTag#0;n#FB3LinkTag#0;n#FB3DOM#0" />
+                <element signature="e#30136#30180#0" />
+                <element signature="e#30347#30412#0" />
+                <element signature="n#!!block;n#Fire#0;n#FB3LinkTag#0;n#FB3DOM#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>Check</find>
+      <find>FB3BookReadProgress</find>
+      <find>ReadPro</find>
+      <find>FB3ReadProgressCache</find>
+      <find>BaseURL</find>
+      <find>LitresURLParser</find>
+      <find>this.Pages</find>
+      <find>this.Pages</find>
+      <find>should be</find>
+      <find>/// &lt;reference</find>
+      <find>IFB3PPCache</find>
+      <find>FB3Storage</find>
+      <find>Ajax</find>
+      <find>DataPro</find>
+      <find>Version</find>
+      <find>key</find>
+      <find>.Request(</find>
+      <find>.Request</find>
+      <find>GetStorageKey</find>
+      <find>:$</find>
+      <find>AJAXDataProvider</find>
+      <find>toc.js</find>
+      <find>IsArtF</find>
+      <find>image</find>
+      <find>!!!</find>
+      <find>DOM(</find>
+      <find>Media</find>
+      <find>src</find>
+      <find>IsArtFullCac</find>
+      <find>MediaCacheLoader</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>FB3Storage.CheckStorageAvail</replace>
+    </replaceStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/default.htm" />
+        <option value="$PROJECT_DIR$/MediaCache/MediaCache.ts" />
+        <option value="$PROJECT_DIR$/Reader/FB3Reader.ts" />
+        <option value="$PROJECT_DIR$/CatalitWeb/CatalitWeb.js" />
+        <option value="$PROJECT_DIR$/CatalitWeb/CatalitWeb.ts" />
+        <option value="$PROJECT_DIR$/Site/FB3ReaderSite.ts" />
+        <option value="$PROJECT_DIR$/Site/LocalBookmarks.ts" />
+        <option value="$PROJECT_DIR$/app.ts" />
+        <option value="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.ts" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectConfigurationFiles">
+    <option name="files">
+      <list>
+        <option value="$PROJECT_DIR$/.idea/FB3Reader.iml" />
+        <option value="$PROJECT_DIR$/.idea/misc.xml" />
+        <option value="$PROJECT_DIR$/.idea/vcs.xml" />
+        <option value="$PROJECT_DIR$/.idea/modules.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6" fullScreen="true">
+    <option name="x" value="180" />
+    <option name="y" value="112" />
+    <option name="width" value="1080" />
+    <option name="height" value="676" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="FB3Reader" type="b2602c69:ProjectViewProjectNode" />
+              <item name="FB3Reader" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="web.server" />
+    <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3e31ca26-9a0b-40aa-8ef3-d42a85ecc3ed" name="Default Changelist" comment="" />
+      <created>1567064145228</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1567064145228</updated>
+      <workItem from="1567064146710" duration="7196000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="7196000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="0" width="2560" height="1440" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Favorites" side_tool="true" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24980143" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info active="true" anchor="bottom" id="TypeScript" visible="true" weight="0.329927" />
+      <window_info anchor="bottom" id="Docker" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" />
+      <window_info anchor="bottom" id="Terminal" weight="0.329927" />
+      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="right" id="Remote Host" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/PagesPositionsCache/PPCache.js.map" />
+        <option value="$PROJECT_DIR$/PagesPositionsCache/PPCache.js" />
+        <option value="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js.map" />
+        <option value="$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js" />
+        <option value="$PROJECT_DIR$/MediaCache/MediaCache.js.map" />
+        <option value="$PROJECT_DIR$/MediaCache/MediaCache.js" />
+        <option value="$PROJECT_DIR$/TextCache/TextCache.js.map" />
+        <option value="$PROJECT_DIR$/TextCache/TextCache.js" />
+        <option value="$PROJECT_DIR$/TextCache/TextCacheHead.js.map" />
+        <option value="$PROJECT_DIR$/TextCache/TextCacheHead.js" />
+        <option value="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.js.map" />
+        <option value="$PROJECT_DIR$/Bookmarks/FB3Bookmarks.js" />
+        <option value="$PROJECT_DIR$/Storage/StorageHead.js.map" />
+        <option value="$PROJECT_DIR$/Storage/StorageHead.js" />
+        <option value="$PROJECT_DIR$/Storage/Storage.js.map" />
+        <option value="$PROJECT_DIR$/Storage/Storage.js" />
+        <option value="$PROJECT_DIR$/Reader/ReadProgressCache.js.map" />
+        <option value="$PROJECT_DIR$/Reader/ReadProgressCache.js" />
+        <option value="$PROJECT_DIR$/Reader/ReadProgress.js.map" />
+        <option value="$PROJECT_DIR$/Reader/ReadProgress.js" />
+        <option value="$PROJECT_DIR$/Reader/FB3ReaderPage.js.map" />
+        <option value="$PROJECT_DIR$/Reader/FB3ReaderPage.js" />
+        <option value="$PROJECT_DIR$/Reader/FB3Reader.js.map" />
+        <option value="$PROJECT_DIR$/Reader/FB3Reader.js" />
+        <option value="$PROJECT_DIR$/Site/FB3ReaderSite.js.map" />
+        <option value="$PROJECT_DIR$/Site/FB3ReaderSite.js" />
+        <option value="$PROJECT_DIR$/Site/LocalBookmarks.js.map" />
+        <option value="$PROJECT_DIR$/Site/LocalBookmarks.js" />
+        <option value="$PROJECT_DIR$/DOM/FB3DOM.js.map" />
+        <option value="$PROJECT_DIR$/DOM/FB3DOM.js" />
+        <option value="$PROJECT_DIR$/DOM/FB3DOMBlock.js.map" />
+        <option value="$PROJECT_DIR$/DOM/FB3DOMBlock.js" />
+        <option value="$PROJECT_DIR$/FB3ReaderHeaders.js" />
+        <option value="$PROJECT_DIR$/app.js" />
+        <option value="$PROJECT_DIR$/PagesPositionsCache/PPCacheHead.js.map" />
+        <option value="$PROJECT_DIR$/PagesPositionsCache/PPCacheHead.js" />
+        <option value="$PROJECT_DIR$/Reader/ReadProgressHead.js" />
+        <option value="$PROJECT_DIR$/Reader/FB3ReaderHead.js" />
+        <option value="$PROJECT_DIR$/Reader/FB3ReaderHead.js.map" />
+        <option value="$PROJECT_DIR$/Reader/ReadProgressHead.js.map" />
+        <option value="$PROJECT_DIR$/DataProvider/FB3DataProviderHead.js" />
+        <option value="$PROJECT_DIR$/DataProvider/FB3DataProviderHead.js.map" />
+        <option value="$PROJECT_DIR$/DOM/FB3DOMHead.js" />
+        <option value="$PROJECT_DIR$/DOM/FB3DOMHead.js.map" />
+        <option value="$PROJECT_DIR$/FB3ReaderHeaders.js.map" />
+        <option value="$PROJECT_DIR$/app.js.map" />
+        <option value="$PROJECT_DIR$/Site/FB3ReaderSiteHead.js.map" />
+        <option value="$PROJECT_DIR$/Site/FB3ReaderSiteHead.js" />
+        <option value="$PROJECT_DIR$/Bookmarks/FB3BookmarksHead.js" />
+        <option value="$PROJECT_DIR$/Bookmarks/FB3BookmarksHead.js.map" />
+        <option value="$PROJECT_DIR$/../svn/cgi/static/rightholders/src/components/RegistrationWizard/StepsContent/SubForms/SelectOwnership.js" />
+        <option value="$PROJECT_DIR$/../svn/cgi/static/rightholders/src/components/RegistrationWizard/StepsContent/SubForms/SelectOwnership.js.map" />
+      </list>
+    </option>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app.css">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/package.json">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Reader/FB3Reader.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="190">
+          <caret line="959" column="13" lean-forward="true" selection-start-line="959" selection-start-column="13" selection-end-line="959" selection-end-column="13" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+            <element signature="n#style#0;n#div#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CatalitWeb/CatalitWeb.js">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Site/FB3ReaderSite.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="45" selection-start-column="45" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/default.htm">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="22" column="50" selection-start-line="22" selection-start-column="50" selection-end-line="22" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Site/LocalBookmarks.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="9" column="30" selection-start-line="9" selection-start-column="30" selection-end-line="9" selection-end-column="30" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CatalitWeb/CatalitWeb.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-column="14" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DOM/FB3DOM.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="47" column="44" selection-start-line="47" selection-start-column="44" selection-end-line="47" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.js">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MediaCache/MediaCache.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="74" column="37" lean-forward="true" selection-start-line="74" selection-start-column="37" selection-end-line="74" selection-end-column="37" />
+          <folding>
+            <element signature="n#MediaCache#0;n#FB3MediaCache#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="339">
+          <caret line="41" column="106" selection-start-line="41" selection-start-column="106" selection-end-line="41" selection-end-column="106" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+            <element signature="n#style#0;n#div#0;n#div#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DataProvider/FB3AjaxDataProvider.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="49">
+          <caret line="23" column="33" selection-start-line="23" selection-start-column="17" selection-end-line="23" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TextCache/TextCache.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="129">
+          <caret line="221" column="9" selection-start-line="221" selection-start-column="9" selection-end-line="221" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DOM/FB3DOMBlock.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="543">
+          <caret line="799" column="30" selection-start-line="799" selection-start-column="30" selection-end-line="799" selection-end-column="30" />
+          <folding>
+            <element signature="e#216#258#0" />
+            <element signature="e#564#1004#0" />
+            <element signature="e#1160#1244#0" />
+            <element signature="n#!!block;n#GetParent#0;n#FB3DOM#0" />
+            <element signature="e#1336#1357#0" />
+            <element signature="e#1392#1415#0" />
+            <element signature="n#!!block;n#IsNote#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#IsFootnoteLink#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#IsLink#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#TagClassFactory#0;n#FB3DOM#0" />
+            <element signature="e#1983#2193#0" />
+            <element signature="e#2007#2070#0" />
+            <element signature="e#2241#2318#0" />
+            <element signature="e#2355#2437#0" />
+            <element signature="e#2461#2539#0" />
+            <element signature="e#2571#2657#0" />
+            <element signature="e#2681#2759#0" />
+            <element signature="e#2765#2839#0" />
+            <element signature="n#!!block;n#XPathCompare#0;n#FB3DOM#0" />
+            <element signature="e#3108#3206#0" />
+            <element signature="e#3296#3394#0" />
+            <element signature="n#Restriction#0;n#FB3DOM#0" />
+            <element signature="e#3519#5518#0" />
+            <element signature="e#3529#3769#0" />
+            <element signature="e#3580#3680#0" />
+            <element signature="e#3707#3764#0" />
+            <element signature="e#3779#4040#0" />
+            <element signature="e#3830#3930#0" />
+            <element signature="e#3957#4035#0" />
+            <element signature="e#4050#4838#0" />
+            <element signature="e#4101#4389#0" />
+            <element signature="e#4239#4290#0" />
+            <element signature="e#4416#4833#0" />
+            <element signature="e#4533#4598#0" />
+            <element signature="e#4637#4703#0" />
+            <element signature="e#4742#4804#0" />
+            <element signature="e#4848#5514#0" />
+            <element signature="e#4899#5193#0" />
+            <element signature="e#5044#5095#0" />
+            <element signature="e#5220#5509#0" />
+            <element signature="e#5399#5482#0" />
+            <element signature="e#5549#5639#0" />
+            <element signature="e#5558#5591#0" />
+            <element signature="e#5600#5635#0" />
+            <element signature="n#!!block;n#ToRoman#0;n#Restriction#0;n#FB3DOM#0" />
+            <element signature="e#5996#6099#0" />
+            <element signature="e#6034#6094#0" />
+            <element signature="n#!!block;n#Repeat#0;n#Restriction#0;n#FB3DOM#0" />
+            <element signature="e#6208#6236#0" />
+            <element signature="n#!!block;n#Increment#0;n#Restriction#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#Get#0;n#Restriction#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#constructor#0;n#Restriction#0;n#FB3DOM#0" />
+            <element signature="n#PageContainer#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#constructor#0;n#PageContainer#0;n#FB3DOM#0" />
+            <element signature="e#7058#7113#0" />
+            <element signature="n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#constructor#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#8109#8217#0" />
+            <element signature="n#!!block;n#EscapeHtml#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#8283#8340#0" />
+            <element signature="n#!!block;n#parseChar#0;n#!!block;n#EscapeHtml#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetHTML#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#8767#8834#0" />
+            <element signature="e#8992#9063#0" />
+            <element signature="e#9085#9135#0" />
+            <element signature="e#9158#9207#0" />
+            <element signature="e#9362#9412#0" />
+            <element signature="e#9578#9716#0" />
+            <element signature="e#9632#9672#0" />
+            <element signature="e#9678#9711#0" />
+            <element signature="e#9736#9790#0" />
+            <element signature="e#9835#9991#0" />
+            <element signature="e#9997#10251#0" />
+            <element signature="e#10031#10096#0" />
+            <element signature="e#10278#10436#0" />
+            <element signature="e#10331#10429#0" />
+            <element signature="n#!!block;n#GetXML#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#10547#10597#0" />
+            <element signature="e#10620#10669#0" />
+            <element signature="n#!!block;n#Position#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#10882#10941#0" />
+            <element signature="n#!!block;n#ArtID2URL#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#11057#11122#0" />
+            <element signature="n#!!block;n#GetBookmarkClasses#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#11498#12501#0" />
+            <element signature="e#11541#11603#0" />
+            <element signature="e#11898#11956#0" />
+            <element signature="e#11962#12048#0" />
+            <element signature="e#12178#12200#0" />
+            <element signature="e#12206#12273#0" />
+            <element signature="n#!!block;n#IsBlock#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#12635#12658#0" />
+            <element signature="e#12664#12688#0" />
+            <element signature="n#!!block;n#Fire#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="e#12742#12772#0" />
+            <element signature="n#!!block;n#InlineStyle#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#PaddingBottom#0;n#FB3Text#0;n#FB3DOM#0" />
+            <element signature="n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetHTML#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#13433#13482#0" />
+            <element signature="e#13545#13602#0" />
+            <element signature="e#13816#13875#0" />
+            <element signature="e#13919#14081#0" />
+            <element signature="e#13925#14037#0" />
+            <element signature="e#14258#14742#0" />
+            <element signature="e#14332#14398#0" />
+            <element signature="e#14421#14491#0" />
+            <element signature="e#14768#14835#0" />
+            <element signature="e#14841#14898#0" />
+            <element signature="e#14971#15002#0" />
+            <element signature="e#15163#15284#0" />
+            <element signature="e#15332#15436#0" />
+            <element signature="e#15500#15792#0" />
+            <element signature="e#15567#15607#0" />
+            <element signature="e#15625#15661#0" />
+            <element signature="n#!!block;n#GetXML#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#16047#16233#0" />
+            <element signature="e#16084#16104#0" />
+            <element signature="e#16441#16561#0" />
+            <element signature="e#16609#16712#0" />
+            <element signature="e#16776#16991#0" />
+            <element signature="e#16843#16884#0" />
+            <element signature="e#16902#16939#0" />
+            <element signature="e#17008#17051#0" />
+            <element signature="n#!!block;n#constructor#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#17332#17369#0" />
+            <element signature="e#17375#17404#0" />
+            <element signature="e#17450#17480#0" />
+            <element signature="e#17544#17685#0" />
+            <element signature="e#17701#18428#0" />
+            <element signature="e#17935#18423#0" />
+            <element signature="e#18080#18103#0" />
+            <element signature="e#18294#18328#0" />
+            <element signature="e#18334#18359#0" />
+            <element signature="e#18446#18481#0" />
+            <element signature="n#!!block;n#HTMLTagName#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#18586#18608#0" />
+            <element signature="e#18643#18685#0" />
+            <element signature="e#18736#18819#0" />
+            <element signature="e#18899#18923#0" />
+            <element signature="e#18929#18960#0" />
+            <element signature="n#!!block;n#CheckPrevTagName#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#19130#19154#0" />
+            <element signature="n#!!block;n#GetCloseTag#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#CutTop#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#19382#19418#0" />
+            <element signature="n#!!block;n#ElementClasses#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#19587#19633#0" />
+            <element signature="e#19662#19723#0" />
+            <element signature="e#19749#19791#0" />
+            <element signature="e#19814#19912#0" />
+            <element signature="e#19936#19981#0" />
+            <element signature="e#20053#20095#0" />
+            <element signature="e#20156#20210#0" />
+            <element signature="e#20232#20276#0" />
+            <element signature="n#!!block;n#InlineStyle#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#20492#20549#0" />
+            <element signature="e#20571#20627#0" />
+            <element signature="n#!!block;n#PaddingBottom#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#20734#20821#0" />
+            <element signature="n#!!block;n#GetInitTag#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#21060#21104#0" />
+            <element signature="e#21138#21180#0" />
+            <element signature="e#21341#21383#0" />
+            <element signature="e#21461#21537#0" />
+            <element signature="e#21584#21670#0" />
+            <element signature="e#21676#21716#0" />
+            <element signature="e#21748#21813#0" />
+            <element signature="e#21865#22147#0" />
+            <element signature="e#22189#22320#0" />
+            <element signature="e#22327#22430#0" />
+            <element signature="n#!!block;n#Fire#0;n#FB3Tag#0;n#FB3DOM#0" />
+            <element signature="e#22555#22698#0" />
+            <element signature="e#23006#23050#0" />
+            <element signature="e#23865#23930#0" />
+            <element signature="e#24149#24179#0" />
+            <element signature="n#!!block;n#HTMLTagName#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="e#24927#24977#0" />
+            <element signature="n#!!block;n#GetRectangleWithinBounds#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="e#25472#25596#0" />
+            <element signature="n#!!block;n#GetValueWithinMinMax#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="e#25869#25897#0" />
+            <element signature="e#25925#25953#0" />
+            <element signature="n#!!block;n#GetValueFromUnits#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="e#26126#26171#0" />
+            <element signature="e#26203#26248#0" />
+            <element signature="e#26280#26325#0" />
+            <element signature="e#26356#26416#0" />
+            <element signature="n#!!block;n#GetValueFromEm#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetValueFromEx#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetValueFromMm#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetValueFromPercent#0;n#FB3ImgTag#0;n#FB3DOM#0" />
+            <element signature="n#FB3PurchaseTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetInitTag#0;n#FB3PurchaseTag#0;n#FB3DOM#0" />
+            <element signature="n#FB3FootnoteTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#constructor#0;n#FB3FootnoteTag#0;n#FB3DOM#0" />
+            <element signature="n#FB3NoteTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetInitTag#0;n#FB3NoteTag#0;n#FB3DOM#0" />
+            <element signature="e#27991#28035#0" />
+            <element signature="e#28217#28282#0" />
+            <element signature="n#!!block;n#Fire#0;n#FB3NoteTag#0;n#FB3DOM#0" />
+            <element signature="n#FB3FootnoteLinkTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetInitTag#0;n#FB3FootnoteLinkTag#0;n#FB3DOM#0" />
+            <element signature="e#28924#28976#0" />
+            <element signature="e#28998#29042#0" />
+            <element signature="e#29154#29219#0" />
+            <element signature="e#29286#29417#0" />
+            <element signature="e#29423#29526#0" />
+            <element signature="n#!!block;n#Fire#0;n#FB3FootnoteLinkTag#0;n#FB3DOM#0" />
+            <element signature="n#FB3LinkTag#0;n#FB3DOM#0" />
+            <element signature="n#!!block;n#GetInitTag#0;n#FB3LinkTag#0;n#FB3DOM#0" />
+            <element signature="e#30136#30180#0" />
+            <element signature="e#30347#30412#0" />
+            <element signature="n#!!block;n#Fire#0;n#FB3LinkTag#0;n#FB3DOM#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

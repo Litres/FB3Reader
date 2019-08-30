@@ -1,9 +1,10 @@
-﻿/// <reference path="FB3ReaderHead.ts" />
+/// <reference path="FB3ReaderHead.ts" />
 /// <reference path="FB3ReaderPage.ts" />
+/// <reference path="ReadProgress.ts" />
 
 module FB3Reader {
 	export var SaveCacheEveryNIterations = 30;
-//	interface IDumbCallback { () }
+	//	interface IDumbCallback { () }
 
 	// 0 on equal
 	// 1 if 1 past 2 on child level like [0,1,2] is past [0,1]
@@ -108,6 +109,12 @@ module FB3Reader {
 		public CurVisiblePage: number;
 		public StartTime: number;
 
+		private PageReadTimers: FB3ReaderPage.ReaderPage[];
+		private PageReadCurrentTimer: number;
+		private PageViewTimer: number;
+
+		public ReadProgress: FB3BookReadProgress.BookReadProgress;
+
 		private Alert: FB3ReaderSite.IAlert;
 		private Pages: FB3ReaderPage.ReaderPage[];
 		private BackgroundRenderFrame: FB3ReaderPage.ReaderPage;
@@ -127,15 +134,17 @@ module FB3Reader {
 		private RedrawState: boolean; // stupid workaround to fix AfterTurnPageDone fire
 		public RedrawInProgress: number;
 		private RedrawAgain: number;
+		private RedrawCallback: Function;
 		private GoTOByProgressBar: boolean; // if someone used progressbar slider to change position, it will be true
 
 		public _CanvasReadyCallback() {
+			//console.log('_CanvasReadyCallback '+ this.IdRedraw)
 			this.RedrawInProgress = 0;
 			if (this.RedrawAgain > 0) {
 				this.RedrawAgain = 0
 				this.RedrawVisible();
 				return;
-			} 
+			}
 
 			if (this.CanvasReadyCallback) {
 				this.CanvasReadyCallback(this.GetVisibleRange());
@@ -146,10 +155,11 @@ module FB3Reader {
 						Percent: this.CurPosPercent(),
 						Pos: this.CurStartPos,
 						TurnByProgressBar: this.GoTOByProgressBar
-					});
+					}, this.RedrawCallback);
 				} else {
 					this.RedrawState = false;
 				}
+				this.RedrawCallback = undefined;
 				this.GoTOByProgressBar = false;
 			}
 		}
@@ -174,7 +184,12 @@ module FB3Reader {
 			public FB3DOM: FB3DOM.IFB3DOM,
 			public Bookmarks: FB3Bookmarks.IBookmarks,
 			public Version: string,
-			public PagesPositionsCache: FB3PPCache.IFB3PPCache) {
+            public PagesPositionsCache: FB3Storage.IFB3PPCache,
+			SID: string,
+			ArtID: string,
+			IsTrial: string,
+			IsSubscription: boolean,
+            public TrackReading?: boolean) {
 
 			// Basic class init
 			this.GoTOByProgressBar = false;
@@ -189,7 +204,10 @@ module FB3Reader {
 			this.IsIE = /MSIE|\.NET CLR/.test(navigator.userAgent);
 			this.TicksFromSave = 0;
 			this.LineHeight = 0;
-			this.CachingDone = {};
+            this.CachingDone = {};
+
+			this.PageReadTimers = [];
+			this.ReadProgress = new FB3BookReadProgress.BookReadProgress(this, SID, ArtID, IsTrial, IsSubscription);
 
 			this.IdleOff();
 		}
@@ -198,6 +216,7 @@ module FB3Reader {
 
 
 			this.FB3DOM.Init(this.HyphON, () => {
+				this.ResetCache();
 				this.Bookmarks.FB3DOM = this.FB3DOM;
 				this.Bookmarks.Reader = this;
 				this.Site.HeadersLoaded(this.FB3DOM.MetaData);
@@ -205,30 +224,54 @@ module FB3Reader {
 				this.PutBlockIntoView(0);
 				this.Bookmarks.LoadFromCache();
 				this.Bookmarks.Bookmarks[0].Range.From = this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
-				if (DateTime) {
-					this.Bookmarks.Bookmarks[0].DateTime = DateTime;
-				}
-				if (this.Bookmarks.Bookmarks.length > 1 || DateTime) {
-					// when we have DateTime we need to merge local bookmark with server bookmark
-					this.Bookmarks.ReLoad();
-				} else {
-					// we have initial bookmark with dummy data, we can override it
-					this.Bookmarks.Load(() => {
-						this.Bookmarks.ApplyPosition();
-					});
-				}
-				if (!this.Bookmarks.ApplyPosition()) {
-					this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
-					this.GoTO(StartFrom);
-				}
+				this.LoadCacheStart(() => {
+					if (DateTime) {
+						this.Bookmarks.Bookmarks[0].DateTime = DateTime;
+					}
+					if (this.Bookmarks.Bookmarks.length > 1 || DateTime) {
+						// when we have DateTime we need to merge local bookmark with server bookmark
+						this.Bookmarks.ReLoad();
+					} else {
+						// we have initial bookmark with dummy data, we can override it
+						this.Bookmarks.Load(() => {
+							this.Bookmarks.ApplyPosition();
+						});
+					}
+					if (!this.Bookmarks.ApplyPosition()) {
+						this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
+						this.GoTO(StartFrom);
+					}
+
+					if (this.TrackReading) this.SetPageViewTimer();
+				});
 			});
+		}
+
+		private CacheLoadingMaxReq: number = 180;
+		private CacheLoadingReqCount: number = 0;
+		private CacheLoadingReq: number;
+		private LoadCacheStart(Callback)
+		{
+			this.LoadCache();
+			this.CacheLoadingReqCount = 0;
+			this.CacheLoadingReq = requestAnimationFrame(() => this.LoadCacheEnd(Callback));
+		}
+
+		private LoadCacheEnd(Callback) {
+			if (!this.PagesPositionsCache.IsReady && this.CacheLoadingReqCount < this.CacheLoadingMaxReq) {
+				this.CacheLoadingReq = requestAnimationFrame(() => this.LoadCacheEnd(Callback));
+				this.CacheLoadingReqCount++;
+			} else {
+				cancelAnimationFrame(this.CacheLoadingReq);
+				Callback();
+			}
 		}
 
 		public GoTO(NewPos: FB3ReaderAbstractClasses.IPosition, Force?: boolean) {
 			if (!NewPos || NewPos.length == 0) {
 				this.Site.Alert('Bad adress targeted');
 				return;
-			}
+            }
 			if (!Force && this.CurStartPos && PosCompare(this.CurStartPos, NewPos) == 0) {
 				return; // Already there
 			}
@@ -250,6 +293,9 @@ module FB3Reader {
 			if(this.PagesPositionsCache.LastPage() && Page == this.PagesPositionsCache.LastPage()) {
 				finishFunction();
 			}
+
+            // TODO calc page jump distance
+
 			// Wow, we know the page. It'll be fast. Page is in fact a column, so it belongs to it's
 			// set, NColumns per one. Let's see what start column we are going to deal with
 			this.StopRenders();
@@ -473,7 +519,6 @@ module FB3Reader {
 		public SearchForText(Text: string): FB3DOM.ITOC[]{ return null }
 
 		private PrepareCanvas() {
-			this.ResetCache();
 			var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%;">';
 			this.Pages = new Array();
 			for (var I = 0; I < this.CacheBackward + this.CacheForward + 1; I++) { // Visible page + precached ones
@@ -503,7 +548,6 @@ module FB3Reader {
 			this.CanvasH = this.Site.Canvas.clientHeight;
 			this.TicksFromSave = 0;
 			this.LineHeight = this.BackgroundRenderFrame.GetLineHeight();
-			this.LoadCache();
 		}
 
 		public AfterCanvasResize() {
@@ -656,7 +700,7 @@ module FB3Reader {
 			*/
 		public GoToXPath(XP: FB3DOM.IXPath): void {
 			var TargetChunk = this.FB3DOM.XPChunk(XP);
-			if (!this.XPToJump) {
+			if (this.FB3DOM.DataChunks[TargetChunk] && !this.XPToJump) {
 				this.XPToJump = XP;
 				if (!this.FB3DOM.DataChunks[TargetChunk].loaded) {
 					this.FB3DOM.LoadChunks([TargetChunk], () => this.GoToXPathFinal());
@@ -897,8 +941,10 @@ module FB3Reader {
 			this.IsIdle = false;
 		}
 
-		public Redraw(): void {
+		public Redraw(callback?: Function): void {
+			this.RedrawCallback = callback;
 			this.RedrawState = true;
+			this.ResetPageTimers('Redraw');
 			for (var I = 0; I < this.Pages.length; I++) {
 				this.Pages[I].Ready = false;
 			}
@@ -906,13 +952,17 @@ module FB3Reader {
 		}
 
 		public RedrawVisible(): void {
+			//console.log('RedrawVisible1');
 			if(this.RedrawInProgress > 0) {
 				this.RedrawAgain = 1;
+				//console.log('RedrawVisible skip');
 				return;
-			}		
-			this.RedrawInProgress = 1;		
+			}
+			this.RedrawInProgress = 1;
 			this.RedrawState = true;
 
+			//console.log('RedrawVisible2 ' + this.IdRedraw);
+			this.ResetPageTimers('RedrawVisible');
 			var NewInstr: IPageRenderInstruction[] = new Array();
 			for (var I = this.CurVisiblePage; I < this.CurVisiblePage + this.NColumns; I++) {
 				if (this.Pages[I].RenderInstr) {
@@ -934,9 +984,13 @@ module FB3Reader {
 			this.FB3DOM.Reset();
 			this.StopRenders();
 			this.BackgroundRenderFrame.Reset();
+			this.ResetCache();
 			this.PrepareCanvas();
 			this.CurVisiblePage = 0;
-			this.GoTO(this.CurStartPos.slice(0), true);
+			this.ResetPageTimers('Reset');
+			this.LoadCacheStart(() => {
+				this.GoTO(this.CurStartPos.slice(0), true);
+			})
 		}
 
 		public GetVisibleRange(): FB3DOM.IRange {
@@ -958,6 +1012,181 @@ module FB3Reader {
 				Range.To.push(this.FB3DOM.Childs[Range.To[0]].Childs.length);
 			}
 			return Range;
+        }
+
+        public SetPageViewTimer() {
+
+            // set page view timer only if track reading is active and only once
+            if (!this.IsTrackReadingActive || this.PageViewTimer != null) return;
+
+            var handler = () => {
+
+                // console.log('[' + Date.now() + '] page view timer #' + this.PageViewTimer + ' event handler executed');
+
+                this.ReadProgress.SendReadReport();
+            }
+
+            var timeoutMSec = Math.round(3 * 60 * 1000); // 3 min
+
+            // NOTE call handler every timeoutMSec
+            this.PageViewTimer = setInterval(handler, timeoutMSec);
+            // console.log('[' + Date.now() + '] page view timer #' + this.PageViewTimer + ' started');
+        }
+
+        public SetPageReadTimer(Page: FB3ReaderPage.ReaderPage) {
+
+            if (!this.IsTrackReadingActive()) {
+                return;
+            }
+
+            this.PageReadTimers.push(Page);
+            this.ReadProgress.FlipPage();
+
+            // console.log(Date.now() + ' page enqueued: ' + Page.ContentLength + ' pages to go: ' + this.PageReadTimers.length);
+
+            if (this.PageReadTimers.length == 1) {
+                this.PageReadTimersHandler();
+            }
+        }
+
+        private PageReadTimersHandler() {
+
+            if (this.PageReadTimers.length == 0) {
+                // this.ReadProgress.ResetFlippedPagesCounter();
+                return;
+            }
+
+            var currentPage: FB3ReaderPage.ReaderPage;
+            var charsPerSecond      = 82; // empirical value
+            var timeoutMSec         = 0;  // in milliseconds
+            var actualContentLength = 0;
+
+            for (var i = 0; i < this.PageReadTimers.length; i++) {
+
+                // console.log('timers queue length: ' + this.PageReadTimers.length);
+
+                // var actualContentLength = currentPage.ContentLength;
+                var actualContentLength = this.ReadProgress.Contains(this.PageReadTimers[i]);
+                // console.log('page #' + this.PageReadTimers[i].PageN + ' content length: ' + this.PageReadTimers[i].ContentLength + ' actual content length: ' + actualContentLength);
+
+                if (actualContentLength > 0) {
+
+                    currentPage = this.PageReadTimers[i];
+                    break;
+                }
+                this.ReadProgress.FlipPage(-1);
+                this.PageReadTimers.shift(); // no content page? failed to calc content length?
+            }
+
+            if (!currentPage) {
+                return;
+            }
+
+            timeoutMSec = Math.round(actualContentLength / charsPerSecond * 1000);
+
+            var handler = () => {
+
+                this.PageReadTimers.shift();  // remove current page
+                // console.log('[' + Date.now() + '] mark page as read, chars: ' + currentPage.ContentLength + ' #' + this.PageReadCurrentTimer + ' pages to go: ' + this.PageReadTimers.length);
+                this.ReadProgress.FlipPage(-1);
+                this.ReadProgress.AddPage(currentPage);
+                this.PageReadTimersHandler(); // start new timer
+            }
+
+            this.PageReadCurrentTimer = setTimeout(handler, timeoutMSec /* HACK TODO 1 */);
+            // console.log('[' + Date.now() + '] timer set #' + this.PageReadCurrentTimer + ' started, pages to go: ' + this.PageReadTimers.length);
+        }
+
+        public ResetPageTimers(caller: string) {
+            clearTimeout(this.PageReadCurrentTimer);
+            this.PageReadTimers = [];
+            // console.log('[' + Date.now() + '] timer reset #' + this.PageReadCurrentTimer + ' cleared, caller: ' + caller + ' pages to go: ' + this.PageReadTimers.length);
+        }
+
+		public ActiveZones(): FB3DOM.IActiveZone[] {
+			var Pages = this.GetVisiblePages();
+
+			var result = [];
+
+			Pages.forEach(function(Page, index, Pages) {
+				result = result.concat(this.ActiveZonesForPage(Page));
+			}, this);
+
+			return result;
+		}
+
+		ActiveZoneCallback: Function
+
+		public CallActiveZoneCallback(id: string): boolean {
+			var activeZone = this.findActiveZone(id);
+
+			if (activeZone) {
+				activeZone.fb3tag.Fire();
+				return true;
+			}
+
+			return false;
+		}
+
+		private findActiveZone(id: string) {
+			var activeZones = this.ActiveZones(),
+				activeZone;
+
+			for (var i = 0; i < activeZones.length; i++) {
+				activeZone = activeZones[i]
+				if (activeZone.id === id) {
+					return activeZone;
+				}
+			}
+
+			return null;
+		}
+
+		private ActiveZonesForPage(Page: FB3ReaderPage.ReaderPage): FB3DOM.IActiveZone[] {
+			var xpid = '',
+				activeElement = null;
+
+			var result = [],
+				activeZone,
+				fb3tag;
+			for (var j = 0; j < Page.ActiveZones.length; j++) {
+				activeZone = Page.ActiveZones[j];
+				activeElement = document.getElementById(activeZone.id);
+				if (!activeElement) {
+					continue;
+				}
+				activeZone.el = activeElement;
+				activeZone.rect = activeElement.getBoundingClientRect();
+				result.push(activeZone);
+			}
+
+			return result;
+		}
+
+		private GetVisiblePages(): FB3ReaderPage.ReaderPage[] {
+			var firstPage = this.Pages[this.CurVisiblePage];
+
+			if (!firstPage.Ready) {
+				return [];
+			}
+
+			if (this.NColumns < 2) {
+				return [firstPage];
+			}
+
+			return [firstPage, this.Pages[this.CurVisiblePage + this.NColumns - 1]];
+		}
+
+		public ColumnWidth(): number {
+			return this.Pages[this.CurVisiblePage].ViewPortW;
+		}
+
+        public IsTrackReadingActive() {
+            return this.TrackReading;
+		}
+
+        public GetPagesQueueLen() {
+            return this.PageReadTimers.length;
 		}
 	}
 

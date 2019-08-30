@@ -1,7 +1,26 @@
 /// <reference path="../FB3ReaderHeaders.ts" />
 
 module FB3DOM {
-
+	// Active zone – element which can be interactive
+	export interface IActiveZone {
+		// active zone id
+		id: string,
+		// path to element
+		xpid: string,
+		// corresponding FB3DOM reference
+		fb3tag: IFB3Block,
+		cursor: string,
+		title?: InnerHTML,
+		// link to DOM element
+		el?: any,
+		// element metrics
+		rect?: {
+			top: number,
+			right: number,
+			bottom: number,
+			left: number
+		}
+	}
 	export var MaxFootnoteHeight: number;
 	export interface IXPath extends Array<any> { }
 	export interface InnerHTML extends String {};
@@ -9,10 +28,17 @@ module FB3DOM {
 		From: FB3ReaderAbstractClasses.IPosition;
 		To: FB3ReaderAbstractClasses.IPosition;
 	}
+	export interface IRestriction {
+		Increment(att: string): number;
+		Get(att: string): string;
+	}
 	export interface IPageContainer {
 		Body: InnerHTML[];
 		FootNotes: InnerHTML[];
 		BodyXML: string[];
+		ActiveZones: IActiveZone[];
+		Restriction: IRestriction;
+		ContentLength: number;
 	}
 	export interface IDOMTextReadyCallback { (PageData: IPageContainer): void; }
 	export interface IChunkLoadedCallback { (): void }
@@ -35,7 +61,7 @@ module FB3DOM {
 		};
 		cl: boolean; // partially clipped chapter (for trial book)
 		tcl: boolean; // entirely clipped chapter (for trial book)
-		fcp: boolean; // first character position in chapter 
+		fcp: boolean; // first character position in chapter
 		c?: ITOC[];	// contents (subitems)
 	}
 	export interface IJSONBlock {	// Compact notation for the same reason
@@ -53,17 +79,17 @@ module FB3DOM {
 		maxw?: number;		// image maximal widthfrom in fb3 document
 		h?: number;			// image height
 		s?: string;			// image src attribute
-		hr: number[];		// target internal xpath for internal hrefs
+		hr?: number[];		// target internal xpath for internal hrefs
 		op?: boolean;		// Is this node unbreakable, should it fit on ONE page, mo matter the cost?
-		fl?: string;		// Where to float the box? May be left|right|center|default
 		al?: string;		// Text-align May be left|right|center|justify
 		valn?: string;		// TD vertical align. top|middle|bottom
 		bnd?: string;		// ID of the element to float around
-		brd?: boolean;		// Border presence
 		csp?: number;		// colspan
 		rsp?: number;		// rowspan
-		att?: boolean;		// If true - note title may have autotext (default behaviour).
-							// Like [1] or * or **. Or leave text from the document if false
+		att?: string;		// If true - note title may have autotext (default behaviour).
+										// Like [1] or * or **. Or leave text from the document if false
+		fl?: string; // Where to float the box? May be left|right|none
+		brd?: boolean; // Border presence
 	}
 
 	export interface IDataDisposition {
@@ -71,7 +97,7 @@ module FB3DOM {
 		e: number;
 		url: string;
 		loaded: number; // 0 - not loaded, 1 - requested, 2 - loaded, available
-		xps: IXPath;  // native fb2 xpath for the chunk first element 
+		xps: IXPath;  // native fb2 xpath for the chunk first element
 		xpe: IXPath;  // same for the last one
 	}
 
@@ -79,11 +105,20 @@ module FB3DOM {
 		Title: string;
 		UUID: string;
 		Authors: IAuthorsData[];
+		DraftStatus?: IDraftStatus,
+		Created?: string;
+		Updated?: string;
 	}
+
 	export interface IAuthorsData {
 		First: string;
 		Last: string;
 		Middle: string;
+	}
+
+	export interface IDraftStatus {
+		expected_chars: string;
+		expected_frequency: string;
 	}
 
 	export interface IFB3BlockRectangle {
@@ -115,7 +150,16 @@ module FB3DOM {
 			PageData: IPageContainer);
 		Position(): FB3ReaderAbstractClasses.IPosition;
 		IsBlock(): boolean;
+		Fire(): void; // Fire corresponding callback from Site
+		InlineStyle(ViewPortW?: any, ViewportH?: any): string;
+		PaddingBottom(): number;
 		IsUnbreakable?: boolean;
+		IsFloatable?: boolean;
+		ElementID: string; // ID for corresponding DOM node
+		HasFootnote: boolean; // Does element have footnote?
+		IsActiveZone: boolean; // Flag for active zone
+		IsLink: boolean;
+		Footnote?: IFB3Block; // Link for footnote FB3Block
 	}
 
 	export interface IIFB3DOMReadyFunc{ (FB3DOM: IFB3DOM): void }
@@ -128,7 +172,9 @@ module FB3DOM {
 		TOC: ITOC[];
 		DataChunks: IDataDisposition[];
 		MetaData: IMetaData;
-		PagesPositionsCache: FB3PPCache.IFB3PPCache;
+		FullLength: number;
+		PagesPositionsCache: FB3Storage.IFB3PPCache;
+		MediaCacheLoader: FB3MediaCache.MediaCacheLoader;
 		ArtID2URL(Chunk?: string): string;
 		Bookmarks: FB3Bookmarks.IBookmarks[];
 		Init(HyphOn: boolean,
@@ -154,7 +200,7 @@ module FB3DOM {
 			ViewPortH: number,
 			PageData: IPageContainer);
 		GetXML(Range: IRange,
-			PageData: IPageContainer);		
+			PageData: IPageContainer);
 		XPChunk(X: IXPath): number;
 		Reset(): void; // Stop all callbacks (leaving some internal processing)
 		GetFullTOC(): object;

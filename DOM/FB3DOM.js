@@ -1,7 +1,10 @@
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -43,7 +46,7 @@ var FB3DOM;
             }
             if (!this.WaitedBlocks.length) {
                 if (this.OnGetDone) {
-                    var PageData = new PageContainer();
+                    var PageData = new FB3DOM_1.PageContainer();
                     var AllBookmarks = new Array();
                     this.FB3DOM.GetHTML(this.HyphOn, this.BookStyleNotes, this.Range, this.IDPrefix, this.ViewPortW, this.ViewPortH, PageData);
                     this.OnGetDone(PageData);
@@ -64,23 +67,15 @@ var FB3DOM;
         return AsyncLoadConsumer;
     }());
     ;
-    var PageContainer = (function () {
-        function PageContainer() {
-            this.Body = new Array();
-            this.FootNotes = new Array();
-            this.BodyXML = new Array();
-        }
-        return PageContainer;
-    }());
-    FB3DOM_1.PageContainer = PageContainer;
     var DOM = (function (_super) {
         __extends(DOM, _super);
-        function DOM(Site, Progressor, DataProvider, PagesPositionsCache) {
+        function DOM(Site, Progressor, DataProvider, PagesPositionsCache, MediaCacheLoader) {
             var _this = _super.call(this, null, null, null, 0) || this;
             _this.Site = Site;
             _this.Progressor = Progressor;
             _this.DataProvider = DataProvider;
             _this.PagesPositionsCache = PagesPositionsCache;
+            _this.MediaCacheLoader = MediaCacheLoader;
             _this.ActiveRequests = [];
             _this.Ready = false;
             _this.XPID = '';
@@ -109,6 +104,12 @@ var FB3DOM;
             this.DataChunks = Data.Parts;
             this.MetaData = Data.Meta;
             this.Ready = true;
+            if (Data["fb3-fragment"]) {
+                this.FullLength = Data["fb3-fragment"].full_length;
+            }
+            else {
+                this.FullLength = Data.full_length;
+            }
             this.OnDoneFunc(this);
         };
         DOM.prototype.GetFullTOC = function () {
@@ -120,13 +121,13 @@ var FB3DOM;
             this.OnDoneFunc = OnDone;
             this.Childs = new Array();
             this.Progressor.HourglassOn(this, true, 'Loading meta...');
-            this.DataProvider.Request(this.DataProvider.ArtID2URL(), function (Data) { return _this.AfterHeaderLoaded(Data); }, this.Progressor);
+            this.DataProvider.Request(this.DataProvider.ArtID2URL(), function (Data) { return _this.AfterHeaderLoaded(Data); }, this.Progressor, undefined, true);
             this.Progressor.HourglassOff(this);
         };
         DOM.prototype.GetHTMLAsync = function (HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, Callback) {
             var MissingChunks = this.CheckRangeLoaded(Range.From[0], Range.To[0]);
             if (MissingChunks.length == 0) {
-                var PageData = new PageContainer();
+                var PageData = new FB3DOM_1.PageContainer();
                 this.GetHTML(HyphOn, BookStyleNotes, Range, IDPrefix, ViewPortW, ViewPortH, PageData);
                 Callback(PageData);
             }
@@ -209,7 +210,7 @@ var FB3DOM;
             var LoadedChunk = CustomData.ChunkN;
             var Shift = this.DataChunks[LoadedChunk].s;
             for (var I = 0; I < Data.length; I++) {
-                this.Childs[I + Shift] = FB3DOM_1.TagClassFactory(Data[I], this, I + Shift, 0, 0, false, this);
+                this.Childs[I + Shift] = FB3DOM_1.TagClassFactory(Data[I], this, I + Shift, 0, 0, false, false, this);
             }
             this.DataChunks[LoadedChunk].loaded = 2;
             var I = 0;

@@ -22,10 +22,15 @@ module FB3Reader {
 		CurStartPos: FB3ReaderAbstractClasses.IPosition;	// Adress of the first visible block, READ ONLY!
 		CurStartPage: number;	// Number of the first visible page (if any)
 		LineHeight: number;		// Height of the line in P - in pixels, to align blocks vertically
-		PagesPositionsCache: FB3PPCache.IFB3PPCache;
+		PagesPositionsCache: FB3Storage.IFB3PPCache;
 		CurVisiblePage: number;	// ID of the first page visible, shared for FB3ReaderPage only
 		Version: string;        // Used to verify cache compatibility with the current renderer
 		StartTime: number;  // Starttime when all elements are initialized
+
+		// SetPageReadTimer(Page: any);
+		SetPageReadTimer(Page: FB3ReaderPage.ReaderPage);
+		ResetPageTimers(caller: string);
+        SetPageViewTimer();
 
 		CanvasReadyCallback: FB3ReaderAbstractClasses.ICanvasReadyCallback; // fired when the page rendering complete
 
@@ -53,12 +58,22 @@ module FB3Reader {
 		GetElementXYByPosition(Position: FB3ReaderAbstractClasses.IPosition): FB3ReaderAbstractClasses.IDimensions;	// Get element start xy and end xy related to window
 		Reset(): void;      // Reopens reader on the current position. Call this after you have
 												// changed CSS, resized canvas or some other distructive things
-		Redraw(): void;     // pages refresh - only updates bookmarks
+		Redraw(callback?: Function): void;     // pages refresh - only updates bookmarks
 		RedrawVisible(): void; // light version of redraw, refresh only visible pages (boookmark selection)
 		GetVisibleRange(): FB3DOM.IRange;
 		PatchRangeTo(Range: FB3DOM.IRange): FB3DOM.IRange;
 		GetFB3Fragment(): object;
 		HasFB3Fragment(): boolean;
+
+
+		ActiveZones(): FB3DOM.IActiveZone[];
+		CallActiveZoneCallback(id: string): boolean;
+
+		ColumnWidth(): number;
+
+        IsTrackReadingActive(): boolean; // returns true if TrackReading is enabled
+        GetPagesQueueLen(): number;
+		ReadProgress: FB3BookReadProgress.BookReadProgress;
 
 		Destroy: boolean; // hack for apps, like win8, when we change page, abort all
 		RedrawInProgress: number;

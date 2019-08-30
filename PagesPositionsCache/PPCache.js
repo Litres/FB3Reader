@@ -1,25 +1,22 @@
 var FB3PPCache;
 (function (FB3PPCache) {
-    function CheckStorageAvail() {
-        if (FB3PPCache.LocalStorage !== undefined) {
-            return FB3PPCache.LocalStorage;
-        }
-        try {
-            window.localStorage['working'] = 'true';
-            FB3PPCache.LocalStorage = true;
-            window.localStorage.removeItem('working');
-        }
-        catch (e) {
-            FB3PPCache.LocalStorage = false;
-        }
-        return FB3PPCache.LocalStorage;
-    }
-    FB3PPCache.CheckStorageAvail = CheckStorageAvail;
     FB3PPCache.MaxCacheRecords = 15;
     var SkipCache = false;
+    var LocalStorageName = 'FB3Reader1.0';
+    var IndexedDBStoreName = "FBReaderStore";
     var PPCache = (function () {
-        function PPCache() {
+        function PPCache(Driver) {
+            if (Driver === void 0) { Driver = FB3Storage.LOCAL_STORAGE; }
             this.Encrypt = true;
+            this.IsReady = false;
+            if (Driver === FB3Storage.LOCAL_STORAGE) {
+                this.Driver = new FB3Storage.LocalStorageDriver(this, FB3PPCache.MaxCacheRecords);
+                this.StorageName = LocalStorageName;
+            }
+            else if (Driver === FB3Storage.INDEXED_DB) {
+                this.Driver = new FB3Storage.IndexedDBDriver(this);
+                this.StorageName = IndexedDBStoreName;
+            }
             this.Reset();
         }
         PPCache.prototype.Get = function (I) {
@@ -32,72 +29,66 @@ var FB3PPCache;
             this.CacheMarkupsList = null;
             this.PagesPositionsCache = new Array();
             this.MarginsCache = {};
+            this.IsReady = this.Driver.IsLocal;
         };
         PPCache.prototype.Length = function () {
             return this.PagesPositionsCache.length;
         };
         PPCache.prototype.Save = function (Key) {
+            var _this = this;
             if (SkipCache) {
                 return;
             }
-            if (FB3PPCache.CheckStorageAvail()) {
+            if (FB3Storage.CheckStorageAvail() !== FB3Storage.NO_STORAGE) {
                 if (!this.CacheMarkupsList) {
-                    this.LoadOrFillEmptyData();
+                    this.LoadOrFillEmptyData(function () {
+                        _this.SaveData(Key, _this.CacheMarkupsList);
+                    });
                 }
-                var RowToFillID;
-                var OldestIDTime;
-                for (var I = 0; I < this.CacheMarkupsList.length; I++) {
-                    if (this.CacheMarkupsList[I].Key == Key) {
-                        this.CacheMarkupsList.splice(I, 1);
-                    }
+                else {
+                    this.SaveData(Key, this.CacheMarkupsList);
                 }
-                if (this.CacheMarkupsList.length >= FB3PPCache.MaxCacheRecords) {
-                    this.CacheMarkupsList.shift();
-                }
-                this.CacheMarkupsList.push({
-                    Time: new Date,
-                    Key: Key,
-                    Cache: this.PagesPositionsCache,
-                    LastPage: this.LastPageN,
-                    MarginsCache: this.MarginsCache
-                });
-                var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
-                this.SaveData(this.EncodeData(uncompressdCacheData));
             }
         };
         PPCache.prototype.Load = function (Key) {
+            var _this = this;
             if (SkipCache) {
+                this.IsReady = true;
                 return;
             }
-            if (FB3PPCache.CheckStorageAvail()) {
+            if (FB3Storage.CheckStorageAvail() !== FB3Storage.NO_STORAGE) {
                 if (!this.CacheMarkupsList) {
-                    this.LoadOrFillEmptyData();
-                }
-                for (var I = 0; I < this.CacheMarkupsList.length; I++) {
-                    if (this.CacheMarkupsList[I].Key == Key) {
-                        this.PagesPositionsCache = this.CacheMarkupsList[I].Cache;
-                        this.MarginsCache = this.CacheMarkupsList[I].MarginsCache;
-                        this.LastPageN = this.CacheMarkupsList[I].LastPage;
-                        break;
-                    }
+                    this.LoadOrFillEmptyData(function (CacheMarkupsList) {
+                        _this.Driver.Find(_this.StorageName, Key, function (CacheMarkupList) {
+                            if (CacheMarkupList) {
+                                _this.PagesPositionsCache = CacheMarkupList.Cache;
+                                _this.MarginsCache = CacheMarkupList.MarginsCache;
+                                _this.LastPageN = CacheMarkupList.LastPage;
+                            }
+                            _this.IsReady = true;
+                        });
+                    });
                 }
             }
         };
         PPCache.prototype.LoadDataAsync = function (ArtID) { };
-        PPCache.prototype.LoadOrFillEmptyData = function () {
-            var compressedCacheData = this.LoadData();
-            var DataInitDone = false;
-            if (compressedCacheData) {
-                try {
-                    var cacheData = this.DecodeData(compressedCacheData);
-                    this.CacheMarkupsList = JSON.parse(cacheData);
-                    DataInitDone = true;
+        PPCache.prototype.LoadOrFillEmptyData = function (Callback) {
+            var _this = this;
+            if (Callback === void 0) { Callback = function (CacheMarkupsList) { }; }
+            this.LoadData(function (cacheData) {
+                var DataInitDone = false;
+                if (cacheData) {
+                    try {
+                        _this.CacheMarkupsList = cacheData;
+                        DataInitDone = true;
+                    }
+                    catch (e) { }
                 }
-                catch (e) { }
-            }
-            if (!DataInitDone) {
-                this.CacheMarkupsList = new Array();
-            }
+                if (!DataInitDone) {
+                    _this.CacheMarkupsList = [];
+                }
+                Callback(_this.CacheMarkupsList);
+            });
         };
         PPCache.prototype.LastPage = function (LastPageN) {
             if (LastPageN == undefined) {
@@ -121,27 +112,19 @@ var FB3PPCache;
             }
             return undefined;
         };
-        PPCache.prototype.DecodeData = function (Data) {
-            if (this.Encrypt) {
-                return LZString.decompressFromUTF16(Data);
-            }
-            else {
-                return Data;
-            }
+        PPCache.prototype.LoadData = function (Callback) {
+            if (Callback === void 0) { Callback = function (compressedCacheData) { }; }
+            return this.Driver.LoadData(this.StorageName, Callback);
         };
-        PPCache.prototype.EncodeData = function (Data) {
-            if (this.Encrypt) {
-                return LZString.compressToUTF16(Data);
-            }
-            else {
-                return Data;
-            }
-        };
-        PPCache.prototype.LoadData = function () {
-            return localStorage['FB3Reader1.0'];
-        };
-        PPCache.prototype.SaveData = function (Data) {
-            localStorage['FB3Reader1.0'] = Data;
+        PPCache.prototype.SaveData = function (Key, Data, Callback) {
+            if (Callback === void 0) { Callback = function () { }; }
+            this.Driver.SaveData(this.StorageName, Key, {
+                Time: new Date,
+                Key: Key,
+                Cache: this.PagesPositionsCache,
+                LastPage: this.LastPageN,
+                MarginsCache: this.MarginsCache
+            }, Data, Callback);
         };
         return PPCache;
     }());

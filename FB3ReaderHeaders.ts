@@ -65,7 +65,7 @@ module FB3ReaderAbstractClasses {
 		// Linked objects - you feed this to FB3Reader.Reader() constructor, can use later on
 		Site: FB3ReaderSite.IFB3ReaderSite;
 		Bookmarks: FB3Bookmarks.IBookmarks;
-		PagesPositionsCache: FB3PPCache.IFB3PPCache;
+		PagesPositionsCache: FB3Storage.IFB3PPCache;
 		FB3DOM: FB3DOM.IFB3DOM;
 }
 

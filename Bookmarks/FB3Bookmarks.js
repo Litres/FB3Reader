@@ -1,8 +1,183 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var FB3Bookmarks;
 (function (FB3Bookmarks) {
     FB3Bookmarks.ActiveXXMLHttp = true;
+    var Catalit = (function (_super) {
+        __extends(Catalit, _super);
+        function Catalit() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.notesRequestID = 'r_my_fb3_notes';
+            _this.notesRequestMethod = 'r_my_fb3_notes_incremental';
+            _this.lockNotesRequestID = 'w_set_bookmark_lock';
+            _this.lockNotesRequestMethod = 'w_set_bookmark_lock';
+            _this.replaceNotesRequestID = 'w_replace_my_fb3_notes';
+            _this.replaceNotesRequestMethod = 'w_replace_my_fb3_notes';
+            _this.deleteNotesRequestID = 'w_drop_my_fb3_notes';
+            _this.deleteNotesRequestMethod = 'w_drop_my_fb3_notes';
+            _this.makeNotePublicRequestID = 'w_quote_make_public';
+            _this.makeNotePublicRequestMethod = 'w_quote_make_public';
+            _this.deletedNotes = [];
+            return _this;
+        }
+        Catalit.prototype.addNotesRequest = function () {
+            this.addNewRequest({
+                func: this.notesRequestMethod,
+                id: this.notesRequestID,
+                param: {
+                    art: this.artID
+                }
+            });
+        };
+        Catalit.prototype.addLockNotesRequest = function () {
+            this.addNewRequest({
+                func: this.lockNotesRequestMethod,
+                id: this.lockNotesRequestID,
+                param: {
+                    art: this.artID
+                }
+            });
+        };
+        Catalit.prototype.addReplaceNotesRequest = function (notes) {
+            this.addNewRequest({
+                func: this.replaceNotesRequestMethod,
+                id: this.replaceNotesRequestID,
+                param: {
+                    art: this.artID,
+                    my_notes: notes,
+                    lock_id: this.lockID
+                }
+            });
+        };
+        Catalit.prototype.addDeletedNotesRequest = function (notes) {
+            this.addNewRequest({
+                func: this.deleteNotesRequestMethod,
+                id: this.deleteNotesRequestID,
+                param: {
+                    notes: notes.map(function (note) { return note.id; }),
+                    lock_id: this.lockID
+                }
+            });
+        };
+        Catalit.prototype.addMakeNotePublicRequest = function (noteID) {
+            this.addNewRequest({
+                func: this.makeNotePublicRequestID,
+                id: this.makeNotePublicRequestMethod,
+                param: {
+                    id: noteID
+                }
+            });
+        };
+        Catalit.prototype.addDeletedNote = function (note) {
+            this.deletedNotes.push(note);
+        };
+        Catalit.prototype.clearDeletedNotes = function () {
+            this.deletedNotes = [];
+        };
+        Catalit.prototype.onGetNotes = function (successCallback, failureCallback, result) {
+            var preparedResult = {
+                success: false,
+                notes: [],
+                lock_id: ''
+            };
+            try {
+                var lockResultBody = result[this.lockNotesRequestID], notesResultBody = result[this.notesRequestID];
+                preparedResult.lock_id = lockResultBody.lock_id;
+                preparedResult.notes = notesResultBody.my_notes;
+                this.setLockID(preparedResult.lock_id);
+                if (result.success) {
+                    preparedResult.success = true;
+                    successCallback(preparedResult);
+                    return true;
+                }
+                failureCallback(preparedResult);
+                return false;
+            }
+            catch (e) {
+                failureCallback(preparedResult);
+                console.warn(e.message);
+                return false;
+            }
+        };
+        Catalit.prototype.onReplaceNotes = function (successCallback, failureCallback, result) {
+            var preparedResult = {
+                success: false
+            };
+            try {
+                var lockResultBody = result[this.lockNotesRequestID], replaceNotesResultBody = result[this.replaceNotesRequestID];
+                if (result.success) {
+                    preparedResult.success = true;
+                    successCallback(preparedResult);
+                    return true;
+                }
+                failureCallback(preparedResult);
+                return false;
+            }
+            catch (e) {
+                failureCallback(preparedResult);
+                console.warn(e.message);
+                return false;
+            }
+        };
+        Catalit.prototype.onMakeNotePublic = function (successCallback, failureCallback, result) {
+            try {
+                var resultBody = result[this.makeNotePublicRequestID];
+                if (resultBody.success) {
+                    successCallback();
+                    return true;
+                }
+                failureCallback(resultBody);
+                return false;
+            }
+            catch (e) {
+                failureCallback();
+                return false;
+            }
+        };
+        Catalit.prototype.getNotes = function (successCallback, failureCallback) {
+            this.clearRequestsArray();
+            this.addLockNotesRequest();
+            this.addNotesRequest();
+            this.requestAPI(this.onGetNotes.bind(this, successCallback, failureCallback));
+        };
+        Catalit.prototype.replaceNotes = function (notes, successCallback, failureCallback) {
+            this.clearRequestsArray();
+            if (notes.length > 0) {
+                this.addReplaceNotesRequest(notes);
+            }
+            if (this.deletedNotes.length > 0) {
+                this.addDeletedNotesRequest(this.deletedNotes);
+                this.clearDeletedNotes();
+            }
+            this.requestAPI(this.onReplaceNotes.bind(this, successCallback, failureCallback));
+        };
+        Catalit.prototype.makeNotePublic = function (noteID, successCallback, failureCallback) {
+            this.clearRequestsArray();
+            this.addMakeNotePublicRequest(noteID);
+            this.requestAPI(this.onMakeNotePublic.bind(this, successCallback, failureCallback));
+        };
+        Catalit.prototype.setLockID = function (lockID) {
+            return this.lockID = lockID;
+        };
+        Catalit.prototype.setArtID = function (artID) {
+            return this.artID = artID;
+        };
+        return Catalit;
+    }(CatalitWeb.CatalitWebApp));
     var LitResBookmarksProcessor = (function () {
-        function LitResBookmarksProcessor(FB3DOM, LitresSID, LitresLocalXML) {
+        function LitResBookmarksProcessor(FB3DOM, LitresSID, LitresLocalXML, UseCatalit2, ScrollToXpath) {
+            if (UseCatalit2 === void 0) { UseCatalit2 = false; }
             this.FB3DOM = FB3DOM;
             if (LitresSID) {
                 this.SID = LitresSID;
@@ -28,6 +203,14 @@ var FB3Bookmarks;
             }
             this.SaveAuto = false;
             this.LocalXML = LitresLocalXML;
+            if (UseCatalit2) {
+                this.UseCatalit2 = true;
+                this.Catalit = new Catalit(LitresURLParser.SID, window.location.host);
+                this.Catalit.setArtID(LitresURLParser.ArtID);
+            }
+            if (ScrollToXpath) {
+                this.ScrollToXpath = ScrollToXpath;
+            }
         }
         LitResBookmarksProcessor.prototype.AddBookmark = function (Bookmark) {
             Bookmark.N = this.Bookmarks.length;
@@ -62,8 +245,13 @@ var FB3Bookmarks;
             this.LoadEndCallback = Callback;
             this.WaitForData = true;
             var URL = this.MakeLoadURL();
-            this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
-            this.SendNotesRequest(URL, 'GET');
+            if (this.UseCatalit2) {
+                this.Catalit.getNotes(this.OnGetNotesSuccess.bind(this), function () { });
+            }
+            else {
+                this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
+                this.SendNotesRequest(URL, 'GET');
+            }
         };
         LitResBookmarksProcessor.prototype.MakeXMLFromString = function (XMLString) {
             var parseXml;
@@ -86,6 +274,35 @@ var FB3Bookmarks;
                 };
             }
             return parseXml(XMLString);
+        };
+        LitResBookmarksProcessor.prototype.OnGetNotesSuccess = function (Result) {
+            var _this = this;
+            var Notes = Result.notes;
+            this.LoadDateTime = moment().unix();
+            if (Result.lock_id) {
+                this.LockID = Result.lock_id;
+            }
+            if (Notes) {
+                for (var j = 0; j < Notes.length; j++) {
+                    var Note = Notes[j];
+                    var NewBookmark = new Bookmark(this);
+                    NewBookmark.ParseObject(Note);
+                    if (NewBookmark.Group == 0) {
+                        this.Bookmarks[0] = NewBookmark;
+                    }
+                    else {
+                        this.AddBookmark(NewBookmark);
+                    }
+                }
+            }
+            this.WaitedToRemapBookmarks = 0;
+            for (var I = 0; I < this.Bookmarks.length; I++) {
+                if (!this.Bookmarks[I].XPathMappingReady) {
+                    this.Bookmarks[I].RemapWithDOM(function () { return _this.OnChildBookmarkSync(); });
+                    this.WaitedToRemapBookmarks++;
+                }
+            }
+            this.CheckWaitedSync();
         };
         LitResBookmarksProcessor.prototype.AfterTransferFromServerComplete = function (XML) {
             var _this = this;
@@ -112,6 +329,10 @@ var FB3Bookmarks;
                 if (this.ReadyCallback) {
                     this.ReadyCallback();
                 }
+                var ForcedXpathPos = this.GetForcedXpathPosition();
+                if (ForcedXpathPos) {
+                    this.Reader.GoToXPath(this.Bookmarks[0].MakeXPathSub(ForcedXpathPos));
+                }
             }
         };
         LitResBookmarksProcessor.prototype.ParseXML = function (XML) {
@@ -132,31 +353,59 @@ var FB3Bookmarks;
                     }
                 }
             }
+            else {
+            }
         };
         LitResBookmarksProcessor.prototype.Store = function () {
             this.ReLoad(true);
         };
         LitResBookmarksProcessor.prototype.StoreBookmarks = function () {
             var _this = this;
-            var XML = this.MakeStoreXML();
-            if (this.Reader.Site.BeforeBookmarksAction()) {
-                var Data = this.MakeStoreData(XML);
-                var URL = this.MakeStoreURL();
-                this.XMLHTTPResponseCallback = function () {
-                    _this.Reader.Site.AfterStoreBookmarks();
-                };
-                this.SendNotesRequest(URL, 'POST', Data);
+            if (this.UseCatalit2) {
+                if (this.Reader.Site.BeforeBookmarksAction()) {
+                    this.Catalit.replaceNotes(this.MakeStoreObject(), this.OnReplaceNotesSuccess.bind(this), this.OnReplaceNotesFailure.bind(this));
+                }
+            }
+            else {
+                var XML = this.MakeStoreXML();
+                if (this.Reader.Site.BeforeBookmarksAction()) {
+                    var Data = this.MakeStoreData(XML);
+                    var URL = this.MakeStoreURL();
+                    this.XMLHTTPResponseCallback = function () {
+                        _this.Reader.Site.AfterStoreBookmarks();
+                    };
+                    this.SendNotesRequest(URL, 'POST', Data);
+                }
             }
         };
-        LitResBookmarksProcessor.prototype.MakeBookmarkPublic = function (Bookmark, callback) {
-            if (callback === void 0) { callback = function () { }; }
-            this.XMLHTTPResponseCallback = function () {
-                callback();
-            };
-            var URL = this.Host + "pages/ajax_empty2/", Data = "action=quote_make_public&q=" + Bookmark.ID;
-            this.SendNotesRequest(URL, 'POST', Data);
+        LitResBookmarksProcessor.prototype.OnReplaceNotesSuccess = function () {
+            this.Reader.Site.AfterStoreBookmarks();
         };
-        LitResBookmarksProcessor.prototype.CreateBookmarkFromTemporary = function (Group, Bookmark, Title, callback) {
+        LitResBookmarksProcessor.prototype.OnReplaceNotesFailure = function () {
+            this.Reader.Site.AfterStoreBookmarksFailure();
+        };
+        LitResBookmarksProcessor.prototype.MakeStoreObject = function () {
+            var result = [];
+            for (var j = 0; j < this.Bookmarks.length; j++) {
+                if (!this.Bookmarks[j].TemporaryState) {
+                    result.push(this.Bookmarks[j].PublicObject());
+                }
+            }
+            return result;
+        };
+        LitResBookmarksProcessor.prototype.MakeBookmarkPublic = function (Bookmark, callback, failureCallback) {
+            if (callback === void 0) { callback = function () { }; }
+            if (failureCallback === void 0) { failureCallback = function () { }; }
+            if (this.UseCatalit2) {
+                this.Catalit.makeNotePublic(Bookmark.ID, function () {
+                    callback();
+                }, function (resultObject) { failureCallback(resultObject); });
+            }
+            else {
+                failureCallback();
+            }
+        };
+        LitResBookmarksProcessor.prototype.CreateBookmarkFromTemporary = function (Group, Bookmark, Title, callback, failureCallback) {
             var NewNote;
             var titles = { 1: 'Закладка', 3: 'Заметка', 5: 'Заметка' };
             switch (Group) {
@@ -185,7 +434,7 @@ var FB3Bookmarks;
             else {
                 this.Reader.RedrawVisible();
             }
-            this.Reader.Site.StoreBookmarksHandler(200, callback);
+            this.Reader.Site.StoreBookmarksHandler(200, callback, failureCallback);
             return NewNote;
         };
         LitResBookmarksProcessor.prototype.ApplyPosition = function () {
@@ -199,7 +448,7 @@ var FB3Bookmarks;
         };
         LitResBookmarksProcessor.prototype.ReLoad = function (SaveAutoState) {
             var _this = this;
-            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
+            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID, undefined, this.UseCatalit2, this.ScrollToXpath);
             TemporaryNotes.Host = this.Host;
             TemporaryNotes.Reader = this.Reader;
             TemporaryNotes.aldebaran = this.aldebaran;
@@ -228,6 +477,9 @@ var FB3Bookmarks;
                 for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) {
                     Found = 0;
                     if (this.DeletedBookmarks[TemporaryNotes.Bookmarks[j].ID]) {
+                        if (this.UseCatalit2) {
+                            this.Catalit.addDeletedNote(TemporaryNotes.Bookmarks[j].PublicObject());
+                        }
                         continue;
                     }
                     for (var i = 1; i < this.Bookmarks.length; i++) {
@@ -273,6 +525,9 @@ var FB3Bookmarks;
             if (this.SaveAuto) {
                 this.LockID = TemporaryNotes.LockID;
                 this.LoadDateTime = TemporaryNotes.LoadDateTime;
+                if (this.UseCatalit2) {
+                    this.Catalit.setLockID(this.LockID);
+                }
                 this.StoreBookmarks();
             }
         };
@@ -379,6 +634,12 @@ var FB3Bookmarks;
         };
         LitResBookmarksProcessor.prototype.OnBookmarksSync = function (ActualBookmarks, PrevBookmarks) {
             this.Reader.Site.OnBookmarksSync(ActualBookmarks, PrevBookmarks);
+        };
+        LitResBookmarksProcessor.prototype.GetForcedXpathPosition = function () {
+            if (this.ScrollToXpath) {
+                return this.ScrollToXpath;
+            }
+            return null;
         };
         return LitResBookmarksProcessor;
     }());
@@ -600,9 +861,24 @@ var FB3Bookmarks;
                 'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
                 'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
                 'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' +
-                this.MakePercent() + '>' +
+                ' percent="' + this.MakePercent() + '">' +
                 this.GetNote() + this.GetExtract() +
                 '</Selection>';
+        };
+        Bookmark.prototype.PublicObject = function () {
+            return {
+                id: this.ID,
+                group: this.Group,
+                last_update: moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ"),
+                percent: this.MakePercent(),
+                xpath_start: '/' + this.MakePointer(this.XStart),
+                xpath_end: '/' + this.MakePointer(this.XEnd),
+                "class": this.Class ? this.prepareClass(this.Class) : '',
+                title: this.Title ? this.prepareTitle(this.Title) : '',
+                selection_text: '<p>' + this.MakePreviewFromNote() + '</p>',
+                note: this.Note[1] ? this.Note[1] : '',
+                is_public: 1
+            };
         };
         Bookmark.prototype.ParseXML = function (XML) {
             this.Group = parseInt(XML.getAttribute('group'));
@@ -644,6 +920,20 @@ var FB3Bookmarks;
                 this.Extract = ExtractHTML;
             }
         };
+        Bookmark.prototype.ParseObject = function (Note) {
+            this.Group = Note.group;
+            this.Class = 'default';
+            this.Title = Note.title;
+            this.parseTitle();
+            this.ID = Note.id.toLowerCase();
+            this.XStart = this.MakeXPathSub(Note.xpath_start);
+            this.XEnd = Note.xpath_end ? this.MakeXPathSub(Note.xpath_end) : this.XStart;
+            this.DateTime = moment(Note.last_update, "YYYY-MM-DDTHH:mm:ssZ").unix();
+            this.Note[0] = Note.selection_text || '';
+            this.Note[1] = Note.note || '';
+            this.NotSavedYet = 0;
+            this.XPathMappingReady = false;
+        };
         Bookmark.prototype.parseTitle = function () {
             if (this.Title == '' || this.Title == null) {
                 if (this.Group == 1) {
@@ -672,7 +962,7 @@ var FB3Bookmarks;
         };
         Bookmark.prototype.MakePercent = function () {
             if (this.Group != 0)
-                return '';
+                return 0;
             var percent = Math.round(this.Owner.Reader.CurPosPercent());
             if (percent > 100) {
                 percent = 100;
@@ -680,7 +970,7 @@ var FB3Bookmarks;
             else if (percent < 0) {
                 percent = 0;
             }
-            return ' percent="' + percent + '"';
+            return percent;
         };
         Bookmark.prototype.parseXMLNote = function (el) {
             var res = '';
@@ -757,13 +1047,14 @@ var FB3Bookmarks;
         };
         Bookmark.prototype.MakeExtractSelection = function () {
             var Start = this.MakePointer(this.XStart);
-            return '/1/' + Start.replace(/\.\d+$/, '') + '';
+            return '/' + Start.replace(/\.\d+$/, '') + '';
         };
         Bookmark.prototype.MakeSelection = function () {
             var Start = this.MakePointer(this.XStart);
-            if (FB3DOM.XPathCompare(this.XStart, this.XEnd) == 0)
-                return 'point(/1/' + Start + ')';
-            return 'point(/1/' + Start + ')/range-to(point(/1/' + this.MakePointer(this.XEnd) + '))';
+            if (FB3DOM.XPathCompare(this.XStart, this.XEnd) == 0) {
+                return 'point(/' + Start + ')';
+            }
+            return 'point(/' + Start + ')/range-to(point(/' + this.MakePointer(this.XEnd) + '))';
         };
         Bookmark.prototype.MakePointer = function (X) {
             X = X.slice(0);
@@ -771,17 +1062,17 @@ var FB3Bookmarks;
             return X.join('/') + ((/^\./).test(last) ? '' : '/') + last + ((/^\./).test(last) ? '' : '.0');
         };
         Bookmark.prototype.MakeXPath = function (X) {
-            var p = X.match(/\/1\/(.[^\)]*)/g);
-            var MakeXPathSub = function (str) {
-                return str.replace(/^\/1\//, '').replace(/\.0$/, '').replace('.', '/.').split('/');
-            };
-            this.XStart = MakeXPathSub(p[0]);
+            var p = X.match(/(\/\d+|\.\d+)+/g);
+            this.XStart = this.MakeXPathSub(p[0]);
             if (p.length == 1) {
                 this.XEnd = this.XStart.slice(0);
             }
             else {
-                this.XEnd = MakeXPathSub(p[1]);
+                this.XEnd = this.MakeXPathSub(p[1]);
             }
+        };
+        Bookmark.prototype.MakeXPathSub = function (str) {
+            return str.replace(/^\//, '').replace(/\.0$/, '').replace('.', '/.').split('/');
         };
         return Bookmark;
     }());

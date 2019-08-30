@@ -65,13 +65,16 @@ var FB3Reader;
         return { top: Math.round(top), left: Math.round(left) };
     }
     var Reader = (function () {
-        function Reader(EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache) {
+        function Reader(EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache, SID, ArtID, IsTrial, IsSubscription, TrackReading) {
             this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
             this.Bookmarks = Bookmarks;
             this.Version = Version;
             this.PagesPositionsCache = PagesPositionsCache;
+            this.TrackReading = TrackReading;
+            this.CacheLoadingMaxReq = 180;
+            this.CacheLoadingReqCount = 0;
             this.GoTOByProgressBar = false;
             this.RedrawState = false;
             this.Destroy = false;
@@ -85,6 +88,8 @@ var FB3Reader;
             this.TicksFromSave = 0;
             this.LineHeight = 0;
             this.CachingDone = {};
+            this.PageReadTimers = [];
+            this.ReadProgress = new FB3BookReadProgress.BookReadProgress(this, SID, ArtID, IsTrial, IsSubscription);
             this.IdleOff();
         }
         Reader.prototype._CanvasReadyCallback = function () {
@@ -103,11 +108,12 @@ var FB3Reader;
                         Percent: this.CurPosPercent(),
                         Pos: this.CurStartPos,
                         TurnByProgressBar: this.GoTOByProgressBar
-                    });
+                    }, this.RedrawCallback);
                 }
                 else {
                     this.RedrawState = false;
                 }
+                this.RedrawCallback = undefined;
                 this.GoTOByProgressBar = false;
             }
         };
@@ -128,6 +134,7 @@ var FB3Reader;
         Reader.prototype.Init = function (StartFrom, DateTime) {
             var _this = this;
             this.FB3DOM.Init(this.HyphON, function () {
+                _this.ResetCache();
                 _this.Bookmarks.FB3DOM = _this.FB3DOM;
                 _this.Bookmarks.Reader = _this;
                 _this.Site.HeadersLoaded(_this.FB3DOM.MetaData);
@@ -135,22 +142,43 @@ var FB3Reader;
                 _this.PutBlockIntoView(0);
                 _this.Bookmarks.LoadFromCache();
                 _this.Bookmarks.Bookmarks[0].Range.From = _this.Bookmarks.Bookmarks[0].Range.To = StartFrom;
-                if (DateTime) {
-                    _this.Bookmarks.Bookmarks[0].DateTime = DateTime;
-                }
-                if (_this.Bookmarks.Bookmarks.length > 1 || DateTime) {
-                    _this.Bookmarks.ReLoad();
-                }
-                else {
-                    _this.Bookmarks.Load(function () {
-                        _this.Bookmarks.ApplyPosition();
-                    });
-                }
-                if (!_this.Bookmarks.ApplyPosition()) {
-                    _this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
-                    _this.GoTO(StartFrom);
-                }
+                _this.LoadCacheStart(function () {
+                    if (DateTime) {
+                        _this.Bookmarks.Bookmarks[0].DateTime = DateTime;
+                    }
+                    if (_this.Bookmarks.Bookmarks.length > 1 || DateTime) {
+                        _this.Bookmarks.ReLoad();
+                    }
+                    else {
+                        _this.Bookmarks.Load(function () {
+                            _this.Bookmarks.ApplyPosition();
+                        });
+                    }
+                    if (!_this.Bookmarks.ApplyPosition()) {
+                        _this.Bookmarks.Bookmarks[0].SkipUpdateDatetime = true;
+                        _this.GoTO(StartFrom);
+                    }
+                    if (_this.TrackReading)
+                        _this.SetPageViewTimer();
+                });
             });
+        };
+        Reader.prototype.LoadCacheStart = function (Callback) {
+            var _this = this;
+            this.LoadCache();
+            this.CacheLoadingReqCount = 0;
+            this.CacheLoadingReq = requestAnimationFrame(function () { return _this.LoadCacheEnd(Callback); });
+        };
+        Reader.prototype.LoadCacheEnd = function (Callback) {
+            var _this = this;
+            if (!this.PagesPositionsCache.IsReady && this.CacheLoadingReqCount < this.CacheLoadingMaxReq) {
+                this.CacheLoadingReq = requestAnimationFrame(function () { return _this.LoadCacheEnd(Callback); });
+                this.CacheLoadingReqCount++;
+            }
+            else {
+                cancelAnimationFrame(this.CacheLoadingReq);
+                Callback();
+            }
         };
         Reader.prototype.GoTO = function (NewPos, Force) {
             if (!NewPos || NewPos.length == 0) {
@@ -378,7 +406,6 @@ var FB3Reader;
         };
         Reader.prototype.SearchForText = function (Text) { return null; };
         Reader.prototype.PrepareCanvas = function () {
-            this.ResetCache();
             var InnerHTML = '<div class="FB3ReaderColumnset' + this.NColumns + '" id="FB3ReaderHostDiv" style="width:100%; overflow:hidden; height:100%;">';
             this.Pages = new Array();
             for (var I = 0; I < this.CacheBackward + this.CacheForward + 1; I++) {
@@ -404,7 +431,6 @@ var FB3Reader;
             this.CanvasH = this.Site.Canvas.clientHeight;
             this.TicksFromSave = 0;
             this.LineHeight = this.BackgroundRenderFrame.GetLineHeight();
-            this.LoadCache();
         };
         Reader.prototype.AfterCanvasResize = function () {
             var _this = this;
@@ -546,7 +572,7 @@ var FB3Reader;
         Reader.prototype.GoToXPath = function (XP) {
             var _this = this;
             var TargetChunk = this.FB3DOM.XPChunk(XP);
-            if (!this.XPToJump) {
+            if (this.FB3DOM.DataChunks[TargetChunk] && !this.XPToJump) {
                 this.XPToJump = XP;
                 if (!this.FB3DOM.DataChunks[TargetChunk].loaded) {
                     this.FB3DOM.LoadChunks([TargetChunk], function () { return _this.GoToXPathFinal(); });
@@ -755,8 +781,10 @@ var FB3Reader;
         Reader.prototype.IdleOff = function () {
             this.IsIdle = false;
         };
-        Reader.prototype.Redraw = function () {
+        Reader.prototype.Redraw = function (callback) {
+            this.RedrawCallback = callback;
             this.RedrawState = true;
+            this.ResetPageTimers('Redraw');
             for (var I = 0; I < this.Pages.length; I++) {
                 this.Pages[I].Ready = false;
             }
@@ -769,6 +797,7 @@ var FB3Reader;
             }
             this.RedrawInProgress = 1;
             this.RedrawState = true;
+            this.ResetPageTimers('RedrawVisible');
             var NewInstr = new Array();
             for (var I = this.CurVisiblePage; I < this.CurVisiblePage + this.NColumns; I++) {
                 if (this.Pages[I].RenderInstr) {
@@ -785,12 +814,17 @@ var FB3Reader;
             }
         };
         Reader.prototype.Reset = function () {
+            var _this = this;
             this.FB3DOM.Reset();
             this.StopRenders();
             this.BackgroundRenderFrame.Reset();
+            this.ResetCache();
             this.PrepareCanvas();
             this.CurVisiblePage = 0;
-            this.GoTO(this.CurStartPos.slice(0), true);
+            this.ResetPageTimers('Reset');
+            this.LoadCacheStart(function () {
+                _this.GoTO(_this.CurStartPos.slice(0), true);
+            });
         };
         Reader.prototype.GetVisibleRange = function () {
             if (!this.Pages[this.CurVisiblePage + this.NColumns - 1].Ready) {
@@ -808,6 +842,120 @@ var FB3Reader;
                 Range.To.push(this.FB3DOM.Childs[Range.To[0]].Childs.length);
             }
             return Range;
+        };
+        Reader.prototype.SetPageViewTimer = function () {
+            var _this = this;
+            if (!this.IsTrackReadingActive || this.PageViewTimer != null)
+                return;
+            var handler = function () {
+                _this.ReadProgress.SendReadReport();
+            };
+            var timeoutMSec = Math.round(3 * 60 * 1000);
+            this.PageViewTimer = setInterval(handler, timeoutMSec);
+        };
+        Reader.prototype.SetPageReadTimer = function (Page) {
+            if (!this.IsTrackReadingActive()) {
+                return;
+            }
+            this.PageReadTimers.push(Page);
+            this.ReadProgress.FlipPage();
+            if (this.PageReadTimers.length == 1) {
+                this.PageReadTimersHandler();
+            }
+        };
+        Reader.prototype.PageReadTimersHandler = function () {
+            var _this = this;
+            if (this.PageReadTimers.length == 0) {
+                return;
+            }
+            var currentPage;
+            var charsPerSecond = 82;
+            var timeoutMSec = 0;
+            var actualContentLength = 0;
+            for (var i = 0; i < this.PageReadTimers.length; i++) {
+                var actualContentLength = this.ReadProgress.Contains(this.PageReadTimers[i]);
+                if (actualContentLength > 0) {
+                    currentPage = this.PageReadTimers[i];
+                    break;
+                }
+                this.ReadProgress.FlipPage(-1);
+                this.PageReadTimers.shift();
+            }
+            if (!currentPage) {
+                return;
+            }
+            timeoutMSec = Math.round(actualContentLength / charsPerSecond * 1000);
+            var handler = function () {
+                _this.PageReadTimers.shift();
+                _this.ReadProgress.FlipPage(-1);
+                _this.ReadProgress.AddPage(currentPage);
+                _this.PageReadTimersHandler();
+            };
+            this.PageReadCurrentTimer = setTimeout(handler, timeoutMSec);
+        };
+        Reader.prototype.ResetPageTimers = function (caller) {
+            clearTimeout(this.PageReadCurrentTimer);
+            this.PageReadTimers = [];
+        };
+        Reader.prototype.ActiveZones = function () {
+            var Pages = this.GetVisiblePages();
+            var result = [];
+            Pages.forEach(function (Page, index, Pages) {
+                result = result.concat(this.ActiveZonesForPage(Page));
+            }, this);
+            return result;
+        };
+        Reader.prototype.CallActiveZoneCallback = function (id) {
+            var activeZone = this.findActiveZone(id);
+            if (activeZone) {
+                activeZone.fb3tag.Fire();
+                return true;
+            }
+            return false;
+        };
+        Reader.prototype.findActiveZone = function (id) {
+            var activeZones = this.ActiveZones(), activeZone;
+            for (var i = 0; i < activeZones.length; i++) {
+                activeZone = activeZones[i];
+                if (activeZone.id === id) {
+                    return activeZone;
+                }
+            }
+            return null;
+        };
+        Reader.prototype.ActiveZonesForPage = function (Page) {
+            var xpid = '', activeElement = null;
+            var result = [], activeZone, fb3tag;
+            for (var j = 0; j < Page.ActiveZones.length; j++) {
+                activeZone = Page.ActiveZones[j];
+                activeElement = document.getElementById(activeZone.id);
+                if (!activeElement) {
+                    continue;
+                }
+                activeZone.el = activeElement;
+                activeZone.rect = activeElement.getBoundingClientRect();
+                result.push(activeZone);
+            }
+            return result;
+        };
+        Reader.prototype.GetVisiblePages = function () {
+            var firstPage = this.Pages[this.CurVisiblePage];
+            if (!firstPage.Ready) {
+                return [];
+            }
+            if (this.NColumns < 2) {
+                return [firstPage];
+            }
+            return [firstPage, this.Pages[this.CurVisiblePage + this.NColumns - 1]];
+        };
+        Reader.prototype.ColumnWidth = function () {
+            return this.Pages[this.CurVisiblePage].ViewPortW;
+        };
+        Reader.prototype.IsTrackReadingActive = function () {
+            return this.TrackReading;
+        };
+        Reader.prototype.GetPagesQueueLen = function () {
+            return this.PageReadTimers.length;
         };
         return Reader;
     }());

@@ -1,42 +1,35 @@
 /// <reference path="PPCacheHead.ts" />
+/// <reference path="../Storage/StorageHead.ts" />
 /// <reference path="../plugins/lz-string.d.ts" />
 
 module FB3PPCache {
-	export function CheckStorageAvail(): boolean {
-		if (FB3PPCache.LocalStorage !== undefined) {
-			return FB3PPCache.LocalStorage;
-		}
-		try {
-			window.localStorage['working'] = 'true';
-			FB3PPCache.LocalStorage = true;
-			window.localStorage.removeItem('working');
-		} catch (e) {
-			FB3PPCache.LocalStorage = false;
-		}
-		return FB3PPCache.LocalStorage;
-	}
-
 	export var MaxCacheRecords: number = 15;
-	export var LocalStorage: boolean; // global for window.localStorage check
 
 	var SkipCache: boolean = false; // For debug purposes
 
-	interface IPageRenderInstructionsCacheEntry {
-		Time: Date;
-		Key: string;
-		LastPage: number;
-		Cache: FB3Reader.IPageRenderInstruction[];
-		MarginsCache: any; // we are going to store a plain hash here for all "margined" elements
-	}
+	const LocalStorageName: string = 'FB3Reader1.0';
+	const IndexedDBStoreName: string = "FBReaderStore";
 
-	export class PPCache implements IFB3PPCache {
+	export class PPCache implements FB3Storage.IFB3PPCache {
 		private PagesPositionsCache: FB3Reader.IPageRenderInstruction[];
-		private CacheMarkupsList: IPageRenderInstructionsCacheEntry[];
+		private CacheMarkupsList: FB3Storage.IPageRenderInstructionsCacheEntry[];
 		private LastPageN: number;
 		private MarginsCache: any; // we are going to store a plain hash here for all "margined" elements
 		public Encrypt: boolean = true;
+		public IsReady: boolean = false;
+		private StorageName: string;
 
-		constructor() {
+		private Driver;
+
+		constructor(Driver: string = FB3Storage.LOCAL_STORAGE) {
+			if (Driver === FB3Storage.LOCAL_STORAGE) {
+				this.Driver = new FB3Storage.LocalStorageDriver(this, MaxCacheRecords);
+				this.StorageName = LocalStorageName;
+			} else if (Driver === FB3Storage.INDEXED_DB) {
+				this.Driver = new FB3Storage.IndexedDBDriver(this);
+				this.StorageName = IndexedDBStoreName;
+			}
+
 			this.Reset();
 		}
 
@@ -51,6 +44,7 @@ module FB3PPCache {
 			this.CacheMarkupsList = null;
 			this.PagesPositionsCache = new Array();
 			this.MarginsCache = {};
+			this.IsReady = this.Driver.IsLocal;
 		}
 
 		public Length(): number {
@@ -64,71 +58,56 @@ module FB3PPCache {
 			// We are going to save no more than 50 cache entries
 			// We reuse slots on write request based on access time
 
-			if (FB3PPCache.CheckStorageAvail()) {
-				// localStorage support required
+			if (FB3Storage.CheckStorageAvail() !== FB3Storage.NO_STORAGE) {
 				if (!this.CacheMarkupsList) {
-					this.LoadOrFillEmptyData();
+					this.LoadOrFillEmptyData(() => {
+						this.SaveData(Key, this.CacheMarkupsList);
+					});
+				} else {
+					this.SaveData(Key, this.CacheMarkupsList);
 				}
-				var RowToFillID: string;
-				var OldestIDTime: number;
-				for (var I = 0; I < this.CacheMarkupsList.length; I++) {
-					if (this.CacheMarkupsList[I].Key == Key) {
-						this.CacheMarkupsList.splice(I, 1);
-					}
-				}
-				if (this.CacheMarkupsList.length >= MaxCacheRecords) {
-					this.CacheMarkupsList.shift();
-				}
-				this.CacheMarkupsList.push(
-						{
-							Time: new Date,
-							Key: Key,
-							Cache: this.PagesPositionsCache,
-							LastPage: this.LastPageN,
-							MarginsCache: this.MarginsCache
-						}
-					);
-				// Keep in mind - next line is really, really slow
-				var uncompressdCacheData = JSON.stringify(this.CacheMarkupsList);
-				this.SaveData(this.EncodeData(uncompressdCacheData));
 
 			}//  else { no luck, no store - recreate from scratch } 
 		}
 
 		public Load(Key: string): void {
 			if (SkipCache) {
+				this.IsReady = true;
 				return;
 			}
-			if (FB3PPCache.CheckStorageAvail()) {
+			if (FB3Storage.CheckStorageAvail() !== FB3Storage.NO_STORAGE) {
 				if (!this.CacheMarkupsList) {
-					this.LoadOrFillEmptyData();
-				}
-				for (var I = 0; I < this.CacheMarkupsList.length; I++) {
-					if (this.CacheMarkupsList[I].Key == Key) {
-						this.PagesPositionsCache = this.CacheMarkupsList[I].Cache;
-						this.MarginsCache = this.CacheMarkupsList[I].MarginsCache;
-						this.LastPageN = this.CacheMarkupsList[I].LastPage;
-						break;
-					}
+					this.LoadOrFillEmptyData((CacheMarkupsList) => {
+						this.Driver.Find(this.StorageName, Key, (CacheMarkupList) => {
+							if (CacheMarkupList) {
+								this.PagesPositionsCache = CacheMarkupList.Cache;
+								this.MarginsCache = CacheMarkupList.MarginsCache;
+								this.LastPageN = CacheMarkupList.LastPage;
+							}
+
+							this.IsReady = true;
+						});
+					});
 				}
 			}
 		}
 
 		public LoadDataAsync(ArtID: string) { }
 
-		private LoadOrFillEmptyData(): void {
-			var compressedCacheData = this.LoadData();
-			var DataInitDone = false;
-			if (compressedCacheData) {
-				try {
-					var cacheData = this.DecodeData(compressedCacheData);
-					this.CacheMarkupsList = JSON.parse(cacheData);
-					DataInitDone = true;
-				} catch (e) { }
-			}
-			if (!DataInitDone) {
-				this.CacheMarkupsList = new Array();
-			}
+		private LoadOrFillEmptyData(Callback = (CacheMarkupsList: FB3Storage.IPageRenderInstructionsCacheEntry[]) => {}): void {
+			this.LoadData((cacheData) => {
+				var DataInitDone = false;
+				if (cacheData) {
+					try {
+						this.CacheMarkupsList = cacheData;
+						DataInitDone = true;
+					} catch (e) { }
+				}
+				if (!DataInitDone) {
+					this.CacheMarkupsList = [];
+				}
+				Callback(this.CacheMarkupsList);
+			});
 		}
 
 		public LastPage(LastPageN?: number): number {
@@ -155,30 +134,19 @@ module FB3PPCache {
 			return undefined;
 		}
 
-		private DecodeData(Data) {
-			if (this.Encrypt) {
-				return LZString.decompressFromUTF16(Data);
-			} else {
-				return Data;
-			}
+		public LoadData(Callback = (compressedCacheData) => {}): string {
+			return this.Driver.LoadData(this.StorageName, Callback);
 		}
 
-		private EncodeData(Data) {
-			if (this.Encrypt) {
-				return LZString.compressToUTF16(Data);
-			} else {
-				return Data;
-			}
+		public SaveData(Key: String, Data: FB3Storage.IPageRenderInstructionsCacheEntry[], Callback = () => {}): void {
+			this.Driver.SaveData(this.StorageName, Key, <FB3Storage.IPageRenderInstructionsCacheEntry> {
+				Time: new Date,
+				Key: Key,
+				Cache: this.PagesPositionsCache,
+				LastPage: this.LastPageN,
+				MarginsCache: this.MarginsCache
+			}, Data, Callback);
 		}
-
-		public LoadData(): string {
-			return localStorage['FB3Reader1.0'];
-		}
-
-		public SaveData(Data: string): void {
-			localStorage['FB3Reader1.0'] = Data;
-		}
-
 	}
 
 }

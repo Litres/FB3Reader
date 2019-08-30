@@ -1,5 +1,4 @@
 /// <reference path="FB3ReaderSiteHead.ts" />
-/// <reference path="../app.ts" />
 
 module FB3ReaderSite {
 
@@ -11,6 +10,7 @@ module FB3ReaderSite {
 		public Alert: IAlert;
 		public Key: string;
 		public FontSize: number = 16;
+		public MinimalCharacterCountInColumn: number = 17;
 		constructor(public Canvas: HTMLElement) {
 			this.ViewText = new ViewText();
 			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
@@ -36,16 +36,24 @@ module FB3ReaderSite {
 
 
 		public HeadersLoaded(MetaData: FB3DOM.IMetaData) {}
-		public AfterTurnPageDone(Data: ITurnPageData) {
+		public AfterTurnPageDone(Data: ITurnPageData, callback: Function) {
 			if (Data.CurPage) {
 				document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' +
-				(Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
+					(Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
 			}
 			LitresLocalBookmarks.SetCurrentPosition(Data.Pos);
 		}
+		public IsAlreadyClicked(sourceAction: string): boolean {
+			return true;
+		}
+		public GetArtTrialInfo() : IArtTrialInfo {
+			return {};
+		}
+		public SetArtTrialInfo(newArtTrialInfo: IArtTrialInfo) {}
 		public BookCacheDone(Data: ITurnPageData) {}
 		public StoreBookmarksHandler(timer: number) {}
 		public AfterStoreBookmarks(): void {}
+		public AfterStoreBookmarksFailure(): void {}
 		public BeforeBookmarksAction(): boolean {
 			return true;
 		}
@@ -74,10 +82,26 @@ module FB3ReaderSite {
 		public OnBookmarksSync(ActualBookmarks: FB3Bookmarks.IBookmarks, PrevBookmarks: FB3Bookmarks.IBookmarks): void {
 			AFB3Reader.GoTO(ActualBookmarks.Bookmarks[0].Range.From);
 		}
-		public IsAuthorizeMode(Percent: number): boolean {
+		public IsAuthorizeMode(): boolean {
 			return false;
 		}
-		public AuthorizeIFrame: IFrame.IFrame;
+		public HTMLPopup( MsgHTML: FB3DOM.InnerHTML): void {}
+		public GoToExternalLink(URL: string): void {
+			window.open(URL, '_blank');
+		}
+		public GoToNote(Href: string): void {
+			var Reader = AFB3Reader;
+			var tmpArr = Href.split(',');
+			var newPos = [];
+			for (var i = 0; i < tmpArr.length; i++) {
+				newPos.push(parseInt(tmpArr[i]));
+			}
+			Reader.Site.HistoryHandler(Reader.CurStartPos);
+			Reader.GoTO(newPos);
+		}
+		public AuthorizeIFrame: IFrame.AuthorizeIFrame;
+		public UpsaleIFrame: IFrame.IFrame;
+		public RatingIFrame: IFrame.IFrame;
 	}
 
 	export class ExampleProgressor implements ILoadProgress {

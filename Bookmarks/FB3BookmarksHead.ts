@@ -7,6 +7,20 @@ module FB3Bookmarks {
 	export interface IBookmarksReadyCallback { (Bookmarks: IBookmarks): void; }
 	export interface IBookmarkSyncCallback { (): void; }
 
+	export interface INote {
+		id: string,
+		group: number,
+		last_update: string,
+		xpath_start: string,
+		xpath_end: string,
+		title: string,
+		note: InnerFB2,
+		selection_text: string,
+		percent: number,
+		class: string,
+		is_public: number
+	}
+
 	export interface IBookmark {
 		ID: string;
 		Owner: IBookmarks;
@@ -29,8 +43,10 @@ module FB3Bookmarks {
 		Detach(): void; // removes itself from the parent.
 		RemapWithDOM(Callback: IBookmarkSyncCallback): void;
 		PublicXML(): string;
+		PublicObject(): INote;
 		ParseXML(XML: any): void;
 		MakePreviewFromNote(): string;
+		MakeXPathSub(str: string): FB3DOM.IXPath;
 	}
 
 	export interface IBookmarks {
@@ -55,9 +71,9 @@ module FB3Bookmarks {
 		MakeStoreXML(): string;
 		// sometimes we need this when we dont have cached chunks
 		// this will fix that problem
-		MakeStoreXMLAsync(Callback): string;	
-		MakeBookmarkPublic(Bookmark: IBookmark, callback?: Function): void;
-		CreateBookmarkFromTemporary(Group: string, Bookmark: IBookmark, Title: string, callback?: Function): IBookmark
+		MakeStoreXMLAsync(Callback): string;
+		MakeBookmarkPublic(Bookmark: IBookmark, callback?: Function, failureCallback?: Function): void;
+		CreateBookmarkFromTemporary(Group: string, Bookmark: IBookmark, Title: string, callback?: Function, failureCallback?: Function): IBookmark;
+		GetForcedXpathPosition(): string | null; // [139028]
 	}
-
 }

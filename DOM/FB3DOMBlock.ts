@@ -1,4 +1,4 @@
-﻿/// <reference path="FB3DOMHead.ts" />
+/// <reference path="FB3DOMHead.ts" />
 
 module FB3DOM {
 	export var MaxFootnoteHeight: number = 0.5;
@@ -46,22 +46,50 @@ module FB3DOM {
 		cite: 1
 	};
 
-	// FixMe - separate class for (at least) 'a' required, see if-else hacks in GetInitTag below
+	function GetParent(tagName: string, Parent: IFB3Block) {
+		if (!Parent || !Parent.Data) {
+			return null;
+		}
+
+		if (Parent.Data.t === tagName) {
+			return Parent;
+		}
+		return GetParent(tagName, Parent.Parent);
+	}
+
+	function IsNote(Data: IJSONBlock) {
+		return (Data.t == 'a' || Data.t == 'note') && Data.hr;
+	}
+
+	function IsFootnoteLink(Data: IJSONBlock) {
+		return (Data.t == 'a' || Data.t == 'note') && Data.f;
+	}
+
+	function IsLink(Data: IJSONBlock) {
+		return Data.t == 'a' && Data.href;
+	}
+
 	export function TagClassFactory(Data: IJSONBlock, Parent: IFB3Block,
-		ID: number, NodeN: number, Chars: number, IsFootnote: boolean, DOM: IFB3DOM): IFB3Block {
+		ID: number, NodeN: number, Chars: number, IsFootnote: boolean, IsLinkChild: boolean, DOM: IFB3DOM): IFB3Block {
 		var Kid: IFB3Block;
 		if (typeof Data === "string") {
 			if (Parent.Data.f) {
 				Data = (<any> Data).replace(/[\[\]\{\}\(\)]+/g, '');
 			}
-			Kid = new FB3Text(DOM, (<any> Data), Parent, ID, NodeN, Chars, IsFootnote);
+			Kid = new FB3Text(DOM, (<any> Data), Parent, ID, NodeN, Chars, IsFootnote, IsLinkChild);
 		// [94948] Add "img" tag
 		} else if (Data.t == 'image' || Data.t == 'img') {
-			Kid = new FB3ImgTag(DOM, Data, Parent, ID, IsFootnote);
+			Kid = new FB3ImgTag(DOM, Data, Parent, ID, IsFootnote, IsLinkChild);
 		} else if (Data.t == 'trialPurchase') {
-			Kid = new FB3PurchaseTag(DOM, Data, Parent, ID, IsFootnote);
+			Kid = new FB3PurchaseTag(DOM, Data, Parent, ID, IsFootnote, IsLinkChild);
+		} else if (IsNote(Data)) {
+			Kid = new FB3NoteTag(DOM, Data, Parent, ID, IsFootnote, IsLinkChild);
+		} else if (IsFootnoteLink(Data)) {
+			Kid = new FB3FootnoteLinkTag(DOM, Data, Parent, ID, IsFootnote, IsLinkChild);
+		} else if (IsLink(Data)) {
+			Kid = new FB3LinkTag(DOM, Data, Parent, ID, IsFootnote, IsLinkChild);
 		} else {
-			Kid = new FB3Tag(DOM, Data, Parent, ID, IsFootnote);
+			Kid = new FB3Tag(DOM, Data, Parent, ID, IsFootnote, IsLinkChild);
 		}
 		return Kid;
 	}
@@ -79,6 +107,154 @@ module FB3DOM {
 		return FB3Reader.PosCompare(Pos1, Pos2);
 	}
 
+	class Restriction implements IRestriction {
+		private Enumeration: object = {
+			'1': {
+				counters: [0],
+				incrementor: (context) => {
+					return context.Enumeration['1'].counters[0] = context.Enumeration['1'].counters[0] + 1;
+				},
+				getter: (context) => {
+					return context.Enumeration['1'].counters[0];
+				}
+			},
+			'i': {
+				counters: [0],
+				incrementor: (context) => {
+					return context.Enumeration['i'].counters[0] = context.Enumeration['i'].counters[0] + 1;
+				},
+				getter: (context) => {
+					return Restriction.ToRoman(context.Enumeration['i'].counters[0]);
+				}
+			},
+			'*': {
+				counters: [0],
+				incrementor: (context) => {
+					var Enumeration = context.Enumeration['*'].counters;
+
+					if (Enumeration.length < 3 && Enumeration[Enumeration.length - 1] >= 4) {
+						Enumeration[Enumeration.length] = 0;
+					}
+
+					return Enumeration[Enumeration.length - 1] = Enumeration[Enumeration.length - 1] + 1;
+
+				},
+				getter: (context) => {
+					var Enumeration = context.Enumeration['*'].counters,
+						result = '';
+		
+					if (Enumeration.length === 1) {
+						result += Restriction.Repeat('*', Enumeration[0]);
+					}
+		
+					if (Enumeration.length === 2) {
+						result += Restriction.Repeat('\'', Enumeration[1]);
+					}
+		
+					if (Enumeration.length === 3) {
+						result += '' + Enumeration[2] + '<sup>*</sup>';
+					}
+		
+					return result;
+				}
+			},
+			'a': {
+				counters: [0],
+				incrementor: (context) => {
+					var Enumeration = context.Enumeration['a'].counters;
+
+					if (Enumeration[Enumeration.length - 1] >= context.Alphabet[context.Lang].len) {
+						Enumeration[Enumeration.length] = 0;
+					}
+
+					return Enumeration[Enumeration.length - 1] = Enumeration[Enumeration.length - 1] + 1;
+				},
+				getter: (context) => {
+					var Enumeration = context.Enumeration['a'].counters,
+						alphabet = context.Alphabet[context.Lang],
+						result = '';
+
+					for (var i = 0; i < Enumeration.length; i++) {
+						result += String.fromCharCode(alphabet.start - 1 + Enumeration[i]);	
+					}
+
+					return result;
+				}
+			}
+		}
+
+		private Alphabet: object = {
+			en: {
+				start: 97,
+				len: 26
+			},
+			ru: {
+				start: 1072,
+				len: 32
+			}
+		}
+
+		private Lang: string =  'en'
+
+		// https://www.selftaughtjs.com/algorithm-sundays-converting-roman-numerals/
+		static ToRoman(num) {
+			var result = '';
+			var decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+			var roman = ["M", "CM","D","CD","C", "XC", "L", "XL", "X","IX","V","IV","I"];
+
+			for (var i = 0; i <= decimal.length; i++) {
+			  while (num % decimal[i] < num) {     
+				result += roman[i];
+				num -= decimal[i];
+			  }
+			}
+
+			return result;
+		}
+
+		static Repeat(symbol, n) {
+			var result = '';
+			
+			for (var i = 0; i < n; i++) {
+				result += symbol;
+			}
+
+			return result;	
+		}
+
+		public Increment(att = '1') {
+			return this.Enumeration[att].incrementor(this).toString();
+		}
+
+		public Get(att = '1') {
+			return this.Enumeration[att].getter(this).toString();
+		}
+
+		constructor(Lang: string = 'en') {
+			this.Lang = Lang;
+		}
+	};
+
+	// debug
+	(<any>window).Restriction = Restriction;
+
+	export class PageContainer implements IPageContainer {
+		public Body: InnerHTML[];
+		public FootNotes: InnerHTML[];
+		public BodyXML: string[];
+		public ActiveZones: IActiveZone[];
+        public ContentLength: number;
+		public Restriction: IRestriction;
+		constructor () {
+			this.Body = new Array();
+			this.FootNotes = new Array();
+			this.BodyXML = new Array();	
+			this.ActiveZones = new Array();
+            this.ContentLength = 0;
+			this.Restriction = new Restriction();
+		}
+	}
+
 	// Each DOM-node holds xpath-adress of self as an array
 	// Last item in array is ALWAYS char pos. When converting to string such a zerro is ommited
 
@@ -89,6 +265,12 @@ module FB3DOM {
 		public Childs: IFB3Block[];
 		public XPath: any[];
 		public TagName: string;
+		public HasFootnote: boolean = false;
+		public Footnote: IFB3Block;
+		public IsActiveZone: boolean = false;
+		public ElementID: string = '';
+		public IsLink: boolean = false;
+		public Cursor: string = 'selection';
 
 		constructor(public DOM: IFB3DOM,
 			public text: string,
@@ -96,7 +278,8 @@ module FB3DOM {
 			public ID: number,
 			NodeN: number,
 			Chars: number,
-			public IsFootnote: boolean) {
+			public IsFootnote: boolean,
+			public IsLinkChild?: boolean) {
 			this.Chars = this.text.replace(/\u00AD|&shy;/, '').length;
 			this.text = this.EscapeHtml(this.text);
 			//			this.text = this.text.replace(/\u00AD|&shy;/, '')
@@ -121,11 +304,28 @@ module FB3DOM {
 		}
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]) {
 			var OutStr = this.text;
+
+			var title, footnote;
+			if (this.Parent.Data.f && this.Parent.Data.att !== 'keep') {
+				OutStr = PageData.Restriction.Get(this.Parent.Data.att);
+			}
+
+			if (this.IsFootnote && (title = GetParent('title', this.Parent)) && (footnote = title.Parent) && footnote.Parent && footnote.Parent.Data.att !== 'keep') {
+				OutStr = PageData.Restriction.Get(footnote.Parent.Data.att);
+			}
+
 			if (Range.To[0]) {
 				OutStr = OutStr.substr(0, Range.To[0]);
 			}
 			if (Range.From[0]) {
 				OutStr = OutStr.substr(Range.From[0]);
+			}
+
+			// TODO skip char calculation if not needed by view
+			PageData.ContentLength += OutStr.length;
+			var hyphs = OutStr.match(/\u00AD/g);
+			if (hyphs) {
+				PageData.ContentLength -= hyphs.length;
 			}
 
 			var TargetStream = this.IsFootnote ? PageData.FootNotes : PageData.Body;
@@ -150,7 +350,17 @@ module FB3DOM {
 				if (OutStr.match(/\u00AD/)) {
 					OutStr = '<span></span>' + OutStr + '<span></span>';
 				}
-				TargetStream.push('<span id="n_' + IDPrefix + this.XPID + '"' + ClassNames + '>' + OutStr + '</span>');
+				this.ElementID = 'n_' + IDPrefix + this.XPID;
+				TargetStream.push('<span id="' + this.ElementID + '"' + ClassNames + '>' + OutStr + '</span>');
+			}
+
+			if (this.IsLinkChild) {
+				PageData.ActiveZones.push(<FB3DOM.IActiveZone> {
+					fb3tag: this,
+					id: this.ElementID,
+					xpid: this.XPID,
+					cursor: this.Cursor
+				});
 			}
 		}
 		public GetXML(Range: IRange, PageData: IPageContainer) {
@@ -224,19 +434,35 @@ module FB3DOM {
 				return false;
 			}
 		}
+		public Fire(): void {
+			if (this.IsLinkChild) {
+				this.Parent.Fire();
+			}
+		}
+		public InlineStyle(ViewPortW?: any, ViewportH?: any): string {
+			return "";
+		}
+		public PaddingBottom(): number {
+			return 0;
+		}
 	}
 
 
 	export class FB3Tag extends FB3Text implements IFB3Block {
 		public TagName: string;
-		
-		readonly IsUnbreakable: boolean = false;
+
+		readonly IsUnbreakable: boolean;
+		readonly IsFloatable: boolean = false;
 
 		public GetHTML(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, PageData: IPageContainer, Bookmarks: FB3Bookmarks.IBookmark[]):void {
 
 			// If someone asks for impossible - just ignore it. May happend when someone tries to go over the end
 			if (Range.From[0] > this.Childs.length - 1) {
 				Range.From = [this.Childs.length - 1];
+			}
+
+			if (this.Data && this.Data.f && this.Data.att !== 'keep') {
+				PageData.Restriction.Increment(this.Data.att);
 			}
 
 			// keep in mind after GetBookmarkClasses Bookmarks is cleaned of all unneeded bookmarks
@@ -253,12 +479,31 @@ module FB3DOM {
 				// we should do something about it
 			}
 
-			if (this.IsFootnote) {
-				PageData.FootNotes = PageData.FootNotes.concat(this.GetInitTag(Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, ClassNames));
-			} else {
-				PageData.Body = PageData.Body.concat(this.GetInitTag(Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, ClassNames));
+			var InitTag = this.GetInitTag(Range, BookStyleNotes, IDPrefix, ViewPortW, ViewPortH, ClassNames);
+
+			var PaddingBottom = this.PaddingBottom();
+			if (PaddingBottom !== 0) {
+				let classAttribute = `padding_wrapper`;
+				if (this.IsUnbreakable) {
+					classAttribute += ` ${FB3DOM.UNBREAKABLE_CSS_CLASS}`;
+				}
+				if (this.Data.fl) {
+					classAttribute += ` tag_float tag_float_${this.Data.fl}`;
+				}
+				classAttribute = classAttribute ? ` class="${classAttribute}"` : ``;
+				InitTag.unshift(`<div style="padding-bottom: ${PaddingBottom}px; ${this.Data.fl ? ('float: ' + this.Data.fl + ';') : ''}" id="nn${this.ElementID}" ${classAttribute}>`);
 			}
+
+			if (this.IsFootnote) {
+				PageData.FootNotes = PageData.FootNotes.concat(InitTag);
+			} else {
+				PageData.Body = PageData.Body.concat(InitTag);
+			}
+
 			var CloseTag = this.GetCloseTag(Range);
+			if (PaddingBottom !== 0) {
+				CloseTag += '</div>'
+			}
 			var From = Range.From.shift() || 0;
 			var To = Range.To.shift();
 			if (To === undefined)
@@ -330,8 +575,8 @@ module FB3DOM {
 
 
 		}
-		constructor(public DOM: IFB3DOM, public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean) {
-			super(DOM, '', Parent, ID, 1, 0, IsFootnote);
+		constructor(public DOM: IFB3DOM, public Data: IJSONBlock, Parent: IFB3Block, ID: number, IsFootnote?: boolean, IsLinkChild?: boolean) {
+			super(DOM, '', Parent, ID, 1, 0, IsFootnote, IsLinkChild);
 			if (Data === null) return;
 
 			this.TagName = Data.t;
@@ -342,11 +587,15 @@ module FB3DOM {
 				this.XPath = null;
 			}
 
+			if (Data.t === 'a' || Data.t === 'note') {
+				this.IsLink = true;
+			}
+
 			this.Childs = new Array();
 			var Base = 0;
 			if (Data.f) {
 				Base++;
-				var NKid = new FB3Tag(this.DOM, Data.f, this, Base, true);
+				var NKid = new FB3FootnoteTag(this.DOM, Data.f, this, Base);
 				this.Childs.push(NKid);
 				this.Chars += NKid.Chars;
 			}
@@ -361,7 +610,7 @@ module FB3DOM {
 						NodeN++;
 					}
 					PrevItmType = ItmType;
-					var Kid = TagClassFactory(Itm, <IFB3Block> this, I + Base, NodeN, Chars, IsFootnote, this.DOM);
+					var Kid = TagClassFactory(Itm, <IFB3Block> this, I + Base, NodeN, Chars, IsFootnote, this.IsLink || this.IsLinkChild, this.DOM);
 					if (ItmType == 'text') {
 						Chars += Kid.Chars;
 					} else {
@@ -372,9 +621,11 @@ module FB3DOM {
 				}
 			}
 
-			if (Data.op) {
-				this.IsUnbreakable = true;
+			if (Data.fl) {
+				this.IsFloatable = true;
 			}
+			
+			this.IsUnbreakable = Boolean(Data.op);
 		}
 
 		public HTMLTagName(): string {
@@ -425,6 +676,19 @@ module FB3DOM {
 				ElementClasses.push('footnote')
 			}
 
+			if (this.Data.fl) {
+				ElementClasses.push('tag_float');
+				ElementClasses.push('tag_float_' + this.Data.fl);
+			}
+
+			if (this.Data.brd) {
+				ElementClasses.push('tag_border');
+			}
+
+			if (this.Data.t === 'image' || this.Data.t === TagMapper['image']) {
+				ElementClasses.push('tag_img');
+			}
+
 			if (TagMapper[this.TagName] || this.TagName == 'title') {
 				ElementClasses.push('tag_' + this.TagName);
 			}
@@ -438,11 +702,9 @@ module FB3DOM {
 		public InlineStyle(ViewPortW?: any, ViewportH?: any): string {
 			// top-level block elements, we want to align it to greed vertically
 			var InlineStyle = '';
-			if (!this.Parent.Parent) {
-				var Margin = (<IFB3DOM>this.Parent).PagesPositionsCache.GetMargin(this.XPID);
-				if (Margin) {
-					InlineStyle = 'margin-bottom: ' + Margin + 'px';
-				}
+
+			if (this.Data.fl) {
+				InlineStyle += 'float: ' + this.Data.fl + ';';
 			}
 
 			if (InlineStyle) {
@@ -451,15 +713,16 @@ module FB3DOM {
 			return InlineStyle;
 		}
 
+		public PaddingBottom(): number {
+			if (this.Parent && !this.Parent.Parent) {
+				return (<IFB3DOM>this.Parent).PagesPositionsCache.GetMargin(this.XPID) || 0;
+			}
+			return 0;
+		}
+
 		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
 			var ElementClasses = this.ElementClasses();
 
-			if (this.Data.f) {
-				ElementClasses.push('footnote_attached')
-				if (!BookStyleNotes) {
-					ElementClasses.push('footnote_clickable')
-				}
-			}
 			if (MoreClasses) {
 				ElementClasses.push(MoreClasses);
 			}
@@ -473,15 +736,12 @@ module FB3DOM {
 				ElementClasses.push('cut_bot');
 			}
 
-
 			var InlineStyle = this.InlineStyle();
 
 			var Out: string[] = ['<'];
 
 			/* [94948] Add note tag from tag mappper (note can only has hr attribute) */
-			if ((this.TagName == 'a' || this.TagName == 'note') && this.Data.hr){
-				Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
-			} else if (this.TagName == 'a' && this.Data.href) {
+			if (this.TagName == 'a' && this.Data.href) {
 				Out.push('a href="' + this.Data.href + '" target="' + ExtLinkTarget + '"');
 			} else {
 				Out.push(this.HTMLTagName());
@@ -494,18 +754,31 @@ module FB3DOM {
 
 			if (this.IsFootnote) {
 //				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '">');
-				Out.push(' id="fn_' + IDPrefix + this.Parent.XPID + '" style="max-height: ' + (ViewPortH * MaxFootnoteHeight).toFixed(0) + 'px">');
+				this.ElementID = 'fn_' + IDPrefix + this.Parent.XPID;
+				Out.push(' id="' + this.ElementID + '"' + (ViewPortH > 0 ? ' style="max-height: ' + (ViewPortH * MaxFootnoteHeight).toFixed(0) + 'px"' : '') + '>');
 			} else if (this.Data.f && !BookStyleNotes) {
-				Out.push(' id="n_' + IDPrefix + this.XPID + '" onclick="alert(1)" href="#">');
+				this.ElementID = 'n_' + IDPrefix + this.XPID;
+				Out.push(' id="' + this.ElementID + '" onclick="alert(1)" href="#">');
 			}  else {
-				Out.push(' id="n_' + IDPrefix + this.XPID + '">');
+				this.ElementID = 'n_' + IDPrefix + this.XPID;
+				Out.push(' id="' + this.ElementID + '">');
 			}
+
 			return Out;
+		}
+
+		public Fire(): void {
+			var PageContainer = new FB3DOM.PageContainer();
+
+			if (this.IsUnbreakable) {
+				this.GetHTML(true, false, {From: [], To: []}, '', 0, 0, PageContainer, []);
+				this.DOM.Site.ZoomHTML(PageContainer.Body.join(''));
+			}
+
+			super.Fire();
 		}
 	}
 	export class FB3ImgTag extends FB3Tag implements IFB3Block {
-		readonly IsUnbreakable: boolean = true;
-
 		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
 			var ElementClasses = this.ElementClasses();
 
@@ -519,7 +792,22 @@ module FB3DOM {
 			var Path = this.ArtID2URL(this.Data.s);
 			// This is kind of a hack, normally images a inline, but if we have op:1 this mians it's block-level one
 			var TagName = this.HTMLTagName();
-			var Out = ['<' + TagName + ' id="ii_' + IDPrefix + this.XPID + '"' + InlineStyle];
+			this.ElementID = 'ii_' + IDPrefix + this.XPID;
+			var Out = ['<' + TagName + ' id="' + this.ElementID + '"' + InlineStyle];
+
+			if (this.DOM.MediaCacheLoader) {
+				let ElementID, InsertionRules;
+				if (TagName != "span") {
+					// if we not a span tag, <img> will be added as a child, so we need to load img there
+					ElementID = 'n_' + IDPrefix + this.XPID;
+					InsertionRules = 'src';
+				} else {
+					// in case of span we are adding image as background-url css property
+					ElementID = this.ElementID;
+					InsertionRules = 'style.background.url';
+				}
+				this.DOM.MediaCacheLoader.LoadImageAsync(ElementID, Path, InsertionRules);
+			}
 
 			const Rectangle: IFB3BlockRectangle = this.GetRectangleWithinBounds(
 				this.Data.w, this.Data.h,
@@ -531,7 +819,11 @@ module FB3DOM {
 				Out.push(' class="' + ElementClasses.join(' ') + '"');
 			}
 			if(TagName != "span") {
-				Out.push('><img width = "' + Rectangle.Width + '" height = "' + Rectangle.Height + '" src = "' + Path + '" alt = "-"');
+				if (this.DOM.MediaCacheLoader) {
+					Out.push('><img width = "' + Rectangle.Width + '" height = "' + Rectangle.Height + '" alt = "-"');
+				} else {
+					Out.push('><img width = "' + Rectangle.Width + '" height = "' + Rectangle.Height + '" src = "' + Path + '" alt = "-"');
+				}
 
 				Out.push(' id="n_' + IDPrefix + this.XPID + '"/>');
 			} else {
@@ -548,8 +840,11 @@ module FB3DOM {
 			var display = ""
 			var backgroundImage = ""
 			if(this.HTMLTagName() == "span") {
-				display = "display: inline-block;";
-				backgroundImage = "background: url("+ this.ArtID2URL(this.Data.s) +") no-repeat right center;background-size: contain;"
+				display = "display: block;";
+				// TODO: add some spinning animation while real image is loading
+				if (!this.DOM.MediaCacheLoader) {
+					backgroundImage = "background: url("+ this.ArtID2URL(this.Data.s) +") no-repeat right center; background-size: contain;";
+				}
 			}
 			
 			const Rectangle: IFB3BlockRectangle = this.GetRectangleWithinBounds(
@@ -558,14 +853,13 @@ module FB3DOM {
 				ViewPortW, ViewPortH
 			);
 
-			// top-level block elements, we want to align it to greed vertically
-			var InlineStyle = 'width:' + Rectangle.Width + 'px;height:' + Rectangle.Height + 'px;' + display + backgroundImage;
-			if (!this.Parent.Parent) {
-				var Margin = (<IFB3DOM>this.Parent).PagesPositionsCache.GetMargin(this.XPID);
-				if (Margin) {
-					InlineStyle += 'margin-bottom: ' + Margin + 'px';
-				}
+			var float = '';
+			if (this.Data.fl) {
+				float = 'float: ' + this.Data.fl + ';';
 			}
+
+			// top-level block elements, we want to align it to greed vertically
+			var InlineStyle = 'width:' + Rectangle.Width + 'px;height:' + Rectangle.Height + 'px;' + display + backgroundImage + float;
 
 			return ' style="' + InlineStyle + '"';
 		}
@@ -626,11 +920,123 @@ module FB3DOM {
 		}
 	}
 	export class FB3PurchaseTag extends FB3Tag implements IFB3Block {
-		readonly IsUnbreakable: boolean = true;
 		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
 			var Out: string[] = ['<div class="' + FB3DOM.UNBREAKABLE_CSS_CLASS + '" id ="n_' + IDPrefix + this.XPID + '">'];
 			Out.push(this.DOM.Site.showTrialEnd('n_' + IDPrefix + this.XPID));
 			return Out;
+		}
+	}
+	export class FB3FootnoteTag extends FB3Tag implements IFB3Block {
+		public IsFootnote: boolean = true;
+		
+		constructor(public DOM: IFB3DOM, public Data: IJSONBlock, Parent: IFB3Block, ID: number) {
+			super(DOM, Data, Parent, ID, true);
+			Parent.Footnote = this;
+			Parent.HasFootnote = true;
+		}		
+	}
+	export class FB3NoteTag extends FB3Tag implements IFB3Block {
+		public IsActiveZone: boolean = true;
+
+		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+			var ElementClasses = this.ElementClasses();
+
+			if (MoreClasses) {
+				ElementClasses.push(MoreClasses);
+			}
+			
+			var InlineStyle = this.InlineStyle();
+			
+			var Out: string[] = ['<'];
+
+			Out.push('a href="about:blank" data-href="' + this.Data.hr + '"');
+
+			if (ElementClasses.length) {
+				Out.push(' class="' + ElementClasses.join(' ') + '"');
+			}
+			Out.push(InlineStyle);
+
+			this.ElementID = 'n_' + IDPrefix + this.XPID;
+			Out.push(' id="' + this.ElementID + '">');
+
+			return Out;
+		}
+
+		public Fire(): void {
+			this.DOM.Site.GoToNote(this.Data.hr.join(''));
+		}
+	}
+	export class FB3FootnoteLinkTag extends FB3Tag implements IFB3Block {
+		public IsActiveZone: boolean = true;
+		public HasFootnote: boolean = true;
+
+		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+			var ElementClasses = this.ElementClasses();
+
+			ElementClasses.push('footnote_attached')
+			if (!BookStyleNotes) {
+				ElementClasses.push('footnote_clickable')
+			}
+
+			if (MoreClasses) {
+				ElementClasses.push(MoreClasses);
+			}
+			
+			var InlineStyle = this.InlineStyle();
+			
+			var Out: string[] = ['<a'];
+
+			if (ElementClasses.length) {
+				Out.push(' class="' + ElementClasses.join(' ') + '"');
+			}
+			Out.push(InlineStyle);
+
+			if (this.Data.f && !BookStyleNotes) {
+				this.ElementID = 'n_' + IDPrefix + this.XPID;
+				Out.push(' id="' + this.ElementID + '" onclick="alert(1)" href="#">');
+			} else {
+				this.ElementID = 'n_' + IDPrefix + this.XPID;
+				Out.push(' id="' + this.ElementID + '">');
+			}
+
+			return Out;
+		}
+
+		public Fire(): void {
+			var PageContainer = new FB3DOM.PageContainer();
+
+			this.Footnote.GetHTML(true, false, {From: [], To: []}, '', 0, 0, PageContainer, []);
+			this.DOM.Site.ZoomHTML(PageContainer.FootNotes.join(''));
+		}
+	}
+	export class FB3LinkTag extends FB3Tag implements IFB3Block {
+		public IsActiveZone: boolean = true;
+		public IsLink: boolean = true;
+
+		public GetInitTag(Range: IRange, BookStyleNotes: boolean, IDPrefix: string, ViewPortW: number, ViewPortH: number, MoreClasses: string): InnerHTML[] {
+			var ElementClasses = this.ElementClasses();
+
+			if (MoreClasses) {
+				ElementClasses.push(MoreClasses);
+			}
+
+			var InlineStyle = this.InlineStyle();
+
+			var Out: string[] = ['<a href="' + this.Data.href + '" target="' + ExtLinkTarget + '"'];
+
+			if (ElementClasses.length) {
+				Out.push(' class="' + ElementClasses.join(' ') + '"');
+			}
+			Out.push(InlineStyle);
+
+			this.ElementID = 'n_' + IDPrefix + this.XPID;
+			Out.push(' id="' + this.ElementID + '">');
+
+			return Out;
+		}
+
+		public Fire(): void {
+			this.DOM.Site.GoToExternalLink(this.Data.href);
 		}
 	}
 }

@@ -3,7 +3,10 @@
 module FB3DataProvider {
 
 	interface IJSonLoadedCallbackWrap {
-		(ID: number, Data: any, CustomData?: any): void;
+		(ID: number, URL: string, Data: any, CustomData?: any): void;
+	}
+	interface IJSonFailureCallbackWrap {
+		(ID: number, URL: string, Error?: any): void;
 	}
 	interface iWindow {
 		XDomainRequest?: any;
@@ -23,20 +26,70 @@ module FB3DataProvider {
 		private CurrentRequestID: number;
 		private BaseURL: string;
 		public json_redirected:boolean;
-		constructor(public LitresURL: string, public ArtID2URL: IArtID2URL) {
+		constructor(public LitresURL: string, public ArtID2URL: IArtID2URL, private TextCacheManager?: FB3TextCache.TextCacheManager) {
 			this.BaseURL = LitresURL;
 			this.CurrentRequestID = 0;
 			this.ActiveRequests = {};
 		}
-		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
+		public Request(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any, IgnoreCache: boolean = false) {
+			if (this.TextCacheManager && !IgnoreCache) {
+				this.TextCacheManager.Use(() => {
+					this.TextCacheManager.LoadChunkData(FB3TextCache.TextCacheManager.GetStorageKey(this.BaseURL), URL, (data, customData) => {
+						if (data) {
+							Callback(data, customData);
+						} else {
+							this.InitRequest(URL, Callback, Progressor, CustomData);
+						}
+					});
+				}, () => {
+					this.InitRequest(URL, Callback, Progressor, CustomData);
+				});
+				return;
+			}
+
+			if (IgnoreCache === true) {
+				URL = FB3TextCache.TextCacheManager.NoCacheURL(URL);
+			}
+
+			this.InitRequest(URL, Callback, Progressor, CustomData);
+		}
+		private InitRequest(URL: string, Callback: IJSonLoadedCallback, Progressor: FB3ReaderSite.ILoadProgress, CustomData?: any) {
 			this.CurrentRequestID++;
 			this.ActiveRequests['req' + this.CurrentRequestID] = Callback;
-			new AjaxLoader(URL, (ID, Data: any, CustomData?: any) => this.CallbackWrap(ID, Data, CustomData), Progressor, this.CurrentRequestID, CustomData,this.json_redirected);
+			new AjaxLoader(URL, (ID, URL, Data: any, CustomData?: any) => this.CallbackWrap(ID, URL, Data, CustomData), (ID, URL) => this.FailureCallbackWrap(ID, URL, Callback), Progressor, this.CurrentRequestID, CustomData,this.json_redirected);
 		}
-		private CallbackWrap(ID:number, Data: any, CustomData?: any): void {
+		private CallbackWrap(ID:number, URL:string, Data: any, CustomData?: any): void {
+			if (this.TextCacheManager) {
+				this.TextCacheManager.Use(()=> {
+					this.TextCacheManager.SaveChunkData(FB3TextCache.TextCacheManager.GetStorageKey(this.BaseURL), URL, Data, CustomData, () => {
+						this.ProcessCallback(Data, CustomData);
+					});
+				}, () => {
+					this.ProcessCallback(Data, CustomData);
+				});
+				return;
+			}
+
+			this.ProcessCallback(Data, CustomData);
+		}
+
+		private ProcessCallback(Data, CustomData) {
 			var Func = this.ActiveRequests['req' + this.CurrentRequestID];
 			if (Func) {
 				this.ActiveRequests['req' + this.CurrentRequestID](Data, CustomData);
+			}
+		}
+
+		private FailureCallbackWrap(ID:number, URL:string, Callback:IJSonLoadedCallback) {
+			// if we failed to download file, we anyway try to fetch it from our cache (even if had IgnoreCache option)
+			if (this.TextCacheManager) {
+				this.TextCacheManager.Use(() => {
+					this.TextCacheManager.LoadChunkData(FB3TextCache.TextCacheManager.GetStorageKey(this.BaseURL), URL, (data, customData) => {
+						if (data) {
+							Callback(data, customData);
+						}
+					});
+				});
 			}
 		}
 		public Reset(): void {
@@ -49,6 +102,7 @@ module FB3DataProvider {
 		private xhrIE9: boolean;
 		constructor(public URL: string,
 			private Callback: IJSonLoadedCallbackWrap,
+			private FailureCallback: IJSonFailureCallbackWrap,
 			private Progressor: FB3ReaderSite.ILoadProgress,
 			private ID: number,
 			public CustomData?: any,
@@ -86,6 +140,7 @@ module FB3DataProvider {
 					if (this.Req.status == 200) {
 						this.ParseData(this.Req.responseText);
 					} else {
+						this.FailureCallback(this.ID, this.URL);
 						this.Progressor.Alert('Failed to load "' + this.URL + '", server returned error "' + this.Req.status + '"');
 					}
 				}
@@ -108,12 +163,13 @@ module FB3DataProvider {
 			var URL = this.FindRedirectInJSON(Data);
 			if (URL) {
 				new AjaxLoader(URL,
-					(ID, Data: any, CustomData?: any) => this.Callback(ID, Data, CustomData),
+					(ID, _, Data: any, CustomData?: any) => this.Callback(ID, this.URL, Data, CustomData),
+					this.FailureCallback,
 					this.Progressor,
 					this.ID,
 					this.CustomData);
 			} else {
-				this.Callback(this.ID, Data, this.CustomData);
+				this.Callback(this.ID, this.URL, Data, this.CustomData);
 			}
 		}
 
@@ -123,10 +179,12 @@ module FB3DataProvider {
 		private onTransferFailed(e: ProgressEvent) {
 			this.Progressor.HourglassOff(this);
 			this.Progressor.Alert('Failed to load "' + this.URL + '"');
+			this.FailureCallback(this.ID, this.URL, e);
 		}
 		private onTransferAborted(e: ProgressEvent) {
 			this.Progressor.HourglassOff(this);
 			this.Progressor.Alert('Failed to load "' + this.URL + '" (interrupted)');
+			this.FailureCallback(this.ID, this.URL, e);
 		}
 
 		private HttpRequest(): XMLHttpRequest {
@@ -171,6 +229,65 @@ module FB3DataProvider {
 			// all shis safe and pretty stuff is nice, but I stick to simple
 			var Data = (new Function("return " + data))()
 			return Data;
+		}
+	}
+}
+
+/**
+ * More common ajax loader, capable of any type of data
+ */
+module AjaxDataProvider {
+	/**
+	 * Plain loader class to process data
+	 */
+	export class AjaxLoader {
+		private URL: string;
+		private Method: string = "GET";
+		private Data: any;
+		private ResponseType: string;
+		private SuccessCallback: (response: any) => void;
+		private FailureCallback: () => void;
+
+		constructor(Config: FB3DataProvider.RequestConfiguration) {
+			if (Config.Method) {
+				this.Method = Config.Method;
+			}
+			if (Config.Data) {
+				this.Data = Config.Data;
+			}
+
+			this.URL = Config.URL;
+			this.ResponseType = Config.ResponseType;
+			this.SuccessCallback = Config.SuccessCallback;
+			this.FailureCallback = Config.FailureCallback;
+		}
+
+		public PerformRequest() {
+			const xhr = new XMLHttpRequest();
+			xhr.responseType = <XMLHttpRequestResponseType>this.ResponseType;
+			xhr.open(this.Method, this.URL);
+
+			if (!this.Data) {
+				xhr.send();
+			} else {
+				xhr.send(this.Data);
+			}
+
+			xhr.onload = evt => {
+				if (xhr.status == 200) {
+					this.SuccessCallback(xhr.response);
+				} else {
+					this.FailureCallback();
+				}
+			};
+
+			xhr.onerror = evt => {
+				this.FailureCallback();
+			};
+
+			xhr.ontimeout = evt => {
+				this.FailureCallback();
+			};
 		}
 	}
 }

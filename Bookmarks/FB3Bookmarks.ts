@@ -5,14 +5,208 @@ module FB3Bookmarks {
 
 	export var ActiveXXMLHttp: boolean = true;
 
-  interface iWindow extends Window {
+	interface iWindow extends Window {
 		ActiveXObject: any;
 		DOMParser: any;
 		XDomainRequest: any;
 	}
-  declare var window: iWindow;
+	declare var window: iWindow;
+
+	interface ICatalitResponse extends CatalitWeb.IServerResponseObject {
+		success: boolean,
+		time: string,
+		lock_id?: string;
+		notes?: INote[];
+	}
 
 	interface IXMLHTTPResponseCallback { (Data: XMLDocument): void; }
+
+	class Catalit extends CatalitWeb.CatalitWebApp {
+		private artID: string;
+		private lockID: string;
+
+		private notesRequestID: string = 'r_my_fb3_notes';
+		private notesRequestMethod: string = 'r_my_fb3_notes_incremental';
+
+		private lockNotesRequestID: string = 'w_set_bookmark_lock';
+		private lockNotesRequestMethod: string = 'w_set_bookmark_lock';
+
+		private replaceNotesRequestID: string = 'w_replace_my_fb3_notes';
+		private replaceNotesRequestMethod: string = 'w_replace_my_fb3_notes';
+
+		private deleteNotesRequestID: string = 'w_drop_my_fb3_notes';
+		private deleteNotesRequestMethod: string = 'w_drop_my_fb3_notes';
+
+		private makeNotePublicRequestID: string = 'w_quote_make_public';
+		private makeNotePublicRequestMethod: string = 'w_quote_make_public';
+
+		private deletedNotes: INote[] = [];
+
+		private addNotesRequest(): void {
+			this.addNewRequest({
+				func: this.notesRequestMethod,
+				id: this.notesRequestID,
+				param: {
+					art: this.artID
+				}
+			});
+		}
+
+		private addLockNotesRequest(): void {
+			this.addNewRequest({
+				func: this.lockNotesRequestMethod,
+				id: this.lockNotesRequestID,
+				param: {
+					art: this.artID
+				}
+			});
+		}
+
+		private addReplaceNotesRequest(notes: INote[]): void {
+			this.addNewRequest({
+				func: this.replaceNotesRequestMethod,
+				id: this.replaceNotesRequestID,
+				param: {
+					art: this.artID,
+					my_notes: notes,
+					lock_id: this.lockID
+				}
+			});
+		}
+
+		private addDeletedNotesRequest(notes: INote[]): void {
+			this.addNewRequest({
+				func: this.deleteNotesRequestMethod,
+				id: this.deleteNotesRequestID,
+				param: {
+					notes: notes.map((note: INote) => note.id),
+					lock_id: this.lockID
+				}
+			});
+		}
+
+		private addMakeNotePublicRequest(noteID: string): void {
+			this.addNewRequest({
+				func: this.makeNotePublicRequestID,
+				id: this.makeNotePublicRequestMethod,
+				param: {
+					id: noteID
+				}
+			});
+		}
+
+		public addDeletedNote(note: INote): void {
+			this.deletedNotes.push(note);
+		}
+
+		public clearDeletedNotes(): void {
+			this.deletedNotes = [];
+		}
+
+		private onGetNotes(successCallback: Function, failureCallback: Function, result: ICatalitResponse): boolean {
+			let preparedResult = {
+				success: false,
+				notes: [],
+				lock_id: ''
+			};
+
+			try {
+				let lockResultBody = result[this.lockNotesRequestID],
+					notesResultBody = result[this.notesRequestID];
+
+				preparedResult.lock_id = lockResultBody.lock_id;
+				preparedResult.notes = notesResultBody.my_notes;
+
+				this.setLockID(preparedResult.lock_id);
+
+				if (result.success) {
+					preparedResult.success = true;
+					successCallback(preparedResult);
+					return true;
+				}
+
+				failureCallback(preparedResult);
+				return false;
+			} catch (e) {
+				failureCallback(preparedResult);
+				console.warn(e.message);
+				return false;
+			}
+		}
+
+		private onReplaceNotes(successCallback: Function, failureCallback: Function, result: ICatalitResponse): boolean {
+			let preparedResult = {
+				success: false
+			};
+
+			try {
+				let lockResultBody = result[this.lockNotesRequestID],
+					replaceNotesResultBody = result[this.replaceNotesRequestID];
+
+				if (result.success) {
+					preparedResult.success = true;
+					successCallback(preparedResult);
+					return true;
+				}
+
+				failureCallback(preparedResult);
+				return false;
+			} catch (e) {
+				failureCallback(preparedResult);
+				console.warn(e.message);
+				return false;
+			}
+		}
+
+		private onMakeNotePublic(successCallback: Function, failureCallback: Function, result: ICatalitResponse): boolean {
+			try {
+				let resultBody = result[this.makeNotePublicRequestID];
+
+				if (resultBody.success) {
+					successCallback();
+					return true;
+				}
+                failureCallback(resultBody);
+				return false;
+			} catch (e) {
+				failureCallback();
+				return false;
+			}
+		}
+
+		public getNotes(successCallback: (result) => void, failureCallback: (result) => void): void {
+			this.clearRequestsArray();
+			this.addLockNotesRequest();
+			this.addNotesRequest();
+			this.requestAPI(this.onGetNotes.bind(this, successCallback, failureCallback));
+		}
+
+		public replaceNotes(notes: INote[], successCallback: (result) => void, failureCallback: (result) => void): void {
+			this.clearRequestsArray();
+			if (notes.length > 0) {
+				this.addReplaceNotesRequest(notes);
+			}
+			if (this.deletedNotes.length > 0) {
+				this.addDeletedNotesRequest(this.deletedNotes);
+				this.clearDeletedNotes();
+			}
+			this.requestAPI(this.onReplaceNotes.bind(this, successCallback, failureCallback));
+		}
+
+		public makeNotePublic(noteID: string, successCallback: Function, failureCallback: Function): void {
+			this.clearRequestsArray();
+			this.addMakeNotePublicRequest(noteID);
+			this.requestAPI(this.onMakeNotePublic.bind(this, successCallback, failureCallback));
+		}
+
+		public setLockID(lockID): string {
+			return this.lockID = lockID;
+		}
+
+		public setArtID(artID): string {
+			return this.artID = artID;
+		}
+	}
 
 	export class LitResBookmarksProcessor implements IBookmarks {
 		public Host: string;
@@ -30,16 +224,23 @@ module FB3Bookmarks {
 		private WaitForData: boolean;
 		private XMLHttp: any;
 		private SID: string;
+		private ArtID: string;
 		private Callback: any;
 		private SaveAuto: boolean; // save state after ReLoad
 		private XMLHTTPResponseCallback: IXMLHTTPResponseCallback;
 		private LocalXML: string;
 		private xhrIE9: boolean;
 		private MakeStoreXMLAsyncTimeout: number;
+		private Catalit: Catalit;
+		private ScrollToXpath: string;
+		public UseCatalit2: boolean;
 		public aldebaran: boolean; // stupid hack
-		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string, LitresLocalXML?: string) {
+		constructor(public FB3DOM: FB3DOM.IFB3DOM, LitresSID?: string, ArtID?: string, LitresLocalXML?: string, UseCatalit2: boolean = false, ScrollToXpath?: string) {
 			if (LitresSID) {
 				this.SID = LitresSID;
+			}
+			if (ArtID) {
+				this.ArtID = ArtID;
 			}
 			this.xhrIE9 = false;
 			this.Ready = false;
@@ -52,7 +253,7 @@ module FB3Bookmarks {
 			this.WaitForData = false;
 			this.Host = '/';
 			//// local testing part start
-			//this.SID = "528k8b3l3rex5o4j5z522590dt0q3dac";			
+			//this.SID = "528k8b3l3rex5o4j5z522590dt0q3dac";
 			//this.Host = 'https://www.litres.ru/';
 			//this.aldebaran = true;
 			//// local testing part end
@@ -69,6 +270,15 @@ module FB3Bookmarks {
 			}
 			this.SaveAuto = false;
 			this.LocalXML = LitresLocalXML;
+			if (UseCatalit2) {
+				this.UseCatalit2 = true;
+				this.Catalit = new Catalit(this.SID, window.location.host);
+				this.Catalit.setArtID(this.ArtID);
+			}
+
+			if (ScrollToXpath) {
+				this.ScrollToXpath = ScrollToXpath;
+			}
 		}
 
 		public AddBookmark(Bookmark: IBookmark): void {
@@ -106,8 +316,12 @@ module FB3Bookmarks {
 			this.LoadEndCallback = Callback;
 			this.WaitForData = true;
 			var URL = this.MakeLoadURL();
-			this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
-			this.SendNotesRequest(URL, 'GET');
+			if (this.UseCatalit2) {
+				this.Catalit.getNotes(this.OnGetNotesSuccess.bind(this), () => {});
+			} else {
+				this.XMLHTTPResponseCallback = this.AfterTransferFromServerComplete;
+				this.SendNotesRequest(URL, 'GET');
+			}
 			// todo some data transfer init stuff here, set AfterTransferFromServerComplete to run at the end
 			// for now we just fire it as it is, should fire after XML loaded
 			// setTimeout(()=>this.AfterTransferFromServerComplete(),200);
@@ -132,6 +346,38 @@ module FB3Bookmarks {
 				};
 			}
 			return parseXml(XMLString);
+		}
+
+		private OnGetNotesSuccess(Result: ICatalitResponse): void {
+			let Notes: INote[] = Result.notes;
+			this.LoadDateTime = moment().unix();
+
+			if (Result.lock_id) {
+				this.LockID = Result.lock_id;
+			}
+
+			if (Notes) {
+                for (var j = 0; j < Notes.length; j++) {
+					let Note: INote = Notes[j];
+                    let NewBookmark: Bookmark = new Bookmark(this);
+                    NewBookmark.ParseObject(Note);
+
+                    if (NewBookmark.Group == 0) {
+                        this.Bookmarks[0] = NewBookmark;
+                    } else {
+                        this.AddBookmark(NewBookmark);
+                    }
+                }
+			}
+
+			this.WaitedToRemapBookmarks = 0;
+			for (var I = 0; I < this.Bookmarks.length; I++) {
+				if (!this.Bookmarks[I].XPathMappingReady) {
+					this.Bookmarks[I].RemapWithDOM(() => this.OnChildBookmarkSync());
+					this.WaitedToRemapBookmarks++;
+				}
+			}
+			this.CheckWaitedSync();
 		}
 
 		private AfterTransferFromServerComplete(XML: XMLDocument) {
@@ -160,6 +406,12 @@ module FB3Bookmarks {
 				if (this.ReadyCallback) {
 					this.ReadyCallback();
 				}
+
+				// [139028] Научить читалку «быстрому переходу» на позицию из URL
+				let ForcedXpathPos: string = this.GetForcedXpathPosition();
+				if (ForcedXpathPos) {
+					this.Reader.GoToXPath(this.Bookmarks[0].MakeXPathSub(ForcedXpathPos));
+				}
 			}
 		}
 
@@ -171,6 +423,7 @@ module FB3Bookmarks {
 				this.LockID = XML.documentElement.getAttribute('lock-id');
 			}
 			if (Rows.length) {
+				// console.log('we have selection');
 				for (var j = 0; j < Rows.length; j++) {
 					var NewBookmark = new Bookmark(this);
 					NewBookmark.ParseXML(Rows[j]);
@@ -180,6 +433,8 @@ module FB3Bookmarks {
 						this.AddBookmark(NewBookmark);
 					}
 				}
+			} else {
+				// console.log('we dont have any selections on server');
 			}
 		}
 
@@ -188,29 +443,53 @@ module FB3Bookmarks {
 		}
 
 		private StoreBookmarks(): void {
-			var XML = this.MakeStoreXML();
-			if (this.Reader.Site.BeforeBookmarksAction()) {
-				var Data = this.MakeStoreData(XML);
-				var URL = this.MakeStoreURL();
-				this.XMLHTTPResponseCallback = () => {
-					this.Reader.Site.AfterStoreBookmarks();
-				};
-				this.SendNotesRequest(URL, 'POST', Data);
+			if (this.UseCatalit2) {
+				if (this.Reader.Site.BeforeBookmarksAction()) {
+					this.Catalit.replaceNotes(this.MakeStoreObject(), this.OnReplaceNotesSuccess.bind(this), this.OnReplaceNotesFailure.bind(this));
+				}
+			} else {
+				var XML = this.MakeStoreXML();
+				if (this.Reader.Site.BeforeBookmarksAction()) {
+					var Data = this.MakeStoreData(XML);
+					var URL = this.MakeStoreURL();
+					this.XMLHTTPResponseCallback = () => {
+						this.Reader.Site.AfterStoreBookmarks();
+					};
+					this.SendNotesRequest(URL, 'POST', Data);
+				}
 			}
 		}
 
-		public MakeBookmarkPublic(Bookmark: IBookmark, callback: Function = () => {}): void {
-			this.XMLHTTPResponseCallback = () => {
-				callback();
-			};
-
-			var URL = `${this.Host}pages/ajax_empty2/`,
-				Data = `action=quote_make_public&q=${Bookmark.ID}`;
-
-			this.SendNotesRequest(URL, 'POST', Data);
+		private OnReplaceNotesSuccess() {
+			this.Reader.Site.AfterStoreBookmarks();
 		}
 
-		public CreateBookmarkFromTemporary(Group: string, Bookmark: IBookmark, Title: string, callback?: Function): IBookmark {
+        private OnReplaceNotesFailure() {
+            this.Reader.Site.AfterStoreBookmarksFailure();
+        }
+
+		private MakeStoreObject() {
+			var result = [];
+			for (var j = 0; j < this.Bookmarks.length; j++) {
+				if (!this.Bookmarks[j].TemporaryState) {
+					result.push(this.Bookmarks[j].PublicObject())
+				}
+			}
+
+			return result;
+		}
+
+		public MakeBookmarkPublic(Bookmark: IBookmark, callback: Function = () => {}, failureCallback: Function = () => {}): void {
+			if (this.UseCatalit2) {
+				this.Catalit.makeNotePublic(Bookmark.ID, () => {
+					callback()
+				}, (resultObject) => {failureCallback(resultObject);});
+			} else {
+                failureCallback();
+			}
+		}
+
+		public CreateBookmarkFromTemporary(Group: string, Bookmark: IBookmark, Title: string, callback?: Function, failureCallback?: Function): IBookmark {
 			var NewNote;
 			var titles = { 1: 'Закладка', 3: 'Заметка', 5: 'Заметка' };
 			switch (Group) {
@@ -238,7 +517,7 @@ module FB3Bookmarks {
 			} else {
 				this.Reader.RedrawVisible();
 			}
-			this.Reader.Site.StoreBookmarksHandler(200, callback);
+			this.Reader.Site.StoreBookmarksHandler(200, callback, failureCallback);
 			return NewNote;
 		}
 
@@ -254,7 +533,7 @@ module FB3Bookmarks {
 		}
 
 		public ReLoad(SaveAutoState?: boolean) {
-			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID);
+			var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID, this.ArtID, undefined, this.UseCatalit2, this.ScrollToXpath);
 			TemporaryNotes.Host = this.Host;
 			TemporaryNotes.Reader = this.Reader;
 			// TemporaryNotes.ReadyCallback = this.ReadyCallback;
@@ -269,6 +548,7 @@ module FB3Bookmarks {
 			// than check if new "current position" is newer, if so - goto it
 			// keep in mind this.Bookmarks[0] is always here and is the current position,
 			// so we skip it on merge
+			//console.log("RELOAD BOOKMARK")
 			var AnyUpdates = false;
 			if (this.Bookmarks.length) {
 				var Found;
@@ -288,6 +568,9 @@ module FB3Bookmarks {
 				for (var j = 1; j < TemporaryNotes.Bookmarks.length; j++) { // check new bookmarks
 					Found = 0;
 					if (this.DeletedBookmarks[TemporaryNotes.Bookmarks[j].ID]) { // skip deleted
+						if (this.UseCatalit2) {
+							this.Catalit.addDeletedNote(TemporaryNotes.Bookmarks[j].PublicObject());
+						}
 						continue;
 					}
 					for (var i = 1; i < this.Bookmarks.length; i++) {
@@ -334,6 +617,9 @@ module FB3Bookmarks {
 			if (this.SaveAuto) {
 				this.LockID = TemporaryNotes.LockID;
 				this.LoadDateTime = TemporaryNotes.LoadDateTime;
+				if (this.UseCatalit2) {
+					this.Catalit.setLockID(this.LockID);
+				}
 				this.StoreBookmarks();
 			}
 		}
@@ -450,6 +736,13 @@ module FB3Bookmarks {
 
 		private OnBookmarksSync(ActualBookmarks: IBookmarks, PrevBookmarks: IBookmarks): void {
 			this.Reader.Site.OnBookmarksSync(ActualBookmarks, PrevBookmarks);
+		}
+
+		public GetForcedXpathPosition(): string | null {
+			if (this.ScrollToXpath) {
+				return this.ScrollToXpath;
+			}
+			return null;
 		}
 	}
 
@@ -580,17 +873,17 @@ module FB3Bookmarks {
 		}
 
 		private CleanExtractNode(Text: string): string {
-				var CleanText;
-				// For xsd check to comply, tags should be like: <subtitle><fb:emphasis>большого формата</fb:emphasis></subtitle>
-				// As workaround, now just simple clean up text from any tags at all				
-				CleanText = Text.replace(/<[^>]+>/gi, ' ');
-				CleanText = '<p>' + CleanText + '</p>';
-				return CleanText;
+			var CleanText;
+			// For xsd check to comply, tags should be like: <subtitle><fb:emphasis>большого формата</fb:emphasis></subtitle>
+			// As workaround, now just simple clean up text from any tags at all
+			CleanText = Text.replace(/<[^>]+>/gi, ' ');
+			CleanText = '<p>' + CleanText + '</p>';
+			return CleanText;
 		}
 
 		private GetDataFromText() {
 			var PageData = new FB3DOM.PageContainer();
-			this.Owner.FB3DOM.GetXML( this.Range, PageData);			
+			this.Owner.FB3DOM.GetXML( this.Range, PageData);
 			this.Owner.FB3DOM.GetHTML(this.Owner.Reader.HyphON, this.Owner.Reader.BookStyleNotes, this.Range, '', 100, 100, PageData);
 			//this.ExtractNodeText = PageData.BodyXML.join('');
 			this.ExtractNodeText = this.CleanExtractNode(PageData.BodyXML.join(''));
@@ -611,7 +904,7 @@ module FB3Bookmarks {
 			this.RawText = this.RawText.replace(/'|"/g, '');
 
 			this.Note[0] = this.Raw2FB2(this.RawText);
-			
+
 			this.RawText = this.RawText.replace(/\[\/?[i,b]\]/gi, '');
 
 			if (this.RawText == "" && InnerHTML.match(/img/i)) {
@@ -720,9 +1013,25 @@ module FB3Bookmarks {
 				'selection="fb2#xpointer(' + this.MakeSelection() + ')" ' +
 				'art-id="' + this.Owner.FB3DOM.MetaData.UUID + '" ' +
 				'last-update="' + moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ") + '"' +
-				this.MakePercent() + '>' +
+				' percent="' + this.MakePercent() + '">' +
 				this.GetNote() + this.GetExtract() +
 			'</Selection>';
+		}
+
+		public PublicObject(): INote {
+			return {
+				id: this.ID,
+				group: this.Group,
+				last_update: moment.unix(this.DateTime).format("YYYY-MM-DDTHH:mm:ssZ"),
+				percent: this.MakePercent(),
+				xpath_start: '/' + this.MakePointer(this.XStart),
+				xpath_end: '/' + this.MakePointer(this.XEnd),
+				class: this.Class ? this.prepareClass(this.Class) : '',
+				title: this.Title ? this.prepareTitle(this.Title) : '',
+				selection_text: '<p>' + this.MakePreviewFromNote() + '</p>',
+				note: this.Note[1] ? this.Note[1] : '',
+				is_public: 1
+			};
 		}
 
 		public ParseXML(XML: any): void { // TODO: fix, need correct type
@@ -768,6 +1077,21 @@ module FB3Bookmarks {
 			// this.Range; // will be filled in ReMapping
 		}
 
+		public ParseObject(Note: INote): void {
+			this.Group = Note.group;
+			this.Class = 'default';
+			this.Title = Note.title;
+			this.parseTitle();
+			this.ID = Note.id.toLowerCase();
+			this.XStart = this.MakeXPathSub(Note.xpath_start);
+			this.XEnd = Note.xpath_end ? this.MakeXPathSub(Note.xpath_end) : this.XStart;
+			this.DateTime = moment(Note.last_update, "YYYY-MM-DDTHH:mm:ssZ").unix();
+			this.Note[0] = Note.selection_text || '';
+			this.Note[1] = Note.note || '';
+			this.NotSavedYet = 0;
+			this.XPathMappingReady = false;
+		}
+
 		private parseTitle(): void {
 			if (this.Title == '' || this.Title == null) {
 				// if Title empty, set new title group
@@ -796,15 +1120,15 @@ module FB3Bookmarks {
 			str = str.replace(/<|>/gi, '');
 			return str.substr(0, len);
 		}
-		private MakePercent(): string {
-			if (this.Group != 0) return '';
+		private MakePercent(): number {
+			if (this.Group != 0) return 0;
 			var percent = Math.round(this.Owner.Reader.CurPosPercent());
 			if (percent > 100) {
 				percent = 100;
 			} else if (percent < 0) {
 				percent = 0;
 			}
-			return ' percent="' + percent + '"';
+			return percent;
 		}
 
 		private parseXMLNote(el) {
@@ -881,14 +1205,15 @@ module FB3Bookmarks {
 		}
 		private MakeExtractSelection(): string {
 			var Start: string = this.MakePointer(this.XStart);
-			return '/1/' + Start.replace(/\.\d+$/, '') + '';
+			return '/' + Start.replace(/\.\d+$/, '') + '';
 		}
 
 		private MakeSelection(): string {
 			var Start: string = this.MakePointer(this.XStart);
-			if (FB3DOM.XPathCompare(this.XStart, this.XEnd) == 0)
-				return 'point(/1/' + Start + ')';
-			return 'point(/1/' + Start + ')/range-to(point(/1/' + this.MakePointer(this.XEnd) + '))';
+			if (FB3DOM.XPathCompare(this.XStart, this.XEnd) == 0) {
+				return 'point(/' + Start + ')';
+			}
+			return 'point(/' + Start + ')/range-to(point(/' + this.MakePointer(this.XEnd) + '))';
 		}
 
 		private MakePointer(X: FB3DOM.IXPath): string {
@@ -898,17 +1223,17 @@ module FB3Bookmarks {
 		}
 
 		private MakeXPath(X: string): void {
-			var p = X.match(/\/1\/(.[^\)]*)/g);
-			var MakeXPathSub = function (str) {
-				return str.replace(/^\/1\//, '').replace(/\.0$/, '').replace('.', '/.').split('/');
-			}
-			this.XStart = MakeXPathSub(p[0]);
+			var p = X.match(/(\/\d+|\.\d+)+/g);
+			this.XStart = this.MakeXPathSub(p[0]);
 			if (p.length == 1) {
 				this.XEnd = this.XStart.slice(0);
 			} else {
-				this.XEnd = MakeXPathSub(p[1]);
+				this.XEnd = this.MakeXPathSub(p[1]);
 			}
 		}
 
+		public MakeXPathSub(str: string): FB3DOM.IXPath {
+			return str.replace(/^\//, '').replace(/\.0$/, '').replace('.', '/.').split('/');
+		}
 	}
 }

@@ -5,6 +5,7 @@ var FB3ReaderSite;
             var _this = this;
             this.Canvas = Canvas;
             this.FontSize = 16;
+            this.MinimalCharacterCountInColumn = 17;
             this.ViewText = new ViewText();
             this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
             this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
@@ -25,16 +26,24 @@ var FB3ReaderSite;
             return ele;
         };
         ExampleSite.prototype.HeadersLoaded = function (MetaData) { };
-        ExampleSite.prototype.AfterTurnPageDone = function (Data) {
+        ExampleSite.prototype.AfterTurnPageDone = function (Data, callback) {
             if (Data.CurPage) {
                 document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' +
                     (Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
             }
             LitresLocalBookmarks.SetCurrentPosition(Data.Pos);
         };
+        ExampleSite.prototype.IsAlreadyClicked = function (sourceAction) {
+            return true;
+        };
+        ExampleSite.prototype.GetArtTrialInfo = function () {
+            return {};
+        };
+        ExampleSite.prototype.SetArtTrialInfo = function (newArtTrialInfo) { };
         ExampleSite.prototype.BookCacheDone = function (Data) { };
         ExampleSite.prototype.StoreBookmarksHandler = function (timer) { };
         ExampleSite.prototype.AfterStoreBookmarks = function () { };
+        ExampleSite.prototype.AfterStoreBookmarksFailure = function () { };
         ExampleSite.prototype.BeforeBookmarksAction = function () {
             return true;
         };
@@ -57,8 +66,22 @@ var FB3ReaderSite;
         ExampleSite.prototype.OnBookmarksSync = function (ActualBookmarks, PrevBookmarks) {
             AFB3Reader.GoTO(ActualBookmarks.Bookmarks[0].Range.From);
         };
-        ExampleSite.prototype.IsAuthorizeMode = function (Percent) {
+        ExampleSite.prototype.IsAuthorizeMode = function () {
             return false;
+        };
+        ExampleSite.prototype.HTMLPopup = function (MsgHTML) { };
+        ExampleSite.prototype.GoToExternalLink = function (URL) {
+            window.open(URL, '_blank');
+        };
+        ExampleSite.prototype.GoToNote = function (Href) {
+            var Reader = AFB3Reader;
+            var tmpArr = Href.split(',');
+            var newPos = [];
+            for (var i = 0; i < tmpArr.length; i++) {
+                newPos.push(parseInt(tmpArr[i]));
+            }
+            Reader.Site.HistoryHandler(Reader.CurStartPos);
+            Reader.GoTO(newPos);
         };
         return ExampleSite;
     }());

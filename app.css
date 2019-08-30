@@ -1,4 +1,4 @@
-﻿/* this are engine-independent CSS, do with it whatewer you see fit */
+/* this are engine-independent CSS, do with it whatewer you see fit */
 /*
   Several things to note:
 
@@ -212,6 +212,11 @@ div.tocitm {
     width:80%;
     line-height: 130%;
 }
+
+.FBReaderContentDiv div.fit_to_page.tag_float p {
+    width: 100%;
+}
+
 .FBReaderContentDiv div.tag_image {
     display: block;
     margin:0 auto;
@@ -226,8 +231,13 @@ html, body {
 
 div, p, h1, h2, h3, h4, h5, h6, blockquote {
     position: relative;
-    margin-bottom: 0; /* Messing mith margins in DOM is a hell, I'll return to this later on */
+    margin-bottom: 0;
     margin-top: 0;
+}
+
+#reader div, #reader p, #reader h1, #reader h2, #reader h3, #reader h4, #reader h5, #reader h6, #reader blockquote {
+	margin-bottom: 0 !important; /* Messing mith margins in DOM is a hell, I'll return to this later on */
+	margin-top: 0 !important;
 }
 
 div.FB2readerPage {
@@ -291,3 +301,5 @@ sub, sup {
 
 /* engine-required CSS END */
 
+.preorder_buy_trial {background: #f5f5f5; padding: 15px 0 0 0;}
+.preorder_buy_trial .trial-button {display: none;}

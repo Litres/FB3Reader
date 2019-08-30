@@ -1,5 +1,5 @@
+/// <reference path="../Storage/StorageHead.ts" />
 /// <reference path="../plugins/lz-string.d.ts" />
-/// <reference path="../PagesPositionsCache/PPCache.ts" />
 
 module LocalBookmarks {
 	export class LocalBookmarksClass {
@@ -36,7 +36,7 @@ module LocalBookmarks {
 			return null;
 		}
 		public GetBookmarks(): void {
-			if (!FB3PPCache.CheckStorageAvail()) {
+			if (!FB3Storage.CheckStorageAvail()) {
 				return;
 			}
 			var bookmarksXML = this.local.getItem(this.storageVal);
@@ -46,7 +46,7 @@ module LocalBookmarks {
 			}
 		}
 		public StoreBookmarks(XMLString: string): void {
-			if (!FB3PPCache.CheckStorageAvail()) {
+			if (!FB3Storage.CheckStorageAvail()) {
 				return;
 			}
 			if (this.LocalBookmarks.length >= 10) {
@@ -69,7 +69,7 @@ module LocalBookmarks {
 			this.local.setItem(this.storageVal, cacheData);
 		}
 		public GetCurrentArtBookmarks(): string {
-			if (!FB3PPCache.CheckStorageAvail()) {
+			if (!FB3Storage.CheckStorageAvail()) {
 				return;
 			}
 			var FoundBookmark;

@@ -29,7 +29,7 @@ var LocalBookmarks;
             return null;
         };
         LocalBookmarksClass.prototype.GetBookmarks = function () {
-            if (!FB3PPCache.CheckStorageAvail()) {
+            if (!FB3Storage.CheckStorageAvail()) {
                 return;
             }
             var bookmarksXML = this.local.getItem(this.storageVal);
@@ -39,7 +39,7 @@ var LocalBookmarks;
             }
         };
         LocalBookmarksClass.prototype.StoreBookmarks = function (XMLString) {
-            if (!FB3PPCache.CheckStorageAvail()) {
+            if (!FB3Storage.CheckStorageAvail()) {
                 return;
             }
             if (this.LocalBookmarks.length >= 10) {
@@ -62,7 +62,7 @@ var LocalBookmarks;
             this.local.setItem(this.storageVal, cacheData);
         };
         LocalBookmarksClass.prototype.GetCurrentArtBookmarks = function () {
-            if (!FB3PPCache.CheckStorageAvail()) {
+            if (!FB3Storage.CheckStorageAvail()) {
                 return;
             }
             var FoundBookmark;

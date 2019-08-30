@@ -56,17 +56,6 @@ module FB3DOM {
 
 	interface IJSonLoadingDone{ (JSON: string) };
 
-	export class PageContainer implements IPageContainer {
-		public Body: InnerHTML[];
-		public FootNotes: InnerHTML[];
-		public BodyXML: string[];
-		constructor () {
-			this.Body = new Array();
-			this.FootNotes = new Array();
-			this.BodyXML = new Array();	
-		}
-	}
-
 	export class DOM extends FB3Tag implements IFB3DOM {
 		private HyphOn: boolean;
 		private ActiveRequests: AsyncLoadConsumer[];
@@ -74,6 +63,7 @@ module FB3DOM {
 		public TOC: ITOC[];
 		public DataChunks: IDataDisposition[];
 		public MetaData: IMetaData;
+		public FullLength: number;
 		public Ready: boolean;
 		private OnDoneFunc: any;
 		public XPID: string;
@@ -82,7 +72,8 @@ module FB3DOM {
 		constructor(public Site: FB3ReaderSite.IFB3ReaderSite,
 			public Progressor: FB3ReaderSite.ILoadProgress,
 			public DataProvider: FB3DataProvider.IJsonLoaderFactory,
-			public PagesPositionsCache: FB3PPCache.IFB3PPCache) {
+			public PagesPositionsCache: FB3Storage.IFB3PPCache,
+			public MediaCacheLoader: FB3MediaCache.MediaCacheLoader) {
 			super(null, null, null, 0);
 			this.ActiveRequests = [];
 			this.Ready = false;
@@ -114,6 +105,11 @@ module FB3DOM {
 			this.DataChunks = Data.Parts;
 			this.MetaData = Data.Meta;
 			this.Ready = true;
+			if (Data["fb3-fragment"]) {
+				this.FullLength = Data["fb3-fragment"].full_length;
+			} else {
+				this.FullLength = Data.full_length;
+			}
 			this.OnDoneFunc(this);
 		}
 
@@ -127,7 +123,7 @@ module FB3DOM {
 			this.OnDoneFunc = OnDone;
 			this.Childs = new Array();
 			this.Progressor.HourglassOn(this, true, 'Loading meta...');
-			this.DataProvider.Request(this.DataProvider.ArtID2URL(), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor);
+			this.DataProvider.Request(this.DataProvider.ArtID2URL(), (Data: any) => this.AfterHeaderLoaded(Data), this.Progressor, undefined, true);
 			this.Progressor.HourglassOff(this);
 		}
 		public GetHTMLAsync(HyphOn: boolean, BookStyleNotes:boolean, Range: IRange, IDPrefix: string, ViewPortW: number, ViewPortH: number, Callback: IDOMTextReadyCallback): void {
@@ -229,7 +225,7 @@ module FB3DOM {
 			var LoadedChunk: number = CustomData.ChunkN;
 			var Shift = this.DataChunks[LoadedChunk].s;
 			for (var I = 0; I < Data.length; I++) {
-				this.Childs[I + Shift] = TagClassFactory(Data[I], this, I + Shift, 0, 0, false, this); //new FB3Tag(Data[I], this, I + Shift);
+				this.Childs[I + Shift] = TagClassFactory(Data[I], this, I + Shift, 0, 0, false, false, this); //new FB3Tag(Data[I], this, I + Shift);
 			}
 			this.DataChunks[LoadedChunk].loaded = 2;
 

@@ -1,5 +1,5 @@
 module FB3ReaderSite {
-	
+
 	// Mothership with all interfaces aboard - everybody will pick here
 	export interface IFB3ReaderSite {
 		ViewText: IViewText;
@@ -12,10 +12,11 @@ module FB3ReaderSite {
 		getElementById(elementId: string): HTMLElement;
 		elementFromPoint(x: number, y: number): Element;
 		HeadersLoaded(MetaData: FB3DOM.IMetaData): void; // when headers (Meta, toc and chunks info) loaded
-		AfterTurnPageDone(Data: ITurnPageData): void; // when first start, default position and bookmark position set
+		AfterTurnPageDone(Data: ITurnPageData, callback: Function): void; // when first start, default position and bookmark position set
 		BookCacheDone(Data: ITurnPageData): void; // after full 100% book cache done
-		StoreBookmarksHandler(timer: number, callback?: Function);
+		StoreBookmarksHandler(timer: number, callback?: Function, failureCallback?: Function);
 		AfterStoreBookmarks(): void;
+		AfterStoreBookmarksFailure(): void;
 		BeforeBookmarksAction(): boolean;
 		ZoomImg(obj): void;
 		ZoomHTML(HTML: FB3DOM.InnerHTML): void;
@@ -25,9 +26,23 @@ module FB3ReaderSite {
 		PrepareHTML(HTMLString: string): string;
 		PatchNoteNode(Node: HTMLElement): HTMLElement;
 		OnBookmarksSync(ActualBookmarks: FB3Bookmarks.IBookmarks, PrevBookmarks: FB3Bookmarks.IBookmarks): void;
-		IsAuthorizeMode(Percent: number): boolean;
-		AuthorizeIFrame: IFrame.IFrame;
+		IsAuthorizeMode(): boolean;
+		IsAlreadyClicked(sourceAction: string): boolean;
+		GetArtTrialInfo(): IArtTrialInfo;
+		SetArtTrialInfo(newArtTrialInfo: IArtTrialInfo): void;
+		GoToExternalLink(URL: string): void;
+		HTMLPopup(MsgHTML: FB3DOM.InnerHTML): void;
+		GoToNote(Href: string): void;
+		AuthorizeIFrame: IFrame.AuthorizeIFrame;
+		UpsaleIFrame: IFrame.IFrame;
+		RatingIFrame: IFrame.IFrame;
 		FontSize: number
+		MinimalCharacterCountInColumn: number;
+	}
+
+	export interface IArtTrialInfo {
+		isFair?: boolean;
+		counter?: number;
 	}
 
 	// General-purpose interface for progress feedback

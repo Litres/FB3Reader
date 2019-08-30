@@ -7,34 +7,38 @@
 /// <reference path="Site/LocalBookmarks.ts" />
 
 var AFB3Reader: FB3Reader.IFBReader;
-var AFB3PPCache: FB3PPCache.IFB3PPCache;
+var AFB3PPCache: FB3Storage.IFB3PPCache;
 var BookmarksProcessor: FB3Bookmarks.IBookmarks;
 var start: number;
 var LocalArtID = 11668997;
 var Temp = 0;
 var LitresLocalBookmarks = new LocalBookmarks.LocalBookmarksClass(LocalArtID.toString());
 var aldebaran_or4 = false;
+var AppVersion = '1.2';
 
 window.onload = () => {
 	document.getElementById('reader').addEventListener('touchstart', TapStart, false);
 	document.getElementById('reader').addEventListener('touchmove', TapMove, false);
 	document.getElementById('reader').addEventListener('touchend', TapEnd, false);
 
-	var Version = '1.2';
+	var TextCacheManager: FB3TextCache.TextCacheManager = new FB3TextCache.TextCacheManager();
+	var MediaCacheLoader: FB3MediaCache.MediaCacheLoader = new FB3MediaCache.MediaCacheLoader(TextCacheManager, GetBaseURL());
+
 	var UUID = '43e7a504-33d4-4f37-b715-410342955f1f';
 	var SID = GetSID();
+	var ArtID = '123456789';
 	var Canvas = document.getElementById('reader');
 	var AReaderSite = new FB3ReaderSite.ExampleSite(Canvas);
-	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(), ArtID2URL);
+	var DataProvider = new FB3DataProvider.AJAXDataProvider(GetBaseURL(), ArtID2URL, TextCacheManager);
 	AFB3PPCache = new FB3PPCache.PPCache();
-	var AReaderDOM = new FB3DOM.DOM(AReaderSite, AReaderSite.Progressor, DataProvider, AFB3PPCache);
+	var AReaderDOM = new FB3DOM.DOM(AReaderSite, AReaderSite.Progressor, DataProvider, AFB3PPCache, MediaCacheLoader);
 	BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(
 		AReaderDOM,
 		SID,
 		LitresLocalBookmarks.GetCurrentArtBookmarks()
 	);
 	BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
-	AFB3Reader = new FB3Reader.Reader(true, AReaderSite, AReaderDOM, BookmarksProcessor, Version, AFB3PPCache);
+	AFB3Reader = new FB3Reader.Reader(true, AReaderSite, AReaderDOM, BookmarksProcessor, AppVersion, AFB3PPCache, SID, ArtID, '0', false);
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
 	PrepareCSS();
 	AFB3Reader.CanvasReadyCallback = function () {
@@ -380,7 +384,7 @@ function RefreshVisible() {
 }
 
 function ClearCache() {
-	if (FB3PPCache.CheckStorageAvail()) {
+	if (FB3Storage.CheckStorageAvail()) {
 		localStorage.clear();
 	}
 	RefreshVisible();

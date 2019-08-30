@@ -41,6 +41,18 @@ var FB3ReaderPage;
         }
         return false;
     }
+    function IsFloatable(Node) {
+        return !!Node.className.match(/\btag_float\b/);
+    }
+    function IsPaddingWrapper(Node) {
+        return !!Node.className.match(/\bpadding_wrapper\b/);
+    }
+    function IsEnoughSpace(Page, Site, Node) {
+        return (Page.ViewPortW - Node.scrollWidth) > (Site.FontSize * Site.MinimalCharacterCountInColumn);
+    }
+    function GetImageFromNode(Node) {
+        return Node.querySelector('.tag_img');
+    }
     function IsNodeUnbreakable(Node) {
         if (Node.nodeName.match(/^(h\d|a|su[bp])$/i)) {
             return true;
@@ -71,6 +83,8 @@ var FB3ReaderPage;
             this.FB3DOM = FB3DOM;
             this.FBReader = FBReader;
             this.ActialRequest = 0;
+            this.ActiveZones = [];
+            this.ContentLength = 0;
             if (Prev) {
                 Prev.Next = this;
             }
@@ -85,6 +99,9 @@ var FB3ReaderPage;
             if (!this.Visible) {
                 this.ParentElement.style.top = '0';
                 this.Visible = true;
+            }
+            if (this.ContentLength > 0 && this.FBReader.IsTrackReadingActive()) {
+                this.SetPageReadTimer('Show()');
             }
         };
         ReaderPage.prototype.Hide = function () {
@@ -213,6 +230,7 @@ var FB3ReaderPage;
             return { From: RenderInstr.Start.slice(0), To: [FragmentEnd] };
         };
         ReaderPage.prototype.CleanPage = function () {
+            this.ActiveZones = [];
             this.NotesElement.Node.innerHTML = this.Element.Node.innerHTML = '';
             this.PageN = undefined;
             this.Ready = true;
@@ -222,6 +240,7 @@ var FB3ReaderPage;
             if (Node.scrollHeight > this.Element.Height * FB3DOM.MaxFootnoteHeight) {
                 Node.style.height = (this.Element.Height * FB3DOM.MaxFootnoteHeight).toFixed(0) + 'px';
                 Node = this.Site.PatchNoteNode(Node);
+                this.AddActiveZone(Node.id);
             }
         };
         ReaderPage.prototype.DrawEnd = function (PageData, ReqID) {
@@ -230,7 +249,10 @@ var FB3ReaderPage;
                 return;
             }
             this.Element.Node.innerHTML = this.Site.PrepareHTML(PageData.Body.join(''));
+            var hyphs = this.Element.Node.textContent.match(/\u00AD/g);
+            this.ContentLength = this.Element.Node.textContent.length - (hyphs ? hyphs.length : 0);
             this.PatchUnbreakableContent();
+            this.SetPageReadTimer('DrawEnd()');
             var HasFootnotes = PageData.FootNotes.length && this.FBReader.BookStyleNotes;
             if (HasFootnotes) {
                 this.NotesElement.Node.innerHTML = this.Site.PrepareHTML('<div class="NotesLine"></div>' +
@@ -264,12 +286,26 @@ var FB3ReaderPage;
                     }
                 }, FB3ReaderPage.SemiSleepTimeout);
             }
+            this.ActiveZones = this.ActiveZones.length > 0 ? this.ActiveZones.concat(PageData.ActiveZones) : PageData.ActiveZones;
         };
         ReaderPage.prototype.PatchUnbreakableContent = function () {
             var NodesCount = this.Element.Node.children.length;
             for (var I = 0; I < NodesCount; I++) {
                 var KidToCrop = this.Element.Node.children[I];
                 var ElWidth = Math.min(KidToCrop.scrollWidth, KidToCrop.clientWidth);
+                var Floatable = IsFloatable(KidToCrop);
+                var ImageNode = Floatable && GetImageFromNode(KidToCrop);
+                if (ImageNode) {
+                    if (!IsPaddingWrapper(KidToCrop)) {
+                        KidToCrop.style.width = ImageNode.scrollWidth + 'px';
+                    }
+                    else {
+                        KidToCrop.style.width = "calc(" + (ImageNode.scrollWidth + 'px') + " + 2em)";
+                    }
+                    if (!IsEnoughSpace(this, this.Site, ImageNode)) {
+                        KidToCrop.style.cssFloat = 'none';
+                    }
+                }
                 if (ElWidth > this.ViewPortW + 1) {
                     var LeftMargin;
                     if (document.all) {
@@ -300,9 +336,10 @@ var FB3ReaderPage;
             }
         };
         ReaderPage.prototype.CropNodeToViewport = function (Node) {
+            var borderTop = getComputedStyle(Node).borderTop;
             var BaseElementW = Node.scrollWidth;
             var BaseElementH = Node.scrollHeight;
-            var Ratio = Math.round(Math.min(this.ViewPortH / BaseElementH, this.ViewPortW / BaseElementW) * 999999) / 1000000;
+            var Ratio = Math.round(Math.min(this.ViewPortH / BaseElementH, this.ViewPortW / BaseElementW) * 995) / 1000;
             var NewW = Math.round(BaseElementW * Ratio);
             var NewH = Math.round(BaseElementH * Ratio);
             var WShift = Math.floor((BaseElementW - NewW) / 2);
@@ -311,61 +348,39 @@ var FB3ReaderPage;
             var Native_Bottom_Margin = Node.style.marginBottom;
             Node.style.marginBottom = '';
             var MoveToCenter = NewW < this.ViewPortW - 1 ? Math.floor((this.ViewPortW - NewW) / 2) : 0;
-            var BtnHTML = '<span class="span-zoom" id="zbs' + BaseID + '">' +
+            var BtnID = 'zb' + BaseID;
+            var BtnHTML = '<span class="span-zoom" id="zbs' + BtnID + '">' +
                 '<button class="zoom_block" id="zb' + BaseID + '">' +
                 'Zoom ' + BaseID + '</button></span>';
             var ContainerDivs = BtnHTML + '<div id="n0' + BaseID + '" style ="height:' + BaseElementH + 'px;width:' + BaseElementW + 'px;left:' + MoveToCenter + 'px;">'
-                + '<div id="n1' + BaseID + '" style="transform: scale(' + Ratio + ');top:-' + HShift + 'px;left:-' + WShift + 'px; position:relative;">';
+                + '<div class="' + Node.className + '" id="n1' + BaseID + '" style="transform: scale(' + Ratio + ');top:-' + HShift + 'px;left:-' + WShift + 'px; position:relative; margin: 0;">';
+            Node.style.cssFloat = 'none';
+            Node.style.padding = '0';
+            Node.style.border = '0';
+            Node.style.margin = '0';
             var HTML = ContainerDivs + Node.outerHTML + '</div></div>';
             var NewNode = document.createElement('div');
-            NewNode.style.height = NewH + 'px';
-            NewNode.style.overflow = 'hidden';
+            NewNode.style.overflow = "hidden";
+            NewNode.style.height = NewH + parseInt(borderTop) * 2 + 'px';
             NewNode.className = FB3DOM.UNBREAKABLE_CSS_CLASS;
             NewNode.style.width = "100%";
             NewNode.style.marginBottom = Native_Bottom_Margin;
             NewNode.id = 'nn' + BaseID;
             NewNode.innerHTML = HTML;
             this.Element.Node.replaceChild(NewNode, Node);
+            this.AddActiveZone(BtnID);
+        };
+        ReaderPage.prototype.AddActiveZone = function (ID) {
+            var xpid = ID.replace(/[a-z0-9]+_\d+_/, '');
+            this.ActiveZones.push({
+                id: ID,
+                fb3tag: this.FB3DOM.GetElementByAddr(xpid.split('_').map(function (i) { return Number(i); })),
+                xpid: xpid,
+                cursor: 'pointer'
+            });
         };
         ReaderPage.prototype.AddHandlers = function () {
-            var _this = this;
-            this.DoAddLinkHandlers(this.Element.Node.querySelectorAll('a'));
-            this.DoAddLinkHandlers(this.NotesElement.Node.querySelectorAll('a'));
-            var zoom = this.Element.Node.querySelectorAll('.zoom_block');
-            if (zoom.length) {
-                for (var j = 0; j < zoom.length; j++) {
-                    zoom[j].addEventListener('click', function (t) {
-                        var obj = ((t.currentTarget) ? t.currentTarget : t.srcElement);
-                        var ID = obj.id.replace(/^zb/, '');
-                        _this.FBReader.Site.ZoomHTML(_this.Site.getElementById(ID).outerHTML);
-                        obj.blur();
-                    }, true);
-                }
-            }
             this.Site.addTrialHandlers();
-        };
-        ReaderPage.prototype.DoAddLinkHandlers = function (Links) {
-            var _this = this;
-            if (Links.length) {
-                for (var j = 0; j < Links.length; j++) {
-                    Links[j].addEventListener('click', function (t) {
-                        var obj = (t.currentTarget) ? t.currentTarget : t.srcElement;
-                        var href = obj.getAttribute('data-href');
-                        if (href == undefined) {
-                            return true;
-                        }
-                        t.preventDefault();
-                        t.stopPropagation();
-                        var tmpArr = href.split(',');
-                        var newPos = [];
-                        for (var i = 0; i < tmpArr.length; i++) {
-                            newPos.push(parseInt(tmpArr[i]));
-                        }
-                        _this.FBReader.Site.HistoryHandler(_this.FBReader.CurStartPos);
-                        _this.FBReader.GoTO(newPos);
-                    }, false);
-                }
-            }
         };
         ReaderPage.prototype.ApplyPageMetrics = function () {
             var _this = this;
@@ -833,23 +848,37 @@ var FB3ReaderPage;
             var LinesFit = parseInt((CurBottomLine / this.FBReader.LineHeight));
             if (CurBottomLine / this.FBReader.LineHeight != LinesFit && Element.id) {
                 var XPID = Element.id.replace(/[a-z0-9]+_\d+_/, '');
-                if (XPID) {
+                if (XPID && !Element.tagName.match(/^p$/i)) {
                     var ExactNewMargin = this.FBReader.PagesPositionsCache.GetMargin(XPID);
                     if (!ExactNewMargin) {
                         var MissingPixels = (LinesFit + 1) * this.FBReader.LineHeight - ChildBot + Baseline;
                         var MarginAlready = 0;
                         if (document.all) {
                             MarginAlready = HardcoreParseInt(Element.currentStyle.marginBottom);
+                            ExactNewMargin = MarginAlready + MissingPixels;
                         }
                         else {
-                            MarginAlready = parseInt(getComputedStyle(Element, '').getPropertyValue('margin-bottom'));
+                            ExactNewMargin = MissingPixels;
                         }
-                        ExactNewMargin = MarginAlready + MissingPixels;
                         if (this.RenderInstr.CacheAs !== undefined) {
                             this.FBReader.PagesPositionsCache.SetMargin(XPID, ExactNewMargin);
                         }
                     }
-                    Element.style.marginBottom = ExactNewMargin + 'px';
+                    var NewNode = document.createElement('div');
+                    NewNode.id = "nn" + Element.id;
+                    NewNode.innerHTML = Element.outerHTML;
+                    var elemFloat = Element.style.cssFloat;
+                    NewNode.classList.add('padding_wrapper');
+                    if (IsNodeUnbreakable(Element)) {
+                        NewNode.classList.add(FB3DOM.UNBREAKABLE_CSS_CLASS);
+                    }
+                    if ((elemFloat === 'left') || (elemFloat === 'right')) {
+                        NewNode.classList.add('tag_float');
+                        NewNode.classList.add("tag_float_" + elemFloat);
+                        NewNode.style.cssFloat = elemFloat;
+                    }
+                    NewNode.style.paddingBottom = ExactNewMargin + 'px';
+                    this.Element.Node.replaceChild(NewNode, Element);
                 }
             }
         };
@@ -873,6 +902,14 @@ var FB3ReaderPage;
             else {
                 return RealLineHeight;
             }
+        };
+        ReaderPage.prototype.SetPageReadTimer = function (comment) {
+            if (!this.FBReader.IsTrackReadingActive() || !this.Visible || this.ContentLength == 0)
+                return;
+            if (this.ColumnN == 0) {
+                this.FBReader.ResetPageTimers(comment + ' clear prev pages, column 0');
+            }
+            this.FBReader.SetPageReadTimer(this);
         };
         return ReaderPage;
     }());

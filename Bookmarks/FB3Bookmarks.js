@@ -176,11 +176,14 @@ var FB3Bookmarks;
         return Catalit;
     }(CatalitWeb.CatalitWebApp));
     var LitResBookmarksProcessor = (function () {
-        function LitResBookmarksProcessor(FB3DOM, LitresSID, LitresLocalXML, UseCatalit2, ScrollToXpath) {
+        function LitResBookmarksProcessor(FB3DOM, LitresSID, ArtID, LitresLocalXML, UseCatalit2, ScrollToXpath) {
             if (UseCatalit2 === void 0) { UseCatalit2 = false; }
             this.FB3DOM = FB3DOM;
             if (LitresSID) {
                 this.SID = LitresSID;
+            }
+            if (ArtID) {
+                this.ArtID = ArtID;
             }
             this.xhrIE9 = false;
             this.Ready = false;
@@ -205,8 +208,8 @@ var FB3Bookmarks;
             this.LocalXML = LitresLocalXML;
             if (UseCatalit2) {
                 this.UseCatalit2 = true;
-                this.Catalit = new Catalit(LitresURLParser.SID, window.location.host);
-                this.Catalit.setArtID(LitresURLParser.ArtID);
+                this.Catalit = new Catalit(this.SID, window.location.host);
+                this.Catalit.setArtID(this.ArtID);
             }
             if (ScrollToXpath) {
                 this.ScrollToXpath = ScrollToXpath;
@@ -448,7 +451,7 @@ var FB3Bookmarks;
         };
         LitResBookmarksProcessor.prototype.ReLoad = function (SaveAutoState) {
             var _this = this;
-            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID, undefined, this.UseCatalit2, this.ScrollToXpath);
+            var TemporaryNotes = new LitResBookmarksProcessor(this.FB3DOM, this.SID, this.ArtID, undefined, this.UseCatalit2, this.ScrollToXpath);
             TemporaryNotes.Host = this.Host;
             TemporaryNotes.Reader = this.Reader;
             TemporaryNotes.aldebaran = this.aldebaran;

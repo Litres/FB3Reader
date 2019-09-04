@@ -462,7 +462,7 @@ module FB3BookReadProgress {
             // this.Info.FlippedPagesNumber = 0;
         }
 
-        constructor(Reader: FB3Reader.Reader, SID: string, ArtID: string, IsTrial: string, IsSubscription: boolean) {
+        constructor(Reader: FB3Reader.Reader, SID: string, ArtID: string, IsTrial: boolean, IsSubscription: boolean) {
 
             this.Reader = Reader;
             this.Cache  = new FB3ReadProgressCache.ReadProgressCache(Reader);
@@ -470,7 +470,7 @@ module FB3BookReadProgress {
 
             this.Catalit = new Catalit(SID, window.location.host);
             this.Catalit.setArtID(ArtID);
-            this.Catalit.setTrialSign('1' == IsTrial);
+            this.Catalit.setTrialSign(IsTrial);
             this.Catalit.setSubscriptionSign(IsSubscription);
             this.Catalit.setCaller(this);
         }

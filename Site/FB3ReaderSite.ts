@@ -99,9 +99,6 @@ module FB3ReaderSite {
 			Reader.Site.HistoryHandler(Reader.CurStartPos);
 			Reader.GoTO(newPos);
 		}
-		public AuthorizeIFrame: IFrame.AuthorizeIFrame;
-		public UpsaleIFrame: IFrame.IFrame;
-		public RatingIFrame: IFrame.IFrame;
 	}
 
 	export class ExampleProgressor implements ILoadProgress {

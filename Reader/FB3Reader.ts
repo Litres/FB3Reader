@@ -187,7 +187,7 @@ module FB3Reader {
             public PagesPositionsCache: FB3Storage.IFB3PPCache,
 			SID: string,
 			ArtID: string,
-			IsTrial: string,
+			IsTrial: boolean,
 			IsSubscription: boolean,
             public TrackReading?: boolean) {
 

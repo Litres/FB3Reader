@@ -23,7 +23,7 @@ window.onload = function () {
     var AReaderDOM = new FB3DOM.DOM(AReaderSite, AReaderSite.Progressor, DataProvider, AFB3PPCache, MediaCacheLoader);
     BookmarksProcessor = new FB3Bookmarks.LitResBookmarksProcessor(AReaderDOM, SID, LitresLocalBookmarks.GetCurrentArtBookmarks());
     BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
-    AFB3Reader = new FB3Reader.Reader(true, AReaderSite, AReaderDOM, BookmarksProcessor, AppVersion, AFB3PPCache, SID, ArtID, '0', false);
+    AFB3Reader = new FB3Reader.Reader(true, AReaderSite, AReaderDOM, BookmarksProcessor, AppVersion, AFB3PPCache, SID, ArtID, false, false);
     AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent));
     PrepareCSS();
     AFB3Reader.CanvasReadyCallback = function () {

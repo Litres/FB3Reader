@@ -65,7 +65,8 @@ var FB3Reader;
         return { top: Math.round(top), left: Math.round(left) };
     }
     var Reader = (function () {
-        function Reader(EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache, SID, ArtID, IsTrial, IsSubscription, TrackReading) {
+        function Reader(EnableBackgroundPreRender, Site, FB3DOM, Bookmarks, Version, PagesPositionsCache, SID, ArtID, IsTrial, IsSubscription, TrackReading, FinishFunction) {
+            if (FinishFunction === void 0) { FinishFunction = function () { }; }
             this.EnableBackgroundPreRender = EnableBackgroundPreRender;
             this.Site = Site;
             this.FB3DOM = FB3DOM;
@@ -73,6 +74,7 @@ var FB3Reader;
             this.Version = Version;
             this.PagesPositionsCache = PagesPositionsCache;
             this.TrackReading = TrackReading;
+            this.FinishFunction = FinishFunction;
             this.CacheLoadingMaxReq = 180;
             this.CacheLoadingReqCount = 0;
             this.GoTOByProgressBar = false;
@@ -201,11 +203,11 @@ var FB3Reader;
         Reader.prototype.GoTOPage = function (Page) {
             if (this.PagesPositionsCache.LastPage() && Page > this.PagesPositionsCache.LastPage()) {
                 this.Site.NotePopup('Paging beyong the file end');
-                finishFunction();
+                this.FinishFunction();
                 return;
             }
             if (this.PagesPositionsCache.LastPage() && Page == this.PagesPositionsCache.LastPage()) {
-                finishFunction();
+                this.FinishFunction();
             }
             this.StopRenders();
             clearTimeout(this.MoveTimeoutID);
@@ -493,7 +495,7 @@ var FB3Reader;
                         || this.Pages[this.CurVisiblePage + this.NColumns]
                             && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr
                             && this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
-                        finishFunction();
+                        this.FinishFunction();
                         return;
                     }
                     else {

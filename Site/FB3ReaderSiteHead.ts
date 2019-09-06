@@ -33,9 +33,6 @@ module FB3ReaderSite {
 		GoToExternalLink(URL: string): void;
 		HTMLPopup(MsgHTML: FB3DOM.InnerHTML): void;
 		GoToNote(Href: string): void;
-		AuthorizeIFrame: IFrame.AuthorizeIFrame;
-		UpsaleIFrame: IFrame.IFrame;
-		RatingIFrame: IFrame.IFrame;
 		FontSize: number
 		MinimalCharacterCountInColumn: number;
 	}

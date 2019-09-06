@@ -124,7 +124,7 @@ module FB3DataProvider {
 				if (this.xhrIE9) {
 					this.Req.timeout = 0;
 					this.Req.onload = () => this.onTransferIE9Complete();
-					setTimeout(() => this.Req.send(null), '200');
+					setTimeout(() => this.Req.send(null), 200);
 				} else {
 					this.Req.onreadystatechange = () => this.onTransferComplete();
 					this.Req.send(null);

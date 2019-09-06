@@ -51,7 +51,7 @@ module FB3MediaCache {
 		 * @param Callback
 		 */
 		public Clear(Callback: Function = () => {}) {
-			this.Filter(({primaryKey: [ArtKey]}) => ArtKey !== this.ArtKey, Callback);
+			this.Filter((elem: IDBCursor) => elem.primaryKey[0] !== this.ArtKey, Callback);
 		}
 
 		/**

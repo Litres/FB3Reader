@@ -38,7 +38,7 @@ window.onload = () => {
 		LitresLocalBookmarks.GetCurrentArtBookmarks()
 	);
 	BookmarksProcessor.FB3DOM.Bookmarks.push(BookmarksProcessor);
-	AFB3Reader = new FB3Reader.Reader(true, AReaderSite, AReaderDOM, BookmarksProcessor, AppVersion, AFB3PPCache, SID, ArtID, '0', false);
+	AFB3Reader = new FB3Reader.Reader(true, AReaderSite, AReaderDOM, BookmarksProcessor, AppVersion, AFB3PPCache, SID, ArtID, false, false);
 	AFB3Reader.HyphON = !(/Android [12]\./i.test(navigator.userAgent)); // Android 2.* is unable to work with soft hyphens properly
 	PrepareCSS();
 	AFB3Reader.CanvasReadyCallback = function () {

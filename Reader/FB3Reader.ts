@@ -187,9 +187,10 @@ module FB3Reader {
             public PagesPositionsCache: FB3Storage.IFB3PPCache,
 			SID: string,
 			ArtID: string,
-			IsTrial: string,
+			IsTrial: boolean,
 			IsSubscription: boolean,
-            public TrackReading?: boolean) {
+            public TrackReading?: boolean,
+			private FinishFunction: Function = () => {}) {
 
 			// Basic class init
 			this.GoTOByProgressBar = false;
@@ -287,11 +288,11 @@ module FB3Reader {
 		public GoTOPage(Page: number): void {
 			if (this.PagesPositionsCache.LastPage() && Page > this.PagesPositionsCache.LastPage()) {
 				this.Site.NotePopup('Paging beyong the file end');
-				finishFunction();
+				this.FinishFunction();
 				return;
 			}
 			if(this.PagesPositionsCache.LastPage() && Page == this.PagesPositionsCache.LastPage()) {
-				finishFunction();
+				this.FinishFunction();
 			}
 
             // TODO calc page jump distance
@@ -609,7 +610,7 @@ module FB3Reader {
 						|| this.Pages[this.CurVisiblePage + this.NColumns]
 							&& this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr
 							&& this.Pages[this.CurVisiblePage + this.NColumns].RenderInstr.Range.To[0] == -1) {
-						finishFunction();
+						this.FinishFunction();
 						return; // EOF reached, the book is over
 					} else {
 						var From = this.Pages[this.CurVisiblePage + this.NColumns - 1].RenderInstr.Range.To;

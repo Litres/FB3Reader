@@ -1,0 +1,9 @@
+{
+	"port": 8000,
+	"server": {
+		"baseDir": "./dist",
+		"routes": {
+			"/DataProvider": "../__mocks__/"
+		}
+	}
+}

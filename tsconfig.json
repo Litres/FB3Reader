@@ -1,7 +1,17 @@
 {
 	"compilerOptions": {
-	"removeComments": true,
-	"newLine": "crlf",
-    "sourceMap": true
-    }
+		"removeComments": true,
+		"newLine": "crlf",
+    	"sourceMap": true,
+	  	"esModuleInterop": true,
+		"declaration": true,
+	  	"declarationDir": "dist"
+    },
+  	"include": [
+		"src/**/*"
+  	],
+  	"exclude": [
+		"node_modules",
+		"**/*.spec.ts"
+  	]
 }

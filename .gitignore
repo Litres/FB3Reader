@@ -7,9 +7,19 @@ Properties
 *.sln
 *.suo
 
-# *.js vill eventually go avay, but for now it's just fine
+# *.js vill eventually go away, but for now it's just fine
 *.js
 !plugins/*.js
 
 # webstorm
 .idea/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Dependency directories
+node_modules/
+
+# builds
+dist/

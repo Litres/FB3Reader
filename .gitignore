@@ -7,10 +7,6 @@ Properties
 *.sln
 *.suo
 
-# *.js vill eventually go away, but for now it's just fine
-*.js
-!plugins/*.js
-
 # webstorm
 .idea/
 

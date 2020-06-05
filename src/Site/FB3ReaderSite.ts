@@ -1,0 +1,182 @@
+import {
+	IAlert,
+	IArtTrialInfo,
+	IFB3ReaderSite,
+	ILoadProgress,
+	INotePopup,
+	ITextArray,
+	ITurnPageData,
+	IViewText
+} from "./FB3ReaderSite.head";
+import {IMetaData, InnerHTML, IXPath} from "../DOM/FB3DOM.head";
+import {IBookmarks} from "../Bookmarks/FB3Bookmarks.head";
+import {getListElementFromPoint} from "../DOM/DocumentTools";
+
+export module FB3ReaderSite {
+	export class ExampleSite implements IFB3ReaderSite {
+		public ViewText: IViewText;
+		public Progressor: ILoadProgress;
+		public IdleThreadProgressor:ILoadProgress;
+		public NotePopup: INotePopup;
+		public Alert: IAlert;
+		public Key: string;
+		public FontSize: number = 16;
+		public MinimalCharacterCountInColumn: number = 17;
+		constructor(public Canvas: HTMLElement, public AFB3Reader, public LocalBookmarks) {
+			this.ViewText = new ViewText();
+			this.Progressor = new ExampleProgressor('AlertSpan', 'MessSpan', 'ProgressSpan');
+			this.IdleThreadProgressor = new ExampleProgressor('IdleAlertSpan', 'IdleMessSpan', 'IdleProgressSpan');
+			this.Alert = (Message: string) => this.Progressor.Alert(Message);
+			this.Key = 'Times:16';
+		}
+		getElementById(elementId: string): HTMLElement {
+			return document.getElementById(elementId);
+		}
+		elementFromPoint(x: number, y: number): Element {
+			var ele = document.elementFromPoint(x,y);
+			if(ele.id.indexOf("wrapper") > -1 || ele.localName == "area" || ele.id.indexOf("empty") > -1) {
+				var eleWithWrap = getListElementFromPoint(this.AFB3Reader, x,y,1);
+				if(eleWithWrap && eleWithWrap[0]) {
+
+					return eleWithWrap[0]
+				}
+			}
+			return ele;
+
+		}
+
+
+		public HeadersLoaded(MetaData: IMetaData) {}
+		public AfterTurnPageDone(Data: ITurnPageData, callback: Function) {
+			if (Data.CurPage) {
+				document.getElementById('CurPosPage').innerHTML = Data.CurPage.toFixed(0) + '/' +
+					(Data.MaxPage ? Data.MaxPage.toFixed(0) : '?');
+			}
+			this.LocalBookmarks.SetCurrentPosition(Data.Pos);
+		}
+		public IsAlreadyClicked(sourceAction: string): boolean {
+			return true;
+		}
+		public GetArtTrialInfo() : IArtTrialInfo {
+			return {};
+		}
+		public SetArtTrialInfo(newArtTrialInfo: IArtTrialInfo) {}
+		public BookCacheDone(Data: ITurnPageData) {}
+		public StoreBookmarksHandler(timer: number) {}
+		public AfterStoreBookmarks(): void {}
+		public AfterStoreBookmarksFailure(): void {}
+		public BeforeBookmarksAction(): boolean {
+			return true;
+		}
+		public ZoomImg(obj): void {
+			// obj
+			// 	data-path="" - src for real img
+			//	data-w="" - real img width
+			//	data-h="" - real img height
+		}
+		public ZoomHTML(HTML: InnerHTML): void {
+			// For zoomed down (for any reason) elements engine will call this to
+			// show full-scale contents of the element
+			alert(HTML);
+		}
+		public HistoryHandler(Pos: IXPath): void {}
+		public showTrialEnd(ID: string): string { return ''; }
+		public addTrialHandlers(): void { }
+		public PrepareHTML(HTMLString: string): string {
+			return HTMLString;
+		}
+		public PatchNoteNode(Node: HTMLElement): HTMLElement {
+			Node.style.overflow = 'auto';
+			Node.className += ' overfloatednote';
+			return Node;
+		}
+		public OnBookmarksSync(ActualBookmarks: IBookmarks, PrevBookmarks: IBookmarks): void {
+			this.AFB3Reader.GoTO(ActualBookmarks.Bookmarks[0].Range.From);
+		}
+		public IsAuthorizeMode(): boolean {
+			return false;
+		}
+		public HTMLPopup( MsgHTML: InnerHTML): void {}
+		public GoToExternalLink(URL: string): void {
+			window.open(URL, '_blank');
+		}
+		public GoToNote(Href: string): void {
+			var Reader = this.AFB3Reader;
+			var tmpArr = Href.split(',');
+			var newPos = [];
+			for (var i = 0; i < tmpArr.length; i++) {
+				newPos.push(parseInt(tmpArr[i]));
+			}
+			Reader.Site.HistoryHandler(Reader.CurStartPos);
+			Reader.GoTO(newPos);
+		}
+	}
+
+	export class ExampleProgressor implements ILoadProgress {
+		private Hourglasses: any;
+		public Progresses: any;
+		public Alert(Message: string): void {
+//			document.getElementById(this.AlertSpan).innerHTML = Message;
+			//			window.alert(Message);
+		}
+		HourglassOn(Owner: any, LockUI?: boolean, Message?: string): void {
+			this.Hourglasses[Owner.toString()] = 1;
+//			document.getElementById(this.MessSpan).innerHTML = Message;
+//			document.body.style.cursor = 'wait';
+		}
+		Progress(Owner: any, Progress: number): void {
+			this.Progresses[Owner] = Progress;
+			var N = 0;
+			var OverallProgress = 0;
+			for (var ProgressInst in this.Progresses) {
+				N++;
+				OverallProgress = this.Progresses[ProgressInst];
+			}
+			OverallProgress = OverallProgress / N;
+//			document.getElementById(this.ProgressSpan).innerHTML = OverallProgress.toFixed(1);
+		}
+		HourglassOff(Owner: any): void {
+			this.Hourglasses[Owner] = 0;
+			var HaveLive = 0;
+			for (var Hourglass in this.Hourglasses) {
+				if (this.Hourglasses[Hourglass] > 0) {
+					HaveLive = 1;
+					break;
+				}
+			}
+			if (!HaveLive) {
+				this.Hourglasses = {};
+				this.Progresses = {};
+//				document.body.style.cursor = '';
+			} else {
+				this.Progress(Owner, 100);
+			}
+		}
+		Tick(Owner: any): void {
+			if (!this.Progresses[Owner]) {
+				this.Progresses[Owner] = 1;
+			} else if (this.Progresses[Owner] < 99) {
+				this.Progresses[Owner] += 1;
+			}
+			this.Progress(Owner, this.Progresses[Owner]);
+		}
+		constructor(private AlertSpan: string, private MessSpan: string, private ProgressSpan:string) {
+			this.Hourglasses = {};
+			this.Progresses = {};
+		}
+	}
+
+	export class ViewText implements IViewText {
+		private TextArray: ITextArray;
+		constructor() {
+			this.TextArray = {
+				'BOOKMARK_IMAGE_PREVIEW_TEXT': 'Изображение',
+				'BOOKMARK_EMPTY_TYPE_1_TEXT': 'Закладка',
+				'BOOKMARK_EMPTY_TYPE_3_TEXT': 'Заметка'
+			};
+		}
+		public Print(Index: string): string {
+			return this.TextArray[Index];
+		}
+	}
+}

@@ -1,0 +1,27 @@
+{
+	"name": "fb3reader-example-app",
+	"version": "1.0.0",
+	"description": "Example app that shows how to use FB3Reader",
+	"main": "app.js",
+	"scripts": {
+		"build": "webpack",
+		"start": "lite-server -c bs-config.json",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"dependencies": {
+		"fb3reader": "file:.."
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"css-loader": "^3.5.3",
+		"html-webpack-plugin": "^4.3.0",
+		"lite-server": "^2.5.4",
+		"mini-css-extract-plugin": "^0.9.0",
+		"style-loader": "^1.2.1",
+		"ts-loader": "^7.0.5",
+		"typescript": "^3.9.3",
+		"webpack": "^4.43.0",
+		"webpack-cli": "^3.3.11"
+	}
+}

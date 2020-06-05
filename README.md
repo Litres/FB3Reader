@@ -9,7 +9,7 @@ Run `npm install` to install components ([Node.js](https://nodejs.org/) with npm
  
 ## Tests
 
-We use [Jest framework](https://jestjs.io/) to perform tests. For now we have several E2E tests that ensure correctness of renedring through image snapshots. Tests can be invoked by `npm run test`.
+We use [Jest framework](https://jestjs.io/) to perform tests. For now we have several E2E tests that ensure correctness of rendering through image snapshots. Tests can be invoked by `npm run test`. Note that visual regression snapshots were made on MacOS. It means that you probably will have failed tests if run them on different OS due to difference in font rendering.
 
 ## Example App
 

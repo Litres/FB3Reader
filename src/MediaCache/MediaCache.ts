@@ -3,7 +3,6 @@ import {FB3TextCache} from "../TextCache/TextCache";
 import {AjaxDataProvider} from "../DataProvider/FB3AjaxDataProvider";
 import {FB_MEDIA_CACHE_STORE_IDB_OBJECT_NAME} from "../Storage/Storage";
 import {IQueryable} from "../Storage/index.head";
-import {Promise} from "q";
 import {ITextCacheManager} from "../TextCache/TextCache.head";
 
 export module FB3MediaCache {

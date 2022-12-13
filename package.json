@@ -18,7 +18,7 @@
     "babel-loader": "^8.1.0",
     "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^3.5.3",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^25.4.0",
     "jest-cli": "^25.4.0",
